@@ -1,0 +1,6 @@
+{
+  "name": "Retro Pixel Shooter Deluxe",
+  "description": "A classic 2D retro arcade shooter with responsive controls, boss battles, power-ups, daily challenges, and local progression.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
