@@ -125,7 +125,11 @@ export class Bullet extends Entity {
     | "crystal"
     | "splitting_pellet"
     | "reverse_gravity_bullet"
-    | "colliding_orb" = "normal";
+    | "colliding_orb"
+    | "electric_missile"
+    | "recall_shard"
+    | "tail_rocket"
+    | "void_mine" = "normal";
   homingTimer: number = 0;
   color: string = "#38bdf8";
   companionIndex?: number;

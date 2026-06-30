@@ -60,6 +60,7 @@ export interface LeaderboardRepository {
   readonly scope: LeaderboardScope;
   isConfigured(): boolean;
   getTopScores(limit: number): Promise<LeaderboardEntry[]>;
+  getBestEntryForPlayer(playerName: string): Promise<LeaderboardEntry | null>;
   submitScore(submission: ScoreSubmission): Promise<LeaderboardEntry>;
   getRank(score: number): Promise<number | null>;
 }

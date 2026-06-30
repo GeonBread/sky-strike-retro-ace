@@ -318,7 +318,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
                     onClick={() => {
                       setSandboxBossPhase3(false);
                       setSandboxBossOverdrive(true);
-                      if (sandboxBossPhaseLock < 14 || sandboxBossPhaseLock > 19) {
+                      if (sandboxBossPhaseLock < 14 || (sandboxBossPhaseLock > 19 && (sandboxBossPhaseLock < 42 || sandboxBossPhaseLock > 46))) {
                         setSandboxBossPhaseLock(-1);
                       }
                     }}
@@ -331,7 +331,11 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
                     onClick={() => {
                       setSandboxBossPhase3(true);
                       setSandboxBossOverdrive(false);
-                      if (sandboxBossPhaseLock < 20 || sandboxBossPhaseLock > 39) {
+                      if (
+                        sandboxBossPhaseLock < 20 ||
+                        sandboxBossPhaseLock > 39 ||
+                        [22, 25, 26, 27, 29, 30, 31, 33, 35, 38, 39].includes(sandboxBossPhaseLock)
+                      ) {
                         setSandboxBossPhaseLock(-1);
                       }
                     }}

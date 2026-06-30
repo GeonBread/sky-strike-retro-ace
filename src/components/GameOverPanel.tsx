@@ -28,7 +28,7 @@ export function GameOverPanel({ onShare }: GameOverPanelProps) {
     online: "idle",
     message: "",
     localRank: null,
-    onlineRank: null
+    onlineRank: null,
   });
 
   const onlineReady = onlineLeaderboard.isConfigured();
@@ -41,7 +41,7 @@ export function GameOverPanel({ onShare }: GameOverPanelProps) {
       online: "idle",
       message: "",
       localRank: null,
-      onlineRank: null
+      onlineRank: null,
     });
   }, [lastRun?.runSession.runId, score]);
 
@@ -51,9 +51,9 @@ export function GameOverPanel({ onShare }: GameOverPanelProps) {
       setResult({
         local: "error",
         online: "skipped",
-        message: "이번 플레이 세션 정보가 없어 랭킹에 등록할 수 없습니다.",
+        message: "이번 플레이 세션 정보가 없어 랭킹을 등록할 수 없습니다.",
         localRank: null,
-        onlineRank: null
+        onlineRank: null,
       });
       return;
     }
@@ -65,9 +65,9 @@ export function GameOverPanel({ onShare }: GameOverPanelProps) {
     setResult({
       local: "idle",
       online: onlineReady ? "idle" : "skipped",
-      message: "랭킹에 등록하는 중입니다.",
+      message: "랭킹 등록 중입니다.",
       localRank: null,
-      onlineRank: null
+      onlineRank: null,
     });
 
     let localStatus: ChannelStatus = "idle";
@@ -108,9 +108,9 @@ export function GameOverPanel({ onShare }: GameOverPanelProps) {
     setResult({
       local: localStatus,
       online: onlineStatus,
-      message: messages.join(" · "),
+      message: messages.join(" / "),
       localRank,
-      onlineRank
+      onlineRank,
     });
   };
 
@@ -157,7 +157,7 @@ export function GameOverPanel({ onShare }: GameOverPanelProps) {
 
         {!onlineReady && (
           <div className="text-[10px] text-slate-500 text-center font-mono">
-            온라인 랭킹은 Supabase 환경변수 설정 후 자동 등록됩니다.
+            온라인 랭킹은 Supabase 설정 후 자동 등록됩니다.
           </div>
         )}
       </div>
@@ -200,7 +200,7 @@ function StatusBadge({ label, status, rank }: { label: string; status: ChannelSt
     idle: "border-slate-800 text-slate-500 bg-slate-950/60",
     done: "border-emerald-500/40 text-emerald-300 bg-emerald-500/10",
     skipped: "border-slate-800 text-slate-500 bg-slate-950/60",
-    error: "border-rose-500/40 text-rose-300 bg-rose-500/10"
+    error: "border-rose-500/40 text-rose-300 bg-rose-500/10",
   } satisfies Record<ChannelStatus, string>;
 
   const text = status === "done" ? "DONE" : status === "error" ? "FAIL" : status === "skipped" ? "SKIP" : "READY";
@@ -220,7 +220,7 @@ async function ensureOnlineRun(run: CompletedRunSummary): Promise<CompletedRunSu
   const serverRunSession = await onlineLeaderboard.startRun();
   return {
     ...run,
-    runSession: serverRunSession
+    runSession: serverRunSession,
   };
 }
 

@@ -15,6 +15,10 @@ export class LocalLeaderboardRepository implements LeaderboardRepository {
     return readEntries().slice(0, limit);
   }
 
+  async getBestEntryForPlayer(playerName: string): Promise<LeaderboardEntry | null> {
+    return readEntries().find((entry) => entry.playerName === playerName) ?? null;
+  }
+
   async submitScore(submission: ScoreSubmission): Promise<LeaderboardEntry> {
     const validation = validateScoreSubmission(submission);
     if (!validation.ok) {

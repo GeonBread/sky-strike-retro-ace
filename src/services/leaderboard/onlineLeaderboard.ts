@@ -83,6 +83,28 @@ export class OnlineLeaderboardRepository implements LeaderboardRepository {
     return rows.map(mapRow);
   }
 
+  async getBestEntryForPlayer(playerName: string): Promise<LeaderboardEntry | null> {
+    if (!this.isConfigured()) return null;
+
+    const params = new URLSearchParams({
+      select: "id,player_name,score,stage,ship_color,duration_ms,game_version,rules_version,run_id,created_at,verified",
+      player_name: `eq.${playerName}`,
+      order: "score.desc,created_at.asc",
+      limit: "1"
+    });
+
+    const response = await fetch(`${getSupabaseUrl()}/rest/v1/leaderboard_scores?${params.toString()}`, {
+      headers: {
+        apikey: getSupabaseAnonKey(),
+        authorization: `Bearer ${getSupabaseAnonKey()}`
+      }
+    });
+
+    if (!response.ok) return null;
+    const rows = (await response.json()) as SupabaseScoreRow[];
+    return rows[0] ? mapRow(rows[0]) : null;
+  }
+
   async submitScore(submission: ScoreSubmission): Promise<LeaderboardEntry> {
     if (!this.isConfigured()) {
       throw new Error("온라인 랭킹 환경변수가 설정되지 않았습니다.");
