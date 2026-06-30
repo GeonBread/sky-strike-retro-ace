@@ -6,6 +6,7 @@ import { CompletedRunSummary } from "../services/leaderboard";
 
 interface GameOverPanelProps {
   onShare: () => void;
+  onLeaderboard: () => void;
 }
 
 type SubmitStatus = "idle" | "submitting" | "done" | "error";
@@ -19,7 +20,7 @@ interface SubmitResult {
   onlineRank: number | null;
 }
 
-export function GameOverPanel({ onShare }: GameOverPanelProps) {
+export function GameOverPanel({ onShare, onLeaderboard }: GameOverPanelProps) {
   const { score, lastRun, setGameState } = useAppStore();
   const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
   const [status, setStatus] = useState<SubmitStatus>("idle");
@@ -179,7 +180,7 @@ export function GameOverPanel({ onShare }: GameOverPanelProps) {
 
       <div className="flex items-center justify-center gap-5">
         <button
-          onClick={() => setGameState("LEADERBOARD")}
+          onClick={onLeaderboard}
           className="flex items-center gap-2 text-sm font-mono text-yellow-400 hover:text-yellow-300 font-extrabold transition-all duration-150"
         >
           <Trophy size={16} /> 랭킹 보기

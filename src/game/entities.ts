@@ -83,6 +83,7 @@ export class Enemy extends Entity {
   gridLasersX?: number[];
   gridLasersY?: number[];
   lastCycleIndex?: number;
+  laserSoundCycle?: number;
   laserAngle?: number;
 }
 
@@ -97,6 +98,21 @@ export class InkCloud {
   maxLife: number = 4.5;
   active: boolean = true;
 }
+
+export type BulletVisualType =
+  | "plasma_bolt"
+  | "comet_needle"
+  | "core_orb"
+  | "cracked_core"
+  | "drone_missile"
+  | "tesla_spark"
+  | "spore_glob"
+  | "cosmic_plasma_core"
+  | "comet_spear"
+  | "tesla_spine_missile"
+  | "rift_shard"
+  | "phase_core"
+  | "star_beacon";
 
 export class Bullet extends Entity {
   isEnemy: boolean = false;
@@ -142,6 +158,7 @@ export class Bullet extends Entity {
   dashTriggered?: boolean;
   bounceCount?: number;
   shootTimer?: number;
+  visualType?: BulletVisualType;
 }
 
 export class Particle extends Entity {

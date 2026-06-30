@@ -142,7 +142,7 @@ export function LeaderboardPanel({ onBack }: LeaderboardPanelProps) {
           onClick={onBack}
           className="px-5 py-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-white font-bold rounded-lg font-mono transition-all duration-200"
         >
-          메인 메뉴
+          돌아가기
         </button>
       </div>
     </div>

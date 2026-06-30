@@ -9,6 +9,7 @@ import { SHIP_COLORS } from "./render/palette";
 
 import {
   Bullet,
+  type BulletVisualType,
   Enemy,
   Entity,
   type EnemyType,
@@ -28,7 +29,7 @@ const PLAYER_BULLET_SPEED_MULT = 1.16;
 const PLAYER_FIRE_INTERVAL = 0.075;
 const NORMAL_BOSS_PHASE_IDS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13];
 const OVERDRIVE_BOSS_PHASE_IDS = [14, 15, 16, 17, 18, 19, 42, 43, 44, 45, 46];
-const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28];
+const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 47, 48, 49, 50];
 
 interface ElectricTrail {
   x1: number;
@@ -87,6 +88,51 @@ interface BossDashState {
   phase: "search" | "lock" | "dash" | "recover";
   age: number;
   hasHit: boolean;
+}
+
+interface BossSafeZoneBlast {
+  x: number;
+  y: number;
+  radius: number;
+  age: number;
+  warnTime: number;
+  fireTime: number;
+  active: boolean;
+}
+
+interface BossAbsorbOrb {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  hp: number;
+  age: number;
+  active: boolean;
+}
+
+interface BossAfterimageSlash {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  age: number;
+  warnTime: number;
+  fireTime: number;
+  width: number;
+}
+
+interface BossCompressionField {
+  age: number;
+  warnTime: number;
+  closeTime: number;
+  holdTime: number;
+  maxInset: number;
+}
+
+interface PlayerHistoryPoint {
+  x: number;
+  y: number;
+  age: number;
 }
 
 export class GameEngine {
@@ -149,6 +195,11 @@ export class GameEngine {
   bossTimedExplosions: TimedExplosionZone[] = [];
   bossTailMines: TailMine[] = [];
   bossDashState: BossDashState | null = null;
+  bossSafeZoneBlasts: BossSafeZoneBlast[] = [];
+  bossAbsorbOrbs: BossAbsorbOrb[] = [];
+  bossAfterimageSlashes: BossAfterimageSlash[] = [];
+  bossCompressionField: BossCompressionField | null = null;
+  playerPositionHistory: PlayerHistoryPoint[] = [];
 
   bombActive: boolean = false;
   bombRadius: number = 0;
@@ -450,6 +501,7 @@ export class GameEngine {
     }
 
     this.updatePlayer(dt);
+    this.updatePlayerPositionHistory(dt);
     this.updateBullets(dt);
     this.updateEnemies(dt);
     this.updateParticles(dt);
@@ -468,6 +520,33 @@ export class GameEngine {
     }
   }
 
+  private updatePlayerPositionHistory(dt: number) {
+    const px = this.player.x + this.player.width / 2;
+    const py = this.player.y + this.player.height / 2;
+    this.playerPositionHistory.forEach((point) => {
+      point.age += dt;
+    });
+    this.playerPositionHistory.unshift({ x: px, y: py, age: 0 });
+    this.playerPositionHistory = this.playerPositionHistory.filter((point, index) => point.age <= 2.1 && index < 160);
+  }
+
+  private getPlayerHistoryPoint(targetAge: number): PlayerHistoryPoint {
+    let best = this.playerPositionHistory[0] || {
+      x: this.player.x + this.player.width / 2,
+      y: this.player.y + this.player.height / 2,
+      age: 0,
+    };
+    let bestDelta = Math.abs(best.age - targetAge);
+    this.playerPositionHistory.forEach((point) => {
+      const delta = Math.abs(point.age - targetAge);
+      if (delta < bestDelta) {
+        best = point;
+        bestDelta = delta;
+      }
+    });
+    return best;
+  }
+
   private clearBossPatternHazards() {
     this.bossElectricTrails = [];
     this.bossGridLasers = [];
@@ -475,6 +554,10 @@ export class GameEngine {
     this.bossTimedExplosions = [];
     this.bossTailMines = [];
     this.bossDashState = null;
+    this.bossSafeZoneBlasts = [];
+    this.bossAbsorbOrbs = [];
+    this.bossAfterimageSlashes = [];
+    this.bossCompressionField = null;
   }
 
   private updateBossPatternHazards(dt: number) {
@@ -487,7 +570,11 @@ export class GameEngine {
     this.bossElectricTrails = this.bossElectricTrails.filter((trail) => trail.life > 0);
 
     this.bossGridLasers.forEach((laser) => {
+      const previousAge = laser.age;
       laser.age += dt;
+      if (previousAge < laser.warnTime && laser.age >= laser.warnTime) {
+        sfx.laserBlast();
+      }
       if (laser.age >= laser.warnTime && laser.age <= laser.warnTime + laser.fireTime) {
         const px = this.player.x + this.player.width / 2;
         const py = this.player.y + this.player.height / 2;
@@ -556,6 +643,84 @@ export class GameEngine {
       }
     });
     this.bossSuicideDrones = this.bossSuicideDrones.filter((drone) => drone.active);
+
+    this.bossSafeZoneBlasts.forEach((blast) => {
+      blast.age += dt;
+      const firing = blast.age >= blast.warnTime && blast.age <= blast.warnTime + blast.fireTime;
+      if (firing) {
+        const px = this.player.x + this.player.width / 2;
+        const py = this.player.y + this.player.height / 2;
+        if (Math.hypot(px - blast.x, py - blast.y) > blast.radius) {
+          this.hitPlayerFromBossHazard();
+        }
+      }
+      if (blast.age > blast.warnTime + blast.fireTime + 0.35) blast.active = false;
+    });
+    this.bossSafeZoneBlasts = this.bossSafeZoneBlasts.filter((blast) => blast.active);
+
+    this.bossAbsorbOrbs.forEach((orb) => {
+      if (!this.bossEntity) return;
+      orb.age += dt;
+      const tx = this.bossEntity.x + this.bossEntity.width / 2;
+      const ty = this.bossEntity.y + this.bossEntity.height / 2;
+      const dx = tx - orb.x;
+      const dy = ty - orb.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const speed = 56 + Math.min(120, orb.age * 38);
+      orb.vx += ((dx / dist) * speed - orb.vx) * 0.035;
+      orb.vy += ((dy / dist) * speed - orb.vy) * 0.035;
+      orb.x += orb.vx * dt;
+      orb.y += orb.vy * dt;
+
+      this.bullets.forEach((b) => {
+        if (!b.active || b.isEnemy || !orb.active) return;
+        const bx = b.x + b.width / 2;
+        const by = b.y + b.height / 2;
+        if (Math.hypot(bx - orb.x, by - orb.y) < 20 + Math.max(b.width, b.height) / 2) {
+          b.active = false;
+          orb.hp -= b.damage;
+          this.spawnExplosion(orb.x, orb.y, "#67e8f9", 4);
+          if (orb.hp <= 0) {
+            orb.active = false;
+            this.spawnExplosion(orb.x, orb.y, "#22d3ee", 18);
+            sfx.enemyExplode();
+          }
+        }
+      });
+
+      if (dist < 34 && orb.active) {
+        orb.active = false;
+        this.bossEntity.burstCount++;
+        this.spawnExplosion(tx, ty, "#a78bfa", 14);
+        sfx.bossHit();
+      }
+    });
+    this.bossAbsorbOrbs = this.bossAbsorbOrbs.filter((orb) => orb.active);
+
+    this.bossAfterimageSlashes.forEach((slash) => {
+      slash.age += dt;
+      if (slash.age >= slash.warnTime && slash.age <= slash.warnTime + slash.fireTime) {
+        this.checkPlayerAgainstSegment(slash.x1, slash.y1, slash.x2, slash.y2, slash.width);
+      }
+    });
+    this.bossAfterimageSlashes = this.bossAfterimageSlashes.filter((slash) => slash.age < slash.warnTime + slash.fireTime + 0.18);
+
+    if (this.bossCompressionField) {
+      const field = this.bossCompressionField;
+      field.age += dt;
+      const activeUntil = field.warnTime + field.closeTime + field.holdTime;
+      if (field.age >= field.warnTime && field.age <= activeUntil) {
+        const progress = Math.min(1, (field.age - field.warnTime) / field.closeTime);
+        const inset = field.maxInset * progress;
+        const px = this.player.x + this.player.width / 2;
+        const py = this.player.y + this.player.height / 2;
+        const topInset = inset * 0.58;
+        if (px < inset || px > this.canvas.width - inset || py < topInset || py > this.canvas.height - topInset) {
+          this.hitPlayerFromBossHazard();
+        }
+      }
+      if (field.age > activeUntil + 0.35) this.bossCompressionField = null;
+    }
   }
 
   private hitPlayerFromBossHazard() {
@@ -654,7 +819,7 @@ export class GameEngine {
         const px = this.player.x + this.player.width / 2;
         const py = this.player.y + this.player.height / 2;
         const angle = Math.atan2(py - sy, px - sx);
-        const speed = 1050;
+        const speed = 1220;
 
         const b = new Bullet();
         b.x = sx - 9;
@@ -686,12 +851,18 @@ export class GameEngine {
       const positions = [
         { x: 60, y: 120 },
         { x: w - 60, y: 120 },
+        { x: w * 0.5, y: 95 },
         { x: 58, y: h * 0.45 },
         { x: w - 58, y: h * 0.45 },
+        { x: 70, y: h * 0.68 },
+        { x: w - 70, y: h * 0.68 },
         { x: 95, y: h - 130 },
         { x: w - 95, y: h - 130 },
         { x: w * 0.34, y: 90 },
         { x: w * 0.66, y: 90 },
+        { x: w * 0.24, y: h - 90 },
+        { x: w * 0.5, y: h - 76 },
+        { x: w * 0.76, y: h - 90 },
       ];
       this.bossSuicideDrones = positions.map((pos, index) => ({
         x: pos.x,
@@ -716,12 +887,24 @@ export class GameEngine {
       e.lastShot = 0;
       const count = Math.random() < 0.45 ? 2 : 1;
       for (let i = 0; i < count; i++) {
-        const axis: "x" | "y" = Math.random() < 0.55 ? "x" : "y";
-        const margin = axis === "x" ? 46 : 92;
-        const max = axis === "x" ? this.canvas.width : this.canvas.height;
+        let axis: "x" | "y" = "x";
+        let pos = 0;
+        let found = false;
+        for (let attempt = 0; attempt < 24; attempt++) {
+          axis = Math.random() < 0.55 ? "x" : "y";
+          const margin = axis === "x" ? 46 : 92;
+          const max = axis === "x" ? this.canvas.width : this.canvas.height;
+          pos = Math.random() * (max - margin * 2) + margin;
+          const minGap = axis === "x" ? 70 : 82;
+          if (this.bossGridLasers.every((laser) => laser.axis !== axis || Math.abs(laser.pos - pos) > minGap)) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) continue;
         this.bossGridLasers.push({
           axis,
-          pos: Math.random() * (max - margin * 2) + margin,
+          pos,
           age: 0,
           warnTime: 0.44,
           fireTime: 0.28,
@@ -783,6 +966,7 @@ export class GameEngine {
         e.vx = Math.cos(dash.angle) * 1280;
         e.vy = Math.sin(dash.angle) * 1280;
         this.screenShakeIntensity = 12;
+        sfx.bossDash();
       }
     } else if (dash.phase === "dash") {
       const prevX = e.x + e.width / 2;
@@ -810,6 +994,135 @@ export class GameEngine {
       e.y += (targetTopY - e.y) * 3.0 * dt;
       if (dash.age >= 1.1) {
         this.bossDashState = null;
+      }
+    }
+  }
+
+  private runFinalSafeZoneBlast(e: Enemy, dt: number) {
+    e.x += (this.canvas.width / 2 - e.width / 2 - e.x) * 1.2 * dt;
+    e.y += (58 - e.y) * 1.2 * dt;
+
+    if (e.rapidFireCount === 0) {
+      e.rapidFireCount = 1;
+      const bossCx = e.x + e.width / 2;
+      const bossCy = e.y + e.height / 2;
+      let x = this.canvas.width / 2;
+      let y = this.canvas.height * 0.72;
+      for (let attempt = 0; attempt < 20; attempt++) {
+        x = 58 + Math.random() * Math.max(1, this.canvas.width - 116);
+        y = this.canvas.height * 0.38 + Math.random() * this.canvas.height * 0.48;
+        if (Math.hypot(x - bossCx, y - bossCy) > 210) break;
+      }
+      this.bossSafeZoneBlasts.push({
+        x,
+        y,
+        radius: 54,
+        age: 0,
+        warnTime: 2.05,
+        fireTime: 1.15,
+        active: true,
+      });
+      sfx.bossPatternFire();
+    }
+  }
+
+  private runFinalAbsorptionField(e: Enemy, dt: number) {
+    e.x += (this.canvas.width / 2 - e.width / 2 - e.x) * 0.9 * dt;
+    e.y += (65 - e.y) * 0.9 * dt;
+
+    if (e.rapidFireCount === 0) {
+      e.rapidFireCount = 1;
+      e.burstCount = 0;
+      const positions = [
+        { x: 58, y: this.canvas.height * 0.28 },
+        { x: this.canvas.width - 58, y: this.canvas.height * 0.28 },
+        { x: 70, y: this.canvas.height * 0.65 },
+        { x: this.canvas.width - 70, y: this.canvas.height * 0.65 },
+        { x: this.canvas.width / 2, y: this.canvas.height - 96 },
+      ];
+      this.bossAbsorbOrbs = positions.map((pos) => ({
+        x: pos.x,
+        y: pos.y,
+        vx: 0,
+        vy: 0,
+        hp: 9,
+        age: 0,
+        active: true,
+      }));
+      this.spawnExplosion(e.x + e.width / 2, e.y + e.height / 2, "#a78bfa", 18);
+    }
+
+    if (e.burstCount >= 3 && e.rapidFireCount === 1) {
+      e.rapidFireCount = 2;
+      this.bossTimedExplosions.push({
+        x: this.canvas.width / 2,
+        y: this.canvas.height / 2,
+        radius: Math.max(this.canvas.width, this.canvas.height) * 0.72,
+        age: 0,
+        warnTime: 0.7,
+        fireTime: 0.42,
+        color: "#a78bfa",
+      });
+      sfx.laserBlast();
+    }
+  }
+
+  private runFinalAfterimageSlash(e: Enemy, dt: number) {
+    e.x += e.vx * 0.08 * dt;
+    if (e.x < 18 || e.x > this.canvas.width - e.width - 18) e.vx *= -1;
+
+    if (e.lastShot > 1.15) {
+      e.lastShot = 0;
+      [0.5, 1.0, 1.5].forEach((age, index) => {
+        const p = this.getPlayerHistoryPoint(age);
+        const angle = -Math.PI / 2 + (index - 1) * 0.52 + (Math.random() - 0.5) * 0.18;
+        const len = 900;
+        this.bossAfterimageSlashes.push({
+          x1: p.x - Math.cos(angle) * len,
+          y1: p.y - Math.sin(angle) * len,
+          x2: p.x + Math.cos(angle) * len,
+          y2: p.y + Math.sin(angle) * len,
+          age: -index * 0.1,
+          warnTime: 0.62,
+          fireTime: 0.18,
+          width: 42,
+        });
+      });
+      sfx.bossPatternFire();
+    }
+  }
+
+  private runFinalCompressionWalls(e: Enemy, dt: number) {
+    e.x += (this.canvas.width / 2 - e.width / 2 - e.x) * 1.0 * dt;
+    e.y += (62 - e.y) * 1.0 * dt;
+
+    if (!this.bossCompressionField) {
+      this.bossCompressionField = {
+        age: 0,
+        warnTime: 0.85,
+        closeTime: 3.35,
+        holdTime: 1.25,
+        maxInset: Math.min(this.canvas.width, this.canvas.height) * 0.28,
+      };
+      sfx.bossPatternFire();
+    }
+
+    if (e.lastShot > 0.42 && this.bossCompressionField.age > 1.2) {
+      e.lastShot = 0;
+      const cx = e.x + e.width / 2;
+      const cy = e.y + e.height;
+      for (let i = -1; i <= 1; i++) {
+        const b = new Bullet();
+        b.x = cx - 5 + i * 24;
+        b.y = cy;
+        b.width = 10;
+        b.height = 18;
+        b.vx = i * 55;
+        b.vy = 270;
+        b.isEnemy = true;
+        b.type = "needle";
+        b.color = "#f43f5e";
+        this.bullets.push(b);
       }
     }
   }
@@ -875,7 +1188,7 @@ export class GameEngine {
     const cx = e.x + e.width / 2;
     const cy = e.y + e.height / 2;
 
-    if (e.patternTimer < 1.85 && e.lastShot > 0.07) {
+    if (e.patternTimer < 2.15 && e.lastShot > 0.07) {
       e.lastShot = 0;
       const base = e.patternTimer * 5.8;
       for (let i = 0; i < 5; i++) {
@@ -897,7 +1210,7 @@ export class GameEngine {
       sfx.bossPatternFire();
     }
 
-    if (e.patternTimer > 1.85 && e.patternTimer < 3.5 && Math.random() < 0.48) {
+    if (e.patternTimer > 2.15 && e.patternTimer < 4.0 && Math.random() < 0.48) {
       const p = new Particle();
       const angle = Math.random() * Math.PI * 2;
       const radius = 80 + Math.random() * 80;
@@ -916,25 +1229,28 @@ export class GameEngine {
     e.x += e.vx * 0.09 * dt;
     if (e.x < 18 || e.x > this.canvas.width - e.width - 18) e.vx *= -1;
 
-    if (e.lastShot > 0.18) {
+    if (e.lastShot > 0.46) {
       e.lastShot = 0;
-      const laneBias = Math.random();
-      const x = laneBias < 0.25
-        ? 45 + Math.random() * 90
-        : laneBias > 0.75
-          ? this.canvas.width - 135 + Math.random() * 90
-          : 55 + Math.random() * Math.max(1, this.canvas.width - 110);
-      const y = 135 + Math.random() * Math.max(1, this.canvas.height - 230);
-      this.bossTimedExplosions.push({
-        x,
-        y,
-        radius: 38 + Math.random() * 24,
-        age: 0,
-        warnTime: 0.42 + Math.random() * 0.22,
-        fireTime: 0.22,
-        color: Math.random() < 0.55 ? "#f97316" : "#eab308",
-      });
-      if (Math.random() < 0.45) sfx.bossPatternFire();
+      const burstCount = 3 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < burstCount; i++) {
+        const laneBias = Math.random();
+        const x = laneBias < 0.25
+          ? 58 + Math.random() * 110
+          : laneBias > 0.75
+            ? this.canvas.width - 168 + Math.random() * 110
+            : 72 + Math.random() * Math.max(1, this.canvas.width - 144);
+        const y = 145 + Math.random() * Math.max(1, this.canvas.height - 250);
+        this.bossTimedExplosions.push({
+          x,
+          y,
+          radius: 76 + Math.random() * 42,
+          age: 0,
+          warnTime: 0.42 + i * 0.12 + Math.random() * 0.08,
+          fireTime: 0.28,
+          color: Math.random() < 0.55 ? "#f97316" : "#eab308",
+        });
+      }
+      sfx.bossPatternFire();
     }
   }
 
@@ -942,31 +1258,25 @@ export class GameEngine {
     e.x += e.vx * 0.16 * dt;
     if (e.x < 15 || e.x > this.canvas.width - e.width - 15) e.vx *= -1;
 
-    if (e.lastShot > 0.42) {
+    if (e.lastShot > 0.24) {
       e.lastShot = 0;
-      const cx = e.x + e.width / 2;
-      const cy = e.y + e.height * 0.82;
-      const px = this.player.x + this.player.width / 2;
-      const py = this.player.y + this.player.height / 2;
-      const base = Math.atan2(py - cy, px - cx);
-      const spread = e.rapidFireCount % 2 === 0 ? [-0.11, 0.11] : [0];
+      const dropCount = e.rapidFireCount % 3 === 0 ? 3 : 2;
       e.rapidFireCount++;
 
-      spread.forEach((offset) => {
-        const angle = base + offset + (Math.random() - 0.5) * 0.08;
+      for (let i = 0; i < dropCount; i++) {
         const b = new Bullet();
-        b.x = cx - 7;
-        b.y = cy - 14;
+        b.x = 20 + Math.random() * Math.max(1, this.canvas.width - 40);
+        b.y = -50 - Math.random() * 80;
         b.width = 14;
         b.height = 28;
-        b.vx = Math.cos(angle) * 720;
-        b.vy = Math.sin(angle) * 720;
+        b.vx = (Math.random() - 0.5) * 38;
+        b.vy = 700 + Math.random() * 120;
         b.isEnemy = true;
         b.type = "tail_rocket";
         b.color = "#f43f5e";
         b.shootTimer = 0;
         this.bullets.push(b);
-      });
+      }
       sfx.bossPatternFire();
     }
   }
@@ -1394,7 +1704,7 @@ export class GameEngine {
           // Emitter functionality
           if (b.gravityTimer === undefined) b.gravityTimer = 0;
           b.gravityTimer += dt;
-          if (b.gravityTimer > 0.14) {
+          if (b.gravityTimer > 0.22) {
             b.gravityTimer = 0;
             const spiralAngle = b.y * 0.04;
             for (let i = 0; i < 2; i++) {
@@ -1738,9 +2048,9 @@ export class GameEngine {
           if (b.age === undefined) b.age = 0;
           b.age += dt;
 
-          if (b.age < 1.15) {
-            b.vx *= 0.955;
-            b.vy *= 0.955;
+          if (b.age < 1.85) {
+            b.vx *= 0.972;
+            b.vy *= 0.972;
           } else if (this.bossEntity) {
             const tx = this.bossEntity.x + this.bossEntity.width / 2;
             const ty = this.bossEntity.y + this.bossEntity.height / 2;
@@ -1749,10 +2059,10 @@ export class GameEngine {
             const dx = tx - bx;
             const dy = ty - by;
             const dist = Math.hypot(dx, dy) || 1;
-            const targetVx = (dx / dist) * 250;
-            const targetVy = (dy / dist) * 250;
-            b.vx += (targetVx - b.vx) * 0.055;
-            b.vy += (targetVy - b.vy) * 0.055;
+            const targetVx = (dx / dist) * 235;
+            const targetVy = (dy / dist) * 235;
+            b.vx += (targetVx - b.vx) * 0.045;
+            b.vy += (targetVy - b.vy) * 0.045;
             if (dist < 34) {
               b.active = false;
               this.spawnExplosion(tx, ty, "#67e8f9", 3);
@@ -2106,6 +2416,14 @@ export class GameEngine {
             if (this.bossGridLasers.length > 0) canTransition = false;
           } else if (e.phase === 24) {
             if (this.bossDashState !== null) canTransition = false;
+          } else if (e.phase === 47) {
+            if (this.bossSafeZoneBlasts.length > 0) canTransition = false;
+          } else if (e.phase === 48) {
+            if (this.bossAbsorbOrbs.length > 0 || this.bossTimedExplosions.length > 0) canTransition = false;
+          } else if (e.phase === 49) {
+            if (this.bossAfterimageSlashes.length > 0) canTransition = false;
+          } else if (e.phase === 50) {
+            if (this.bossCompressionField !== null) canTransition = false;
           } else if (e.phase === 44) {
             if (this.bullets.some((b) => b.active && b.isEnemy && b.type === "recall_shard")) canTransition = false;
           } else if (e.phase === 45) {
@@ -2425,6 +2743,7 @@ export class GameEngine {
           e.shootTimer += dt;
 
           const cycle = e.shootTimer % 2.8;
+          this.playBossLaserSoundOncePerCycle(e, e.shootTimer, 2.8, 1.8);
 
           let xPositions: number[] = [];
           let yPositions: number[] = [];
@@ -2584,6 +2903,7 @@ export class GameEngine {
           e.shootTimer += dt;
 
           const cycle = e.shootTimer % 2.8;
+          this.playBossLaserSoundOncePerCycle(e, e.shootTimer, 2.8, 1.8);
           const cycleIndex = Math.floor(e.shootTimer / 2.8);
 
           if (e.lastCycleIndex !== cycleIndex || !e.gridLasersX || !e.gridLasersY) {
@@ -2790,6 +3110,7 @@ export class GameEngine {
           e.shootTimer += dt;
 
           const cycle = e.shootTimer % 2.8;
+          this.playBossLaserSoundOncePerCycle(e, e.shootTimer, 2.8, 1.8);
           const cx = e.x + e.width / 2;
           const cy = e.y + e.height / 2;
           const px = this.player.x + this.player.width / 2;
@@ -3037,7 +3358,7 @@ export class GameEngine {
         } else if (e.phase === 24) {
           this.runFinalBossDash(e, dt);
         } else if (e.phase === 28) {
-          // Final Phase 28: Plasma Strike - falling fireballs plus triple prism lasers.
+          // Final Phase 28: Meteor prism strike - five warning lanes, staggered laser fire.
           if (e.shootTimer === undefined) e.shootTimer = 0;
           e.shootTimer += dt;
 
@@ -3045,66 +3366,75 @@ export class GameEngine {
           const cy = e.y + e.height / 2;
           const px = this.player.x + this.player.width / 2;
           const py = this.player.y + this.player.height / 2;
-          const cycle = e.shootTimer % 3.1;
+          const cycle = e.shootTimer % 4.2;
 
           if (e.laserAngle === undefined) {
             e.laserAngle = Math.atan2(py - cy, px - cx);
           }
-          if (cycle < 1.2) {
+          if (cycle < 1.35) {
             e.laserAngle = Math.atan2(py - cy, px - cx);
-          } else if (cycle >= 1.8 && cycle < 2.25) {
-            [0].forEach((offset) => {
-              const angle = e.laserAngle! + offset;
-              const dx = px - cx;
-              const dy = py - cy;
-              const dirX = Math.cos(angle);
-              const dirY = Math.sin(angle);
-              const proj = dx * dirX + dy * dirY;
-              if (proj > 0 && proj < 3000) {
-                const closestX = cx + proj * dirX;
-                const closestY = cy + proj * dirY;
-                const distToLaser = Math.hypot(px - closestX, py - closestY);
-                if (distToLaser < 22 && this.player.invulnTimer <= 0 && !this.player.isDead) {
-                  this.triggerPlayerHit();
-                }
-              }
-            });
-          } else if (cycle >= 2.35 && cycle < 2.9) {
-            [-Math.PI / 6, Math.PI / 6].forEach((offset) => {
-              const angle = e.laserAngle! + offset;
-              const dx = px - cx;
-              const dy = py - cy;
-              const dirX = Math.cos(angle);
-              const dirY = Math.sin(angle);
-              const proj = dx * dirX + dy * dirY;
-              if (proj > 0 && proj < 3000) {
-                const closestX = cx + proj * dirX;
-                const closestY = cy + proj * dirY;
-                const distToLaser = Math.hypot(px - closestX, py - closestY);
-                if (distToLaser < 22 && this.player.invulnTimer <= 0 && !this.player.isDead) {
-                  this.triggerPlayerHit();
-                }
-              }
-            });
           }
 
-          if (e.lastShot > 0.16) {
+          const phase28Step =
+            cycle >= 1.75 && cycle < 2.15 ? 1 :
+            cycle >= 2.45 && cycle < 2.85 ? 2 :
+            cycle >= 3.15 && cycle < 3.55 ? 3 :
+            0;
+          if (e.lastCycleIndex !== phase28Step) {
+            e.lastCycleIndex = phase28Step;
+            if (phase28Step > 0) sfx.laserBlast();
+          }
+
+          const degree20 = Math.PI / 9;
+          const firingOffsets =
+            phase28Step === 1 ? [0] :
+            phase28Step === 2 ? [-degree20, degree20] :
+            phase28Step === 3 ? [-degree20 * 2, degree20 * 2] :
+            [];
+
+          firingOffsets.forEach((offset) => {
+            const angle = e.laserAngle! + offset;
+            const dx = px - cx;
+            const dy = py - cy;
+            const dirX = Math.cos(angle);
+            const dirY = Math.sin(angle);
+            const proj = dx * dirX + dy * dirY;
+            if (proj > 0 && proj < 3000) {
+              const closestX = cx + proj * dirX;
+              const closestY = cy + proj * dirY;
+              const distToLaser = Math.hypot(px - closestX, py - closestY);
+              if (distToLaser < 24 && this.player.invulnTimer <= 0 && !this.player.isDead) {
+                this.triggerPlayerHit();
+              }
+            }
+          });
+
+          if (e.lastShot > 0.22) {
             e.lastShot = 0;
-            sfx.bossPatternFire();
-            for (let i = 0; i < 2; i++) {
-              const b = new Bullet();
-              b.x = Math.random() * this.canvas.width;
-              b.y = -20;
-              b.width = 18 + Math.random() * 10;
-              b.height = b.width;
-              b.vx = (Math.random() - 0.5) * 210;
-              b.vy = 330 + Math.random() * 140;
-              b.isEnemy = true;
-              b.type = i === 0 ? "heavy" : "pellet";
-              b.color = i === 0 ? "#f97316" : "#facc15";
-              this.bullets.push(b);
+            if (Math.random() < 0.55) sfx.bossPatternFire();
+            const meteorCount = Math.random() < 0.45 ? 2 : 1;
+            for (let i = 0; i < meteorCount; i++) {
+              this.meteors.push({
+                x: 26 + Math.random() * Math.max(1, this.canvas.width - 52),
+                y: -42 - Math.random() * 80,
+                radius: 15 + Math.random() * 15,
+                vx: (Math.random() - 0.5) * 170,
+                vy: 340 + Math.random() * 160,
+                hp: 999,
+                rotation: Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 3.2,
+                active: true,
+              });
             }
           }
+        } else if (e.phase === 47) {
+          this.runFinalSafeZoneBlast(e, dt);
+        } else if (e.phase === 48) {
+          this.runFinalAbsorptionField(e, dt);
+        } else if (e.phase === 49) {
+          this.runFinalAfterimageSlash(e, dt);
+        } else if (e.phase === 50) {
+          this.runFinalCompressionWalls(e, dt);
         } else if (e.phase === 32) {
           // Final Phase 32: Stellar Interceptor Spheres - delayed tracking tracking pellets
           e.x += e.vx * 0.05 * dt;
@@ -3118,22 +3448,21 @@ export class GameEngine {
             sfx.bossPatternFire();
             const cx = e.x + e.width / 2;
             const cy = e.y + e.height;
-            const px = this.player.x + this.player.width / 2;
-            const py = this.player.y + this.player.height / 2;
-            const angle = Math.atan2(py - cy, px - cx);
 
-            const count = 10;
+            const count = 18;
+            const baseAngle = Math.random() * Math.PI * 2;
             for (let i = 0; i < count; i++) {
-              const ang = angle + (i / count) * Math.PI * 2;
+              const ang = baseAngle + (i / count) * Math.PI * 2;
               const b = new Bullet();
               b.x = cx - 6;
               b.y = cy - 6;
               b.width = 12;
               b.height = 12;
-              b.vx = Math.cos(ang) * 125;
-              b.vy = Math.sin(ang) * 125;
+              b.vx = Math.cos(ang) * 150;
+              b.vy = Math.sin(ang) * 150;
               b.isEnemy = true;
               b.color = "#22d3ee";
+              b.visualType = "cosmic_plasma_core";
               this.bullets.push(b);
             }
           }
@@ -3159,31 +3488,6 @@ export class GameEngine {
               b.isEnemy = true;
               b.type = "colliding_orb";
               b.color = "#ec4899";
-              this.bullets.push(b);
-            }
-          }
-        } else if (e.phase === 36) {
-          // Final Phase 36: Anti-Shield Sonic Pulse - concentric fast shock rings
-          const targetX = this.canvas.width / 2 - e.width / 2;
-          e.x += (targetX - e.x) * dt;
-
-          if (e.lastShot > 0.58) {
-            e.lastShot = 0;
-            sfx.bossPatternFire();
-            const cx = e.x + e.width / 2;
-            const cy = e.y + e.height / 2;
-            const count = 30;
-            for (let i = 0; i < count; i++) {
-              const angle = (i / count) * Math.PI * 2;
-              const b = new Bullet();
-              b.x = cx - 5;
-              b.y = cy - 5;
-              b.width = 10;
-              b.height = 10;
-              b.vx = Math.cos(angle) * 320;
-              b.vy = Math.sin(angle) * 320;
-              b.isEnemy = true;
-              b.color = "#fbbf24";
               this.bullets.push(b);
             }
           }
@@ -4006,6 +4310,7 @@ export class GameEngine {
 
   private resetBossPattern(e: Enemy) {
     this.clearBossPatternHazards();
+    this.clearEnemyBulletsSilently();
     e.patternTimer = 0;
     e.shootTimer = 0;
     e.lastShot = 0;
@@ -4013,7 +4318,21 @@ export class GameEngine {
     e.burstCount = 0;
     e.laserAngle = undefined;
     e.lastCycleIndex = undefined;
+    e.laserSoundCycle = undefined;
     e.satellites = [];
+  }
+
+  private clearEnemyBulletsSilently() {
+    this.bullets = this.bullets.filter((b) => !b.isEnemy);
+  }
+
+  private playBossLaserSoundOncePerCycle(e: Enemy, timer: number, cycleLength: number, fireStart: number) {
+    const cycle = timer % cycleLength;
+    if (cycle < fireStart) return;
+    const cycleIndex = Math.floor(timer / cycleLength);
+    if (e.laserSoundCycle === cycleIndex) return;
+    e.laserSoundCycle = cycleIndex;
+    sfx.laserBlast();
   }
 
   private pickOverdriveBossPhase(): number {
@@ -4035,6 +4354,10 @@ export class GameEngine {
     if (phase === 21) return 8.8;
     if (phase === 23) return 6.8;
     if (phase === 24) return 6.2;
+    if (phase === 47) return 5.1;
+    if (phase === 48) return 6.4;
+    if (phase === 49) return 6.2;
+    if (phase === 50) return 6.2;
     if (phase === 44) return 5.6;
     if (phase === 45) return 5.8;
     if (phase === 46) return 5.9;
@@ -5897,6 +6220,397 @@ export class GameEngine {
     this.ctx.restore();
   }
 
+  private getBulletVisualType(b: Bullet): BulletVisualType {
+    if (b.visualType) return b.visualType;
+    if (b.type === "electric_missile") return "tesla_spine_missile";
+    if (b.type === "tail_rocket") return "comet_spear";
+    if (b.type === "recall_shard" || b.type === "crystal" || b.type === "ricochet") return "rift_shard";
+    if (b.type === "void_mine" || b.type === "parent_cross" || b.type === "parent_nsplit" || b.type === "splitting_pellet") return "cracked_core";
+    if (b.type === "gravity_ball" || b.type === "gravity_singularity" || b.type === "colliding_orb" || b.type === "heavy") return "core_orb";
+    if (b.type === "needle") return "comet_needle";
+    if (b.type === "homing" || b.type === "delayed") return "drone_missile";
+    if (b.type === "ring") return "star_beacon";
+    if (b.type === "dash_paint_bullet" || b.type === "dilation_bullet") return "phase_core";
+    if (b.type === "mine_orb") return "spore_glob";
+    if (b.type === "plasma") return "cosmic_plasma_core";
+    return "plasma_bolt";
+  }
+
+  private renderEnemyBulletVisual(b: Bullet, visualType: BulletVisualType, cx: number, cy: number) {
+    switch (visualType) {
+      case "comet_needle":
+        this.renderCometNeedle(b, cx, cy);
+        break;
+      case "core_orb":
+        this.renderCoreOrb(b, cx, cy);
+        break;
+      case "cracked_core":
+        this.renderCrackedCore(b, cx, cy);
+        break;
+      case "drone_missile":
+        this.renderDroneMissile(b, cx, cy);
+        break;
+      case "tesla_spark":
+        this.renderTeslaSpark(b, cx, cy);
+        break;
+      case "spore_glob":
+        this.renderSporeGlob(b, cx, cy);
+        break;
+      case "cosmic_plasma_core":
+        this.renderCosmicPlasmaCore(b, cx, cy);
+        break;
+      case "comet_spear":
+        this.renderCometSpear(b, cx, cy);
+        break;
+      case "tesla_spine_missile":
+        this.renderTeslaSpineMissile(b, cx, cy);
+        break;
+      case "rift_shard":
+        this.renderRiftShard(b, cx, cy);
+        break;
+      case "phase_core":
+        this.renderPhaseCore(b, cx, cy);
+        break;
+      case "star_beacon":
+        this.renderStarBeacon(b, cx, cy);
+        break;
+      default:
+        this.renderPlasmaBolt(b, cx, cy);
+    }
+  }
+
+  private renderPlasmaBolt(b: Bullet, cx: number, cy: number) {
+    const r = Math.max(b.width, b.height) * 1.4;
+    const grad = this.ctx.createRadialGradient(cx, cy, r * 0.12, cx, cy, r);
+    grad.addColorStop(0, "#ffffff");
+    grad.addColorStop(0.34, b.color);
+    grad.addColorStop(1, "rgba(15,23,42,0)");
+    this.ctx.fillStyle = grad;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.strokeStyle = b.color;
+    this.ctx.lineWidth = 1.25;
+    this.ctx.globalAlpha = 0.85;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2);
+    this.ctx.stroke();
+  }
+
+  private renderCometNeedle(b: Bullet, cx: number, cy: number) {
+    const angle = Math.atan2(b.vy, b.vx);
+    const length = Math.max(b.width, b.height) * 3.1;
+    const thickness = Math.max(4, Math.min(b.width, b.height) * 0.8);
+    this.ctx.translate(cx, cy);
+    this.ctx.rotate(angle);
+    this.ctx.shadowColor = b.color;
+    this.ctx.shadowBlur = 12;
+    this.ctx.fillStyle = "rgba(255,255,255,0.18)";
+    this.ctx.beginPath();
+    this.ctx.moveTo(length * 0.58, 0);
+    this.ctx.lineTo(-length * 0.52, -thickness * 1.45);
+    this.ctx.lineTo(-length * 0.2, 0);
+    this.ctx.lineTo(-length * 0.52, thickness * 1.45);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.fillStyle = b.color;
+    this.ctx.strokeStyle = "#ffffff";
+    this.ctx.lineWidth = 1.4;
+    this.ctx.beginPath();
+    this.ctx.moveTo(length * 0.52, 0);
+    this.ctx.lineTo(-length * 0.22, -thickness * 0.62);
+    this.ctx.lineTo(-length * 0.42, 0);
+    this.ctx.lineTo(-length * 0.22, thickness * 0.62);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+  }
+
+  private renderCoreOrb(b: Bullet, cx: number, cy: number) {
+    const r = Math.max(b.width, b.height) * 1.55;
+    const grad = this.ctx.createRadialGradient(cx, cy, r * 0.12, cx, cy, r);
+    grad.addColorStop(0, "#030712");
+    grad.addColorStop(0.48, "#1e1b4b");
+    grad.addColorStop(0.82, b.color);
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    this.ctx.fillStyle = grad;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.strokeStyle = "#f472b6";
+    this.ctx.lineWidth = 2;
+    this.ctx.globalAlpha = 0.85;
+    const spin = performance.now() * 0.008;
+    this.ctx.beginPath();
+    for (let i = 0; i < 4; i++) this.ctx.arc(cx, cy, r * 0.52, spin + i * Math.PI / 2, spin + i * Math.PI / 2 + 1.35);
+    this.ctx.stroke();
+  }
+
+  private renderCrackedCore(b: Bullet, cx: number, cy: number) {
+    const r = Math.max(b.width, b.height) * 1.08;
+    const spin = performance.now() * 0.004 + (b.age || 0) * 2;
+    this.ctx.translate(cx, cy);
+    this.ctx.rotate(spin);
+    this.ctx.shadowColor = b.color;
+    this.ctx.shadowBlur = 15;
+    this.ctx.fillStyle = "#042f2e";
+    this.ctx.strokeStyle = b.color;
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      const rr = i % 2 === 0 ? r * 1.18 : r * 0.56;
+      if (i === 0) this.ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      else this.ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.strokeStyle = "#ccfbf1";
+    this.ctx.lineWidth = 1;
+    this.ctx.beginPath();
+    this.ctx.moveTo(-r * 0.6, -r * 0.15);
+    this.ctx.lineTo(-r * 0.05, r * 0.2);
+    this.ctx.lineTo(r * 0.58, -r * 0.28);
+    this.ctx.moveTo(-r * 0.35, r * 0.48);
+    this.ctx.lineTo(r * 0.28, r * 0.1);
+    this.ctx.stroke();
+  }
+
+  private renderDroneMissile(b: Bullet, cx: number, cy: number) {
+    const angle = Math.atan2(b.vy, b.vx) + Math.PI / 2;
+    const w = Math.max(8, b.width * 0.75);
+    const h = Math.max(18, b.height * 1.4);
+    this.ctx.translate(cx, cy);
+    this.ctx.rotate(angle);
+    this.ctx.shadowColor = b.color;
+    this.ctx.shadowBlur = 12;
+    this.ctx.fillStyle = "rgba(255,255,255,0.16)";
+    this.ctx.beginPath();
+    this.ctx.ellipse(0, h * 0.12, w * 1.05, h * 0.8, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.fillStyle = "#020617";
+    this.ctx.strokeStyle = b.color;
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, -h * 0.62);
+    this.ctx.lineTo(w * 0.72, -h * 0.12);
+    this.ctx.lineTo(w * 0.44, h * 0.56);
+    this.ctx.lineTo(0, h * 0.34);
+    this.ctx.lineTo(-w * 0.44, h * 0.56);
+    this.ctx.lineTo(-w * 0.72, -h * 0.12);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.fillStyle = "#ffffff";
+    this.ctx.fillRect(-2, -h * 0.18, 4, h * 0.36);
+  }
+
+  private renderTeslaSpark(b: Bullet, cx: number, cy: number) {
+    const len = Math.max(b.width, b.height) * 2.4;
+    const angle = Math.atan2(b.vy, b.vx);
+    this.ctx.translate(cx, cy);
+    this.ctx.rotate(angle);
+    this.ctx.shadowColor = "#67e8f9";
+    this.ctx.shadowBlur = 15;
+    this.ctx.strokeStyle = b.color || "#67e8f9";
+    this.ctx.lineWidth = 2.4;
+    this.ctx.beginPath();
+    this.ctx.moveTo(-len * 0.5, 0);
+    for (let i = 1; i <= 5; i++) {
+      this.ctx.lineTo(-len * 0.5 + (len * i) / 5, (Math.random() - 0.5) * 12);
+    }
+    this.ctx.stroke();
+    this.ctx.strokeStyle = "#ffffff";
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
+  }
+
+  private renderSporeGlob(b: Bullet, cx: number, cy: number) {
+    const r = Math.max(b.width, b.height) * 1.2;
+    this.ctx.shadowColor = b.color;
+    this.ctx.shadowBlur = 12;
+    this.ctx.fillStyle = "rgba(134, 239, 172, 0.25)";
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r * 1.15, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.fillStyle = b.color;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r * 0.68, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < 3; i++) {
+      const a = performance.now() * 0.002 + i * 2.1;
+      this.ctx.beginPath();
+      this.ctx.arc(cx + Math.cos(a) * r * 0.42, cy + Math.sin(a) * r * 0.42, r * 0.12, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+  }
+
+  private renderCosmicPlasmaCore(b: Bullet, cx: number, cy: number) {
+    const r = Math.max(b.width, b.height) * 1.42;
+    const speed = Math.hypot(b.vx, b.vy) || 1;
+    const tailX = cx - (b.vx / speed) * r * 2.4;
+    const tailY = cy - (b.vy / speed) * r * 2.4;
+    const tail = this.ctx.createLinearGradient(tailX, tailY, cx, cy);
+    tail.addColorStop(0, "rgba(34,211,238,0)");
+    tail.addColorStop(1, "rgba(34,211,238,0.55)");
+    this.ctx.strokeStyle = tail;
+    this.ctx.lineWidth = r * 1.1;
+    this.ctx.beginPath();
+    this.ctx.moveTo(tailX, tailY);
+    this.ctx.lineTo(cx, cy);
+    this.ctx.stroke();
+    this.ctx.shadowColor = "#22d3ee";
+    this.ctx.shadowBlur = 18;
+    const grad = this.ctx.createRadialGradient(cx, cy, 1, cx, cy, r);
+    grad.addColorStop(0, "#ffffff");
+    grad.addColorStop(0.42, "#67e8f9");
+    grad.addColorStop(1, "rgba(125, 211, 252, 0)");
+    this.ctx.fillStyle = grad;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.strokeStyle = "#a78bfa";
+    this.ctx.lineWidth = 1.5;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r * 0.52, 0, Math.PI * 2);
+    this.ctx.stroke();
+  }
+
+  private renderCometSpear(b: Bullet, cx: number, cy: number) {
+    const angle = Math.atan2(b.vy, b.vx) + Math.PI / 2;
+    this.ctx.translate(cx, cy);
+    this.ctx.rotate(angle);
+    this.ctx.shadowColor = "#fb7185";
+    this.ctx.shadowBlur = 16;
+    this.ctx.fillStyle = "rgba(251,113,133,0.18)";
+    this.ctx.beginPath();
+    this.ctx.ellipse(0, 10, 12, 34, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.fillStyle = "#450a0a";
+    this.ctx.strokeStyle = "#fb7185";
+    this.ctx.lineWidth = 2.1;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, -24);
+    this.ctx.lineTo(10, -3);
+    this.ctx.lineTo(6, 20);
+    this.ctx.lineTo(0, 12);
+    this.ctx.lineTo(-6, 20);
+    this.ctx.lineTo(-10, -3);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.fillStyle = "#ffffff";
+    this.ctx.fillRect(-2.5, -9, 5, 14);
+  }
+
+  private renderTeslaSpineMissile(b: Bullet, cx: number, cy: number) {
+    const angle = Math.atan2(b.vy, b.vx) + Math.PI / 2;
+    this.ctx.translate(cx, cy);
+    this.ctx.rotate(angle);
+    this.ctx.shadowColor = "#a3e635";
+    this.ctx.shadowBlur = 18;
+    this.ctx.strokeStyle = "rgba(103,232,249,0.9)";
+    this.ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      this.ctx.beginPath();
+      this.ctx.moveTo((Math.random() - 0.5) * 10, 24 + i * 8);
+      this.ctx.lineTo((Math.random() - 0.5) * 20, 40 + i * 8);
+      this.ctx.stroke();
+    }
+    this.ctx.fillStyle = "#020617";
+    this.ctx.strokeStyle = "#a3e635";
+    this.ctx.lineWidth = 2.4;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, -25);
+    this.ctx.lineTo(12, -5);
+    this.ctx.lineTo(8, 18);
+    this.ctx.lineTo(3, 10);
+    this.ctx.lineTo(0, 26);
+    this.ctx.lineTo(-3, 10);
+    this.ctx.lineTo(-8, 18);
+    this.ctx.lineTo(-12, -5);
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.stroke();
+    this.ctx.strokeStyle = "#ffffff";
+    this.ctx.lineWidth = 1.2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(0, -16);
+    this.ctx.lineTo(0, 13);
+    this.ctx.moveTo(-7, -3);
+    this.ctx.lineTo(7, -3);
+    this.ctx.stroke();
+  }
+
+  private renderRiftShard(b: Bullet, cx: number, cy: number) {
+    const spin = performance.now() * 0.007 + cx * 0.01;
+    const r = Math.max(b.width, b.height) * 1.35;
+    this.ctx.translate(cx, cy);
+    this.ctx.rotate(spin);
+    this.ctx.shadowColor = b.color;
+    this.ctx.shadowBlur = 14;
+    this.ctx.fillStyle = "rgba(45,212,191,0.22)";
+    this.ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const rr = i % 2 === 0 ? r : r * 0.42;
+      if (i === 0) this.ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      else this.ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    this.ctx.closePath();
+    this.ctx.fill();
+    this.ctx.strokeStyle = "#ffffff";
+    this.ctx.lineWidth = 1.35;
+    this.ctx.stroke();
+    this.ctx.fillStyle = b.color;
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, r * 0.24, 0, Math.PI * 2);
+    this.ctx.fill();
+  }
+
+  private renderPhaseCore(b: Bullet, cx: number, cy: number) {
+    const w = b.width * 1.45;
+    const h = b.height * 1.45;
+    const frozen = b.type === "dilation_bullet" && b.dilationState === "frozen";
+    const jitter = frozen ? 4.5 : 2.0;
+    const gx = cx + (Math.random() - 0.5) * jitter;
+    const gy = cy + (Math.random() - 0.5) * jitter;
+    this.ctx.globalAlpha = 0.72;
+    this.ctx.fillStyle = "#22d3ee";
+    this.ctx.fillRect(gx - w / 2 - 3, gy - h / 2 + 1, w, h);
+    this.ctx.fillStyle = "#ef4444";
+    this.ctx.fillRect(gx - w / 2 + 2, gy - h / 2 - 2, w, h);
+    this.ctx.globalAlpha = 0.95;
+    this.ctx.fillStyle = b.color;
+    this.ctx.fillRect(gx - w / 2, gy - h / 2, w, h);
+    this.ctx.fillStyle = "#ffffff";
+    this.ctx.fillRect(gx - w * 0.22, gy - h * 0.22, w * 0.44, h * 0.44);
+  }
+
+  private renderStarBeacon(b: Bullet, cx: number, cy: number) {
+    const r = Math.max(b.width, b.height) * 1.45;
+    this.ctx.shadowColor = b.color;
+    this.ctx.shadowBlur = 14;
+    this.ctx.strokeStyle = b.color;
+    this.ctx.lineWidth = 4.8;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r * 0.72, 0, Math.PI * 2);
+    this.ctx.stroke();
+    this.ctx.strokeStyle = "#ffffff";
+    this.ctx.lineWidth = 1.4;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2);
+    this.ctx.stroke();
+    this.ctx.beginPath();
+    this.ctx.moveTo(cx - r, cy);
+    this.ctx.lineTo(cx + r, cy);
+    this.ctx.moveTo(cx, cy - r);
+    this.ctx.lineTo(cx, cy + r);
+    this.ctx.stroke();
+  }
+
   private renderBossPatternHazards() {
     const now = performance.now();
 
@@ -5909,14 +6623,24 @@ export class GameEngine {
       this.ctx.strokeStyle = "rgba(56, 189, 248, 0.55)";
       this.ctx.lineWidth = trail.width;
       this.ctx.beginPath();
-      this.ctx.moveTo(trail.x1, trail.y1);
-      this.ctx.lineTo(trail.x2, trail.y2);
+      for (let i = 0; i <= 12; i++) {
+        const t = i / 12;
+        const x = trail.x1 + (trail.x2 - trail.x1) * t + (Math.random() - 0.5) * 13;
+        const y = trail.y1 + (trail.y2 - trail.y1) * t + (Math.random() - 0.5) * 13;
+        if (i === 0) this.ctx.moveTo(x, y);
+        else this.ctx.lineTo(x, y);
+      }
       this.ctx.stroke();
       this.ctx.strokeStyle = "#ffffff";
       this.ctx.lineWidth = Math.max(3, trail.width * 0.22);
       this.ctx.beginPath();
-      this.ctx.moveTo(trail.x1, trail.y1);
-      this.ctx.lineTo(trail.x2, trail.y2);
+      for (let i = 0; i <= 8; i++) {
+        const t = i / 8;
+        const x = trail.x1 + (trail.x2 - trail.x1) * t + (Math.random() - 0.5) * 7;
+        const y = trail.y1 + (trail.y2 - trail.y1) * t + (Math.random() - 0.5) * 7;
+        if (i === 0) this.ctx.moveTo(x, y);
+        else this.ctx.lineTo(x, y);
+      }
       this.ctx.stroke();
       this.ctx.restore();
     });
@@ -5971,6 +6695,60 @@ export class GameEngine {
         this.ctx.stroke();
         this.ctx.restore();
       });
+    }
+
+    if (this.bossEntity?.phase === 28) {
+      const boss = this.bossEntity;
+      const cycle = (boss.shootTimer || 0) % 4.2;
+      const cx = boss.x + boss.width / 2;
+      const cy = boss.y + boss.height / 2;
+      const laserAngle = boss.laserAngle !== undefined ? boss.laserAngle : Math.PI / 2;
+      const degree20 = Math.PI / 9;
+      const offsets = [-degree20 * 2, -degree20, 0, degree20, degree20 * 2];
+
+      this.ctx.save();
+      offsets.forEach((offset, index) => {
+        const angle = laserAngle + offset;
+        const firing =
+          (offset === 0 && cycle >= 1.75 && cycle < 2.15) ||
+          (Math.abs(offset) === degree20 && cycle >= 2.45 && cycle < 2.85) ||
+          (Math.abs(offset) === degree20 * 2 && cycle >= 3.15 && cycle < 3.55);
+        const waiting = cycle < 3.55 && !firing;
+        if (!firing && !waiting) return;
+
+        if (firing) {
+          const hue = (performance.now() * 0.1 + index * 45) % 360;
+          this.ctx.strokeStyle = `hsla(${hue}, 85%, 60%, 0.88)`;
+          this.ctx.lineWidth = 40;
+          this.ctx.shadowColor = `hsla(${hue}, 90%, 50%, 0.9)`;
+          this.ctx.shadowBlur = 24;
+          this.ctx.setLineDash([]);
+        } else {
+          const centerBias = offset === 0 ? 1 : 0.65;
+          const blink = Math.floor(performance.now() / 110 + index) % 2 === 0;
+          this.ctx.strokeStyle = blink ? `rgba(56, 189, 248, ${0.42 * centerBias})` : `rgba(244, 63, 94, ${0.34 * centerBias})`;
+          this.ctx.lineWidth = offset === 0 ? 2.2 : 1.45;
+          this.ctx.shadowColor = "#38bdf8";
+          this.ctx.shadowBlur = cycle >= 1.35 ? 12 : 5;
+          this.ctx.setLineDash([7, 6]);
+        }
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx, cy);
+        this.ctx.lineTo(cx + Math.cos(angle) * 3000, cy + Math.sin(angle) * 3000);
+        this.ctx.stroke();
+
+        if (firing) {
+          this.ctx.strokeStyle = "#ffffff";
+          this.ctx.lineWidth = 11;
+          this.ctx.setLineDash([]);
+          this.ctx.beginPath();
+          this.ctx.moveTo(cx, cy);
+          this.ctx.lineTo(cx + Math.cos(angle) * 3000, cy + Math.sin(angle) * 3000);
+          this.ctx.stroke();
+        }
+      });
+      this.ctx.restore();
     }
 
     this.bossGridLasers.forEach((laser) => {
@@ -6143,6 +6921,119 @@ export class GameEngine {
       this.ctx.moveTo(dash.startX, dash.startY);
       this.ctx.lineTo(endX, endY);
       this.ctx.stroke();
+      this.ctx.restore();
+    }
+
+    this.bossSafeZoneBlasts.forEach((blast) => {
+      const firing = blast.age >= blast.warnTime;
+      const progress = firing
+        ? Math.min(1, (blast.age - blast.warnTime) / blast.fireTime)
+        : Math.min(1, blast.age / blast.warnTime);
+      this.ctx.save();
+      if (!firing) {
+        this.ctx.globalAlpha = 0.25 + Math.sin(now * 0.03) * 0.08;
+        this.ctx.fillStyle = "#ef4444";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.globalAlpha = 0.88;
+        this.ctx.strokeStyle = "#22c55e";
+        this.ctx.lineWidth = 4;
+        this.ctx.setLineDash([12, 8]);
+        this.ctx.beginPath();
+        this.ctx.arc(blast.x, blast.y, blast.radius * (0.82 + progress * 0.18), 0, Math.PI * 2);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+        this.ctx.fillStyle = "rgba(34, 197, 94, 0.14)";
+        this.ctx.beginPath();
+        this.ctx.arc(blast.x, blast.y, blast.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+      } else {
+        this.ctx.globalAlpha = 0.54 * (1 - progress * 0.45);
+        this.ctx.fillStyle = "#f43f5e";
+        this.ctx.beginPath();
+        this.ctx.rect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.arc(blast.x, blast.y, blast.radius, 0, Math.PI * 2, true);
+        this.ctx.fill("evenodd");
+        this.ctx.strokeStyle = "#ffffff";
+        this.ctx.lineWidth = 5;
+        this.ctx.beginPath();
+        this.ctx.arc(blast.x, blast.y, blast.radius, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+    });
+
+    this.bossAbsorbOrbs.forEach((orb) => {
+      this.ctx.save();
+      const r = 17 + Math.sin(now * 0.012 + orb.age * 4) * 3;
+      this.ctx.shadowColor = "#a78bfa";
+      this.ctx.shadowBlur = 18;
+      const grad = this.ctx.createRadialGradient(orb.x, orb.y, 2, orb.x, orb.y, r);
+      grad.addColorStop(0, "#ffffff");
+      grad.addColorStop(0.42, "#67e8f9");
+      grad.addColorStop(1, "rgba(167,139,250,0)");
+      this.ctx.fillStyle = grad;
+      this.ctx.beginPath();
+      this.ctx.arc(orb.x, orb.y, r, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.strokeStyle = "#a78bfa";
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.arc(orb.x, orb.y, r * 0.7, 0, Math.PI * 2);
+      this.ctx.stroke();
+      this.ctx.restore();
+    });
+
+    this.bossAfterimageSlashes.forEach((slash) => {
+      const firing = slash.age >= slash.warnTime;
+      const progress = firing
+        ? Math.min(1, (slash.age - slash.warnTime) / slash.fireTime)
+        : Math.max(0, Math.min(1, slash.age / slash.warnTime));
+      this.ctx.save();
+      if (!firing) {
+        this.ctx.globalAlpha = 0.22 + progress * 0.45;
+        this.ctx.strokeStyle = "#facc15";
+        this.ctx.lineWidth = 3 + progress * 3;
+        this.ctx.setLineDash([16, 8]);
+      } else {
+        this.ctx.globalAlpha = 1 - progress * 0.35;
+        this.ctx.strokeStyle = "#ffffff";
+        this.ctx.lineWidth = slash.width;
+        this.ctx.shadowColor = "#f43f5e";
+        this.ctx.shadowBlur = 24;
+        this.ctx.setLineDash([]);
+      }
+      this.ctx.beginPath();
+      this.ctx.moveTo(slash.x1, slash.y1);
+      this.ctx.lineTo(slash.x2, slash.y2);
+      this.ctx.stroke();
+      if (firing) {
+        this.ctx.strokeStyle = "#f43f5e";
+        this.ctx.lineWidth = 8;
+        this.ctx.beginPath();
+        this.ctx.moveTo(slash.x1, slash.y1);
+        this.ctx.lineTo(slash.x2, slash.y2);
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+    });
+
+    if (this.bossCompressionField) {
+      const field = this.bossCompressionField;
+      const progress = field.age < field.warnTime ? 0 : Math.min(1, (field.age - field.warnTime) / field.closeTime);
+      const inset = field.maxInset * progress;
+      const topInset = inset * 0.58;
+      this.ctx.save();
+      this.ctx.fillStyle = field.age < field.warnTime ? "rgba(250, 204, 21, 0.12)" : "rgba(244, 63, 94, 0.28)";
+      this.ctx.strokeStyle = field.age < field.warnTime ? "#facc15" : "#f43f5e";
+      this.ctx.shadowColor = "#f43f5e";
+      this.ctx.shadowBlur = 18;
+      this.ctx.fillRect(0, 0, inset, this.canvas.height);
+      this.ctx.fillRect(this.canvas.width - inset, 0, inset, this.canvas.height);
+      this.ctx.fillRect(0, 0, this.canvas.width, topInset);
+      this.ctx.fillRect(0, this.canvas.height - topInset, this.canvas.width, topInset);
+      this.ctx.lineWidth = 3;
+      this.ctx.setLineDash(field.age < field.warnTime ? [10, 8] : []);
+      this.ctx.strokeRect(inset, topInset, this.canvas.width - inset * 2, this.canvas.height - topInset * 2);
       this.ctx.restore();
     }
   }
@@ -6370,8 +7261,6 @@ export class GameEngine {
       }
     }
 
-    this.renderBossPatternHazards();
-
     // Enemies
     this.enemies.forEach((e) => {
       if (e.type === "boss") {
@@ -6542,53 +7431,49 @@ export class GameEngine {
           this.ctx.restore();
         }
 
-        if (e.phase === 28) {
-          const cycle = (e.shootTimer || 0) % 3.1;
+        if (false && e.phase === 28) {
+          const cycle = (e.shootTimer || 0) % 4.2;
           const cx = e.x + e.width / 2;
           const cy = e.y + e.height / 2;
           const laserAngle = e.laserAngle !== undefined ? e.laserAngle : Math.PI / 2;
-          const angles = [laserAngle - Math.PI / 6, laserAngle, laserAngle + Math.PI / 6];
+          const degree20 = Math.PI / 9;
+          const offsets = [-degree20 * 2, -degree20, 0, degree20, degree20 * 2];
 
           this.ctx.save();
-          angles.forEach((angle, index) => {
-            const isCenter = index === 1;
-            const centerFiring = isCenter && cycle >= 1.8 && cycle < 2.25;
-            const sideFiring = !isCenter && cycle >= 2.35 && cycle < 2.9;
-            if (cycle < 1.2) {
-              this.ctx.strokeStyle = isCenter ? "#38bdf8" : "rgba(56, 189, 248, 0.55)";
-              this.ctx.lineWidth = isCenter ? 2 : 1.4;
-              this.ctx.setLineDash([8, 4]);
-            } else if (cycle >= 1.2 && cycle < 1.8) {
-              const pulse = (isCenter ? 5 : 2.5) + Math.sin(performance.now() * 0.05 + index) * 1.8;
-              this.ctx.strokeStyle = isCenter ? "#f43f5e" : "rgba(244, 63, 94, 0.55)";
-              this.ctx.lineWidth = pulse;
-              this.ctx.shadowColor = "#f43f5e";
-              this.ctx.shadowBlur = 15;
-              this.ctx.setLineDash([]);
-            } else if (centerFiring || sideFiring) {
-              const hue = (performance.now() * 0.1 + index * 55) % 360;
-              this.ctx.strokeStyle = `hsla(${hue}, 85%, 60%, 0.85)`;
-              this.ctx.lineWidth = 38;
+          offsets.forEach((offset, index) => {
+            const angle = laserAngle + offset;
+            const firing =
+              (offset === 0 && cycle >= 1.75 && cycle < 2.15) ||
+              (Math.abs(offset) === degree20 && cycle >= 2.45 && cycle < 2.85) ||
+              (Math.abs(offset) === degree20 * 2 && cycle >= 3.15 && cycle < 3.55);
+            const waiting = cycle < 3.55 && !firing;
+            if (!firing && !waiting) return;
+
+            if (firing) {
+              const hue = (performance.now() * 0.1 + index * 45) % 360;
+              this.ctx.strokeStyle = `hsla(${hue}, 85%, 60%, 0.88)`;
+              this.ctx.lineWidth = 40;
               this.ctx.shadowColor = `hsla(${hue}, 90%, 50%, 0.9)`;
               this.ctx.shadowBlur = 24;
               this.ctx.setLineDash([]);
-            } else if (!isCenter && cycle >= 2.25 && cycle < 2.35) {
-              this.ctx.strokeStyle = "#f43f5e";
-              this.ctx.lineWidth = 4 + Math.sin(performance.now() * 0.06 + index) * 2;
-              this.ctx.shadowColor = "#f43f5e";
-              this.ctx.shadowBlur = 14;
-              this.ctx.setLineDash([]);
             } else {
-              return;
+              const centerBias = offset === 0 ? 1 : 0.65;
+              const blink = Math.floor(performance.now() / 110 + index) % 2 === 0;
+              this.ctx.strokeStyle = blink ? `rgba(56, 189, 248, ${0.42 * centerBias})` : `rgba(244, 63, 94, ${0.34 * centerBias})`;
+              this.ctx.lineWidth = offset === 0 ? 2.2 : 1.45;
+              this.ctx.shadowColor = "#38bdf8";
+              this.ctx.shadowBlur = cycle >= 1.35 ? 12 : 5;
+              this.ctx.setLineDash([7, 6]);
             }
             this.ctx.beginPath();
             this.ctx.moveTo(cx, cy);
             this.ctx.lineTo(cx + Math.cos(angle) * 3000, cy + Math.sin(angle) * 3000);
             this.ctx.stroke();
 
-            if (centerFiring || sideFiring) {
+            if (firing) {
               this.ctx.strokeStyle = "#ffffff";
-              this.ctx.lineWidth = 10;
+              this.ctx.lineWidth = 11;
+              this.ctx.setLineDash([]);
               this.ctx.beginPath();
               this.ctx.moveTo(cx, cy);
               this.ctx.lineTo(cx + Math.cos(angle) * 3000, cy + Math.sin(angle) * 3000);
@@ -6817,12 +7702,17 @@ export class GameEngine {
       }
     });
 
+    this.renderBossPatternHazards();
+
     // Bullets
     this.bullets.forEach((b) => {
       this.ctx.save();
       if (b.isEnemy) {
         const cx = b.x + b.width / 2;
         const cy = b.y + b.height / 2;
+        this.renderEnemyBulletVisual(b, this.getBulletVisualType(b), cx, cy);
+        this.ctx.restore();
+        return;
 
         if (b.type === "electric_missile") {
           const angle = Math.atan2(b.vy, b.vx) + Math.PI / 2;
@@ -7694,21 +8584,6 @@ export class GameEngine {
 
   spawnInitialDebris() {
     this.debrisCovers = [];
-    if (this.isSandbox) return; // No debris clutter in clean practice simulation sandbox
-    const count = 3;
-    const spacing = this.canvas.width / (count + 1);
-    for (let i = 0; i < count; i++) {
-      this.debrisCovers.push({
-        id: `debris_${i}`,
-        x: spacing * (i + 1) - 40,
-        y: this.canvas.height - 240,
-        width: 80,
-        height: 18,
-        hp: 150,
-        maxHp: 150,
-        active: true,
-      });
-    }
   }
 
   updateDebrisAndMeteors(dt: number) {

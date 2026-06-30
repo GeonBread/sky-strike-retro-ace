@@ -3,7 +3,7 @@ import { HelpCircle, Keyboard, Palette, Play, Shield, Smartphone, Trophy, Volume
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
-import { ShipColor } from "./types";
+import { GameState, ShipColor } from "./types";
 import { DevSandbox } from "./components/DevSandbox";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { LeaderboardPanel } from "./components/LeaderboardPanel";
@@ -131,6 +131,7 @@ function GameCanvas() {
       if (event.code === "ArrowLeft" || event.code === "KeyA") inputRef.current.left = true;
       if (event.code === "ArrowRight" || event.code === "KeyD") inputRef.current.right = true;
       if (event.code === "Space") inputRef.current.fire = true;
+      if (event.code === "ShiftLeft" || event.code === "ShiftRight" || event.code === "KeyB" || event.code === "KeyX") inputRef.current.useBomb = true;
       if (engineRef.current) engineRef.current.input = inputRef.current;
     };
 
@@ -141,6 +142,7 @@ function GameCanvas() {
       if (event.code === "ArrowLeft" || event.code === "KeyA") inputRef.current.left = false;
       if (event.code === "ArrowRight" || event.code === "KeyD") inputRef.current.right = false;
       if (event.code === "Space") inputRef.current.fire = false;
+      if (event.code === "ShiftLeft" || event.code === "ShiftRight" || event.code === "KeyB" || event.code === "KeyX") inputRef.current.useBomb = false;
       if (engineRef.current) engineRef.current.input = inputRef.current;
     };
 
@@ -337,6 +339,7 @@ function getRewardDetail(choice: string) {
 
 export default function App() {
   const { gameState, setGameState, stats, settings, updateSettings, shipColor, setShipColor } = useAppStore();
+  const [leaderboardReturnState, setLeaderboardReturnState] = useState<GameState>("MENU");
 
   useEffect(() => {
     sfx.init();
@@ -402,13 +405,27 @@ export default function App() {
               </div>
             </div>
 
-            <button onClick={() => setGameState("LEADERBOARD")} className="mt-8 text-xs font-mono font-semibold text-slate-500 hover:text-slate-300 underline underline-offset-4 transition-all duration-150">
+              <button
+                onClick={() => {
+                  setLeaderboardReturnState("MENU");
+                  setGameState("LEADERBOARD");
+                }}
+                className="mt-8 text-xs font-mono font-semibold text-slate-500 hover:text-slate-300 underline underline-offset-4 transition-all duration-150"
+              >
               랭킹 보기
             </button>
           </>
         )}
 
-        {gameState === "GAME_OVER" && <GameOverPanel onShare={handleShare} />}
+        {gameState === "GAME_OVER" && (
+          <GameOverPanel
+            onShare={handleShare}
+            onLeaderboard={() => {
+              setLeaderboardReturnState("GAME_OVER");
+              setGameState("LEADERBOARD");
+            }}
+          />
+        )}
 
         {gameState === "CUSTOMIZE" && (
           <div className="w-full flex flex-col items-center">
@@ -474,7 +491,7 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white mb-0.5">PC</h3>
-                  <p className="text-xs text-slate-400">방향키 또는 WASD로 이동하고 Space로 발사합니다.</p>
+                  <p className="text-xs text-slate-400">방향키/WASD 이동, Space 발사, Shift/B/X 폭탄.</p>
                 </div>
               </div>
             </div>
@@ -485,7 +502,7 @@ export default function App() {
           </div>
         )}
 
-        {gameState === "LEADERBOARD" && <LeaderboardPanel onBack={() => setGameState("MENU")} />}
+        {gameState === "LEADERBOARD" && <LeaderboardPanel onBack={() => setGameState(leaderboardReturnState)} />}
       </div>
 
       {gameState === "MENU" && (

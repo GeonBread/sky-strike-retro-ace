@@ -306,6 +306,63 @@ export class AudioSystem {
     osc.stop(this.ctx.currentTime + 0.15);
   }
 
+  laserBlast() {
+    if (!this.ctx || !this.sfxVolumeParams) return;
+
+    const beam = this.ctx.createOscillator();
+    const beamGain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    beam.type = "sawtooth";
+    beam.frequency.setValueAtTime(1100, this.ctx.currentTime);
+    beam.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.28);
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(1700, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(360, this.ctx.currentTime + 0.28);
+    beamGain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    beamGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.28);
+    beam.connect(filter);
+    filter.connect(beamGain);
+    beamGain.connect(this.sfxVolumeParams);
+    beam.start();
+    beam.stop(this.ctx.currentTime + 0.28);
+
+    const crackleSize = this.ctx.sampleRate * 0.08;
+    const buffer = this.ctx.createBuffer(1, crackleSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < crackleSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / crackleSize);
+    const crackle = this.ctx.createBufferSource();
+    const crackleGain = this.ctx.createGain();
+    const crackleFilter = this.ctx.createBiquadFilter();
+    crackle.buffer = buffer;
+    crackleFilter.type = "highpass";
+    crackleFilter.frequency.value = 2400;
+    crackleGain.gain.setValueAtTime(0.045, this.ctx.currentTime);
+    crackleGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+    crackle.connect(crackleFilter);
+    crackleFilter.connect(crackleGain);
+    crackleGain.connect(this.sfxVolumeParams);
+    crackle.start();
+    crackle.stop(this.ctx.currentTime + 0.08);
+  }
+
+  bossDash() {
+    if (!this.ctx || !this.sfxVolumeParams) return;
+
+    const sweep = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    sweep.type = "sawtooth";
+    sweep.frequency.setValueAtTime(90, this.ctx.currentTime);
+    sweep.frequency.exponentialRampToValueAtTime(540, this.ctx.currentTime + 0.22);
+    gain.gain.setValueAtTime(0.16, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+    sweep.connect(gain);
+    gain.connect(this.sfxVolumeParams);
+    sweep.start();
+    sweep.stop(this.ctx.currentTime + 0.22);
+
+    this.playNoise(0.12);
+  }
+
   startBossBgm() {
     this.stopBgm();
     if (!this.ctx) return;
