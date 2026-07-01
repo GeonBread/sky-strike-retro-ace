@@ -22,6 +22,7 @@ export interface CompletedRunSummary {
   durationMs: number;
   finishedAt: number;
   runSession: LeaderboardRunSession;
+  isNewHighScore?: boolean;
 }
 
 export interface LeaderboardEntry {

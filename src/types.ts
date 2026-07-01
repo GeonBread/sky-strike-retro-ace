@@ -5,6 +5,9 @@ export type ShipColor = 'blue' | 'red' | 'green' | 'yellow' | 'vanguard';
 export interface GameSettings {
   bgmVolume: number;
   sfxVolume: number;
+  playerShootVolume: number;
+  enemyHitVolume: number;
+  itemVolume: number;
   notifications: boolean;
 }
 

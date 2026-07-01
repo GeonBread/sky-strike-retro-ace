@@ -3,10 +3,15 @@ export class AudioSystem {
   bgmVolumeParams: GainNode | null = null;
   sfxVolumeParams: GainNode | null = null;
   bgmInterval: number | null = null;
+  bgmElement: HTMLAudioElement | null = null;
+  currentBgmTrack: string | null = null;
   isPlayingBgm = false;
 
   bgmVol = 0.5;
   sfxVol = 0.8;
+  playerShootVol = 1;
+  enemyHitVol = 1;
+  itemVol = 1;
 
   init() {
     if (this.ctx) return;
@@ -29,22 +34,34 @@ export class AudioSystem {
     this.sfxVol = sfx;
     if (this.bgmVolumeParams) this.bgmVolumeParams.gain.value = this.bgmVol;
     if (this.sfxVolumeParams) this.sfxVolumeParams.gain.value = this.sfxVol;
+    if (this.bgmElement) this.bgmElement.volume = this.bgmVol;
+  }
+
+  setCategoryVolumes(playerShoot: number, enemyHit: number, item: number) {
+    this.playerShootVol = playerShoot;
+    this.enemyHitVol = enemyHit;
+    this.itemVol = item;
   }
 
   pauseAll() {
     if (this.ctx && this.ctx.state === "running") {
       this.ctx.suspend();
     }
+    if (this.bgmElement && !this.bgmElement.paused) this.bgmElement.pause();
   }
 
   resumeAll() {
     if (this.ctx && this.ctx.state === "suspended") {
       this.ctx.resume();
     }
+    if (this.bgmElement && this.isPlayingBgm) {
+      this.bgmElement.play().catch(() => {});
+    }
   }
 
-  playOscillator(freq: number, type: OscillatorType, duration: number, slideFreq?: number) {
+  playOscillator(freq: number, type: OscillatorType, duration: number, slideFreq?: number, gainScale = 1) {
     if (!this.ctx || !this.sfxVolumeParams) return;
+    if (gainScale <= 0) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = type;
@@ -54,7 +71,7 @@ export class AudioSystem {
       osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
     }
 
-    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.3 * gainScale, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
 
     osc.connect(gain);
@@ -87,6 +104,7 @@ export class AudioSystem {
 
   shoot() {
     if (!this.ctx || !this.sfxVolumeParams) return;
+    if (this.playerShootVol <= 0) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     
@@ -95,7 +113,7 @@ export class AudioSystem {
     osc.frequency.setValueAtTime(600, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
 
-    gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.06 * this.playerShootVol, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
 
     osc.connect(gain);
@@ -107,6 +125,7 @@ export class AudioSystem {
 
   satelliteShoot() {
     if (!this.ctx || !this.sfxVolumeParams) return;
+    if (this.playerShootVol <= 0) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     
@@ -115,7 +134,7 @@ export class AudioSystem {
     osc.frequency.setValueAtTime(850, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.04);
 
-    gain.gain.setValueAtTime(0.015, this.ctx.currentTime); // quiet and subtle
+    gain.gain.setValueAtTime(0.015 * this.playerShootVol, this.ctx.currentTime); // quiet and subtle
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
 
     osc.connect(gain);
@@ -182,6 +201,7 @@ export class AudioSystem {
 
   enemyHit() {
     if (!this.ctx || !this.sfxVolumeParams) return;
+    if (this.enemyHitVol <= 0) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     
@@ -190,7 +210,7 @@ export class AudioSystem {
     osc.frequency.setValueAtTime(520, this.ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.06);
     
-    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.08 * this.enemyHitVol, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
     
     osc.connect(gain);
@@ -244,12 +264,13 @@ export class AudioSystem {
   }
 
   powerup() {
-    this.playOscillator(400, 'sine', 0.2, 800);
-    setTimeout(() => this.playOscillator(600, 'sine', 0.2, 1200), 100);
+    this.playOscillator(400, 'sine', 0.2, 800, this.itemVol);
+    setTimeout(() => this.playOscillator(600, 'sine', 0.2, 1200, this.itemVol), 100);
   }
   
   bossHit() {
     if (!this.ctx || !this.sfxVolumeParams) return;
+    if (this.enemyHitVol <= 0) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     
@@ -259,7 +280,7 @@ export class AudioSystem {
     osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.04);
     
     // Quiet, highly satisfying punchy click
-    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.05 * this.enemyHitVol, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
     
     osc.connect(gain);
@@ -274,7 +295,7 @@ export class AudioSystem {
     clink.type = 'sine';
     clink.frequency.setValueAtTime(1800, this.ctx.currentTime);
     clink.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.02);
-    clinkGain.gain.setValueAtTime(0.012, this.ctx.currentTime);
+    clinkGain.gain.setValueAtTime(0.012 * this.enemyHitVol, this.ctx.currentTime);
     clinkGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.02);
     clink.connect(clinkGain);
     clinkGain.connect(this.sfxVolumeParams);
@@ -363,7 +384,33 @@ export class AudioSystem {
     this.playNoise(0.12);
   }
 
+  startBgmForPhase(phase: number) {
+    const track =
+      phase >= 3
+        ? "/audio/3phase%20(Starfall%20Circuit).mp3"
+        : phase === 2
+          ? "/audio/2phase%20(Stellar%20Drift2).mp3"
+          : "/audio/1phase%20bgm%20(Stellar%20Drift1).mp3";
+
+    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.bgmElement.play().catch(() => {
+      this.isPlayingBgm = false;
+    });
+  }
+
   startBossBgm() {
+    this.startBgmForPhase(2);
+    return;
     this.stopBgm();
     if (!this.ctx) return;
     this.isPlayingBgm = true;
@@ -438,6 +485,8 @@ export class AudioSystem {
   }
 
   startBgm() {
+    this.startBgmForPhase(1);
+    return;
     if (this.isPlayingBgm || !this.ctx) return;
     this.isPlayingBgm = true;
     
@@ -479,6 +528,12 @@ export class AudioSystem {
 
   stopBgm() {
     this.isPlayingBgm = false;
+    if (this.bgmElement) {
+      this.bgmElement.pause();
+      this.bgmElement.currentTime = 0;
+      this.bgmElement = null;
+    }
+    this.currentBgmTrack = null;
     if (this.bgmInterval) {
       clearInterval(this.bgmInterval);
       this.bgmInterval = null;

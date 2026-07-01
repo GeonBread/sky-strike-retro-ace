@@ -29,7 +29,7 @@ const PLAYER_BULLET_SPEED_MULT = 1.16;
 const PLAYER_FIRE_INTERVAL = 0.075;
 const NORMAL_BOSS_PHASE_IDS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13];
 const OVERDRIVE_BOSS_PHASE_IDS = [14, 15, 16, 17, 18, 19, 42, 43, 44, 45, 46];
-const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 47, 48, 49, 50];
+const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 47, 48, 49, 32];
 
 interface ElectricTrail {
   x1: number;
@@ -107,6 +107,9 @@ interface BossAbsorbOrb {
   vy: number;
   hp: number;
   age: number;
+  targetX: number;
+  targetY: number;
+  retargetTimer: number;
   active: boolean;
 }
 
@@ -200,6 +203,10 @@ export class GameEngine {
   bossAfterimageSlashes: BossAfterimageSlash[] = [];
   bossCompressionField: BossCompressionField | null = null;
   playerPositionHistory: PlayerHistoryPoint[] = [];
+  bossClearTimer: number = 0;
+  bossClearX: number = 0;
+  bossClearY: number = 0;
+  bossClearLabel: string = "";
 
   bombActive: boolean = false;
   bombRadius: number = 0;
@@ -307,7 +314,7 @@ export class GameEngine {
     this.lastTime = performance.now();
     this.reqId = requestAnimationFrame((t) => this.loop(t));
     sfx.init();
-    sfx.startBgm();
+    sfx.startBgmForPhase(1);
   }
 
   stop() {
@@ -335,6 +342,20 @@ export class GameEngine {
 
     if (this.state === "STAGE_CLEAR_CHOICE") {
       this.updateParticles(dt);
+      return;
+    }
+
+    if (this.state === "BOSS_CLEAR_EXPLOSION") {
+      this.updateBossClearExplosion(dt);
+      return;
+    }
+
+    if (this.state === "BOSS_CLEAR_MESSAGE") {
+      this.updateParticles(dt);
+      this.bossClearTimer -= dt;
+      if (this.bossClearTimer <= 0) {
+        this.finishBossClearSequence();
+      }
       return;
     }
 
@@ -560,6 +581,99 @@ export class GameEngine {
     this.bossCompressionField = null;
   }
 
+  private clampBossToArena(e: Enemy) {
+    if (e.phase === 24 && this.bossDashState && (this.bossDashState.phase === "dash" || this.bossDashState.phase === "recover")) {
+      return;
+    }
+
+    const margin = 12;
+    const maxX = Math.max(margin, this.canvas.width - e.width - margin);
+    const minY = -e.height * 0.35;
+    const maxY = Math.max(minY, this.canvas.height * 0.52);
+
+    if (e.x < margin) {
+      e.x = margin;
+      e.vx = Math.abs(e.vx || 120);
+    } else if (e.x > maxX) {
+      e.x = maxX;
+      e.vx = -Math.abs(e.vx || 120);
+    }
+
+    if (e.y < minY) {
+      e.y = minY;
+      e.vy = Math.abs(e.vy || 0);
+    } else if (e.y > maxY) {
+      e.y = maxY;
+      e.vy = -Math.abs(e.vy || 0);
+    }
+  }
+
+  private beginBossClearSequence(e: Enemy) {
+    this.bossClearX = e.x + e.width / 2;
+    this.bossClearY = e.y + e.height / 2;
+    const clearedPhase = this.bossPhase3Active ? 3 : this.bossPhase2Active ? 2 : 1;
+    this.bossClearLabel = `PHASE ${clearedPhase} CLEAR`;
+    this.bossClearTimer = 5.0;
+    this.state = "BOSS_CLEAR_EXPLOSION";
+    this.bossActive = false;
+    this.bossEntity = null;
+    e.active = false;
+    this.enemies = this.enemies.filter((other) => other !== e);
+    this.clearAllEnemyBullets();
+    this.clearBossPatternHazards();
+    this.screenShakeIntensity = 18;
+    sfx.bossExplode();
+  }
+
+  private updateBossClearExplosion(dt: number) {
+    this.bossClearTimer -= dt;
+    this.screenShakeIntensity = Math.max(this.screenShakeIntensity, 10);
+    if (Math.random() < 0.18) {
+      const radiusX = 120 + Math.random() * 90;
+      const radiusY = 80 + Math.random() * 70;
+      const angle = Math.random() * Math.PI * 2;
+      const x = this.bossClearX + Math.cos(angle) * radiusX * Math.random();
+      const y = this.bossClearY + Math.sin(angle) * radiusY * Math.random();
+      const color = Math.random() < 0.45 ? "#fbbf24" : (Math.random() < 0.5 ? "#38bdf8" : "#c084fc");
+      this.spawnExplosion(x, y, color, 12 + Math.floor(Math.random() * 12));
+    }
+    if (Math.random() < 0.45) {
+      const p = new Particle();
+      p.x = this.bossClearX + (Math.random() - 0.5) * 220;
+      p.y = this.bossClearY + (Math.random() - 0.5) * 150;
+      p.vx = (Math.random() - 0.5) * 380;
+      p.vy = (Math.random() - 0.5) * 340;
+      p.color = Math.random() < 0.5 ? "#ffffff" : "#67e8f9";
+      p.size = 3 + Math.random() * 5;
+      p.life = p.maxLife = 0.55 + Math.random() * 0.65;
+      this.particles.push(p);
+    }
+    this.updateParticles(dt);
+
+    if (this.bossClearTimer <= 0) {
+      this.bossClearTimer = 2.0;
+      this.screenShakeIntensity = 0;
+      this.state = "BOSS_CLEAR_MESSAGE";
+    }
+  }
+
+  private finishBossClearSequence() {
+    if (this.isSandbox) {
+      this.state = "PLAYING";
+      return;
+    }
+
+    if (this.onStageClear) {
+      this.state = "STAGE_CLEAR_CHOICE";
+      this.onStageClear(this.getStageClearChoices(), (choice) => {
+        this.applyStageClearReward(choice);
+        this.startNextStageAfterReward();
+      });
+    } else {
+      this.startNextStageAfterReward();
+    }
+  }
+
   private updateBossPatternHazards(dt: number) {
     this.bossElectricTrails.forEach((trail) => {
       trail.life -= dt;
@@ -615,10 +729,11 @@ export class GameEngine {
 
     this.bossSuicideDrones.forEach((drone) => {
       drone.age += dt;
+      if (drone.age < 0) return;
       if (drone.state === "spawn" && drone.age >= 0.35) {
         drone.state = "wait";
       }
-      if (drone.state === "wait" && drone.age >= 2.0 + drone.order * 0.42) {
+      if (drone.state === "wait" && drone.age >= 1.1) {
         drone.state = "chase";
         drone.chaseTime = 0;
       }
@@ -661,14 +776,25 @@ export class GameEngine {
     this.bossAbsorbOrbs.forEach((orb) => {
       if (!this.bossEntity) return;
       orb.age += dt;
-      const tx = this.bossEntity.x + this.bossEntity.width / 2;
-      const ty = this.bossEntity.y + this.bossEntity.height / 2;
+      const bossTx = this.bossEntity.x + this.bossEntity.width / 2;
+      const bossTy = this.bossEntity.y + this.bossEntity.height / 2;
+      if (orb.age < 5.0) {
+        orb.retargetTimer -= dt;
+        if (orb.retargetTimer <= 0) {
+          orb.targetX = Math.max(54, Math.min(this.canvas.width - 54, bossTx + (Math.random() - 0.5) * 250));
+          orb.targetY = Math.max(130, Math.min(this.canvas.height * 0.55, bossTy + 76 + Math.random() * 150));
+          orb.retargetTimer = 0.38 + Math.random() * 0.55;
+        }
+      }
+      const tx = orb.age < 5.0 ? orb.targetX : bossTx;
+      const ty = orb.age < 5.0 ? orb.targetY : bossTy;
       const dx = tx - orb.x;
       const dy = ty - orb.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const speed = 56 + Math.min(120, orb.age * 38);
-      orb.vx += ((dx / dist) * speed - orb.vx) * 0.035;
-      orb.vy += ((dy / dist) * speed - orb.vy) * 0.035;
+      const speed = orb.age < 5.0 ? 92 : 70 + Math.min(150, (orb.age - 5.0) * 70);
+      const steer = orb.age < 5.0 ? 0.045 : 0.06;
+      orb.vx += ((dx / dist) * speed - orb.vx) * steer;
+      orb.vy += ((dy / dist) * speed - orb.vy) * steer;
       orb.x += orb.vx * dt;
       orb.y += orb.vy * dt;
 
@@ -688,10 +814,12 @@ export class GameEngine {
         }
       });
 
-      if (dist < 34 && orb.active) {
+      if (orb.age >= 5.0 && dist < 34 && orb.active) {
         orb.active = false;
         this.bossEntity.burstCount++;
-        this.spawnExplosion(tx, ty, "#a78bfa", 14);
+        const maxBossHp = this.bossPhase3Active ? 8000 : this.bossPhase2Active ? 5000 : 3000;
+        this.bossEntity.hp = Math.min(maxBossHp, this.bossEntity.hp + 200);
+        this.spawnExplosion(bossTx, bossTy, "#a78bfa", 14);
         sfx.bossHit();
       }
     });
@@ -860,16 +988,13 @@ export class GameEngine {
         { x: w - 95, y: h - 130 },
         { x: w * 0.34, y: 90 },
         { x: w * 0.66, y: 90 },
-        { x: w * 0.24, y: h - 90 },
-        { x: w * 0.5, y: h - 76 },
-        { x: w * 0.76, y: h - 90 },
       ];
       this.bossSuicideDrones = positions.map((pos, index) => ({
         x: pos.x,
         y: pos.y,
         vx: 0,
         vy: 0,
-        age: 0,
+        age: -index * 0.2,
         chaseTime: 0,
         state: "spawn",
         order: index,
@@ -1018,7 +1143,7 @@ export class GameEngine {
         y,
         radius: 54,
         age: 0,
-        warnTime: 2.05,
+        warnTime: 3.55,
         fireTime: 1.15,
         active: true,
       });
@@ -1033,13 +1158,11 @@ export class GameEngine {
     if (e.rapidFireCount === 0) {
       e.rapidFireCount = 1;
       e.burstCount = 0;
-      const positions = [
-        { x: 58, y: this.canvas.height * 0.28 },
-        { x: this.canvas.width - 58, y: this.canvas.height * 0.28 },
-        { x: 70, y: this.canvas.height * 0.65 },
-        { x: this.canvas.width - 70, y: this.canvas.height * 0.65 },
-        { x: this.canvas.width / 2, y: this.canvas.height - 96 },
-      ];
+      const cx = e.x + e.width / 2;
+      const positions = Array.from({ length: 5 }, (_, index) => ({
+        x: Math.max(52, Math.min(this.canvas.width - 52, cx + (index - 2) * 58 + (Math.random() - 0.5) * 34)),
+        y: 150 + Math.random() * Math.max(1, this.canvas.height * 0.36),
+      }));
       this.bossAbsorbOrbs = positions.map((pos) => ({
         x: pos.x,
         y: pos.y,
@@ -1047,6 +1170,9 @@ export class GameEngine {
         vy: 0,
         hp: 9,
         age: 0,
+        targetX: pos.x,
+        targetY: pos.y,
+        retargetTimer: 0.2 + Math.random() * 0.45,
         active: true,
       }));
       this.spawnExplosion(e.x + e.width / 2, e.y + e.height / 2, "#a78bfa", 18);
@@ -1063,6 +1189,9 @@ export class GameEngine {
         fireTime: 0.42,
         color: "#a78bfa",
       });
+      this.player.hp = 1;
+      this.player.invulnTimer = 0;
+      this.hitPlayerFromBossHazard();
       sfx.laserBlast();
     }
   }
@@ -1071,23 +1200,24 @@ export class GameEngine {
     e.x += e.vx * 0.08 * dt;
     if (e.x < 18 || e.x > this.canvas.width - e.width - 18) e.vx *= -1;
 
-    if (e.lastShot > 1.15) {
+    if (e.lastShot > 1.0) {
       e.lastShot = 0;
-      [0.5, 1.0, 1.5].forEach((age, index) => {
-        const p = this.getPlayerHistoryPoint(age);
-        const angle = -Math.PI / 2 + (index - 1) * 0.52 + (Math.random() - 0.5) * 0.18;
+      for (let index = 0; index < 2; index++) {
+        const px = 72 + Math.random() * Math.max(1, this.canvas.width - 144);
+        const py = 130 + Math.random() * Math.max(1, this.canvas.height - 240);
+        const angle = Math.random() * Math.PI;
         const len = 900;
         this.bossAfterimageSlashes.push({
-          x1: p.x - Math.cos(angle) * len,
-          y1: p.y - Math.sin(angle) * len,
-          x2: p.x + Math.cos(angle) * len,
-          y2: p.y + Math.sin(angle) * len,
+          x1: px - Math.cos(angle) * len,
+          y1: py - Math.sin(angle) * len,
+          x2: px + Math.cos(angle) * len,
+          y2: py + Math.sin(angle) * len,
           age: -index * 0.1,
-          warnTime: 0.62,
-          fireTime: 0.18,
-          width: 42,
+          warnTime: 0.54,
+          fireTime: 0.2,
+          width: 46,
         });
-      });
+      }
       sfx.bossPatternFire();
     }
   }
@@ -1105,25 +1235,6 @@ export class GameEngine {
         maxInset: Math.min(this.canvas.width, this.canvas.height) * 0.28,
       };
       sfx.bossPatternFire();
-    }
-
-    if (e.lastShot > 0.42 && this.bossCompressionField.age > 1.2) {
-      e.lastShot = 0;
-      const cx = e.x + e.width / 2;
-      const cy = e.y + e.height;
-      for (let i = -1; i <= 1; i++) {
-        const b = new Bullet();
-        b.x = cx - 5 + i * 24;
-        b.y = cy;
-        b.width = 10;
-        b.height = 18;
-        b.vx = i * 55;
-        b.vy = 270;
-        b.isEnemy = true;
-        b.type = "needle";
-        b.color = "#f43f5e";
-        this.bullets.push(b);
-      }
     }
   }
 
@@ -1154,7 +1265,7 @@ export class GameEngine {
   private runOverdriveSplitMineRain(e: Enemy, dt: number) {
     e.x += e.vx * 0.12 * dt;
     if (e.x < 15 || e.x > this.canvas.width - e.width - 15) e.vx *= -1;
-    if (e.lastShot > 0.5) {
+    if (e.lastShot > 0.62) {
       e.lastShot = 0;
       const cx = e.x + e.width / 2;
       const cy = e.y + e.height;
@@ -1188,29 +1299,31 @@ export class GameEngine {
     const cx = e.x + e.width / 2;
     const cy = e.y + e.height / 2;
 
-    if (e.patternTimer < 2.15 && e.lastShot > 0.07) {
+    if (e.patternTimer < 7.0 && e.lastShot > 0.095) {
       e.lastShot = 0;
-      const base = e.patternTimer * 5.8;
-      for (let i = 0; i < 5; i++) {
-        const angle = base + (i / 5) * Math.PI * 2 + (Math.random() - 0.5) * 0.16;
-        const speed = 420 + Math.random() * 180;
+      const count = 6;
+      const base = e.patternTimer * 4.2;
+      for (let i = 0; i < count; i++) {
+        const angle = base + (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.09;
+        const speed = i % 2 === 0 ? 340 + Math.random() * 70 : 545 + Math.random() * 85;
         const b = new Bullet();
         b.x = cx - 8;
         b.y = cy - 8;
-        b.width = 16;
-        b.height = 16;
+        b.width = 18;
+        b.height = 18;
         b.vx = Math.cos(angle) * speed;
-        b.vy = Math.sin(angle) * speed + 55;
+        b.vy = Math.sin(angle) * speed + 25;
         b.isEnemy = true;
         b.type = "recall_shard";
         b.color = i % 2 === 0 ? "#67e8f9" : "#2dd4bf";
-        b.age = -Math.random() * 0.35;
+        b.age = 0;
+        b.fuseTimer = Math.max(0.12, 7.0 - e.patternTimer);
         this.bullets.push(b);
       }
       sfx.bossPatternFire();
     }
 
-    if (e.patternTimer > 2.15 && e.patternTimer < 4.0 && Math.random() < 0.48) {
+    if (e.patternTimer > 8.0 && e.patternTimer < 12.2 && Math.random() < 0.65) {
       const p = new Particle();
       const angle = Math.random() * Math.PI * 2;
       const radius = 80 + Math.random() * 80;
@@ -1258,9 +1371,9 @@ export class GameEngine {
     e.x += e.vx * 0.16 * dt;
     if (e.x < 15 || e.x > this.canvas.width - e.width - 15) e.vx *= -1;
 
-    if (e.lastShot > 0.24) {
+    if (e.lastShot > 0.34) {
       e.lastShot = 0;
-      const dropCount = e.rapidFireCount % 3 === 0 ? 3 : 2;
+      const dropCount = e.rapidFireCount % 4 === 0 ? 2 : 1;
       e.rapidFireCount++;
 
       for (let i = 0; i < dropCount; i++) {
@@ -1270,10 +1383,10 @@ export class GameEngine {
         b.width = 14;
         b.height = 28;
         b.vx = (Math.random() - 0.5) * 38;
-        b.vy = 700 + Math.random() * 120;
+        b.vy = 640 + Math.random() * 90;
         b.isEnemy = true;
         b.type = "tail_rocket";
-        b.color = "#f43f5e";
+        b.color = "#38bdf8";
         b.shootTimer = 0;
         this.bullets.push(b);
       }
@@ -2047,10 +2160,19 @@ export class GameEngine {
         if (b.type === "recall_shard") {
           if (b.age === undefined) b.age = 0;
           b.age += dt;
+          if (b.fuseTimer === undefined) b.fuseTimer = 0;
+          b.fuseTimer -= dt;
+          const postStopAge = -b.fuseTimer;
 
-          if (b.age < 1.85) {
-            b.vx *= 0.972;
-            b.vy *= 0.972;
+          if (b.fuseTimer > 0) {
+            // Keep the original speed and direction during the 7 second spread phase.
+          } else if (postStopAge < 1.0) {
+            const brake = Math.pow(0.045, dt);
+            b.vx *= brake;
+            b.vy *= brake;
+          } else if (postStopAge < 2.0) {
+            b.vx = 0;
+            b.vy = 0;
           } else if (this.bossEntity) {
             const tx = this.bossEntity.x + this.bossEntity.width / 2;
             const ty = this.bossEntity.y + this.bossEntity.height / 2;
@@ -2059,17 +2181,17 @@ export class GameEngine {
             const dx = tx - bx;
             const dy = ty - by;
             const dist = Math.hypot(dx, dy) || 1;
-            const targetVx = (dx / dist) * 235;
-            const targetVy = (dy / dist) * 235;
-            b.vx += (targetVx - b.vx) * 0.045;
-            b.vy += (targetVy - b.vy) * 0.045;
+            const targetVx = (dx / dist) * 320;
+            const targetVy = (dy / dist) * 320;
+            b.vx += (targetVx - b.vx) * 0.065;
+            b.vy += (targetVy - b.vy) * 0.065;
             if (dist < 34) {
               b.active = false;
               this.spawnExplosion(tx, ty, "#67e8f9", 3);
             }
           }
 
-          if (b.age > 5.2) b.active = false;
+          if (b.age > 16.5) b.active = false;
         }
 
         if (b.type === "void_mine") {
@@ -2087,11 +2209,11 @@ export class GameEngine {
           const dist = Math.hypot(px - bx, py - by);
           if (b.fuseTimer <= 0 || dist < 70) {
             b.active = false;
-            this.spawnExplosion(bx, by, "#14b8a6", 18);
+            this.spawnExplosion(bx, by, "#14b8a6", 12);
             if (dist < 92) this.hitPlayerFromBossHazard();
 
-            for (let i = 0; i < 6; i++) {
-              const angle = (i / 6) * Math.PI * 2 + b.age * 2.0;
+            for (let i = 0; i < 5; i++) {
+              const angle = (i / 5) * Math.PI * 2 + b.age * 2.0;
               const shard = new Bullet();
               shard.x = bx - 5;
               shard.y = by - 5;
@@ -2174,15 +2296,15 @@ export class GameEngine {
 
       if (b.active && b.isEnemy && b.type === "tail_rocket") {
         b.shootTimer = (b.shootTimer || 0) + dt;
-        if (b.shootTimer > 0.06) {
+        if (b.shootTimer > 0.11) {
           b.shootTimer = 0;
           this.bossTailMines.push({
             x: prevCx,
             y: prevCy,
-            radius: 22,
+            radius: 20,
             age: 0,
-            warnTime: 0.4 + Math.random() * 0.3,
-            fireTime: 0.16,
+            warnTime: 0.34 + Math.random() * 0.18,
+            fireTime: 0.12,
           });
         }
       }
@@ -2277,13 +2399,13 @@ export class GameEngine {
         this.clearingForBoss = false;
         this.bossActive = true;
         this.state = "BOSSCUTSCENE";
-        sfx.startBossBgm();
         this.cutsceneTimer = 3.5;
         if (this.onCutsceneChange) this.onCutsceneChange(true);
 
         const b = new Enemy();
         b.type = "boss";
         const bossTier = Math.min(3, this.stage);
+        sfx.startBgmForPhase(bossTier);
         b.width = bossTier === 3 ? 200 : bossTier === 2 ? 150 : 120;
         b.height = bossTier === 3 ? 150 : bossTier === 2 ? 110 : 90;
         b.x = this.canvas.width / 2 - b.width / 2;
@@ -2423,6 +2545,8 @@ export class GameEngine {
           } else if (e.phase === 49) {
             if (this.bossAfterimageSlashes.length > 0) canTransition = false;
           } else if (e.phase === 50) {
+            if (this.bossCompressionField !== null) canTransition = false;
+          } else if (e.phase === 32) {
             if (this.bossCompressionField !== null) canTransition = false;
           } else if (e.phase === 44) {
             if (this.bullets.some((b) => b.active && b.isEnemy && b.type === "recall_shard")) canTransition = false;
@@ -3366,7 +3490,7 @@ export class GameEngine {
           const cy = e.y + e.height / 2;
           const px = this.player.x + this.player.width / 2;
           const py = this.player.y + this.player.height / 2;
-          const cycle = e.shootTimer % 4.2;
+          const cycle = e.shootTimer % 4.6;
 
           if (e.laserAngle === undefined) {
             e.laserAngle = Math.atan2(py - cy, px - cx);
@@ -3376,20 +3500,18 @@ export class GameEngine {
           }
 
           const phase28Step =
-            cycle >= 1.75 && cycle < 2.15 ? 1 :
-            cycle >= 2.45 && cycle < 2.85 ? 2 :
-            cycle >= 3.15 && cycle < 3.55 ? 3 :
+            cycle >= 2.35 && cycle < 2.7 ? 1 :
+            cycle >= 2.95 && cycle < 3.3 ? 2 :
             0;
           if (e.lastCycleIndex !== phase28Step) {
             e.lastCycleIndex = phase28Step;
             if (phase28Step > 0) sfx.laserBlast();
           }
 
-          const degree20 = Math.PI / 9;
+          const degree30 = Math.PI / 6;
           const firingOffsets =
             phase28Step === 1 ? [0] :
-            phase28Step === 2 ? [-degree20, degree20] :
-            phase28Step === 3 ? [-degree20 * 2, degree20 * 2] :
+            phase28Step === 2 ? [-degree30, degree30] :
             [];
 
           firingOffsets.forEach((offset) => {
@@ -3411,7 +3533,6 @@ export class GameEngine {
 
           if (e.lastShot > 0.22) {
             e.lastShot = 0;
-            if (Math.random() < 0.55) sfx.bossPatternFire();
             const meteorCount = Math.random() < 0.45 ? 2 : 1;
             for (let i = 0; i < meteorCount; i++) {
               this.meteors.push({
@@ -3436,20 +3557,19 @@ export class GameEngine {
         } else if (e.phase === 50) {
           this.runFinalCompressionWalls(e, dt);
         } else if (e.phase === 32) {
-          // Final Phase 32: Stellar Interceptor Spheres - delayed tracking tracking pellets
-          e.x += e.vx * 0.05 * dt;
-          if (e.x < 15 || e.x > this.canvas.width - e.width - 15) e.vx *= -1;
+          // Final Phase 32: dense radial fire with the merged spatial compression field.
+          this.runFinalCompressionWalls(e, dt);
 
           if (e.shootTimer === undefined) e.shootTimer = 0;
           e.shootTimer += dt;
 
-          if (e.lastShot > 0.58) {
+          if (e.lastShot > 0.48) {
             e.lastShot = 0;
             sfx.bossPatternFire();
             const cx = e.x + e.width / 2;
             const cy = e.y + e.height;
 
-            const count = 18;
+            const count = 25;
             const baseAngle = Math.random() * Math.PI * 2;
             for (let i = 0; i < count; i++) {
               const ang = baseAngle + (i / count) * Math.PI * 2;
@@ -3533,6 +3653,7 @@ export class GameEngine {
         } else if (e.phase === 46) {
           this.runOverdriveTailExplosions(e, dt);
         }
+        this.clampBossToArena(e);
       } else {
         // Normal Enemies Movement
         if (e.type === "stationary") {
@@ -3680,11 +3801,14 @@ export class GameEngine {
             const b = new Bullet();
             b.x = e.x + e.width / 2 + i * 10 - 4;
             b.y = e.y + e.height;
+            b.width = 12;
+            b.height = 24;
             b.vx = 0;
             b.vy = 220;
             b.isEnemy = true;
             b.type = "needle";
-            b.color = "#39ff14"; // Fluorescent green
+            b.color = "#facc15";
+            b.visualType = "comet_needle";
             this.bullets.push(b);
           }
         } else if (e.type === "circle_shooter") {
@@ -3995,6 +4119,12 @@ export class GameEngine {
     this.sideSpawnTimer = 99;
     this.clearingForBoss = false;
     this.bossActive = false;
+    this.player.powerLevel = Math.max(this.player.powerLevel, 5);
+    this.player.bombs = Math.max(this.player.bombs, 3);
+    this.player.satelliteCount = Math.max(this.player.satelliteCount, 3);
+    while (this.player.satelliteHps.length < this.player.satelliteCount) {
+      this.player.satelliteHps.push(3);
+    }
 
     // Wrap sandbox enemies that go off-screen bottom so they repeat their paths instead of getting deleted!
     if (this.sandboxMovementEnabled) {
@@ -4309,8 +4439,6 @@ export class GameEngine {
   }
 
   private resetBossPattern(e: Enemy) {
-    this.clearBossPatternHazards();
-    this.clearEnemyBulletsSilently();
     e.patternTimer = 0;
     e.shootTimer = 0;
     e.lastShot = 0;
@@ -4320,10 +4448,6 @@ export class GameEngine {
     e.lastCycleIndex = undefined;
     e.laserSoundCycle = undefined;
     e.satellites = [];
-  }
-
-  private clearEnemyBulletsSilently() {
-    this.bullets = this.bullets.filter((b) => !b.isEnemy);
   }
 
   private playBossLaserSoundOncePerCycle(e: Enemy, timer: number, cycleLength: number, fireStart: number) {
@@ -4354,13 +4478,14 @@ export class GameEngine {
     if (phase === 21) return 8.8;
     if (phase === 23) return 6.8;
     if (phase === 24) return 6.2;
-    if (phase === 47) return 5.1;
-    if (phase === 48) return 6.4;
+    if (phase === 47) return 6.6;
+    if (phase === 48) return 8.2;
     if (phase === 49) return 6.2;
     if (phase === 50) return 6.2;
-    if (phase === 44) return 5.6;
+    if (phase === 32) return 7.4;
+    if (phase === 44) return 12.8;
     if (phase === 45) return 5.8;
-    if (phase === 46) return 5.9;
+    if (phase === 46) return 7.0;
     if (phase >= 40 && phase <= 43) return 6.8;
     if (phase >= 14 && phase <= 19) return Math.random() * 2 + 5.5;
     if (phase >= 20 && phase <= 39) return Math.random() * 2.2 + 5.8;
@@ -4770,6 +4895,13 @@ export class GameEngine {
                 return;
               }
 
+              if (e.type === "boss") {
+                this.score += 10000;
+                if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+                this.beginBossClearSequence(e);
+                return;
+              }
+
               this.deactivateEnemy(e);
               if (e.type === "counter_on_death") {
                 const count = 10;
@@ -4789,23 +4921,18 @@ export class GameEngine {
                   this.bullets.push(blt);
                 }
               }
-              this.score +=
-                e.type === "boss" ? 10000 : e.type === "tank" ? 300 : 100;
+              this.score += e.type === "tank" ? 300 : 100;
               if (this.onScoreUpdate) this.onScoreUpdate(this.score);
 
               this.spawnExplosion(
                 e.x + e.width / 2,
                 e.y + e.height / 2,
-                e.type === "boss" ? "#fbbf24" : "#f43f5e",
-                e.type === "boss" ? 80 : 25,
+                "#f43f5e",
+                25,
               );
-              if (e.type === "boss") {
-                sfx.bossExplode();
-              } else {
-                sfx.enemyExplode();
-              }
+              sfx.enemyExplode();
 
-              if (Math.random() < 0.12 || e.type === "boss") {
+              if (Math.random() < 0.12) {
                 const pu = new PowerUp();
                 pu.x = e.x + e.width / 2;
                 pu.y = e.y + e.height / 2;
@@ -4814,22 +4941,6 @@ export class GameEngine {
                 pu.vy = 120;
                 pu.type = Math.random() < 0.18 ? "satellite" : (Math.random() < 0.30 ? "heal" : "power");
                 this.powerups.push(pu);
-              }
-
-              if (e.type === "boss") {
-                this.bossActive = false;
-                this.bossEntity = null;
-                if (!this.isSandbox) {
-                  if (this.onStageClear) {
-                    this.state = "STAGE_CLEAR_CHOICE";
-                    this.onStageClear(this.getStageClearChoices(), (choice) => {
-                      this.applyStageClearReward(choice);
-                      this.startNextStageAfterReward();
-                    });
-                  } else {
-                    this.startNextStageAfterReward();
-                  }
-                }
               }
             }
           }
@@ -6480,16 +6591,17 @@ export class GameEngine {
 
   private renderCometSpear(b: Bullet, cx: number, cy: number) {
     const angle = Math.atan2(b.vy, b.vx) + Math.PI / 2;
+    const color = b.color || "#38bdf8";
     this.ctx.translate(cx, cy);
     this.ctx.rotate(angle);
-    this.ctx.shadowColor = "#fb7185";
+    this.ctx.shadowColor = color;
     this.ctx.shadowBlur = 16;
-    this.ctx.fillStyle = "rgba(251,113,133,0.18)";
+    this.ctx.fillStyle = "rgba(14,165,233,0.18)";
     this.ctx.beginPath();
     this.ctx.ellipse(0, 10, 12, 34, 0, 0, Math.PI * 2);
     this.ctx.fill();
-    this.ctx.fillStyle = "#450a0a";
-    this.ctx.strokeStyle = "#fb7185";
+    this.ctx.fillStyle = "#082f49";
+    this.ctx.strokeStyle = color;
     this.ctx.lineWidth = 2.1;
     this.ctx.beginPath();
     this.ctx.moveTo(0, -24);
@@ -6699,21 +6811,21 @@ export class GameEngine {
 
     if (this.bossEntity?.phase === 28) {
       const boss = this.bossEntity;
-      const cycle = (boss.shootTimer || 0) % 4.2;
+      const cycle = (boss.shootTimer || 0) % 4.6;
       const cx = boss.x + boss.width / 2;
       const cy = boss.y + boss.height / 2;
       const laserAngle = boss.laserAngle !== undefined ? boss.laserAngle : Math.PI / 2;
-      const degree20 = Math.PI / 9;
-      const offsets = [-degree20 * 2, -degree20, 0, degree20, degree20 * 2];
+      const degree30 = Math.PI / 6;
+      const offsets = [0, -degree30, degree30];
 
       this.ctx.save();
       offsets.forEach((offset, index) => {
         const angle = laserAngle + offset;
         const firing =
-          (offset === 0 && cycle >= 1.75 && cycle < 2.15) ||
-          (Math.abs(offset) === degree20 && cycle >= 2.45 && cycle < 2.85) ||
-          (Math.abs(offset) === degree20 * 2 && cycle >= 3.15 && cycle < 3.55);
-        const waiting = cycle < 3.55 && !firing;
+          (offset === 0 && cycle >= 2.35 && cycle < 2.7) ||
+          (Math.abs(offset) === degree30 && cycle >= 2.95 && cycle < 3.3);
+        const prepping = cycle >= 1.35 && cycle < 2.35;
+        const waiting = cycle < 3.3 && !firing;
         if (!firing && !waiting) return;
 
         if (firing) {
@@ -6725,12 +6837,14 @@ export class GameEngine {
           this.ctx.setLineDash([]);
         } else {
           const centerBias = offset === 0 ? 1 : 0.65;
-          const blink = Math.floor(performance.now() / 110 + index) % 2 === 0;
-          this.ctx.strokeStyle = blink ? `rgba(56, 189, 248, ${0.42 * centerBias})` : `rgba(244, 63, 94, ${0.34 * centerBias})`;
-          this.ctx.lineWidth = offset === 0 ? 2.2 : 1.45;
-          this.ctx.shadowColor = "#38bdf8";
-          this.ctx.shadowBlur = cycle >= 1.35 ? 12 : 5;
-          this.ctx.setLineDash([7, 6]);
+          const blink = Math.floor(performance.now() / (prepping ? 70 : 130) + index) % 2 === 0;
+          this.ctx.strokeStyle = prepping
+            ? (blink ? `rgba(255, 255, 255, ${0.68 * centerBias})` : `rgba(244, 63, 94, ${0.56 * centerBias})`)
+            : `rgba(56, 189, 248, ${0.42 * centerBias})`;
+          this.ctx.lineWidth = prepping ? (offset === 0 ? 5 : 3.8) : (offset === 0 ? 2.2 : 1.45);
+          this.ctx.shadowColor = prepping ? "#f43f5e" : "#38bdf8";
+          this.ctx.shadowBlur = prepping ? 18 : 5;
+          this.ctx.setLineDash(prepping ? [] : [7, 6]);
         }
 
         this.ctx.beginPath();
@@ -6834,8 +6948,8 @@ export class GameEngine {
       if (!firing) {
         const pulse = Math.floor(now / 80) % 2 === 0;
         this.ctx.globalAlpha = pulse ? 0.8 : 0.32;
-        this.ctx.fillStyle = "#fb7185";
-        this.ctx.shadowColor = "#fb7185";
+        this.ctx.fillStyle = "#38bdf8";
+        this.ctx.shadowColor = "#38bdf8";
         this.ctx.shadowBlur = 10;
         this.ctx.beginPath();
         this.ctx.arc(mine.x, mine.y, 3 + progress * 6, 0, Math.PI * 2);
@@ -6847,8 +6961,8 @@ export class GameEngine {
         this.ctx.stroke();
       } else {
         this.ctx.globalAlpha = 1 - progress * 0.45;
-        this.ctx.fillStyle = "rgba(244, 63, 94, 0.42)";
-        this.ctx.shadowColor = "#f43f5e";
+        this.ctx.fillStyle = "rgba(14, 165, 233, 0.34)";
+        this.ctx.shadowColor = "#38bdf8";
         this.ctx.shadowBlur = 16;
         this.ctx.beginPath();
         this.ctx.arc(mine.x, mine.y, mine.radius * (0.75 + progress * 0.35), 0, Math.PI * 2);
@@ -6863,6 +6977,7 @@ export class GameEngine {
     });
 
     this.bossSuicideDrones.forEach((drone) => {
+      if (drone.age < 0) return;
       this.ctx.save();
       const spawnPulse = 18 + Math.sin((drone.age + drone.order) * 10) * 4;
       if (drone.state === "spawn" || drone.state === "wait") {
@@ -6931,13 +7046,17 @@ export class GameEngine {
         : Math.min(1, blast.age / blast.warnTime);
       this.ctx.save();
       if (!firing) {
-        this.ctx.globalAlpha = 0.25 + Math.sin(now * 0.03) * 0.08;
+        const urgent = blast.warnTime - blast.age <= 1.0;
+        const fastBlink = Math.floor(now / 55) % 2 === 0;
+        this.ctx.globalAlpha = urgent
+          ? (fastBlink ? 0.46 : 0.16)
+          : 0.25 + Math.sin(now * 0.03) * 0.08;
         this.ctx.fillStyle = "#ef4444";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.globalAlpha = 0.88;
-        this.ctx.strokeStyle = "#22c55e";
-        this.ctx.lineWidth = 4;
-        this.ctx.setLineDash([12, 8]);
+        this.ctx.globalAlpha = urgent ? 1 : 0.88;
+        this.ctx.strokeStyle = urgent && fastBlink ? "#ffffff" : "#22c55e";
+        this.ctx.lineWidth = urgent ? 6 : 4;
+        this.ctx.setLineDash(urgent ? [5, 4] : [12, 8]);
         this.ctx.beginPath();
         this.ctx.arc(blast.x, blast.y, blast.radius * (0.82 + progress * 0.18), 0, Math.PI * 2);
         this.ctx.stroke();
@@ -6989,30 +7108,39 @@ export class GameEngine {
         ? Math.min(1, (slash.age - slash.warnTime) / slash.fireTime)
         : Math.max(0, Math.min(1, slash.age / slash.warnTime));
       this.ctx.save();
+      const drawTear = (width: number, color: string, alpha: number, jitter: number) => {
+        const dx = slash.x2 - slash.x1;
+        const dy = slash.y2 - slash.y1;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+        this.ctx.globalAlpha = alpha;
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = width;
+        this.ctx.beginPath();
+        for (let i = 0; i <= 14; i++) {
+          const t = i / 14;
+          const wave = Math.sin(t * 31 + slash.x1 * 0.01 + now * 0.008) * jitter
+            + Math.sin(t * 19 + slash.y1 * 0.015) * jitter * 0.55;
+          const x = slash.x1 + dx * t + nx * wave;
+          const y = slash.y1 + dy * t + ny * wave;
+          if (i === 0) this.ctx.moveTo(x, y);
+          else this.ctx.lineTo(x, y);
+        }
+        this.ctx.stroke();
+      };
       if (!firing) {
-        this.ctx.globalAlpha = 0.22 + progress * 0.45;
-        this.ctx.strokeStyle = "#facc15";
-        this.ctx.lineWidth = 3 + progress * 3;
-        this.ctx.setLineDash([16, 8]);
+        this.ctx.setLineDash([12, 8]);
+        drawTear(3 + progress * 4, "#c084fc", 0.22 + progress * 0.48, 9);
       } else {
-        this.ctx.globalAlpha = 1 - progress * 0.35;
-        this.ctx.strokeStyle = "#ffffff";
-        this.ctx.lineWidth = slash.width;
         this.ctx.shadowColor = "#f43f5e";
         this.ctx.shadowBlur = 24;
         this.ctx.setLineDash([]);
+        drawTear(slash.width, "rgba(168, 85, 247, 0.72)", 1 - progress * 0.38, 15);
+        drawTear(12, "#ffffff", 0.95 - progress * 0.45, 7);
       }
-      this.ctx.beginPath();
-      this.ctx.moveTo(slash.x1, slash.y1);
-      this.ctx.lineTo(slash.x2, slash.y2);
-      this.ctx.stroke();
       if (firing) {
-        this.ctx.strokeStyle = "#f43f5e";
-        this.ctx.lineWidth = 8;
-        this.ctx.beginPath();
-        this.ctx.moveTo(slash.x1, slash.y1);
-        this.ctx.lineTo(slash.x2, slash.y2);
-        this.ctx.stroke();
+        drawTear(5, "#f43f5e", 0.85 - progress * 0.42, 18);
       }
       this.ctx.restore();
     });
@@ -7804,14 +7932,14 @@ export class GameEngine {
           const angle = Math.atan2(b.vy, b.vx) + Math.PI / 2;
           this.ctx.translate(cx, cy);
           this.ctx.rotate(angle);
-          this.ctx.shadowColor = "#fb7185";
+          this.ctx.shadowColor = b.color || "#38bdf8";
           this.ctx.shadowBlur = 16;
-          this.ctx.fillStyle = "rgba(251, 113, 133, 0.22)";
+          this.ctx.fillStyle = "rgba(14, 165, 233, 0.22)";
           this.ctx.beginPath();
           this.ctx.ellipse(0, 8, 12, 30, 0, 0, Math.PI * 2);
           this.ctx.fill();
-          this.ctx.fillStyle = "#450a0a";
-          this.ctx.strokeStyle = "#fb7185";
+          this.ctx.fillStyle = "#082f49";
+          this.ctx.strokeStyle = b.color || "#38bdf8";
           this.ctx.lineWidth = 2.1;
           this.ctx.beginPath();
           this.ctx.moveTo(0, -23);
@@ -8557,6 +8685,30 @@ export class GameEngine {
       });
     }
 
+    this.renderBossClearOverlay();
+    this.ctx.restore();
+  }
+
+  private renderBossClearOverlay() {
+    if (this.state !== "BOSS_CLEAR_MESSAGE") return;
+
+    const now = performance.now();
+    const pulse = 0.82 + Math.sin(now * 0.006) * 0.18;
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height * 0.42;
+
+    this.ctx.save();
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.shadowColor = "#38bdf8";
+    this.ctx.shadowBlur = 24;
+    this.ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+    this.ctx.font = "800 34px Inter, system-ui, sans-serif";
+    this.ctx.fillText(this.bossClearLabel || "PHASE CLEAR", cx, cy);
+    this.ctx.shadowBlur = 10;
+    this.ctx.fillStyle = "rgba(56, 189, 248, 0.78)";
+    this.ctx.font = "700 13px Inter, system-ui, sans-serif";
+    this.ctx.fillText("SYSTEM STABILIZED", cx, cy + 42);
     this.ctx.restore();
   }
 
@@ -8899,6 +9051,7 @@ export class GameEngine {
     this.powerups = [];
     this.clearBossPatternHazards();
     this.state = "PLAYING";
+    sfx.startBgmForPhase(1);
     
     this.waveTimer = 1.5;
     this.spawnTimer = 4.0;

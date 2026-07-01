@@ -134,6 +134,28 @@ export class OnlineLeaderboardRepository implements LeaderboardRepository {
     return mapRow(row);
   }
 
+  async deleteEntriesForPlayer(playerName: string): Promise<void> {
+    if (!this.isConfigured()) return;
+
+    const params = new URLSearchParams({
+      player_name: `eq.${playerName}`
+    });
+
+    const response = await fetch(`${getSupabaseUrl()}/rest/v1/leaderboard_scores?${params.toString()}`, {
+      method: "DELETE",
+      headers: {
+        apikey: getSupabaseAnonKey(),
+        authorization: `Bearer ${getSupabaseAnonKey()}`,
+        prefer: "return=minimal"
+      }
+    });
+
+    if (!response.ok) {
+      const message = await readErrorMessage(response);
+      throw new Error(message || "기존 온라인 기록 삭제에 실패했습니다.");
+    }
+  }
+
   async getRank(score: number): Promise<number | null> {
     if (!this.isConfigured()) return null;
 

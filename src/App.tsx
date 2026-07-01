@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { HelpCircle, Keyboard, Palette, Play, Shield, Smartphone, Trophy, Volume2, VolumeX } from "lucide-react";
+import { HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, Volume2, VolumeX } from "lucide-react";
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
@@ -7,7 +7,7 @@ import { GameState, ShipColor } from "./types";
 import { DevSandbox } from "./components/DevSandbox";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { LeaderboardPanel } from "./components/LeaderboardPanel";
-import { createLocalRunSession } from "./services/leaderboard";
+import { createLocalRunSession, sanitizePlayerName } from "./services/leaderboard";
 
 const MAX_HP = 3;
 
@@ -76,6 +76,8 @@ function GameCanvas() {
     engine.onScoreUpdate = setScore;
     engine.onGameOver = (finalScore) => {
       const finishedAt = Date.now();
+      const currentStats = useAppStore.getState().stats;
+      const isNewHighScore = finalScore > currentStats.highScore;
       setLastRun({
         score: finalScore,
         stage: engine.stage,
@@ -83,9 +85,9 @@ function GameCanvas() {
         durationMs: finishedAt - runStartedAtRef.current,
         finishedAt,
         runSession: runSessionRef.current,
+        isNewHighScore,
       });
       setGameState("GAME_OVER");
-      const currentStats = useAppStore.getState().stats;
       updateStats({
         highScore: Math.max(currentStats.highScore, finalScore),
         lastPlayed: Date.now(),
@@ -337,14 +339,61 @@ function getRewardDetail(choice: string) {
   };
 }
 
+function OptionSlider({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  return (
+    <label className="mb-3 block">
+      <div className="mb-1 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">
+        <span>{label}</span>
+        <span>{Math.round(value * 100)}%</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={1}
+        step={0.05}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full accent-cyan-400"
+      />
+    </label>
+  );
+}
+
+function getSavedPlayerName(): string {
+  if (typeof localStorage === "undefined") return "ACE";
+  return sanitizePlayerName(localStorage.getItem("retro_shooter_player_name") || "ACE");
+}
+
+function hasSavedPlayerName(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  return Boolean(localStorage.getItem("retro_shooter_player_name"));
+}
+
+function savePlayerName(name: string): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem("retro_shooter_player_name", sanitizePlayerName(name));
+}
+
 export default function App() {
   const { gameState, setGameState, stats, settings, updateSettings, shipColor, setShipColor } = useAppStore();
   const [leaderboardReturnState, setLeaderboardReturnState] = useState<GameState>("MENU");
+  const [showOptions, setShowOptions] = useState(false);
+  const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
+  const [needsName, setNeedsName] = useState(() => !hasSavedPlayerName());
 
   useEffect(() => {
     sfx.init();
     sfx.setVolumes(settings.bgmVolume, settings.sfxVolume);
+    sfx.setCategoryVolumes(settings.playerShootVolume, settings.enemyHitVolume, settings.itemVolume);
   }, [settings]);
+
+  const handleStartGame = () => {
+    const normalizedName = sanitizePlayerName(playerName);
+    setPlayerName(normalizedName);
+    savePlayerName(normalizedName);
+    setNeedsName(false);
+    setGameState("PLAYING");
+  };
 
   const handleShare = async () => {
     const text = `StarBlaze에서 ${stats.highScore}점을 기록했습니다.`;
@@ -388,7 +437,23 @@ export default function App() {
             </div>
 
             <div className="flex flex-col gap-4">
-              <MenuButton icon={Play} label="게임 시작" onClick={() => setGameState("PLAYING")} />
+              <div className="w-64">
+                <label className="block text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest mb-2">
+                  Nickname
+                </label>
+                <input
+                  value={playerName}
+                  onChange={(event) => setPlayerName(event.target.value)}
+                  maxLength={16}
+                  className="w-full h-11 bg-slate-950 border border-slate-800 focus:border-cyan-400 outline-none rounded-lg px-3 font-mono text-slate-100 text-center uppercase tracking-wider"
+                />
+                {needsName && (
+                  <div className="mt-2 text-center text-[10px] font-mono font-bold text-cyan-300">
+                    첫 플레이 전에 닉네임을 저장합니다.
+                  </div>
+                )}
+              </div>
+              <MenuButton icon={Play} label="게임 시작" onClick={handleStartGame} />
               <button
                 onClick={() => setGameState("DEV_MODE")}
                 className="flex items-center justify-center gap-2.5 w-64 p-3.5 bg-slate-950/95 hover:bg-slate-900 text-rose-400 hover:text-rose-300 rounded-xl transition-all duration-300 border border-slate-800 hover:border-rose-500/60 font-mono text-sm font-bold"
@@ -508,11 +573,33 @@ export default function App() {
       {gameState === "MENU" && (
         <div className="absolute bottom-4 right-4 flex gap-3">
           <button
+            onClick={() => setShowOptions((prev) => !prev)}
+            className="p-3 bg-slate-900 border border-slate-800 rounded-full text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 shadow-lg transition-all duration-200"
+            title="Options"
+          >
+            <Settings size={22} />
+          </button>
+          <button
             onClick={() => updateSettings({ bgmVolume: settings.bgmVolume > 0 ? 0 : 0.5, sfxVolume: settings.sfxVolume > 0 ? 0 : 0.8 })}
             className="p-3 bg-slate-900 border border-slate-800 rounded-full text-slate-400 hover:text-indigo-400 hover:border-indigo-500/50 shadow-lg transition-all duration-200"
+            title="Mute"
           >
             {settings.bgmVolume > 0 ? <Volume2 size={22} /> : <VolumeX size={22} />}
           </button>
+        </div>
+      )}
+
+      {gameState === "MENU" && showOptions && (
+        <div className="absolute bottom-20 right-4 z-20 w-72 rounded-xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="font-mono text-sm font-black text-slate-100">OPTIONS</div>
+            <button onClick={() => setShowOptions(false)} className="text-xs font-mono text-slate-500 hover:text-slate-200">CLOSE</button>
+          </div>
+          <OptionSlider label="BGM" value={settings.bgmVolume} onChange={(value) => updateSettings({ bgmVolume: value })} />
+          <OptionSlider label="SFX" value={settings.sfxVolume} onChange={(value) => updateSettings({ sfxVolume: value })} />
+          <OptionSlider label="Player Shot" value={settings.playerShootVolume} onChange={(value) => updateSettings({ playerShootVolume: value })} />
+          <OptionSlider label="Enemy Hit" value={settings.enemyHitVolume} onChange={(value) => updateSettings({ enemyHitVolume: value })} />
+          <OptionSlider label="Item Pickup" value={settings.itemVolume} onChange={(value) => updateSettings({ itemVolume: value })} />
         </div>
       )}
     </div>

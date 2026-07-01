@@ -32,6 +32,25 @@ const getInitialStats = (): PlayerStats => {
   return { highScore: 0, dailyChallengeCompleted: false, lastPlayed: Date.now() };
 };
 
+const DEFAULT_SETTINGS: GameSettings = {
+  bgmVolume: 0.5,
+  sfxVolume: 0.8,
+  playerShootVolume: 1,
+  enemyHitVolume: 1,
+  itemVolume: 1,
+  notifications: true
+};
+
+const getInitialSettings = (): GameSettings => {
+  const saved = localStorage.getItem('retro_shooter_settings_v1');
+  if (saved) {
+    try {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+    } catch (e) {}
+  }
+  return DEFAULT_SETTINGS;
+};
+
 export const useAppStore = create<AppState>((set) => ({
   gameState: 'MENU',
   setGameState: (gameState) => set({ gameState }),
@@ -45,8 +64,12 @@ export const useAppStore = create<AppState>((set) => ({
   shipColor: 'blue',
   setShipColor: (shipColor) => set({ shipColor }),
   
-  settings: { bgmVolume: 0.5, sfxVolume: 0.8, notifications: true },
-  updateSettings: (newSettings) => set((state) => ({ settings: { ...state.settings, ...newSettings } })),
+  settings: getInitialSettings(),
+  updateSettings: (newSettings) => set((state) => {
+    const settings = { ...state.settings, ...newSettings };
+    localStorage.setItem('retro_shooter_settings_v1', JSON.stringify(settings));
+    return { settings };
+  }),
   
   stats: getInitialStats(),
   updateStats: (newStats) => set((state) => {
