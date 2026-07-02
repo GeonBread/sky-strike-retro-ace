@@ -1,4 +1,5 @@
 export const ENEMY_TYPES = [
+  { id: 'assault_commander', name: 'Assault Commander', description: 'Stage 2/3 assault-sector midboss with strafe movement and dense aimed fan fire.', bullet: 'Cyan or purple phase-core fan' },
   { id: 'stationary', name: '기본 정지형 (Stationary)', description: '화면 상단에 정착하여 하단으로 일정 기간 탄환 조준 사격', bullet: '단발 조준탄 (Pink)' },
   { id: 'aimed', name: '조준 격발형 (Aimed)', description: '플레이어의 실시간 기체 좌표를 정확히 예측 조준사격', bullet: '조준 핑크탄' },
   { id: 'circle_shooter', name: '회전 중심 방사형 (Circle)', description: '제자리 회전하며 3갈래 나선형 탄각 방출', bullet: '원형 패턴 탄막' },

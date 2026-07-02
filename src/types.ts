@@ -1,4 +1,4 @@
-export type GameState = 'MENU' | 'PLAYING' | 'PAUSED' | 'GAME_OVER' | 'CUTSCENE' | 'TUTORIAL' | 'CUSTOMIZE' | 'LEADERBOARD' | 'DEV_MODE';
+export type GameState = 'MENU' | 'PLAYING' | 'PAUSED' | 'GAME_OVER' | 'CUTSCENE' | 'TUTORIAL' | 'CUSTOMIZE' | 'PROFILE' | 'LEADERBOARD' | 'DEV_MODE';
 
 export type ShipColor = 'blue' | 'red' | 'green' | 'yellow' | 'vanguard';
 

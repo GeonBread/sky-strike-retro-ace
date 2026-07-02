@@ -24,7 +24,7 @@ export const OVERDRIVE_BOSS_PHASES = [
   { id: 43, name: "Phase 43: Void Mine Rain", desc: "New teal mines detonate into distinct shard bursts." },
   { id: 44, name: "Phase 44: Recall Shard Absorption", desc: "Boss sprays shards outward, then draws them back in." },
   { id: 45, name: "Phase 45: Chain Warning Explosions", desc: "Warning zones chain into near-continuous map explosions." },
-  { id: 46, name: "Phase 46: Tail Rocket Blast", desc: "Fast rockets leave blinking tail mines that explode after delay." },
+  { id: 46, name: "Phase 46: Tail Rocket Blast", desc: "Denser fast rockets leave light blinking tail mines that explode after delay." },
 ];
 
 export const OVERLORD_BOSS_PHASES = [
@@ -35,7 +35,7 @@ export const OVERLORD_BOSS_PHASES = [
   { id: 28, name: "Phase 28: Meteor Prism Laser", desc: "Meteor rain plus dotted tracking, 1-second charge, then center and 30-degree side prism lasers." },
   { id: 47, name: "Phase 47: Safe Zone Cataclysm", desc: "One small safe circle survives a full-screen blast away from the boss." },
   { id: 48, name: "Phase 48: Absorption Field", desc: "Five energy orbs drift into the boss; destroy them before absorption." },
-  { id: 49, name: "Phase 49: Space Tear Duet", desc: "Two random space tears rip open every second." },
+  { id: 49, name: "Phase 49: Space Tear Duet", desc: "Two fast space tears rip open around the player position." },
   { id: 32, name: "Phase 32: Compression Sphere Barrage", desc: "Arena walls close inward while dense radial bullets fill the remaining space." },
   { id: 34, name: "Phase 34: Gatekeeper Portal Strike", desc: "Slower portal fire with collision spheres." },
   { id: 37, name: "Phase 37: Meltdown Fusion Hybrid", desc: "Repeated ricochet and straight-fire hybrid waves." },

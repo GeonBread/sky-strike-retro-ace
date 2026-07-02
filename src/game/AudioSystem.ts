@@ -47,14 +47,13 @@ export class AudioSystem {
     if (this.ctx && this.ctx.state === "running") {
       this.ctx.suspend();
     }
-    if (this.bgmElement && !this.bgmElement.paused) this.bgmElement.pause();
   }
 
   resumeAll() {
     if (this.ctx && this.ctx.state === "suspended") {
       this.ctx.resume();
     }
-    if (this.bgmElement && this.isPlayingBgm) {
+    if (this.bgmElement && this.isPlayingBgm && this.bgmElement.paused) {
       this.bgmElement.play().catch(() => {});
     }
   }

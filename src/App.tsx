@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, Volume2, VolumeX } from "lucide-react";
+import { HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, User, Volume2, VolumeX } from "lucide-react";
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
@@ -178,8 +178,9 @@ function GameCanvas() {
     engineRef.current.player.y = y - engineRef.current.player.height * 2.2;
   };
 
-  const bossMaxHp = bossPhase3Active ? 8000 : bossPhase2Active ? 5000 : 3000;
+  const bossMaxHp = bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = bossPhase3Active ? "BOSS PHASE 3" : bossPhase2Active ? "BOSS PHASE 2" : "BOSS PHASE 1";
+  const assaultLabel = stage >= 3 ? "OVERLORD ASSAULT" : stage === 2 ? "OVERDRIVE ASSAULT" : "ASSAULT SECTOR";
 
   return (
     <div className="relative w-full h-full max-w-2xl mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col" ref={containerRef}>
@@ -196,7 +197,7 @@ function GameCanvas() {
           <div className="font-mono text-2xl text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]">
             점수 {score.toString().padStart(6, "0")}
           </div>
-          <div className="font-mono text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">STAGE {stage}</div>
+          <div className="font-mono text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">{assaultLabel} {stage}</div>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex gap-1">
@@ -228,8 +229,8 @@ function GameCanvas() {
       {isBossCutscene && (
         <div className="absolute inset-0 flex items-center justify-center bg-red-950/45 pointer-events-none z-30">
           <div className="text-center p-6 border-y-2 border-red-500 bg-black/80 w-full">
-            <h1 className="text-5xl font-black text-rose-500 font-mono tracking-widest">BOSS STAGE</h1>
-            <p className="text-rose-200 font-mono text-sm mt-2">전투 함선 접근 중</p>
+            <h1 className="text-5xl font-black text-rose-500 font-mono tracking-widest">BOSS APPROACH</h1>
+            <p className="text-rose-200 font-mono text-sm mt-2">PHASE COMBAT READY</p>
           </div>
         </div>
       )}
@@ -364,14 +365,18 @@ function getSavedPlayerName(): string {
   return sanitizePlayerName(localStorage.getItem("retro_shooter_player_name") || "ACE");
 }
 
-function hasSavedPlayerName(): boolean {
-  if (typeof localStorage === "undefined") return false;
-  return Boolean(localStorage.getItem("retro_shooter_player_name"));
-}
-
 function savePlayerName(name: string): void {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem("retro_shooter_player_name", sanitizePlayerName(name));
+}
+
+function getOrCreatePlayerId(): string {
+  if (typeof localStorage === "undefined") return "LOCAL-PLAYER";
+  const saved = localStorage.getItem("retro_shooter_player_id");
+  if (saved) return saved;
+  const id = `LOCAL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  localStorage.setItem("retro_shooter_player_id", id);
+  return id;
 }
 
 export default function App() {
@@ -379,7 +384,7 @@ export default function App() {
   const [leaderboardReturnState, setLeaderboardReturnState] = useState<GameState>("MENU");
   const [showOptions, setShowOptions] = useState(false);
   const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
-  const [needsName, setNeedsName] = useState(() => !hasSavedPlayerName());
+  const [playerId] = useState(() => getOrCreatePlayerId());
 
   useEffect(() => {
     sfx.init();
@@ -391,7 +396,6 @@ export default function App() {
     const normalizedName = sanitizePlayerName(playerName);
     setPlayerName(normalizedName);
     savePlayerName(normalizedName);
-    setNeedsName(false);
     setGameState("PLAYING");
   };
 
@@ -437,22 +441,6 @@ export default function App() {
             </div>
 
             <div className="flex flex-col gap-4">
-              <div className="w-64">
-                <label className="block text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest mb-2">
-                  Nickname
-                </label>
-                <input
-                  value={playerName}
-                  onChange={(event) => setPlayerName(event.target.value)}
-                  maxLength={16}
-                  className="w-full h-11 bg-slate-950 border border-slate-800 focus:border-cyan-400 outline-none rounded-lg px-3 font-mono text-slate-100 text-center uppercase tracking-wider"
-                />
-                {needsName && (
-                  <div className="mt-2 text-center text-[10px] font-mono font-bold text-cyan-300">
-                    첫 플레이 전에 닉네임을 저장합니다.
-                  </div>
-                )}
-              </div>
               <MenuButton icon={Play} label="게임 시작" onClick={handleStartGame} />
               <button
                 onClick={() => setGameState("DEV_MODE")}
@@ -466,6 +454,9 @@ export default function App() {
                 </button>
                 <button onClick={() => setGameState("TUTORIAL")} className="p-3 bg-slate-950 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-1.5 text-xs font-mono font-bold text-slate-400 hover:text-slate-200 border border-slate-800 transition-all duration-200">
                   <HelpCircle size={18} className="text-cyan-400" /> 조작법
+                </button>
+                <button onClick={() => setGameState("PROFILE")} className="col-span-2 p-3 bg-slate-950 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-1.5 text-xs font-mono font-bold text-slate-400 hover:text-slate-200 border border-slate-800 transition-all duration-200">
+                  <User size={18} className="text-emerald-400" /> 프로필 설정
                 </button>
               </div>
             </div>
@@ -490,6 +481,53 @@ export default function App() {
               setGameState("LEADERBOARD");
             }}
           />
+        )}
+
+        {gameState === "PROFILE" && (
+          <div className="w-full flex flex-col items-center">
+            <h2 className="text-3xl font-black text-white font-mono mb-2">PROFILE</h2>
+            <p className="text-xs text-slate-400 font-semibold mb-6 text-center">랭킹에 사용할 호출명을 따로 관리합니다.</p>
+
+            <div className="w-full mb-5">
+              <label className="block text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest mb-2">
+                Nickname
+              </label>
+              <input
+                value={playerName}
+                onChange={(event) => setPlayerName(event.target.value)}
+                maxLength={16}
+                className="w-full h-12 bg-slate-950 border border-slate-800 focus:border-cyan-400 outline-none rounded-lg px-4 font-mono text-slate-100 text-center uppercase tracking-wider"
+              />
+            </div>
+
+            <div className="w-full mb-6 rounded-lg border border-slate-800 bg-slate-950/70 p-3">
+              <div className="text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest mb-1">Player ID</div>
+              <div className="break-all font-mono text-xs font-bold text-emerald-300">{playerId}</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 w-full">
+              <button
+                onClick={() => {
+                  const normalizedName = sanitizePlayerName(playerName);
+                  setPlayerName(normalizedName);
+                  savePlayerName(normalizedName);
+                  setGameState("MENU");
+                }}
+                className="px-5 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg font-mono transition-all duration-200"
+              >
+                저장
+              </button>
+              <button
+                onClick={() => {
+                  setPlayerName(getSavedPlayerName());
+                  setGameState("MENU");
+                }}
+                className="px-5 py-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-white font-bold rounded-lg font-mono transition-all duration-200"
+              >
+                돌아가기
+              </button>
+            </div>
+          </div>
         )}
 
         {gameState === "CUSTOMIZE" && (

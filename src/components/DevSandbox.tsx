@@ -312,7 +312,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
                     className={`py-2 px-1 rounded-xl border font-mono text-[10px] sm:text-xs flex flex-col items-center justify-center transition-all duration-200 ${!sandboxBossOverdrive && !sandboxBossPhase3 ? 'bg-indigo-950/40 border-cyan-500 text-cyan-400 font-black' : 'bg-slate-950 hover:bg-slate-900 border-slate-800 text-slate-400'}`}
                   >
                     <span className="font-extrabold text-[10px] sm:text-[11px]">기동 1페이즈</span>
-                    <span className="text-[8px] opacity-80 font-semibold text-slate-500">HP 3000 / 기본</span>
+                    <span className="text-[8px] opacity-80 font-semibold text-slate-500">HP 4000 / 기본</span>
                   </button>
                   <button
                     onClick={() => {
@@ -325,7 +325,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
                     className={`py-2 px-1 rounded-xl border font-mono text-[10px] sm:text-xs flex flex-col items-center justify-center transition-all duration-200 ${sandboxBossOverdrive && !sandboxBossPhase3 ? 'bg-indigo-950/40 border-rose-500 text-rose-400 font-black' : 'bg-slate-950 hover:bg-slate-900 border-slate-800 text-slate-400'}`}
                   >
                     <span className="font-extrabold text-[10px] sm:text-[11px]">과충전 2페이즈</span>
-                    <span className="text-[8px] opacity-80 font-semibold text-slate-500">HP 5000 / 광폭</span>
+                    <span className="text-[8px] opacity-80 font-semibold text-slate-500">HP 6000 / 광폭</span>
                   </button>
                   <button
                     onClick={() => {
@@ -342,7 +342,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
                     className={`py-2 px-1 rounded-xl border font-mono text-[10px] sm:text-xs flex flex-col items-center justify-center transition-all duration-200 ${sandboxBossPhase3 ? 'bg-purple-950/40 border-purple-500 text-purple-400 font-black animate-pulse' : 'bg-slate-950 hover:bg-slate-900 border-slate-800 text-slate-400'}`}
                   >
                     <span className="font-extrabold text-[10px] sm:text-[11px]">멸망 3페이즈</span>
-                    <span className="text-[8px] opacity-80 font-semibold text-slate-500">HP 8000 / 멸망</span>
+                    <span className="text-[8px] opacity-80 font-semibold text-slate-500">HP 9000 / 멸망</span>
                   </button>
                 </div>
               </div>

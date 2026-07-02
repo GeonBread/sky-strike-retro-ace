@@ -30,6 +30,7 @@ const PLAYER_FIRE_INTERVAL = 0.075;
 const NORMAL_BOSS_PHASE_IDS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13];
 const OVERDRIVE_BOSS_PHASE_IDS = [14, 15, 16, 17, 18, 19, 42, 43, 44, 45, 46];
 const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 47, 48, 49, 32];
+const getBossMaxHpForTier = (tier: number) => tier >= 3 ? 9000 : tier === 2 ? 6000 : 4000;
 
 interface ElectricTrail {
   x1: number;
@@ -175,6 +176,8 @@ export class GameEngine {
   state: EngineState = "PLAYING";
   score: number = 0;
   stage: number = 1;
+  nextBossScore: number = 15000;
+  assaultCommanderStage: number = 0;
   spawnTimer: number = 0;
   sideSpawnTimer: number = 8.0;
   waveTimer: number = 10.0;
@@ -207,6 +210,7 @@ export class GameEngine {
   bossClearX: number = 0;
   bossClearY: number = 0;
   bossClearLabel: string = "";
+  bossClearBoss: Enemy | null = null;
 
   bombActive: boolean = false;
   bombRadius: number = 0;
@@ -281,6 +285,8 @@ export class GameEngine {
     this.powerups = [];
     this.score = 0;
     this.stage = 1;
+    this.nextBossScore = 15000;
+    this.assaultCommanderStage = 0;
     this.bossActive = false;
     this.bossEntity = null;
     this.bossPhase2Triggered = false;
@@ -346,11 +352,19 @@ export class GameEngine {
     }
 
     if (this.state === "BOSS_CLEAR_EXPLOSION") {
+      this.updatePlayer(dt);
+      this.updatePlayerPositionHistory(dt);
+      this.updateBullets(dt);
+      this.updateDronesAndBehaviors(dt);
       this.updateBossClearExplosion(dt);
       return;
     }
 
     if (this.state === "BOSS_CLEAR_MESSAGE") {
+      this.updatePlayer(dt);
+      this.updatePlayerPositionHistory(dt);
+      this.updateBullets(dt);
+      this.updateDronesAndBehaviors(dt);
       this.updateParticles(dt);
       this.bossClearTimer -= dt;
       if (this.bossClearTimer <= 0) {
@@ -376,9 +390,9 @@ export class GameEngine {
         this.bossEntity.x += (bossTargetX - this.bossEntity.x) * 4 * dt;
         this.bossEntity.y += (bossTargetY - this.bossEntity.y) * 4 * dt;
 
-        // Charging HP bar from 0 to 5000
+        // Charging HP bar from 0 to the phase 2 max HP.
         const progress = Math.min(1.0, (3.5 - this.cutsceneTimer) / 3.5);
-        this.bossEntity.hp = Math.floor(progress * 5000);
+        this.bossEntity.hp = Math.floor(progress * getBossMaxHpForTier(2));
 
         // Cyber overdrive laser sparks
         if (Math.random() < 0.65) {
@@ -400,7 +414,7 @@ export class GameEngine {
         this.screenShakeIntensity = 0;
 
         if (this.bossEntity) {
-          this.bossEntity.hp = 5000;
+          this.bossEntity.hp = getBossMaxHpForTier(2);
           this.bossEntity.phase = 14;
           this.bossEntity.patternTimer = 0;
           this.bossEntity.phaseDuration = 7.5;
@@ -439,8 +453,8 @@ export class GameEngine {
         this.bossEntity.x += (bossTargetX - this.bossEntity.x) * 4 * dt;
         this.bossEntity.y += (bossTargetY - this.bossEntity.y) * 4 * dt;
 
-        // Charging HP bar from 0 to 8000
-        this.bossEntity.hp = Math.floor(progress * 8000);
+        // Charging HP bar from 0 to the phase 3 max HP.
+        this.bossEntity.hp = Math.floor(progress * getBossMaxHpForTier(3));
 
         // Cyber overdrive laser sparks of final grand form
         if (Math.random() < 0.85) {
@@ -463,7 +477,7 @@ export class GameEngine {
         this.screenShakeIntensity = 0;
 
         if (this.bossEntity) {
-          this.bossEntity.hp = 8000;
+          this.bossEntity.hp = getBossMaxHpForTier(3);
           this.bossEntity.width = 200;
           this.bossEntity.height = 150;
           this.assignBossPhase(this.bossEntity, 20);
@@ -614,11 +628,13 @@ export class GameEngine {
     const clearedPhase = this.bossPhase3Active ? 3 : this.bossPhase2Active ? 2 : 1;
     this.bossClearLabel = `PHASE ${clearedPhase} CLEAR`;
     this.bossClearTimer = 5.0;
+    this.bossClearBoss = e;
     this.state = "BOSS_CLEAR_EXPLOSION";
-    this.bossActive = false;
-    this.bossEntity = null;
-    e.active = false;
-    this.enemies = this.enemies.filter((other) => other !== e);
+    this.bossActive = true;
+    this.bossEntity = e;
+    e.hp = 0;
+    e.vx = 0;
+    e.vy = 0;
     this.clearAllEnemyBullets();
     this.clearBossPatternHazards();
     this.screenShakeIntensity = 18;
@@ -653,6 +669,13 @@ export class GameEngine {
     if (this.bossClearTimer <= 0) {
       this.bossClearTimer = 2.0;
       this.screenShakeIntensity = 0;
+      if (this.bossClearBoss) {
+        this.bossClearBoss.active = false;
+        this.enemies = this.enemies.filter((enemy) => enemy !== this.bossClearBoss);
+      }
+      this.bossClearBoss = null;
+      this.bossActive = false;
+      this.bossEntity = null;
       this.state = "BOSS_CLEAR_MESSAGE";
     }
   }
@@ -817,7 +840,7 @@ export class GameEngine {
       if (orb.age >= 5.0 && dist < 34 && orb.active) {
         orb.active = false;
         this.bossEntity.burstCount++;
-        const maxBossHp = this.bossPhase3Active ? 8000 : this.bossPhase2Active ? 5000 : 3000;
+        const maxBossHp = getBossMaxHpForTier(this.bossPhase3Active ? 3 : this.bossPhase2Active ? 2 : 1);
         this.bossEntity.hp = Math.min(maxBossHp, this.bossEntity.hp + 200);
         this.spawnExplosion(bossTx, bossTy, "#a78bfa", 14);
         sfx.bossHit();
@@ -1200,11 +1223,13 @@ export class GameEngine {
     e.x += e.vx * 0.08 * dt;
     if (e.x < 18 || e.x > this.canvas.width - e.width - 18) e.vx *= -1;
 
-    if (e.lastShot > 1.0) {
+    if (e.lastShot > 0.68) {
       e.lastShot = 0;
+      const playerCx = this.player.x + this.player.width / 2;
+      const playerCy = this.player.y + this.player.height / 2;
       for (let index = 0; index < 2; index++) {
-        const px = 72 + Math.random() * Math.max(1, this.canvas.width - 144);
-        const py = 130 + Math.random() * Math.max(1, this.canvas.height - 240);
+        const px = Math.max(70, Math.min(this.canvas.width - 70, playerCx + (Math.random() - 0.5) * 86));
+        const py = Math.max(130, Math.min(this.canvas.height - 92, playerCy + (Math.random() - 0.5) * 74));
         const angle = Math.random() * Math.PI;
         const len = 900;
         this.bossAfterimageSlashes.push({
@@ -1371,7 +1396,7 @@ export class GameEngine {
     e.x += e.vx * 0.16 * dt;
     if (e.x < 15 || e.x > this.canvas.width - e.width - 15) e.vx *= -1;
 
-    if (e.lastShot > 0.34) {
+    if (e.lastShot > 0.26) {
       e.lastShot = 0;
       const dropCount = e.rapidFireCount % 4 === 0 ? 2 : 1;
       e.rapidFireCount++;
@@ -2412,7 +2437,7 @@ export class GameEngine {
         b.y = -120;
         b.vx = 150;
         b.vy = 60;
-        b.hp = bossTier === 3 ? 8000 : bossTier === 2 ? 5000 : 3000;
+        b.hp = getBossMaxHpForTier(bossTier);
         b.phase = 0;
         this.bossPhase2Active = bossTier === 2;
         this.bossPhase3Active = bossTier === 3;
@@ -2485,9 +2510,9 @@ export class GameEngine {
             } else if (this.bossPhase3Active) {
               this.assignBossPhase(e, this.pickNextFinalBossPhase(e.phase));
             } else if (this.bossPhase2Active) {
-              this.assignBossPhase(e, this.pickOverdriveBossPhase());
+              this.assignBossPhase(e, this.pickOverdriveBossPhase(e.phase));
             } else {
-              this.assignBossPhase(e, this.pickNormalBossPhase());
+              this.assignBossPhase(e, this.pickNormalBossPhase(e.phase));
             }
           }
           if (Math.random() < 0.25) {
@@ -2550,13 +2575,6 @@ export class GameEngine {
             if (this.bossCompressionField !== null) canTransition = false;
           } else if (e.phase === 44) {
             if (this.bullets.some((b) => b.active && b.isEnemy && b.type === "recall_shard")) canTransition = false;
-          } else if (e.phase === 45) {
-            if (this.bossTimedExplosions.length > 0) canTransition = false;
-          } else if (e.phase === 46) {
-            if (
-              this.bossTailMines.length > 0 ||
-              this.bullets.some((b) => b.active && b.isEnemy && b.type === "tail_rocket")
-            ) canTransition = false;
           }
         }
 
@@ -2584,9 +2602,9 @@ export class GameEngine {
           } else if (this.bossPhase3Active) {
             this.assignBossPhase(e, this.pickNextFinalBossPhase(e.phase));
           } else if (this.bossPhase2Active) {
-            this.assignBossPhase(e, this.pickOverdriveBossPhase());
+            this.assignBossPhase(e, this.pickOverdriveBossPhase(e.phase));
           } else {
-            this.assignBossPhase(e, this.pickNormalBossPhase());
+            this.assignBossPhase(e, this.pickNormalBossPhase(e.phase));
           }
         }
 
@@ -3656,7 +3674,21 @@ export class GameEngine {
         this.clampBossToArena(e);
       } else {
         // Normal Enemies Movement
-        if (e.type === "stationary") {
+        const tier = this.getCombatTier();
+        if (e.type === "assault_commander") {
+          if (e.y < e.spawnPoint) {
+            e.y += e.vy * dt;
+          } else {
+            e.vy = 0;
+            e.patternTimer += dt;
+            e.x += e.vx * dt;
+            e.y = e.spawnPoint + Math.sin(e.patternTimer * (tier >= 3 ? 2.2 : 1.7)) * (tier >= 3 ? 18 : 12);
+            if (e.x < 16 || e.x > this.canvas.width - e.width - 16) {
+              e.x = Math.max(16, Math.min(this.canvas.width - e.width - 16, e.x));
+              e.vx *= -1;
+            }
+          }
+        } else if (e.type === "stationary") {
           e.y += e.vy * dt;
           if (e.y > 100) e.vy = 0; // stop moving
         } else if (e.type === "circle_shooter") {
@@ -3794,7 +3826,13 @@ export class GameEngine {
         }
 
         // Firing Behavior (much faster thresholds)
-        if (e.type === "stationary" && e.lastShot > 1.2) {
+        if (
+          e.type === "assault_commander" &&
+          e.lastShot > (tier >= 3 ? 0.42 : 0.56)
+        ) {
+          e.lastShot = 0;
+          this.fireAssaultCommander(e, tier);
+        } else if (e.type === "stationary" && e.lastShot > 1.2) {
           e.lastShot = 0;
           // Dual parallel vertical bullet beams (straight down)
           for (let i = -1; i <= 1; i += 2) {
@@ -4136,7 +4174,7 @@ export class GameEngine {
           }
           // Reset its health so it runs again
           if (e.type === "boss") {
-            e.hp = this.sandboxBossPhase3 ? 8000 : (this.sandboxBossOverdrive ? 5000 : 3000);
+            e.hp = getBossMaxHpForTier(this.sandboxBossPhase3 ? 3 : this.sandboxBossOverdrive ? 2 : 1);
             if (this.sandboxBossPhase3) {
               e.width = 200;
               e.height = 150;
@@ -4145,13 +4183,17 @@ export class GameEngine {
               e.height = 90;
             }
           } else {
-            e.hp = e.type === "tank" ? 80 : 30;
+            e.hp = e.type === "assault_commander" ? 230 : e.type === "tank" ? 80 : 30;
           }
           e.lastShot = 0;
           e.patternTimer = 0;
 
           // Setup standard real game initial velocity vectors:
-          if (e.type === "stationary") {
+          if (e.type === "assault_commander") {
+            e.vy = 145;
+            e.spawnPoint = 110;
+            e.vx = 125;
+          } else if (e.type === "stationary") {
             e.vy = 300;
             e.spawnPoint = 100;
             e.vx = 0;
@@ -4225,7 +4267,7 @@ export class GameEngine {
           dummy.x = this.canvas.width / 2 - 100;
           dummy.y = 80;
           dummy.spawnPoint = 80;
-          dummy.hp = 8000;
+          dummy.hp = getBossMaxHpForTier(3);
           dummy.phase = this.sandboxBossPhaseLock >= 1 ? this.sandboxBossPhaseLock : 20;
           dummy.bossStunTimer = 0;
           dummy.visualId = 1;
@@ -4240,7 +4282,7 @@ export class GameEngine {
           dummy.x = this.canvas.width / 2 - 60;
           dummy.y = 80;
           dummy.spawnPoint = 80;
-          dummy.hp = this.sandboxBossOverdrive ? 5000 : 3000;
+          dummy.hp = getBossMaxHpForTier(this.sandboxBossOverdrive ? 2 : 1);
           dummy.phase = this.sandboxBossPhaseLock >= 1 ? this.sandboxBossPhaseLock : (this.sandboxBossOverdrive ? 14 : 4);
           dummy.bossStunTimer = 0;
           dummy.visualId = 1;
@@ -4259,16 +4301,17 @@ export class GameEngine {
           dummy.vy = 0;
         }
       } else {
-        dummy.width = 36;
-        dummy.height = 36;
-        dummy.x = this.canvas.width / 2 - 18;
+        dummy.width = dummy.type === "assault_commander" ? 94 : 36;
+        dummy.height = dummy.type === "assault_commander" ? 66 : 36;
+        dummy.x = this.canvas.width / 2 - dummy.width / 2;
         dummy.y = 120;
         dummy.spawnPoint = 120;
         // Set moderate HP so it can be defeated and respawned easily to observe death counter patterns!
-        dummy.hp = dummy.type === "tank" ? 80 : 30;
+        dummy.hp = dummy.type === "assault_commander" ? 230 : dummy.type === "tank" ? 80 : 30;
 
         // Map unique visual ID ship designs for sandbox
         if (dummy.type === "stationary") dummy.visualId = 8;
+        else if (dummy.type === "assault_commander") dummy.visualId = 10;
         else if (dummy.type === "aimed") dummy.visualId = 9;
         else if (dummy.type === "circle_shooter") dummy.visualId = 2;
         else if (dummy.type === "v_360_shooter") dummy.visualId = 5;
@@ -4287,7 +4330,12 @@ export class GameEngine {
         else dummy.visualId = Math.floor(Math.random() * 10) + 1;
 
         if (this.sandboxMovementEnabled) {
-          if (dummy.type === "stationary") {
+          if (dummy.type === "assault_commander") {
+            dummy.y = -90;
+            dummy.vy = 145;
+            dummy.spawnPoint = 110;
+            dummy.vx = 125;
+          } else if (dummy.type === "stationary") {
             dummy.y = -60;
             dummy.vy = 300;
             dummy.spawnPoint = 100;
@@ -4352,7 +4400,8 @@ export class GameEngine {
           e.type !== "circle_shooter" &&
           e.type !== "split_cluster" &&
           e.type !== "mine_layer" &&
-          e.type !== "dash_paint"
+          e.type !== "dash_paint" &&
+          e.type !== "assault_commander"
         ) {
           e.x = this.canvas.width / 2 - e.width / 2;
           e.y = 120;
@@ -4459,18 +4508,22 @@ export class GameEngine {
     sfx.laserBlast();
   }
 
-  private pickOverdriveBossPhase(): number {
-    return OVERDRIVE_BOSS_PHASE_IDS[Math.floor(Math.random() * OVERDRIVE_BOSS_PHASE_IDS.length)];
+  private pickOverdriveBossPhase(currentPhase = -1): number {
+    const pool = OVERDRIVE_BOSS_PHASE_IDS.filter((phase) => phase !== currentPhase);
+    const choices = pool.length > 0 ? pool : OVERDRIVE_BOSS_PHASE_IDS;
+    return choices[Math.floor(Math.random() * choices.length)];
   }
 
-  private pickNormalBossPhase(): number {
-    return NORMAL_BOSS_PHASE_IDS[Math.floor(Math.random() * NORMAL_BOSS_PHASE_IDS.length)];
+  private pickNormalBossPhase(currentPhase = -1): number {
+    const pool = NORMAL_BOSS_PHASE_IDS.filter((phase) => phase !== currentPhase);
+    const choices = pool.length > 0 ? pool : NORMAL_BOSS_PHASE_IDS;
+    return choices[Math.floor(Math.random() * choices.length)];
   }
 
   private pickNextFinalBossPhase(currentPhase: number): number {
-    const currentIndex = FINAL_BOSS_PHASE_SEQUENCE.indexOf(currentPhase);
-    if (currentIndex < 0) return FINAL_BOSS_PHASE_SEQUENCE[0];
-    return FINAL_BOSS_PHASE_SEQUENCE[(currentIndex + 1) % FINAL_BOSS_PHASE_SEQUENCE.length];
+    const pool = FINAL_BOSS_PHASE_SEQUENCE.filter((phase) => phase !== currentPhase);
+    const choices = pool.length > 0 ? pool : FINAL_BOSS_PHASE_SEQUENCE;
+    return choices[Math.floor(Math.random() * choices.length)];
   }
 
   private getBossPhaseDuration(phase: number): number {
@@ -4484,7 +4537,7 @@ export class GameEngine {
     if (phase === 50) return 6.2;
     if (phase === 32) return 7.4;
     if (phase === 44) return 12.8;
-    if (phase === 45) return 5.8;
+    if (phase === 45) return 7.0;
     if (phase === 46) return 7.0;
     if (phase >= 40 && phase <= 43) return 6.8;
     if (phase >= 14 && phase <= 19) return Math.random() * 2 + 5.5;
@@ -4921,18 +4974,18 @@ export class GameEngine {
                   this.bullets.push(blt);
                 }
               }
-              this.score += e.type === "tank" ? 300 : 100;
+              this.score += e.type === "assault_commander" ? 2500 : e.type === "tank" ? 300 : 100;
               if (this.onScoreUpdate) this.onScoreUpdate(this.score);
 
               this.spawnExplosion(
                 e.x + e.width / 2,
                 e.y + e.height / 2,
-                "#f43f5e",
-                25,
+                e.type === "assault_commander" ? "#22d3ee" : "#f43f5e",
+                e.type === "assault_commander" ? 48 : 25,
               );
               sfx.enemyExplode();
 
-              if (Math.random() < 0.12) {
+              if (Math.random() < (e.type === "assault_commander" ? 0.75 : 0.12)) {
                 const pu = new PowerUp();
                 pu.x = e.x + e.width / 2;
                 pu.y = e.y + e.height / 2;
@@ -4954,7 +5007,7 @@ export class GameEngine {
         this.player.invulnTimer <= 0 &&
         this.intersects(this.player, e)
       ) {
-        if (e.type !== "boss") {
+        if (e.type !== "boss" && e.type !== "assault_commander") {
           this.deactivateEnemy(e);
           this.spawnExplosion(
             e.x + e.width / 2,
@@ -5095,21 +5148,41 @@ export class GameEngine {
     this.spawnTimer -= dt;
     this.sideSpawnTimer -= dt;
     this.waveTimer -= dt;
+    const tier = this.getCombatTier();
+    const assaultCommanderActive = this.enemies.some(
+      (e) => e.active && e.type === "assault_commander",
+    );
 
     if (
-      this.score >= this.stage * 15000 &&
+      this.stage >= 2 &&
+      this.assaultCommanderStage !== this.stage &&
+      this.score >= this.nextBossScore - (tier >= 3 ? 9000 : 7000) &&
+      !assaultCommanderActive
+    ) {
+      this.assaultCommanderStage = this.stage;
+      this.spawnAssaultCommander(tier);
+      this.waveTimer = Math.max(this.waveTimer, 4.5);
+      this.spawnTimer = Math.max(this.spawnTimer, 1.1);
+      return;
+    }
+
+    if (
+      this.score >= this.nextBossScore &&
       !this.bossActive &&
-      !this.clearingForBoss
+      !this.clearingForBoss &&
+      !assaultCommanderActive
     ) {
       this.clearingForBoss = true;
       return;
     }
 
     if (this.waveTimer <= 0) {
-      this.waveTimer = Math.random() * 7 + 10;
-      const tier = this.getCombatTier();
+      this.waveTimer =
+        Math.random() * (tier === 1 ? 7 : tier === 2 ? 5 : 3.8) +
+        (tier === 1 ? 10 : tier === 2 ? 7.2 : 5.6);
       const wavePoolSize = tier === 1 ? 8 : tier === 2 ? 14 : 18;
       const waveType = Math.floor(Math.random() * wavePoolSize);
+      const waveStartIndex = this.enemies.length;
       if (waveType === 0) {
         // Horizontal Row - fast deploy across the screen
         const count = 5;
@@ -5506,15 +5579,23 @@ export class GameEngine {
           this.enemies.push(e);
         }
       }
+      this.enemies.slice(waveStartIndex).forEach((enemy) => {
+        this.scaleAssaultEnemy(enemy, tier, tier >= 3 && Math.random() < 0.25);
+      });
     }
 
     if (this.sideSpawnTimer <= 0) {
-      this.sideSpawnTimer = Math.random() * 5 + 6;
+      this.sideSpawnTimer = Math.max(
+        3.2,
+        Math.random() * (tier === 1 ? 5 : tier === 2 ? 3.8 : 3) +
+          (tier === 1 ? 6 : tier === 2 ? 4.5 : 3.7),
+      );
       // side squads
       const isLeft = Math.random() > 0.5;
       const startX = isLeft ? -50 : this.canvas.width + 50;
-      const vx = isLeft ? 350 : -350;
-      for (let i = 0; i < 5; i++) {
+      const vx = (isLeft ? 350 : -350) + (isLeft ? 1 : -1) * (tier - 1) * 45;
+      const count = tier >= 3 ? 7 : tier === 2 ? 6 : 5;
+      for (let i = 0; i < count; i++) {
         const e = new Enemy();
         e.x = startX + (isLeft ? -i * 60 : i * 60);
         e.y = 100 + i * 20;
@@ -5523,17 +5604,17 @@ export class GameEngine {
         e.height = 25;
         e.hp = 2;
         e.vx = vx;
-        e.vy = 0;
+        e.vy = tier >= 3 ? 18 : 0;
         e.visualId = Math.floor(Math.random() * 10) + 1;
+        this.scaleAssaultEnemy(e, tier);
         this.enemies.push(e);
       }
     }
 
     if (this.spawnTimer <= 0) {
-      const tier = this.getCombatTier();
       const stageSpeedMod = this.stage * 18 + (tier - 1) * 18;
-      this.spawnTimer = Math.max(0.62, 1.85 - this.stage * 0.16 - (tier - 1) * 0.14);
-      const speedMult = 1.35 + (tier - 1) * 0.12;
+      this.spawnTimer = Math.max(0.42, 1.68 - this.stage * 0.13 - (tier - 1) * 0.25);
+      const speedMult = 1.35 + (tier - 1) * 0.18;
 
       const randLayout = Math.random();
       // Decide a common type and properties for this wave unit
@@ -5591,8 +5672,9 @@ export class GameEngine {
         vy = 300;
       }
 
-      // 45% chance of spawning as an organized, structured squadron/squad!
-      if (randLayout < 0.45 && type !== "sweeper" && type !== "stationary") {
+      // Higher tiers lean into organized squad pressure instead of isolated fodder.
+      const squadChance = tier === 1 ? 0.45 : tier === 2 ? 0.62 : 0.72;
+      if (randLayout < squadChance && type !== "sweeper" && type !== "stationary") {
         const groupPattern = Math.floor(Math.random() * 3);
         const baseCX = Math.random() * (this.canvas.width - 240) + 120;
 
@@ -5603,7 +5685,7 @@ export class GameEngine {
             e.type = type;
             e.width = width;
             e.height = height;
-            e.hp = Math.ceil(hp * (1 + (tier - 1) * 0.16));
+            e.hp = Math.ceil(hp * this.getAssaultHpMultiplier(tier));
             e.vy = vy;
             e.vx = vx;
             e.x = baseCX + i * 55 - width / 2;
@@ -5623,7 +5705,7 @@ export class GameEngine {
             e.type = type;
             e.width = width;
             e.height = height;
-            e.hp = Math.ceil(hp * (1 + (tier - 1) * 0.16));
+            e.hp = Math.ceil(hp * this.getAssaultHpMultiplier(tier));
             e.vy = vy;
             e.vx = vx;
             e.x = baseCX + off.rx - width / 2;
@@ -5638,7 +5720,7 @@ export class GameEngine {
             e.type = type;
             e.width = width;
             e.height = height;
-            e.hp = Math.ceil(hp * (1 + (tier - 1) * 0.16));
+            e.hp = Math.ceil(hp * this.getAssaultHpMultiplier(tier));
             e.vy = vy;
             e.vx = vx;
             e.x = baseCX - width / 2;
@@ -5655,7 +5737,7 @@ export class GameEngine {
         e.type = type;
         e.width = width;
         e.height = height;
-        e.hp = Math.ceil(hp * (1 + (tier - 1) * 0.16));
+        e.hp = Math.ceil(hp * this.getAssaultHpMultiplier(tier));
         e.vy = vy;
         e.vx = vx;
         e.visualId = visualId;
@@ -6043,6 +6125,8 @@ export class GameEngine {
       this.ctx.fillStyle = "#818cf8"; // Slate Indigo
     } else if (e.type === "gravity_vortex_mob") {
       this.ctx.fillStyle = "#c084fc"; // Purple Vortex
+    } else if (e.type === "assault_commander") {
+      this.ctx.fillStyle = "#0f172a"; // Heavy assault command craft
     } else {
       this.ctx.fillStyle =
         e.type === "boss"
@@ -6057,6 +6141,52 @@ export class GameEngine {
 
     const w2 = e.width / 2;
     const h2 = e.height / 2;
+
+    if (e.type === "assault_commander") {
+      const pulse = 0.65 + Math.sin(performance.now() * 0.009) * 0.25;
+      const accent = this.getCombatTier() >= 3 ? "#c084fc" : "#22d3ee";
+
+      this.ctx.fillStyle = "#020617";
+      this.ctx.strokeStyle = accent;
+      this.ctx.lineWidth = 2.5;
+      this.ctx.shadowColor = accent;
+      this.ctx.shadowBlur = 14;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, h2);
+      this.ctx.lineTo(-w2 * 0.38, h2 * 0.26);
+      this.ctx.lineTo(-w2, h2 * 0.08);
+      this.ctx.lineTo(-w2 * 0.58, -h2 * 0.18);
+      this.ctx.lineTo(-w2 * 0.24, -h2);
+      this.ctx.lineTo(0, -h2 * 0.62);
+      this.ctx.lineTo(w2 * 0.24, -h2);
+      this.ctx.lineTo(w2 * 0.58, -h2 * 0.18);
+      this.ctx.lineTo(w2, h2 * 0.08);
+      this.ctx.lineTo(w2 * 0.38, h2 * 0.26);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      this.ctx.shadowBlur = 0;
+      this.ctx.fillStyle = accent;
+      this.ctx.globalAlpha = 0.35 + pulse * 0.35;
+      this.ctx.fillRect(-w2 * 0.72, h2 * 0.08, w2 * 0.34, 5);
+      this.ctx.fillRect(w2 * 0.38, h2 * 0.08, w2 * 0.34, 5);
+      this.ctx.globalAlpha = 1;
+
+      this.ctx.fillStyle = "#e0f2fe";
+      this.ctx.beginPath();
+      this.ctx.ellipse(0, -h2 * 0.2, w2 * 0.18, h2 * 0.28, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.fillStyle = accent;
+      this.ctx.beginPath();
+      this.ctx.arc(0, h2 * 0.18, 5 + pulse * 3, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.restore();
+      return;
+    }
 
     this.ctx.beginPath();
     switch (e.visualId) {
@@ -6164,6 +6294,86 @@ export class GameEngine {
     if (this.bossPhase3Active || this.stage >= 3) return 3;
     if (this.bossPhase2Active || this.stage >= 2) return 2;
     return 1;
+  }
+
+  private getAssaultHpMultiplier(tier: number): number {
+    if (tier >= 3) return 2.65;
+    if (tier === 2) return 1.85;
+    return 1;
+  }
+
+  private scaleAssaultEnemy(e: Enemy, tier: number, elite = false) {
+    if (e.type === "boss") return;
+    const multiplier = this.getAssaultHpMultiplier(tier) * (elite ? 1.25 : 1);
+    e.hp = Math.max(1, Math.ceil(e.hp * multiplier));
+
+    if (tier >= 2 && e.vy > 0) e.vy *= tier === 2 ? 1.05 : 1.12;
+    if (tier >= 2 && e.vx !== 0) e.vx *= tier === 2 ? 1.04 : 1.1;
+  }
+
+  private spawnAssaultCommander(tier: number) {
+    const e = new Enemy();
+    e.type = "assault_commander";
+    e.width = tier >= 3 ? 106 : 94;
+    e.height = tier >= 3 ? 74 : 66;
+    e.x = this.canvas.width / 2 - e.width / 2 + (Math.random() - 0.5) * 70;
+    e.y = -e.height - 20;
+    e.vx = (Math.random() < 0.5 ? -1 : 1) * (tier >= 3 ? 155 : 125);
+    e.vy = tier >= 3 ? 170 : 145;
+    e.spawnPoint = tier >= 3 ? 112 : 96;
+    e.hp = tier >= 3 ? 360 : 230;
+    e.visualId = 10;
+    e.patternTimer = 0;
+    e.shootTimer = 0;
+    e.lastShot = 0;
+    this.enemies.push(e);
+
+    this.spawnExplosion(e.x + e.width / 2, e.spawnPoint, tier >= 3 ? "#a855f7" : "#22d3ee", 28);
+  }
+
+  private fireAssaultCommander(e: Enemy, tier: number) {
+    const cx = e.x + e.width / 2;
+    const cy = e.y + e.height * 0.72;
+    const tx = this.player.x + this.player.width / 2;
+    const ty = this.player.y + this.player.height / 2;
+    const baseAngle = Math.atan2(ty - cy, tx - cx);
+    const count = tier >= 3 ? 9 : 7;
+    const spread = tier >= 3 ? 0.82 : 0.62;
+    const speed = tier >= 3 ? 310 : 265;
+
+    for (let i = 0; i < count; i++) {
+      const offset = (i - (count - 1) / 2) * (spread / Math.max(1, count - 1));
+      const b = new Bullet();
+      b.x = cx - 5;
+      b.y = cy - 5;
+      b.width = tier >= 3 ? 11 : 10;
+      b.height = tier >= 3 ? 11 : 10;
+      b.vx = Math.cos(baseAngle + offset) * speed;
+      b.vy = Math.sin(baseAngle + offset) * speed;
+      b.isEnemy = true;
+      b.type = "pellet";
+      b.color = tier >= 3 ? "#c084fc" : "#22d3ee";
+      b.visualType = "phase_core";
+      this.bullets.push(b);
+    }
+
+    e.rapidFireCount++;
+    if (tier >= 3 && e.rapidFireCount % 3 === 0) {
+      for (let side = -1; side <= 1; side += 2) {
+        const b = new Bullet();
+        b.x = cx - 6;
+        b.y = cy - 4;
+        b.width = 12;
+        b.height = 12;
+        b.vx = side * 185;
+        b.vy = 235;
+        b.isEnemy = true;
+        b.type = "needle";
+        b.color = "#f472b6";
+        b.visualType = "comet_needle";
+        this.bullets.push(b);
+      }
+    }
   }
 
   private renderBackground() {
@@ -9033,6 +9243,7 @@ export class GameEngine {
 
   startNextStageAfterReward() {
     this.stage++;
+    this.nextBossScore = this.score + 10000 + this.stage * 3000;
     this.bossActive = false;
     this.bossEntity = null;
     this.bossPhase2Triggered = false;

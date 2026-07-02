@@ -55,7 +55,8 @@ export type EnemyType =
   | "ricochet_shooter"
   | "counter_on_death"
   | "ink_shooter"
-  | "gravity_vortex_mob";
+  | "gravity_vortex_mob"
+  | "assault_commander";
 
 export class Enemy extends Entity {
   type: EnemyType = "basic";
