@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, User, Volume2, VolumeX } from "lucide-react";
+import { Bomb, HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, User, Volume2, VolumeX } from "lucide-react";
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
@@ -34,6 +34,7 @@ function GameCanvas() {
 
   const { setGameState, setScore, shipColor, updateStats, setLastRun, score } = useAppStore();
   const [hp, setHp] = useState(MAX_HP);
+  const [bombs, setBombs] = useState(3);
   const [power, setPower] = useState(1);
   const [stage, setStage] = useState(1);
   const [bossHp, setBossHp] = useState<number | null>(null);
@@ -94,6 +95,7 @@ function GameCanvas() {
       });
     };
     engine.onCutsceneChange = setIsBossCutscene;
+    engine.onBombsChanged = setBombs;
     engine.onStageClear = (choices, onSelect) => {
       setStageClearChoices(choices);
       setOnSelectReward(() => onSelect);
@@ -178,9 +180,8 @@ function GameCanvas() {
     engineRef.current.player.y = y - engineRef.current.player.height * 2.2;
   };
 
-  const bossMaxHp = bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
-  const bossLabel = bossPhase3Active ? "BOSS PHASE 3" : bossPhase2Active ? "BOSS PHASE 2" : "BOSS PHASE 1";
-  const assaultLabel = stage >= 3 ? "OVERLORD ASSAULT" : stage === 2 ? "OVERDRIVE ASSAULT" : "ASSAULT SECTOR";
+  const bossMaxHp = stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
+  const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
 
   return (
     <div className="relative w-full h-full max-w-2xl mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col" ref={containerRef}>
@@ -197,7 +198,6 @@ function GameCanvas() {
           <div className="font-mono text-2xl text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]">
             점수 {score.toString().padStart(6, "0")}
           </div>
-          <div className="font-mono text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">{assaultLabel} {stage}</div>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex gap-1">
@@ -209,6 +209,16 @@ function GameCanvas() {
             POWER LV {power}
           </span>
         </div>
+      </div>
+
+      <div className="absolute right-4 bottom-4 pointer-events-none z-20 flex gap-1.5">
+        {[...Array(3)].map((_, i) => (
+          <Bomb
+            key={i}
+            size={19}
+            className={i < bombs ? "text-yellow-300 fill-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.65)]" : "text-slate-700 fill-transparent"}
+          />
+        ))}
       </div>
 
       {bossHp !== null && (

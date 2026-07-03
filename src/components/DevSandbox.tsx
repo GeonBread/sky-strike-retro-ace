@@ -1,10 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Play, RefreshCw, Layers, Cpu, Shield, Sparkles } from 'lucide-react';
+import { ArrowLeft, Bomb, Play, RefreshCw, Layers, Cpu, Shield, Sparkles } from 'lucide-react';
 import { GameEngine, GameInput } from '../game/engine';
 import { ShipColor } from '../types';
 
 import { ENEMY_TYPES, MOTION_PROFILES, WAVES_DATA } from '../game/data/sandboxCatalog';
 import { NORMAL_BOSS_PHASES, OVERDRIVE_BOSS_PHASES, OVERLORD_BOSS_PHASES } from '../game/data/bossPhaseCatalog';
+
+type DeveloperMode = 'lab' | 'bossCombat';
+
+const BOSS_CHAPTERS = [
+  { id: 1, name: 'Chapter 1', detail: '기본 보스전' },
+  { id: 2, name: 'Chapter 2', detail: '오버드라이브 보스전' },
+  { id: 3, name: 'Chapter 3', detail: '오버로드 보스전' },
+  { id: 4, name: 'Chapter 4', detail: '최종 확장 보스전' },
+];
 interface DevSandboxProps {
   onBack: () => void;
   shipColor: ShipColor;
@@ -16,6 +25,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
   const engineRef = useRef<GameEngine | null>(null);
 
   // Sandbox controller states
+  const [developerMode, setDeveloperMode] = useState<DeveloperMode>('lab');
   const [selectedType, setSelectedType] = useState<string>('stationary');
   const [invincible, setInvincible] = useState<boolean>(true);
   const [sandboxMovement, setSandboxMovement] = useState<boolean>(false);
@@ -24,6 +34,10 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
   const [sandboxBossPhaseLock, setSandboxBossPhaseLock] = useState<number>(-1);
   const [sandboxBossOverdrive, setSandboxBossOverdrive] = useState<boolean>(false);
   const [sandboxBossPhase3, setSandboxBossPhase3] = useState<boolean>(false);
+  const [bossChapter, setBossChapter] = useState<number>(1);
+  const [weaponLevel, setWeaponLevel] = useState<number>(5);
+  const [bombCount, setBombCount] = useState<number>(3);
+  const [supportCount, setSupportCount] = useState<number>(3);
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -47,9 +61,17 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
     engine.sandboxMode = activeMode;
     engine.sandboxBossPhaseLock = sandboxBossPhaseLock;
     engine.sandboxBossOverdrive = sandboxBossOverdrive;
+    engine.sandboxBossPhase3 = sandboxBossPhase3;
+    engine.sandboxBossCombatMode = developerMode === 'bossCombat';
+    engine.sandboxBossChapter = bossChapter;
+    engine.sandboxPlayerPowerLevel = weaponLevel;
+    engine.sandboxPlayerBombs = bombCount;
+    engine.sandboxPlayerSatelliteCount = supportCount;
+    engine.onBombsChanged = setBombCount;
 
     engineRef.current = engine;
     engine.start(shipColor);
+    engine.configureSandboxLoadout(weaponLevel, bombCount, supportCount);
 
     return () => {
       resizeObserver.disconnect();
@@ -64,11 +86,21 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
 
     engine.sandboxEnemyType = selectedType;
     engine.sandboxInvincibility = invincible;
-    engine.sandboxMovementEnabled = sandboxMovement;
-    engine.sandboxMode = activeMode;
+    engine.sandboxMovementEnabled = developerMode === 'bossCombat' ? true : sandboxMovement;
+    engine.sandboxMode = developerMode === 'bossCombat' ? 'bossCombat' : activeMode;
     engine.sandboxBossPhaseLock = sandboxBossPhaseLock;
     engine.sandboxBossOverdrive = sandboxBossOverdrive;
     engine.sandboxBossPhase3 = sandboxBossPhase3;
+    engine.sandboxBossCombatMode = developerMode === 'bossCombat';
+    engine.sandboxBossChapter = bossChapter;
+
+    if (developerMode === 'bossCombat') {
+      engine.sandboxEnemyType = 'boss';
+      engine.stage = bossChapter;
+      engine.bossPhase2Active = bossChapter === 2;
+      engine.bossPhase3Active = bossChapter >= 3;
+      return;
+    }
 
     if (activeMode === 'single') {
        if (selectedType === 'boss') {
@@ -103,7 +135,19 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
           }
        }
     }
-  }, [selectedType, invincible, sandboxMovement, activeMode, sandboxBossPhaseLock, sandboxBossOverdrive, sandboxBossPhase3]);
+  }, [developerMode, selectedType, invincible, sandboxMovement, activeMode, sandboxBossPhaseLock, sandboxBossOverdrive, sandboxBossPhase3, bossChapter]);
+
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.configureSandboxLoadout(weaponLevel, bombCount, supportCount);
+  }, [weaponLevel, bombCount, supportCount]);
+
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine || developerMode !== 'bossCombat') return;
+    engine.resetSandboxBossCombat(bossChapter);
+  }, [developerMode, bossChapter, sandboxBossPhaseLock]);
 
   // Support inputs in sandbox
   useEffect(() => {
@@ -116,6 +160,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
       if (code === 'ArrowLeft' || code === 'KeyA') inputState.left = true;
       if (code === 'ArrowRight' || code === 'KeyD') inputState.right = true;
       if (code === 'Space') inputState.fire = true;
+      if (code === 'ShiftLeft' || code === 'ShiftRight' || code === 'KeyB' || code === 'KeyX') inputState.useBomb = true;
       if (engineRef.current) engineRef.current.input = inputState;
     };
 
@@ -126,6 +171,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
       if (code === 'ArrowLeft' || code === 'KeyA') inputState.left = false;
       if (code === 'ArrowRight' || code === 'KeyD') inputState.right = false;
       if (code === 'Space') inputState.fire = false;
+      if (code === 'ShiftLeft' || code === 'ShiftRight' || code === 'KeyB' || code === 'KeyX') inputState.useBomb = false;
       if (engineRef.current) engineRef.current.input = inputState;
     };
 
@@ -140,6 +186,10 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
   const handleReset = () => {
     const engine = engineRef.current;
     if (engine) {
+      if (developerMode === 'bossCombat') {
+        engine.resetSandboxBossCombat(bossChapter);
+        return;
+      }
       engine.enemies = [];
       engine.bullets = [];
       engine.particles = [];
@@ -148,6 +198,24 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
   };
 
   const currentDetails = ENEMY_TYPES.find(t => t.id === selectedType);
+  const bossPatternOptions =
+    bossChapter === 1
+      ? NORMAL_BOSS_PHASES
+      : bossChapter === 2
+        ? OVERDRIVE_BOSS_PHASES
+        : bossChapter === 4
+          ? [
+              ...OVERLORD_BOSS_PHASES,
+              ...OVERDRIVE_BOSS_PHASES.filter((phase) => phase.id === 42 || phase.id === 46),
+            ]
+          : OVERLORD_BOSS_PHASES;
+
+  const selectBossChapter = (chapter: number) => {
+    setBossChapter(chapter);
+    setSandboxBossPhaseLock(-1);
+    setSandboxBossOverdrive(chapter === 2);
+    setSandboxBossPhase3(chapter >= 3);
+  };
 
   return (
     <div className="w-full h-screen bg-slate-950 flex flex-col p-4 md:p-6 overflow-hidden select-none">
@@ -169,19 +237,40 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
           </div>
         </div>
 
-        <button 
-          onClick={handleReset}
-          className="flex items-center gap-1.5 px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-mono font-bold rounded-xl transition"
-        >
-          <RefreshCw size={14} /> 샌드박스 비우기
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl border border-slate-800 bg-slate-950 p-1">
+            <button
+              onClick={() => setDeveloperMode('lab')}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-black transition ${developerMode === 'lab' ? 'bg-slate-800 text-cyan-300' : 'text-slate-500 hover:text-slate-200'}`}
+            >
+              분석 랩
+            </button>
+            <button
+              onClick={() => {
+                setDeveloperMode('bossCombat');
+                setSelectedType('boss');
+                setActiveMode('single');
+                setSandboxMovement(true);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-mono font-black transition ${developerMode === 'bossCombat' ? 'bg-rose-600 text-white' : 'text-slate-500 hover:text-slate-200'}`}
+            >
+              보스 전투
+            </button>
+          </div>
+          <button 
+            onClick={handleReset}
+            className="flex items-center gap-1.5 px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-mono font-bold rounded-xl transition"
+          >
+            <RefreshCw size={14} /> 리셋
+          </button>
+        </div>
       </div>
 
       {/* Main Splitscreen Grid Area */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-12 gap-4 overflow-hidden min-h-0">
+      <div className={`flex-grow grid grid-cols-1 gap-4 overflow-hidden min-h-0 ${developerMode === 'bossCombat' ? 'md:grid-cols-[minmax(360px,1fr)_360px]' : 'md:grid-cols-12'}`}>
         
         {/* Left Column - Diagnostic Live Viewport Area */}
-        <div className="md:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between overflow-hidden relative">
+        <div className={`${developerMode === 'bossCombat' ? 'bg-slate-950 border-slate-800' : 'md:col-span-5 bg-slate-900 border-slate-800'} border rounded-2xl p-4 flex flex-col justify-between overflow-hidden relative`}>
           
           <div className="flex justify-between items-center mb-2.5 shrink-0">
             <span className="font-mono text-[10px] md:text-xs font-black text-emerald-400 flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded-full animate-pulse">
@@ -209,7 +298,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
           </div>
 
           {/* Actual canvas simulation engine context */}
-          <div className="flex-grow bg-slate-950 border border-slate-800 rounded-xl relative overflow-hidden" ref={containerRef}>
+          <div className={`${developerMode === 'bossCombat' ? 'mx-auto w-full max-w-2xl h-full min-h-[620px] bg-slate-900 rounded-3xl border-2' : 'flex-grow bg-slate-950 rounded-xl border'} border-slate-800 relative overflow-hidden`} ref={containerRef}>
             <canvas ref={canvasRef} className="block w-full h-full cursor-crosshair touch-none" />
             <div className="absolute bottom-4 left-4 font-mono text-[9px] text-slate-500 pointer-events-none bg-black/50 p-2 rounded border border-slate-800">
               [W, A, S, D / 방향키] - 테스터 기체 이동<br />
@@ -223,10 +312,126 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
         </div>
 
         {/* Right Column - Controls and Configuration Dash */}
-        <div className="md:col-span-7 flex flex-col gap-4 overflow-y-auto min-h-0 pr-1 select-text">
+        <div className={`${developerMode === 'bossCombat' ? '' : 'md:col-span-7'} flex flex-col gap-4 overflow-y-auto min-h-0 pr-1 select-text`}>
+
+          {developerMode === 'bossCombat' && (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col gap-4 shrink-0">
+              <div className="border-b border-slate-800 pb-3">
+                <h2 className="text-sm font-mono font-black text-rose-300 flex items-center gap-2">
+                  <Cpu size={17} className="text-rose-400" /> 보스 전투 시뮬레이션
+                </h2>
+                <p className="mt-1 text-[11px] text-slate-400 font-semibold">
+                  일반 구간 없이 선택한 챕터 보스만 실제 전투 화면에서 테스트합니다.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {BOSS_CHAPTERS.map((chapter) => (
+                  <button
+                    key={chapter.id}
+                    onClick={() => selectBossChapter(chapter.id)}
+                    className={`rounded-xl border p-3 text-left transition ${bossChapter === chapter.id ? 'bg-rose-950/60 border-rose-500 text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.18)]' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+                  >
+                    <div className="font-mono text-xs font-black">{chapter.name}</div>
+                    <div className="mt-1 text-[10px] font-semibold text-slate-500">{chapter.detail}</div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                <label className="block text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest mb-2">
+                  패턴 고정
+                </label>
+                <select
+                  value={sandboxBossPhaseLock}
+                  onChange={(event) => setSandboxBossPhaseLock(Number(event.target.value))}
+                  className="w-full bg-slate-900 border border-slate-800 text-slate-200 px-3 py-2.5 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-rose-500"
+                >
+                  <option value={-1}>랜덤 로테이션</option>
+                  {bossPatternOptions.map((pattern) => (
+                    <option key={`${bossChapter}-${pattern.id}`} value={pattern.id}>
+                      {pattern.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setInvincible(!invincible)}
+                  className={`rounded-xl border p-3 font-mono text-xs font-black transition ${invincible ? 'bg-indigo-950/60 border-indigo-500 text-indigo-200' : 'bg-rose-950/40 border-rose-500 text-rose-200'}`}
+                >
+                  <Shield size={16} className="inline mr-1.5" />
+                  무적 {invincible ? 'ON' : 'OFF'}
+                </button>
+                <button
+                  onClick={() => {
+                    setWeaponLevel(5);
+                    setBombCount(3);
+                    setSupportCount(3);
+                    engineRef.current?.resetSandboxBossCombat(bossChapter);
+                  }}
+                  className="rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-800 p-3 font-mono text-xs font-black text-slate-300 transition"
+                >
+                  <RefreshCw size={16} className="inline mr-1.5" />
+                  보스 리셋
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <div className="flex justify-between text-xs font-mono font-black text-slate-300 mb-2">
+                    <span>총알 강화</span>
+                    <span className="text-cyan-300">LV {weaponLevel}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    step={1}
+                    value={weaponLevel}
+                    onChange={(event) => setWeaponLevel(Number(event.target.value))}
+                    className="w-full accent-cyan-400"
+                  />
+                </div>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <div className="flex justify-between text-xs font-mono font-black text-slate-300 mb-2">
+                    <span className="flex items-center gap-1.5"><Bomb size={14} className="text-yellow-300" /> 폭탄</span>
+                    <span className="text-yellow-300">{bombCount}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={9}
+                    step={1}
+                    value={bombCount}
+                    onChange={(event) => setBombCount(Number(event.target.value))}
+                    className="w-full accent-yellow-300"
+                  />
+                </div>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <div className="flex justify-between text-xs font-mono font-black text-slate-300 mb-2">
+                    <span>보조 기체</span>
+                    <span className="text-emerald-300">{supportCount}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={4}
+                    step={1}
+                    value={supportCount}
+                    onChange={(event) => setSupportCount(Number(event.target.value))}
+                    className="w-full accent-emerald-400"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Active Simulation Mode status banner */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 shrink-0 flex items-center justify-between">
+          <div className={`${developerMode === 'bossCombat' ? 'hidden' : ''} bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 shrink-0 flex items-center justify-between`}>
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
               <span className="text-xs font-mono font-bold text-slate-400">현재 시제품 검사 모드:</span>

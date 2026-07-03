@@ -384,10 +384,13 @@ export class AudioSystem {
   }
 
   startBgmForPhase(phase: number) {
+    const chapter = Math.max(1, Math.floor(phase));
     const track =
-      phase >= 3
+      chapter >= 4
         ? "/audio/3phase%20(Starfall%20Circuit).mp3"
-        : phase === 2
+        : chapter === 3
+        ? "/audio/3phase%20(Starfall%20Circuit).mp3"
+        : chapter === 2
           ? "/audio/2phase%20(Stellar%20Drift2).mp3"
           : "/audio/1phase%20bgm%20(Stellar%20Drift1).mp3";
 
