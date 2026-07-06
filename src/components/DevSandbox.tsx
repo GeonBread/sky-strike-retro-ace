@@ -8,11 +8,17 @@ import { NORMAL_BOSS_PHASES, OVERDRIVE_BOSS_PHASES, OVERLORD_BOSS_PHASES } from 
 
 type DeveloperMode = 'lab' | 'bossCombat';
 
-const BOSS_CHAPTERS = [
+/* const LEGACY_BOSS_CHAPTERS = [
   { id: 1, name: 'Chapter 1', detail: '기본 보스전' },
   { id: 2, name: 'Chapter 2', detail: '오버드라이브 보스전' },
   { id: 3, name: 'Chapter 3', detail: '오버로드 보스전' },
   { id: 4, name: 'Chapter 4', detail: '최종 확장 보스전' },
+]; */
+const BOSS_CHAPTERS = [
+  { id: 1, name: 'Chapter 1', detail: '기본 보스 전투' },
+  { id: 2, name: 'Chapter 2', detail: '오버드라이브 보스' },
+  { id: 3, name: 'Chapter 3', detail: '오버로드 보스' },
+  { id: 4, name: 'Chapter 4', detail: '최종 확장 보스' },
 ];
 interface DevSandboxProps {
   onBack: () => void;
@@ -231,7 +237,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
           </button>
           <div>
             <h1 className="text-xl font-mono font-black text-rose-500 tracking-tight flex items-center gap-2">
-              <Cpu size={22} className="text-rose-400 animate-spin-slow" /> STAGE DEVELOPER LAB
+              <Cpu size={22} className="text-rose-400 animate-spin-slow" /> DEVELOPER OFFICE
             </h1>
             <p className="text-[10px] font-mono font-semibold text-slate-400">몬스터 유형 분석 및 전대 대열 배치 시뮬레이터</p>
           </div>

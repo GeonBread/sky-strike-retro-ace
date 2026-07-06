@@ -24,14 +24,14 @@ import {
 export type { EnemyType, EngineState, GameInput } from "./entities";
 
 const PLAYER_MAX_HP = 3;
-const PLAYER_MOVE_SPEED = 380;
+const PLAYER_MOVE_SPEED = 415;
 const PLAYER_BULLET_SPEED_MULT = 1.16;
 const PLAYER_FIRE_INTERVAL = 0.075;
 const MAX_CHAPTER = 4;
 const NORMAL_BOSS_PHASE_IDS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13];
 const OVERDRIVE_BOSS_PHASE_IDS = [14, 15, 16, 17, 18, 19, 42, 43, 44, 45, 46];
-const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 47, 48, 49, 32];
-const CHAPTER4_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 42, 46, 47, 48, 49, 32];
+const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 47, 49, 32, 51, 52];
+const CHAPTER4_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 42, 46, 47, 49, 32, 51, 52];
 const getBossMaxHpForTier = (tier: number) => tier >= 4 ? 12000 : tier >= 3 ? 9000 : tier === 2 ? 6000 : 4000;
 
 interface ElectricTrail {
@@ -135,6 +135,41 @@ interface BossCompressionField {
   maxInset: number;
 }
 
+interface BossEdgeStriker {
+  side: "top" | "bottom" | "left" | "right";
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  offscreenX: number;
+  offscreenY: number;
+  age: number;
+  state: "enter" | "hold" | "exit";
+  fired: boolean;
+  active: boolean;
+}
+
+interface MazeWallSegment {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface BossMazeState {
+  phase: "pull" | "active" | "done";
+  age: number;
+  totalTime: number;
+  targetX: number;
+  targetY: number;
+  exitX: number;
+  exitY: number;
+  exitWidth: number;
+  exitHeight: number;
+  fogAlpha: number;
+  walls: MazeWallSegment[];
+}
+
 interface PlayerHistoryPoint {
   x: number;
   y: number;
@@ -212,6 +247,8 @@ export class GameEngine {
   bossAbsorbOrbs: BossAbsorbOrb[] = [];
   bossAfterimageSlashes: BossAfterimageSlash[] = [];
   bossCompressionField: BossCompressionField | null = null;
+  bossEdgeStrikers: BossEdgeStriker[] = [];
+  bossMazeState: BossMazeState | null = null;
   playerPositionHistory: PlayerHistoryPoint[] = [];
   bossClearTimer: number = 0;
   bossClearX: number = 0;
@@ -591,6 +628,53 @@ export class GameEngine {
     return best;
   }
 
+  private instantlyDownPlayer() {
+    if (this.player.isDead) return;
+    this.player.hp = 1;
+    this.player.invulnTimer = 0;
+    this.triggerPlayerHit();
+  }
+
+  private createBossMazeState(): BossMazeState {
+    const targetX = this.canvas.width / 2 - this.player.width / 2;
+    const targetY = this.canvas.height - 86;
+    const laneWidth = Math.max(96, this.player.width * 2.4);
+    const rowCount = 5;
+    const rowHeight = 34;
+    const rowSpacing = 82;
+    let corridorCenter = this.canvas.width / 2;
+    const walls: MazeWallSegment[] = [];
+
+    for (let i = 0; i < rowCount; i++) {
+      corridorCenter += (Math.random() < 0.5 ? -1 : 1) * (56 + Math.random() * 56);
+      corridorCenter = Math.max(84, Math.min(this.canvas.width - 84, corridorCenter));
+      const gapLeft = Math.max(0, corridorCenter - laneWidth / 2);
+      const gapRight = Math.min(this.canvas.width, corridorCenter + laneWidth / 2);
+      const y = this.canvas.height - 150 - i * rowSpacing;
+
+      if (gapLeft > 0) {
+        walls.push({ x: 0, y, width: gapLeft, height: rowHeight });
+      }
+      if (gapRight < this.canvas.width) {
+        walls.push({ x: gapRight, y, width: this.canvas.width - gapRight, height: rowHeight });
+      }
+    }
+
+    return {
+      phase: "pull",
+      age: 0,
+      totalTime: 7.0,
+      targetX,
+      targetY,
+      exitX: Math.max(36, Math.min(this.canvas.width - 116, corridorCenter - 48)),
+      exitY: 48,
+      exitWidth: 96,
+      exitHeight: 24,
+      fogAlpha: 0,
+      walls,
+    };
+  }
+
   private clearBossPatternHazards() {
     this.bossElectricTrails = [];
     this.bossGridLasers = [];
@@ -602,6 +686,8 @@ export class GameEngine {
     this.bossAbsorbOrbs = [];
     this.bossAfterimageSlashes = [];
     this.bossCompressionField = null;
+    this.bossEdgeStrikers = [];
+    this.bossMazeState = null;
   }
 
   private clampBossToArena(e: Enemy) {
@@ -886,6 +972,118 @@ export class GameEngine {
       }
       if (field.age > activeUntil + 0.35) this.bossCompressionField = null;
     }
+
+    this.bossEdgeStrikers.forEach((striker) => {
+      striker.age += dt;
+      const moveTargetX = striker.state === "exit" ? striker.offscreenX : striker.targetX;
+      const moveTargetY = striker.state === "exit" ? striker.offscreenY : striker.targetY;
+      striker.x += (moveTargetX - striker.x) * 8.5 * dt;
+      striker.y += (moveTargetY - striker.y) * 8.5 * dt;
+
+      if (striker.state === "enter" && Math.hypot(striker.x - striker.targetX, striker.y - striker.targetY) < 12) {
+        striker.state = "hold";
+        striker.age = 0;
+      }
+
+      if (striker.state === "hold" && !striker.fired && striker.age >= 0.12) {
+        striker.fired = true;
+        const bullet = new Bullet();
+        bullet.x = striker.x - 6;
+        bullet.y = striker.y - 6;
+        bullet.width = striker.side === "left" || striker.side === "right" ? 20 : 12;
+        bullet.height = striker.side === "top" || striker.side === "bottom" ? 20 : 12;
+        bullet.isEnemy = true;
+        bullet.type = striker.side === "left" || striker.side === "right" ? "needle" : "pellet";
+        bullet.color = "#67e8f9";
+        bullet.visualType = "tesla_spine_missile";
+        const speed = 360;
+        if (striker.side === "top") {
+          bullet.vx = 0;
+          bullet.vy = speed;
+        } else if (striker.side === "bottom") {
+          bullet.vx = 0;
+          bullet.vy = -speed;
+        } else if (striker.side === "left") {
+          bullet.vx = speed;
+          bullet.vy = 0;
+        } else {
+          bullet.vx = -speed;
+          bullet.vy = 0;
+        }
+        this.bullets.push(bullet);
+        sfx.bossPatternFire();
+      }
+
+      if (striker.state === "hold" && striker.age >= 0.3) {
+        striker.state = "exit";
+      }
+
+      if (striker.state === "exit" && Math.hypot(striker.x - striker.offscreenX, striker.y - striker.offscreenY) < 18) {
+        striker.active = false;
+      }
+    });
+    this.bossEdgeStrikers = this.bossEdgeStrikers.filter((striker) => striker.active);
+
+    if (this.bossMazeState) {
+      const maze = this.bossMazeState;
+      maze.age += dt;
+
+      if (maze.phase === "pull") {
+        this.player.x += (maze.targetX - this.player.x) * 7.2 * dt;
+        this.player.y += (maze.targetY - this.player.y) * 7.2 * dt;
+        if (Math.hypot(this.player.x - maze.targetX, this.player.y - maze.targetY) < 8 || maze.age >= 1.15) {
+          maze.phase = "active";
+          maze.age = 0;
+        }
+      } else if (maze.phase === "active") {
+        const remaining = Math.max(0, maze.totalTime - maze.age);
+        const urgent = Math.max(0, 1 - remaining / 2.2);
+        maze.fogAlpha = urgent * 0.62;
+
+        const hitbox = {
+          x: this.player.x + (this.player.width - (this.player.hitWidth || this.player.width)) / 2,
+          y: this.player.y + (this.player.height - (this.player.hitHeight || this.player.height)) / 2,
+          width: this.player.hitWidth || this.player.width,
+          height: this.player.hitHeight || this.player.height,
+        };
+
+        const reachedExit = boxesIntersect(hitbox, {
+          x: maze.exitX,
+          y: maze.exitY,
+          width: maze.exitWidth,
+          height: maze.exitHeight,
+        });
+
+        if (reachedExit) {
+          this.spawnExplosion(maze.exitX + maze.exitWidth / 2, maze.exitY + maze.exitHeight / 2, "#22d3ee", 14);
+          this.bossMazeState = null;
+          if (this.bossEntity?.phase === 52) {
+            this.bossEntity.patternTimer = Math.max(this.bossEntity.patternTimer, this.bossEntity.phaseDuration + 0.01);
+          }
+        } else {
+          for (const wall of maze.walls) {
+            if (boxesIntersect(hitbox, wall)) {
+              this.bossMazeState = null;
+              if (this.bossEntity?.phase === 52) {
+                this.bossEntity.patternTimer = Math.max(this.bossEntity.patternTimer, this.bossEntity.phaseDuration + 0.01);
+              }
+              this.instantlyDownPlayer();
+              return;
+            }
+          }
+
+          if (remaining <= 0) {
+            this.spawnExplosion(this.player.x + this.player.width / 2, this.player.y + this.player.height / 2, "#f43f5e", 28);
+            this.bossMazeState = null;
+            if (this.bossEntity?.phase === 52) {
+              this.bossEntity.patternTimer = Math.max(this.bossEntity.patternTimer, this.bossEntity.phaseDuration + 0.01);
+            }
+            this.instantlyDownPlayer();
+            return;
+          }
+        }
+      }
+    }
   }
 
   private hitPlayerFromBossHazard() {
@@ -1083,6 +1281,7 @@ export class GameEngine {
     const targetTopY = 50;
 
     if (!this.bossDashState) {
+      if (e.rapidFireCount >= e.spawnPoint) return;
       this.bossDashState = {
         angle: Math.PI / 2,
         startX: centerX,
@@ -1155,6 +1354,7 @@ export class GameEngine {
       e.x += (targetTopX - e.x) * 3.0 * dt;
       e.y += (targetTopY - e.y) * 3.0 * dt;
       if (dash.age >= 1.1) {
+        e.rapidFireCount++;
         this.bossDashState = null;
       }
     }
@@ -1237,8 +1437,10 @@ export class GameEngine {
     e.x += e.vx * 0.08 * dt;
     if (e.x < 18 || e.x > this.canvas.width - e.width - 18) e.vx *= -1;
 
+    if (e.rapidFireCount >= e.spawnPoint) return;
     if (e.lastShot > 0.9) {
       e.lastShot = 0;
+      e.rapidFireCount++;
       const playerCx = this.player.x + this.player.width / 2;
       const playerCy = this.player.y + this.player.height / 2;
       for (let index = 0; index < 2; index++) {
@@ -1274,28 +1476,96 @@ export class GameEngine {
         maxInset: Math.min(this.canvas.width, this.canvas.height) * 0.28,
       };
       sfx.bossPatternFire();
+    } else if (e.phase === 32 && e.lastShot < 0.48) {
+      this.bossCompressionField.age = Math.min(
+        this.bossCompressionField.age,
+        this.bossCompressionField.warnTime + this.bossCompressionField.closeTime + 0.12,
+      );
+    }
+  }
+
+  private runFinalEdgeStrikerPattern(e: Enemy, dt: number) {
+    e.x += (this.canvas.width / 2 - e.width / 2 - e.x) * 0.9 * dt;
+    e.y += (60 - e.y) * 0.9 * dt;
+
+    if (e.lastShot > 0.24 && e.patternTimer < e.phaseDuration - 0.25) {
+      e.lastShot = 0;
+      const sideRoll = Math.random();
+      const side: BossEdgeStriker["side"] =
+        sideRoll < 0.25 ? "top" : sideRoll < 0.5 ? "bottom" : sideRoll < 0.75 ? "left" : "right";
+
+      const inset = 28;
+      const edgePad = 56;
+      let x = 0;
+      let y = 0;
+      let targetX = 0;
+      let targetY = 0;
+      let offscreenX = 0;
+      let offscreenY = 0;
+
+      if (side === "top" || side === "bottom") {
+        x = edgePad + Math.random() * Math.max(1, this.canvas.width - edgePad * 2);
+        targetX = x;
+        targetY = side === "top" ? inset : this.canvas.height - inset;
+        y = side === "top" ? -48 : this.canvas.height + 48;
+        offscreenX = x;
+        offscreenY = side === "top" ? -56 : this.canvas.height + 56;
+      } else {
+        y = 92 + Math.random() * Math.max(1, this.canvas.height - 180);
+        targetY = y;
+        targetX = side === "left" ? inset : this.canvas.width - inset;
+        x = side === "left" ? -48 : this.canvas.width + 48;
+        offscreenY = y;
+        offscreenX = side === "left" ? -56 : this.canvas.width + 56;
+      }
+
+      this.bossEdgeStrikers.push({
+        side,
+        x,
+        y,
+        targetX,
+        targetY,
+        offscreenX,
+        offscreenY,
+        age: 0,
+        state: "enter",
+        fired: false,
+        active: true,
+      });
+    }
+  }
+
+  private runFinalElectricMazePattern(e: Enemy, dt: number) {
+    e.x += (this.canvas.width / 2 - e.width / 2 - e.x) * 1.2 * dt;
+    e.y += (54 - e.y) * 1.2 * dt;
+
+    if (!this.bossMazeState) {
+      this.bossMazeState = this.createBossMazeState();
+      sfx.bossPatternFire();
     }
   }
 
   private runOverdriveSpiralLattice(e: Enemy, dt: number) {
     e.x += (this.canvas.width / 2 - e.width / 2 - e.x) * 0.9 * dt;
-    if (e.lastShot > 0.085) {
+    if (e.lastShot > 0.06) {
       e.lastShot = 0;
       const cx = e.x + e.width / 2;
       const cy = e.y + e.height / 2;
-      const base = e.patternTimer * 5.4;
-      for (let i = 0; i < 6; i++) {
-        const angle = base + i * Math.PI / 3;
+      const count = 8;
+      const base = e.patternTimer * (4.8 + Math.random() * 2.4);
+      for (let i = 0; i < count; i++) {
+        const angle = base + (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.22;
+        const speed = 320 + Math.random() * 80;
         const b = new Bullet();
         b.x = cx - 5;
         b.y = cy - 5;
         b.width = 10;
         b.height = 10;
-        b.vx = Math.cos(angle) * 330;
-        b.vy = Math.sin(angle) * 330 + 80;
+        b.vx = Math.cos(angle) * speed;
+        b.vy = Math.sin(angle) * speed + 80;
         b.isEnemy = true;
         b.type = "crystal";
-        b.color = i % 2 === 0 ? "#c084fc" : "#22d3ee";
+        b.color = Math.random() < 0.5 ? "#c084fc" : "#38bdf8";
         this.bullets.push(b);
       }
     }
@@ -1338,7 +1608,8 @@ export class GameEngine {
     const cx = e.x + e.width / 2;
     const cy = e.y + e.height / 2;
 
-    if (e.patternTimer < 7.0 && e.lastShot > 0.095) {
+    const spreadTime = Math.max(1.7, e.phaseDuration - 2.0);
+    if (e.patternTimer < spreadTime && e.lastShot > 0.11) {
       e.lastShot = 0;
       const count = 6;
       const base = e.patternTimer * 4.2;
@@ -1356,13 +1627,13 @@ export class GameEngine {
         b.type = "recall_shard";
         b.color = i % 2 === 0 ? "#67e8f9" : "#2dd4bf";
         b.age = 0;
-        b.fuseTimer = Math.max(0.12, 7.0 - e.patternTimer);
+        b.fuseTimer = Math.max(0.12, spreadTime - e.patternTimer);
         this.bullets.push(b);
       }
       sfx.bossPatternFire();
     }
 
-    if (e.patternTimer > 8.0 && e.patternTimer < 12.2 && Math.random() < 0.65) {
+    if (e.patternTimer > spreadTime + 1.0 && e.patternTimer < spreadTime + 3.0 && Math.random() < 0.65) {
       const p = new Particle();
       const angle = Math.random() * Math.PI * 2;
       const radius = 80 + Math.random() * 80;
@@ -1410,9 +1681,9 @@ export class GameEngine {
     e.x += e.vx * 0.16 * dt;
     if (e.x < 15 || e.x > this.canvas.width - e.width - 15) e.vx *= -1;
 
-    if (e.lastShot > 0.22) {
+    if (e.lastShot > 0.19) {
       e.lastShot = 0;
-      const dropCount = e.rapidFireCount % 3 === 0 ? 2 : 1;
+      const dropCount = e.rapidFireCount % 2 === 0 ? 2 : 1;
       e.rapidFireCount++;
 
       for (let i = 0; i < dropCount; i++) {
@@ -1783,6 +2054,28 @@ export class GameEngine {
       const prevCy = b.y + b.height / 2;
 
       if (b.isEnemy) {
+        if (b.type === "homing") {
+          if (b.homingTimer > 0 && !this.player.isDead) {
+            const px = this.player.x + this.player.width / 2;
+            const py = this.player.y + this.player.height / 2;
+            const bx = b.x + b.width / 2;
+            const by = b.y + b.height / 2;
+            const currentAngle = Math.atan2(b.vy, b.vx);
+            const targetAngle = Math.atan2(py - by, px - bx);
+            const delta = Math.atan2(
+              Math.sin(targetAngle - currentAngle),
+              Math.cos(targetAngle - currentAngle),
+            );
+            const turnStep = (b.turnRate ?? 1.5) * dt;
+            const nextAngle =
+              currentAngle + Math.max(-turnStep, Math.min(turnStep, delta));
+            const speed = b.targetSpeed ?? (Math.hypot(b.vx, b.vy) || 360);
+            b.vx += (Math.cos(nextAngle) * speed - b.vx) * 0.28;
+            b.vy += (Math.sin(nextAngle) * speed - b.vy) * 0.28;
+            b.homingTimer -= dt;
+          }
+        }
+
         // A. Delayed Expansion Bullet
         if (b.type === "delayed") {
           b.homingTimer -= dt;
@@ -2578,19 +2871,26 @@ export class GameEngine {
           } else if (e.phase === 23) {
             if (this.bossGridLasers.length > 0) canTransition = false;
           } else if (e.phase === 24) {
-            if (this.bossDashState !== null) canTransition = false;
+            if (this.bossDashState !== null || e.rapidFireCount < e.spawnPoint) canTransition = false;
           } else if (e.phase === 47) {
             if (this.bossSafeZoneBlasts.length > 0) canTransition = false;
-          } else if (e.phase === 48) {
-            if (this.bossAbsorbOrbs.length > 0 || this.bossTimedExplosions.length > 0) canTransition = false;
           } else if (e.phase === 49) {
-            if (this.bossAfterimageSlashes.length > 0) canTransition = false;
+            if (this.bossAfterimageSlashes.length > 0 || e.rapidFireCount < e.spawnPoint) canTransition = false;
           } else if (e.phase === 50) {
             if (this.bossCompressionField !== null) canTransition = false;
           } else if (e.phase === 32) {
             if (this.bossCompressionField !== null) canTransition = false;
           } else if (e.phase === 44) {
             if (this.bullets.some((b) => b.active && b.isEnemy && b.type === "recall_shard")) canTransition = false;
+          } else if (e.phase === 28) {
+            const cycleLength = 4.6;
+            const completedCycles = Math.floor((e.shootTimer || 0) / cycleLength);
+            const cycle = (e.shootTimer || 0) % cycleLength;
+            if (completedCycles < e.spawnPoint || cycle > 0.1 && cycle < 3.35) canTransition = false;
+          } else if (e.phase === 51) {
+            if (this.bossEdgeStrikers.length > 0) canTransition = false;
+          } else if (e.phase === 52) {
+            if (this.bossMazeState !== null) canTransition = false;
           }
         }
 
@@ -3584,6 +3884,42 @@ export class GameEngine {
               });
             }
           }
+
+          if (phase28Step > 0 && e.shootTimer !== undefined) {
+            const shouldFireShuriken =
+              (phase28Step === 1 && cycle > 2.38 && cycle < 2.68) ||
+              (phase28Step === 2 && cycle > 2.98 && cycle < 3.28);
+            if (shouldFireShuriken && e.lastCycleIndex === phase28Step && e.counterTimer !== phase28Step) {
+              e.counterTimer = phase28Step;
+              const burstBase = e.laserAngle ?? Math.PI / 2;
+              const spread = (5 * Math.PI) / 180;
+              const launchAngles = [
+                burstBase - Math.PI / 2,
+                burstBase,
+                burstBase + Math.PI / 2,
+                burstBase + Math.PI,
+              ];
+              launchAngles.forEach((baseAngle) => {
+                for (let i = -1; i <= 2; i++) {
+                  const b = new Bullet();
+                  b.x = cx - 7;
+                  b.y = cy - 7;
+                  b.width = 14;
+                  b.height = 14;
+                  const angle = baseAngle + (i - 1.5) * spread;
+                  b.vx = Math.cos(angle) * 300;
+                  b.vy = Math.sin(angle) * 300;
+                  b.isEnemy = true;
+                  b.type = "crystal";
+                  b.color = "#38bdf8";
+                  b.visualType = "star_beacon";
+                  this.bullets.push(b);
+                }
+              });
+            } else if (!shouldFireShuriken) {
+              e.counterTimer = 0;
+            }
+          }
         } else if (e.phase === 47) {
           this.runFinalSafeZoneBlast(e, dt);
         } else if (e.phase === 48) {
@@ -3622,6 +3958,10 @@ export class GameEngine {
               this.bullets.push(b);
             }
           }
+        } else if (e.phase === 51) {
+          this.runFinalEdgeStrikerPattern(e, dt);
+        } else if (e.phase === 52) {
+          this.runFinalElectricMazePattern(e, dt);
         } else if (e.phase === 34) {
           // Final Phase 34: Galactic Collision Spheres - giant bouncing balls
           const cx = e.x + e.width / 2;
@@ -3801,6 +4141,35 @@ export class GameEngine {
             b.vx = 0;
             b.vy = 0;
           });
+        } else if (e.type === "aimed") {
+          const stagingY = e.spawnPoint || 120;
+          if (e.y < stagingY) {
+            e.y += e.vy * dt;
+            if (e.startX === undefined) e.startX = e.x;
+          } else {
+            if (e.startX === undefined) e.startX = e.x;
+            e.patternTimer += dt;
+            const moveStyle = Math.abs(Math.floor(e.direction || e.visualId)) % 3;
+
+            if (moveStyle === 0) {
+              const amplitude = Math.min(150, this.canvas.width * 0.24);
+              e.x = e.startX + Math.sin(e.patternTimer * 2.2) * amplitude;
+              e.y += e.vy * 0.42 * dt;
+            } else if (moveStyle === 1) {
+              if (Math.abs(e.vx) < 70) {
+                e.vx = e.startX < this.canvas.width / 2 ? 175 : -175;
+              }
+              e.x += e.vx * dt;
+              e.y += e.vy * 0.36 * dt;
+              if (e.x < 28 || e.x > this.canvas.width - e.width - 28) {
+                e.vx *= -1;
+              }
+            } else {
+              const orbitAngle = e.patternTimer * 1.75;
+              e.x = e.startX + Math.cos(orbitAngle) * Math.min(118, this.canvas.width * 0.18);
+              e.y += e.vy * 0.34 * dt + Math.sin(orbitAngle * 2.4) * 18 * dt;
+            }
+          }
         } else if (e.type === "dash_paint") {
           if (e.y < e.spawnPoint) {
             e.y += e.vy * dt;
@@ -4026,8 +4395,7 @@ export class GameEngine {
             e.burstCount++;
             this.fireSubtypeWeapon(e, "aimed"); // Modified: Fires aimed bullets targeting player sequentially!
           }
-          if (e.lastShot > 4.2) {
-            // Modified: longer firing interval
+          if (e.lastShot > 9.7) {
             e.lastShot = 0;
             e.burstCount = 0;
             e.shootTimer = 0;
@@ -4547,34 +4915,36 @@ export class GameEngine {
       b.color = "#39ff14"; // Fluorescent green
       this.bullets.push(b);
     } else if (pattern === "homing") {
-      // Completely remove active tracking: fires a normal straight-flying purple bullet instead!
       const b = new Bullet();
-      b.x = cx - 4;
-      b.y = cy;
-      b.width = 10;
-      b.height = 10;
-      b.vx = Math.cos(angleToPlayer) * 195;
-      b.vy = Math.sin(angleToPlayer) * 195; // Peaceful & slower straight fire!
+      b.x = cx - 7;
+      b.y = cy - 7;
+      b.width = 14;
+      b.height = 14;
+      b.vx = Math.cos(angleToPlayer) * 360;
+      b.vy = Math.sin(angleToPlayer) * 360;
       b.isEnemy = true;
-      b.type = "needle"; // Also needle shaped thin target projectile for visual clarity
-      b.color = "#38bdf8"; // Light Sky Blue
+      b.type = "homing";
+      b.homingTimer = 2.0;
+      b.turnRate = 1.35;
+      b.targetSpeed = 360;
+      b.color = "#67e8f9";
+      b.visualType = "tesla_spine_missile";
       this.bullets.push(b);
     } else if (pattern === "shotgun") {
-      const choices = [8, 16, 32];
-      const count = choices[Math.floor(Math.random() * choices.length)];
+      const count = 20;
+      const spinOffset = Math.random() * Math.PI * 2;
       for (let i = 0; i < count; i++) {
-        const a =
-          angleToPlayer + (i - (count - 1) / 2) * (0.15 + (10 / count) * 0.05);
+        const a = spinOffset + (i / count) * Math.PI * 2;
         const b = new Bullet();
         b.x = cx - 4;
         b.y = cy;
-        b.width = 7;
-        b.height = 7;
-        b.vx = Math.cos(a) * 155;
-        b.vy = Math.sin(a) * 155; // Slower shotgun spread!
+        b.width = 8;
+        b.height = 8;
+        b.vx = Math.cos(a) * 175;
+        b.vy = Math.sin(a) * 175;
         b.isEnemy = true;
         b.type = "pellet";
-        b.color = "#fb923c"; // Neon orange
+        b.color = i % 2 === 0 ? "#fb923c" : "#facc15";
         this.bullets.push(b);
       }
     } else {
@@ -4640,14 +5010,16 @@ export class GameEngine {
   private getBossPhaseDuration(phase: number): number {
     if (phase === 20) return 8.4;
     if (phase === 21) return 8.8;
-    if (phase === 23) return 6.8;
+    if (phase === 23) return Math.random() * 3 + 2;
     if (phase === 24) return 6.2;
     if (phase === 47) return 6.6;
-    if (phase === 48) return 8.2;
     if (phase === 49) return 6.2;
     if (phase === 50) return 6.2;
     if (phase === 32) return 7.4;
-    if (phase === 44) return 12.8;
+    if (phase === 51) return Math.random() * 2 + 3;
+    if (phase === 52) return 9.2;
+    if (phase === 42) return Math.random() * 3 + 2;
+    if (phase === 44) return Math.random() * 2 + 3;
     if (phase === 45) return 7.0;
     if (phase === 46) return 7.0;
     if (phase >= 40 && phase <= 43) return 6.8;
@@ -4660,6 +5032,13 @@ export class GameEngine {
     e.phase = phase;
     e.phaseDuration = fixedDuration ? 8.5 : this.getBossPhaseDuration(phase);
     e.spawnPoint = Math.floor(Math.random() * 3) + 2;
+    if (phase === 24 || phase === 28) {
+      e.spawnPoint = Math.floor(Math.random() * 3) + 1;
+    } else if (phase === 47) {
+      e.spawnPoint = 1;
+    } else if (phase === 49) {
+      e.spawnPoint = Math.floor(Math.random() * 5) + 8;
+    }
   }
 
   private fireBoss360Burst(e: Enemy) {
@@ -4772,6 +5151,8 @@ export class GameEngine {
       e.vy = vy;
       e.hp = hpNum;
       e.visualId = Math.floor(Math.random() * 10) + 1;
+      e.direction = Math.floor(Math.random() * 3);
+      e.spawnPoint = 120 + Math.random() * 80;
       this.enemies.push(e);
     };
 
@@ -4790,7 +5171,7 @@ export class GameEngine {
         spawnMinion(
           cx + Math.cos(a) * 60,
           cy + Math.sin(a) * 60,
-          "burst_shooter",
+          "aimed",
           0,
           250,
           3,
@@ -4800,22 +5181,42 @@ export class GameEngine {
       const stX = this.canvas.width / 2 - 60;
       for (let r = 0; r < 3; r++) {
         for (let c = 0; c < 3; c++) {
-          spawnMinion(stX + c * 60, -150 + r * 50, "sweeper", 0, 180, 2);
+          spawnMinion(stX + c * 60, -150 + r * 50, "aimed", 0, 180, 2);
         }
       }
     } else if (selected === "SIDE_LINES") {
       // Come from left and right simultaneously
       for (let i = 0; i < 4; i++) {
-        spawnMinion(-50 - i * 40, 150 + i * 30, "homing_shooter", 300, 0, 2);
+        spawnMinion(-50 - i * 40, 150 + i * 30, "aimed", 300, 0, 2);
         spawnMinion(
           this.canvas.width + 50 + i * 40,
           150 + i * 30,
-          "homing_shooter",
+          "aimed",
           -300,
           0,
           2,
         );
       }
+    }
+
+    const soloPool: EnemyType[] = [
+      "homing_shooter",
+      "shotgun_shooter",
+      "burst_shooter",
+      "sweeper",
+    ];
+    const extraCount = 1 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < extraCount; i++) {
+      const type = soloPool[Math.floor(Math.random() * soloPool.length)];
+      const fromLeft = Math.random() < 0.5;
+      spawnMinion(
+        fromLeft ? -48 - i * 32 : this.canvas.width + 48 + i * 32,
+        120 + Math.random() * 180,
+        type,
+        fromLeft ? 170 + Math.random() * 80 : -170 - Math.random() * 80,
+        55 + Math.random() * 50,
+        type === "burst_shooter" ? 3 : 2,
+      );
     }
   }
 
@@ -5062,6 +5463,10 @@ export class GameEngine {
               if (e.type === "boss") {
                 this.score += 10000;
                 if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+                this.bullets.forEach((b) => {
+                  if (b.isEnemy) b.active = false;
+                });
+                this.clearBossPatternHazards();
                 this.beginBossClearSequence(e);
                 return;
               }
@@ -6450,7 +6855,7 @@ export class GameEngine {
     const tx = this.player.x + this.player.width / 2;
     const ty = this.player.y + this.player.height / 2;
     const baseAngle = Math.atan2(ty - cy, tx - cx);
-    const count = tier >= 4 ? 11 : tier >= 3 ? 9 : 7;
+    const count = Math.max(3, tier >= 4 ? 7 : tier >= 3 ? 5 : 3);
     const spread = tier >= 4 ? 0.94 : tier >= 3 ? 0.82 : 0.62;
     const speed = tier >= 4 ? 335 : tier >= 3 ? 310 : 265;
 
@@ -7472,6 +7877,41 @@ export class GameEngine {
       this.ctx.restore();
     });
 
+    this.bossEdgeStrikers.forEach((striker) => {
+      this.ctx.save();
+      const angle =
+        striker.side === "top"
+          ? Math.PI
+          : striker.side === "bottom"
+            ? 0
+            : striker.side === "left"
+              ? Math.PI / 2
+              : -Math.PI / 2;
+      const pulse = 0.72 + Math.sin((now + striker.age * 1000) * 0.02) * 0.28;
+
+      this.ctx.translate(striker.x, striker.y);
+      this.ctx.rotate(angle);
+      this.ctx.strokeStyle = "#67e8f9";
+      this.ctx.fillStyle = "#082f49";
+      this.ctx.shadowColor = "#38bdf8";
+      this.ctx.shadowBlur = 16;
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, -14);
+      this.ctx.lineTo(12, -3);
+      this.ctx.lineTo(8, 12);
+      this.ctx.lineTo(0, 8);
+      this.ctx.lineTo(-8, 12);
+      this.ctx.lineTo(-12, -3);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.stroke();
+      this.ctx.fillStyle = "#ffffff";
+      this.ctx.globalAlpha = pulse;
+      this.ctx.fillRect(-2.5, -8, 5, 11);
+      this.ctx.restore();
+    });
+
     if (this.bossCompressionField) {
       const field = this.bossCompressionField;
       const progress = field.age < field.warnTime ? 0 : Math.min(1, (field.age - field.warnTime) / field.closeTime);
@@ -7489,6 +7929,67 @@ export class GameEngine {
       this.ctx.lineWidth = 3;
       this.ctx.setLineDash(field.age < field.warnTime ? [10, 8] : []);
       this.ctx.strokeRect(inset, topInset, this.canvas.width - inset * 2, this.canvas.height - topInset * 2);
+      this.ctx.restore();
+    }
+
+    if (this.bossMazeState) {
+      const maze = this.bossMazeState;
+      this.ctx.save();
+
+      maze.walls.forEach((wall, index) => {
+        const alpha = 0.68 + Math.sin(now * 0.03 + index) * 0.16;
+        this.ctx.fillStyle = `rgba(8, 47, 73, ${0.42 + alpha * 0.18})`;
+        this.ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+        this.ctx.strokeStyle = `rgba(103, 232, 249, ${alpha})`;
+        this.ctx.lineWidth = 3;
+        this.ctx.shadowColor = "#38bdf8";
+        this.ctx.shadowBlur = 18;
+        this.ctx.beginPath();
+        for (let x = wall.x; x <= wall.x + wall.width; x += 18) {
+          const jitterTop = (Math.random() - 0.5) * 5;
+          const jitterBottom = (Math.random() - 0.5) * 5;
+          if (x === wall.x) {
+            this.ctx.moveTo(x, wall.y + jitterTop);
+          } else {
+            this.ctx.lineTo(x, wall.y + jitterTop);
+          }
+          this.ctx.moveTo(x, wall.y + wall.height + jitterBottom);
+          this.ctx.lineTo(Math.min(wall.x + wall.width, x + 9), wall.y + wall.height + jitterBottom);
+        }
+        this.ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
+      });
+
+      this.ctx.strokeStyle = "#22c55e";
+      this.ctx.fillStyle = "rgba(34, 197, 94, 0.16)";
+      this.ctx.lineWidth = 3;
+      this.ctx.setLineDash([10, 6]);
+      this.ctx.fillRect(maze.exitX, maze.exitY, maze.exitWidth, maze.exitHeight);
+      this.ctx.strokeRect(maze.exitX, maze.exitY, maze.exitWidth, maze.exitHeight);
+      this.ctx.setLineDash([]);
+
+      const remaining = maze.phase === "active" ? Math.max(0, maze.totalTime - maze.age) : maze.totalTime;
+      this.ctx.fillStyle = "#e2e8f0";
+      this.ctx.font = "700 14px Inter, system-ui, sans-serif";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText(`ESCAPE ${remaining.toFixed(1)}s`, this.canvas.width / 2, 28);
+
+      if (maze.fogAlpha > 0) {
+        this.ctx.fillStyle = `rgba(226, 232, 240, ${maze.fogAlpha})`;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        const fog = this.ctx.createRadialGradient(
+          this.player.x + this.player.width / 2,
+          this.player.y + this.player.height / 2,
+          12,
+          this.player.x + this.player.width / 2,
+          this.player.y + this.player.height / 2,
+          190,
+        );
+        fog.addColorStop(0, "rgba(255,255,255,0)");
+        fog.addColorStop(1, `rgba(255,255,255,${maze.fogAlpha * 0.75})`);
+        this.ctx.fillStyle = fog;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+
       this.ctx.restore();
     }
   }
@@ -7774,13 +8275,20 @@ export class GameEngine {
             this.ctx.setLineDash([]);
             // Core laser columns/rows
             xPositions.forEach((lx) => {
-              this.ctx.shadowColor = "#dc2626";
+              this.ctx.shadowColor = "#38bdf8";
               this.ctx.shadowBlur = 22;
-              this.ctx.strokeStyle = "rgba(220, 38, 38, 0.9)";
+              this.ctx.strokeStyle = "rgba(56, 189, 248, 0.88)";
               this.ctx.lineWidth = 36;
               this.ctx.beginPath();
               this.ctx.moveTo(lx, 0);
               this.ctx.lineTo(lx, this.canvas.height);
+              this.ctx.stroke();
+
+              this.ctx.strokeStyle = "rgba(167, 139, 250, 0.58)";
+              this.ctx.lineWidth = 18;
+              this.ctx.beginPath();
+              this.ctx.moveTo(lx + Math.sin(performance.now() * 0.02) * 5, 0);
+              this.ctx.lineTo(lx + Math.cos(performance.now() * 0.018) * 5, this.canvas.height);
               this.ctx.stroke();
 
               this.ctx.strokeStyle = "#ffffff";
@@ -7792,13 +8300,20 @@ export class GameEngine {
             });
 
             yPositions.forEach((ly) => {
-              this.ctx.shadowColor = "#dc2626";
+              this.ctx.shadowColor = "#38bdf8";
               this.ctx.shadowBlur = 22;
-              this.ctx.strokeStyle = "rgba(220, 38, 38, 0.9)";
+              this.ctx.strokeStyle = "rgba(56, 189, 248, 0.88)";
               this.ctx.lineWidth = 36;
               this.ctx.beginPath();
               this.ctx.moveTo(0, ly);
               this.ctx.lineTo(this.canvas.width, ly);
+              this.ctx.stroke();
+
+              this.ctx.strokeStyle = "rgba(167, 139, 250, 0.58)";
+              this.ctx.lineWidth = 18;
+              this.ctx.beginPath();
+              this.ctx.moveTo(0, ly + Math.sin(performance.now() * 0.02) * 5);
+              this.ctx.lineTo(this.canvas.width, ly + Math.cos(performance.now() * 0.018) * 5);
               this.ctx.stroke();
 
               this.ctx.strokeStyle = "#ffffff";
@@ -7999,13 +8514,20 @@ export class GameEngine {
             this.ctx.setLineDash([]);
             // Core laser columns/rows
             xPositions.forEach((lx) => {
-              this.ctx.shadowColor = "#f43f5e";
-              this.ctx.shadowBlur = 18;
-              this.ctx.strokeStyle = "rgba(244, 63, 94, 0.85)";
+              this.ctx.shadowColor = "#38bdf8";
+              this.ctx.shadowBlur = 20;
+              this.ctx.strokeStyle = "rgba(56, 189, 248, 0.86)";
               this.ctx.lineWidth = 28;
               this.ctx.beginPath();
               this.ctx.moveTo(lx, 0);
               this.ctx.lineTo(lx, this.canvas.height);
+              this.ctx.stroke();
+
+              this.ctx.strokeStyle = "rgba(167, 139, 250, 0.54)";
+              this.ctx.lineWidth = 14;
+              this.ctx.beginPath();
+              this.ctx.moveTo(lx + Math.sin(performance.now() * 0.02) * 4, 0);
+              this.ctx.lineTo(lx + Math.cos(performance.now() * 0.018) * 4, this.canvas.height);
               this.ctx.stroke();
 
               this.ctx.strokeStyle = "#ffffff";
@@ -8017,13 +8539,20 @@ export class GameEngine {
             });
 
             yPositions.forEach((ly) => {
-              this.ctx.shadowColor = "#f43f5e";
-              this.ctx.shadowBlur = 18;
-              this.ctx.strokeStyle = "rgba(244, 63, 94, 0.85)";
+              this.ctx.shadowColor = "#38bdf8";
+              this.ctx.shadowBlur = 20;
+              this.ctx.strokeStyle = "rgba(56, 189, 248, 0.86)";
               this.ctx.lineWidth = 28;
               this.ctx.beginPath();
               this.ctx.moveTo(0, ly);
               this.ctx.lineTo(this.canvas.width, ly);
+              this.ctx.stroke();
+
+              this.ctx.strokeStyle = "rgba(167, 139, 250, 0.54)";
+              this.ctx.lineWidth = 14;
+              this.ctx.beginPath();
+              this.ctx.moveTo(0, ly + Math.sin(performance.now() * 0.02) * 4);
+              this.ctx.lineTo(this.canvas.width, ly + Math.cos(performance.now() * 0.018) * 4);
               this.ctx.stroke();
 
               this.ctx.strokeStyle = "#ffffff";

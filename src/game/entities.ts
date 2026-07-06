@@ -155,6 +155,8 @@ export class Bullet extends Entity {
   gravityTimer: number = 0;
   fuseTimer?: number;
   parentAngle?: number;
+  turnRate?: number;
+  targetSpeed?: number;
   age?: number;
   dashTriggered?: boolean;
   bounceCount?: number;
