@@ -1,10 +1,13 @@
 import { create } from 'zustand';
-import { GameState, GameSettings, PlayerStats, ShipColor } from './types';
+import { GameMode, GameState, GameSettings, PlayerStats, ShipColor } from './types';
 import { CompletedRunSummary } from './services/leaderboard';
 
 interface AppState {
   gameState: GameState;
   setGameState: (state: GameState) => void;
+
+  gameMode: GameMode;
+  setGameMode: (mode: GameMode) => void;
   
   score: number;
   setScore: (score: number | ((prev: number) => number)) => void;
@@ -54,6 +57,9 @@ const getInitialSettings = (): GameSettings => {
 export const useAppStore = create<AppState>((set) => ({
   gameState: 'MENU',
   setGameState: (gameState) => set({ gameState }),
+
+  gameMode: 'arcade',
+  setGameMode: (gameMode) => set({ gameMode }),
   
   score: 0,
   setScore: (scoreUpdater) => set((state) => {

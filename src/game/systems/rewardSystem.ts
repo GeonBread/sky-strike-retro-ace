@@ -14,6 +14,7 @@ export interface StageRewardTarget {
     hp: number;
   };
   score: number;
+  scoreEnabled?: boolean;
   onBombsChanged?: (bombs: number) => void;
   onScoreUpdate?: (score: number) => void;
 }
@@ -47,8 +48,10 @@ export function applyStageClearReward(target: StageRewardTarget, choice: string)
     target.player.hp = Math.min(3, target.player.hp + 1);
   }
 
-  target.score += 2000;
-  target.onScoreUpdate?.(target.score);
+  if (target.scoreEnabled !== false) {
+    target.score += 2000;
+    target.onScoreUpdate?.(target.score);
+  }
 }
 
 function addDrone(target: StageRewardTarget, type: DroneType) {

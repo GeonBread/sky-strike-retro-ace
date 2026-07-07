@@ -1,15 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Bomb, HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, User, Volume2, VolumeX } from "lucide-react";
+import { Bomb, BookOpen, HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, User, Volume2, VolumeX } from "lucide-react";
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
-import { GameState, ShipColor } from "./types";
+import { GameMode, GameState, ShipColor } from "./types";
 import { DevSandbox } from "./components/DevSandbox";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { LeaderboardPanel } from "./components/LeaderboardPanel";
 import { createLocalRunSession, sanitizePlayerName } from "./services/leaderboard";
 
 const MAX_HP = 3;
+
+interface StoryResult {
+  outcome: "cleared" | "failed";
+  stage: number;
+  durationMs: number;
+}
 
 function MenuButton({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
   return (
@@ -23,7 +29,7 @@ function MenuButton({ icon: Icon, label, onClick }: { icon: React.ElementType; l
   );
 }
 
-function GameCanvas() {
+function GameCanvas({ mode, onStoryResult }: { mode: GameMode; onStoryResult: (result: StoryResult) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -44,6 +50,7 @@ function GameCanvas() {
   const [isPaused, setIsPaused] = useState(false);
   const [stageClearChoices, setStageClearChoices] = useState<string[] | null>(null);
   const [onSelectReward, setOnSelectReward] = useState<((selected: string) => void) | null>(null);
+  const isStoryMode = mode === "story";
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -74,9 +81,21 @@ function GameCanvas() {
     runStartedAtRef.current = localRunSession.startedAt;
     setLastRun(null);
 
-    engine.onScoreUpdate = setScore;
+    engine.onScoreUpdate = isStoryMode ? undefined : setScore;
     engine.onGameOver = (finalScore) => {
       const finishedAt = Date.now();
+      if (isStoryMode) {
+        setLastRun(null);
+        setScore(0);
+        onStoryResult({
+          outcome: engine.state === "VICTORY" ? "cleared" : "failed",
+          stage: engine.stage,
+          durationMs: finishedAt - runStartedAtRef.current,
+        });
+        setGameState("STORY_RESULT");
+        return;
+      }
+
       const currentStats = useAppStore.getState().stats;
       const isNewHighScore = finalScore > currentStats.highScore;
       setLastRun({
@@ -112,7 +131,7 @@ function GameCanvas() {
       setBossHp(engine.bossActive && engine.bossEntity ? engine.bossEntity.hp : null);
     }, 100);
 
-    engine.start(shipColor);
+    engine.start(shipColor, mode);
 
     return () => {
       resizeObserver.disconnect();
@@ -180,7 +199,9 @@ function GameCanvas() {
     engineRef.current.player.y = y - engineRef.current.player.height * 2.2;
   };
 
-  const bossMaxHp = stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
+  const bossMaxHp = isStoryMode
+    ? stage >= 4 ? 4200 : bossPhase3Active ? 3200 : bossPhase2Active ? 2400 : 1500
+    : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
 
   return (
@@ -195,9 +216,15 @@ function GameCanvas() {
 
       <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start pointer-events-none z-10 bg-gradient-to-b from-slate-950/80 to-transparent">
         <div>
-          <div className="font-mono text-2xl text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]">
-            점수 {score.toString().padStart(6, "0")}
-          </div>
+          {isStoryMode ? (
+            <div className="font-mono text-lg text-cyan-200 font-black tracking-widest drop-shadow-[0_0_8px_rgba(34,211,238,0.55)]">
+              STORY CHAPTER {stage}
+            </div>
+          ) : (
+            <div className="font-mono text-2xl text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]">
+              점수 {score.toString().padStart(6, "0")}
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex gap-1">
@@ -380,6 +407,35 @@ function savePlayerName(name: string): void {
   localStorage.setItem("retro_shooter_player_name", sanitizePlayerName(name));
 }
 
+function StoryResultPanel({ result, onRetry, onMenu }: { result: StoryResult | null; onRetry: () => void; onMenu: () => void }) {
+  const cleared = result?.outcome === "cleared";
+  const stageLabel = result ? `CHAPTER ${Math.min(4, result.stage)}` : "STORY";
+  const elapsed = result ? `${Math.floor(result.durationMs / 60000)}:${Math.floor((result.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : "0:00";
+
+  return (
+    <div className="w-full flex flex-col items-center text-center">
+      <div className={`mb-4 inline-block rounded-full border px-4 py-1.5 font-mono text-[10px] font-black tracking-widest ${cleared ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-200" : "border-rose-400/40 bg-rose-400/10 text-rose-200"}`}>
+        STORY MODE
+      </div>
+      <h2 className={`mb-2 text-4xl font-mono font-black ${cleared ? "text-cyan-300" : "text-rose-400"}`}>
+        {cleared ? "STORY CLEAR" : "MISSION FAILED"}
+      </h2>
+      <p className="mb-6 text-sm font-semibold text-slate-400">{stageLabel} · {elapsed}</p>
+      <div className="mb-8 w-full rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-xs font-semibold leading-relaxed text-slate-300">
+        {cleared ? "챕터 작전을 완료했습니다." : "스토리 진행이 중단되었습니다. 다시 도전할 수 있습니다."}
+      </div>
+      <div className="grid w-full grid-cols-2 gap-3">
+        <button onClick={onRetry} className="rounded-xl bg-cyan-700 px-5 py-3.5 font-mono text-sm font-black text-white transition-all duration-200 hover:bg-cyan-600">
+          다시 하기
+        </button>
+        <button onClick={onMenu} className="rounded-xl border border-slate-800 bg-slate-950 px-5 py-3.5 font-mono text-sm font-black text-white transition-all duration-200 hover:bg-slate-800">
+          메인 메뉴
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function getOrCreatePlayerId(): string {
   if (typeof localStorage === "undefined") return "LOCAL-PLAYER";
   const saved = localStorage.getItem("retro_shooter_player_id");
@@ -390,11 +446,12 @@ function getOrCreatePlayerId(): string {
 }
 
 export default function App() {
-  const { gameState, setGameState, stats, settings, updateSettings, shipColor, setShipColor } = useAppStore();
+  const { gameState, setGameState, gameMode, setGameMode, stats, settings, updateSettings, shipColor, setShipColor } = useAppStore();
   const [leaderboardReturnState, setLeaderboardReturnState] = useState<GameState>("MENU");
   const [showOptions, setShowOptions] = useState(false);
   const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
   const [playerId] = useState(() => getOrCreatePlayerId());
+  const [storyResult, setStoryResult] = useState<StoryResult | null>(null);
 
   useEffect(() => {
     sfx.init();
@@ -406,6 +463,13 @@ export default function App() {
     const normalizedName = sanitizePlayerName(playerName);
     setPlayerName(normalizedName);
     savePlayerName(normalizedName);
+    setGameMode("arcade");
+    setGameState("PLAYING");
+  };
+
+  const handleStartStory = () => {
+    setStoryResult(null);
+    setGameMode("story");
     setGameState("PLAYING");
   };
 
@@ -424,7 +488,7 @@ export default function App() {
   if (gameState === "PLAYING") {
     return (
       <div className="w-full h-screen bg-slate-950 flex items-center justify-center p-2">
-        <GameCanvas />
+        <GameCanvas mode={gameMode} onStoryResult={setStoryResult} />
       </div>
     );
   }
@@ -452,6 +516,7 @@ export default function App() {
 
             <div className="flex flex-col gap-4">
               <MenuButton icon={Play} label="게임 시작" onClick={handleStartGame} />
+              <MenuButton icon={BookOpen} label="스토리 모드" onClick={handleStartStory} />
               <button
                 onClick={() => setGameState("DEV_MODE")}
                 className="flex items-center justify-center gap-2.5 w-64 p-3.5 bg-slate-950/95 hover:bg-slate-900 text-rose-400 hover:text-rose-300 rounded-xl transition-all duration-300 border border-slate-800 hover:border-rose-500/60 font-mono text-sm font-bold"
@@ -490,6 +555,14 @@ export default function App() {
               setLeaderboardReturnState("GAME_OVER");
               setGameState("LEADERBOARD");
             }}
+          />
+        )}
+
+        {gameState === "STORY_RESULT" && (
+          <StoryResultPanel
+            result={storyResult}
+            onRetry={handleStartStory}
+            onMenu={() => setGameState("MENU")}
           />
         )}
 

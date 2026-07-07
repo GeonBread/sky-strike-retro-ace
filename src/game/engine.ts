@@ -1,4 +1,4 @@
-import { ShipColor } from "../types";
+import { type GameMode, ShipColor } from "../types";
 import { sfx } from "./AudioSystem";
 import {
   applyStageClearReward as applyStageClearRewardSystem,
@@ -33,6 +33,15 @@ const OVERDRIVE_BOSS_PHASE_IDS = [14, 15, 16, 17, 18, 19, 42, 43, 44, 45, 46];
 const FINAL_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 47, 49, 32, 51, 52];
 const CHAPTER4_BOSS_PHASE_SEQUENCE = [20, 21, 23, 24, 28, 42, 46, 47, 49, 32, 51, 52];
 const getBossMaxHpForTier = (tier: number) => tier >= 4 ? 12000 : tier >= 3 ? 9000 : tier === 2 ? 6000 : 4000;
+const getStoryBossMaxHpForTier = (tier: number) => tier >= 4 ? 4200 : tier >= 3 ? 3200 : tier === 2 ? 2400 : 1500;
+const STORY_BOSS_PHASE_IDS = [1, 3, 5, 7];
+const STORY_CHAPTER1_PARALLAX_LAYERS = [
+  "/assets/backgrounds/chapter1_parallax_layer_1.png",
+  "/assets/backgrounds/chapter1_parallax_layer_2.png",
+  "/assets/backgrounds/chapter1_parallax_layer_3.png",
+];
+const STORY_CHAPTER1_PARALLAX_SPEEDS = [18, 54, 120];
+const STORY_CHAPTER1_PARALLAX_ALPHAS = [1, 0.82, 0.5];
 
 interface ElectricTrail {
   x1: number;
@@ -191,6 +200,13 @@ export class GameEngine {
   lastCanvasWidth: number = 0;
   lastCanvasHeight: number = 0;
   paused: boolean = false;
+  playMode: GameMode = "arcade";
+  storyStageTimer: number = 0;
+  private storyAdjustedBullets: WeakSet<Bullet> = new WeakSet();
+  private storyAdjustedEnemies: WeakSet<Enemy> = new WeakSet();
+  private storyBulletSerial: number = 0;
+  private chapter1BackgroundLayers: HTMLImageElement[] = [];
+  private chapter1BackgroundReady: boolean = false;
 
   // Sandbox / Developer mode properties
   isSandbox: boolean = false;
@@ -306,9 +322,11 @@ export class GameEngine {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d")!;
+    this.loadChapter1BackgroundLayers();
   }
 
-  start(color: ShipColor) {
+  start(color: ShipColor, mode: GameMode = "arcade") {
+    this.playMode = mode;
     this.player = new Player();
     this.player.width = 48;
     this.player.height = 48;
@@ -330,6 +348,10 @@ export class GameEngine {
     this.score = 0;
     this.stage = 1;
     this.nextBossScore = 15000;
+    this.storyStageTimer = 0;
+    this.storyAdjustedBullets = new WeakSet();
+    this.storyAdjustedEnemies = new WeakSet();
+    this.storyBulletSerial = 0;
     this.assaultCommanderStage = 0;
     this.bossActive = false;
     this.bossEntity = null;
@@ -436,7 +458,7 @@ export class GameEngine {
 
         // Charging HP bar from 0 to the phase 2 max HP.
         const progress = Math.min(1.0, (3.5 - this.cutsceneTimer) / 3.5);
-        this.bossEntity.hp = Math.floor(progress * getBossMaxHpForTier(2));
+        this.bossEntity.hp = Math.floor(progress * this.getBossMaxHp(2));
 
         // Cyber overdrive laser sparks
         if (Math.random() < 0.65) {
@@ -458,7 +480,7 @@ export class GameEngine {
         this.screenShakeIntensity = 0;
 
         if (this.bossEntity) {
-          this.bossEntity.hp = getBossMaxHpForTier(2);
+          this.bossEntity.hp = this.getBossMaxHp(2);
           this.bossEntity.phase = 14;
           this.bossEntity.patternTimer = 0;
           this.bossEntity.phaseDuration = 7.5;
@@ -498,7 +520,7 @@ export class GameEngine {
         this.bossEntity.y += (bossTargetY - this.bossEntity.y) * 4 * dt;
 
         // Charging HP bar from 0 to the phase 3 max HP.
-        this.bossEntity.hp = Math.floor(progress * getBossMaxHpForTier(3));
+        this.bossEntity.hp = Math.floor(progress * this.getBossMaxHp(3));
 
         // Cyber overdrive laser sparks of final grand form
         if (Math.random() < 0.85) {
@@ -521,7 +543,7 @@ export class GameEngine {
         this.screenShakeIntensity = 0;
 
         if (this.bossEntity) {
-          this.bossEntity.hp = getBossMaxHpForTier(3);
+          this.bossEntity.hp = this.getBossMaxHp(3);
           this.bossEntity.width = 200;
           this.bossEntity.height = 150;
           this.assignBossPhase(this.bossEntity, 20);
@@ -555,17 +577,7 @@ export class GameEngine {
         this.state = "PLAYING";
         if (this.bossEntity) {
           this.resetBossPattern(this.bossEntity);
-          if (this.isSandbox && this.sandboxBossPhaseLock >= 1) {
-            this.assignBossPhase(this.bossEntity, this.sandboxBossPhaseLock, true);
-          } else if (this.stage >= 4 && this.bossPhase3Active) {
-            this.assignBossPhase(this.bossEntity, this.pickChapter4BossPhase(-1));
-          } else if (this.bossPhase3Active) {
-            this.assignBossPhase(this.bossEntity, 20);
-          } else if (this.bossPhase2Active) {
-            this.assignBossPhase(this.bossEntity, 14);
-          } else {
-            this.assignBossPhase(this.bossEntity, this.pickNormalBossPhase());
-          }
+          this.assignNextBossPhase(this.bossEntity);
         }
         if (this.onCutsceneChange) this.onCutsceneChange(false);
       }
@@ -594,11 +606,130 @@ export class GameEngine {
     this.updateBossPatternHazards(dt);
     this.checkCollisions();
 
+    if (this.isStoryMode() && !this.bossActive && !this.clearingForBoss) {
+      this.storyStageTimer += dt;
+    }
+
     if (this.isSandbox) {
       this.runSandboxMechanics(dt);
     } else {
       this.spawnEntities(dt);
+      this.tuneStoryEnemies();
     }
+  }
+
+  get scoreEnabled(): boolean {
+    return this.playMode !== "story";
+  }
+
+  private isStoryMode(): boolean {
+    return this.playMode === "story";
+  }
+
+  private awardScore(points: number) {
+    if (!this.scoreEnabled) return;
+    this.score += points;
+    if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+  }
+
+  private getBossMaxHp(tier: number): number {
+    return this.isStoryMode() ? getStoryBossMaxHpForTier(tier) : getBossMaxHpForTier(tier);
+  }
+
+  private getStoryBossDelay(): number {
+    return 24 + Math.min(3, this.stage - 1) * 4;
+  }
+
+  private pickStoryBossPhase(currentPhase = -1): number {
+    const pool = STORY_BOSS_PHASE_IDS.filter((phase) => phase !== currentPhase);
+    const choices = pool.length > 0 ? pool : STORY_BOSS_PHASE_IDS;
+    return choices[Math.floor(Math.random() * choices.length)];
+  }
+
+  private assignNextBossPhase(e: Enemy) {
+    if (this.isStoryMode()) {
+      this.assignBossPhase(e, this.pickStoryBossPhase(e.phase));
+    } else if (this.isSandbox && this.sandboxBossPhaseLock >= 1) {
+      this.assignBossPhase(e, this.sandboxBossPhaseLock, true);
+    } else if (this.stage >= 4 && this.bossPhase3Active) {
+      this.assignBossPhase(e, this.pickChapter4BossPhase(e.phase));
+    } else if (this.bossPhase3Active) {
+      this.assignBossPhase(e, this.pickNextFinalBossPhase(e.phase));
+    } else if (this.bossPhase2Active) {
+      this.assignBossPhase(e, this.pickOverdriveBossPhase(e.phase));
+    } else {
+      this.assignBossPhase(e, this.pickNormalBossPhase(e.phase));
+    }
+  }
+
+  private tuneStoryEnemies() {
+    if (!this.isStoryMode()) return;
+
+    this.enemies.forEach((e) => {
+      if (!e.active || e.type === "boss" || this.storyAdjustedEnemies.has(e)) return;
+      this.storyAdjustedEnemies.add(e);
+
+      const lightTypes: EnemyType[] = ["basic", "sweeper", "aimed", "column_shooter", "tank"];
+      if (!lightTypes.includes(e.type)) {
+        e.type = Math.random() < 0.72 ? "aimed" : "column_shooter";
+      }
+
+      e.hp = Math.max(1, Math.ceil(e.hp * 0.58));
+      e.vx *= 0.68;
+      e.vy *= 0.68;
+      e.lastShot = Math.min(e.lastShot, -0.6);
+      e.shootTimer = 0;
+      if (e.spawnPoint > 0) e.spawnPoint += 18;
+    });
+  }
+
+  private tuneStoryEnemyBullets() {
+    if (!this.isStoryMode()) return;
+
+    this.bullets.forEach((b) => {
+      if (!b.active || !b.isEnemy || this.storyAdjustedBullets.has(b)) return;
+      this.storyAdjustedBullets.add(b);
+      this.storyBulletSerial++;
+
+      const preserveBullet = b.type === "gravity_ball" || b.type === "gravity_singularity" || b.type === "void_mine";
+      if (!preserveBullet && this.storyBulletSerial % 5 < 2) {
+        b.active = false;
+        return;
+      }
+
+      const velocityScale = this.bossActive ? 0.52 : 0.6;
+      b.vx *= velocityScale;
+      b.vy *= velocityScale;
+      if (b.targetSpeed !== undefined) b.targetSpeed *= velocityScale;
+      if (b.turnRate !== undefined) b.turnRate *= 0.65;
+      b.width = Math.max(6, b.width * 0.86);
+      b.height = Math.max(6, b.height * 0.86);
+    });
+
+    const enemyBullets = this.bullets.filter((b) => b.active && b.isEnemy);
+    const cap = this.bossActive ? 64 : 36;
+    if (enemyBullets.length > cap) {
+      let excess = enemyBullets.length - cap;
+      for (const b of enemyBullets) {
+        if (excess <= 0) break;
+        if (b.type === "gravity_ball" || b.type === "gravity_singularity" || b.type === "void_mine") continue;
+        b.active = false;
+        excess--;
+      }
+    }
+  }
+
+  private loadChapter1BackgroundLayers() {
+    if (typeof Image === "undefined") return;
+
+    this.chapter1BackgroundLayers = STORY_CHAPTER1_PARALLAX_LAYERS.map((src) => {
+      const img = new Image();
+      img.onload = () => {
+        this.chapter1BackgroundReady = this.chapter1BackgroundLayers.every((layer) => layer.complete && layer.naturalWidth > 0);
+      };
+      img.src = src;
+      return img;
+    });
   }
 
   private updatePlayerPositionHistory(dt: number) {
@@ -940,7 +1071,7 @@ export class GameEngine {
       if (orb.age >= 5.0 && dist < 34 && orb.active) {
         orb.active = false;
         this.bossEntity.burstCount++;
-        const maxBossHp = getBossMaxHpForTier(this.stage >= 4 ? 4 : this.bossPhase3Active ? 3 : this.bossPhase2Active ? 2 : 1);
+        const maxBossHp = this.getBossMaxHp(this.stage >= 4 ? 4 : this.bossPhase3Active ? 3 : this.bossPhase2Active ? 2 : 1);
         this.bossEntity.hp = Math.min(maxBossHp, this.bossEntity.hp + 200);
         this.spawnExplosion(bossTx, bossTy, "#a78bfa", 14);
         sfx.bossHit();
@@ -1923,7 +2054,7 @@ export class GameEngine {
               "#c084fc",
               12,
             );
-            this.score += 100;
+            this.awardScore(100);
           }
         }
       }
@@ -1937,8 +2068,7 @@ export class GameEngine {
         if (Math.hypot(dx, dy) < this.bombRadius + m.radius) {
           m.active = false;
           sfx.enemyExplode();
-          this.score += 80;
-          if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+          this.awardScore(80);
           this.spawnExplosion(m.x, m.y, "#64748b", 22);
         }
       }
@@ -2049,7 +2179,11 @@ export class GameEngine {
   }
 
   updateBullets(dt: number) {
+    this.tuneStoryEnemyBullets();
+
     this.bullets.forEach((b) => {
+      if (!b.active) return;
+
       const prevCx = b.x + b.width / 2;
       const prevCy = b.y + b.height / 2;
 
@@ -2608,7 +2742,7 @@ export class GameEngine {
         }
       }
 
-      const speedMult = b.isEnemy ? 0.8 : 1.0;
+      const speedMult = b.isEnemy ? (this.isStoryMode() ? 0.62 : 0.8) : 1.0;
       b.x += b.vx * speedMult * dt;
       b.y += b.vy * speedMult * dt;
 
@@ -2670,6 +2804,7 @@ export class GameEngine {
         b.active = false;
       }
     });
+    this.tuneStoryEnemyBullets();
     this.bullets = this.bullets.filter((b) => b.active);
   }
 
@@ -2742,9 +2877,9 @@ export class GameEngine {
         b.height = bossTier >= 4 ? 165 : bossTier === 3 ? 150 : bossTier === 2 ? 110 : 90;
         b.x = this.canvas.width / 2 - b.width / 2;
         b.y = -120;
-        b.vx = 150;
-        b.vy = 60;
-        b.hp = getBossMaxHpForTier(bossTier);
+        b.vx = this.isStoryMode() ? 90 : 150;
+        b.vy = this.isStoryMode() ? 45 : 60;
+        b.hp = this.getBossMaxHp(bossTier);
         b.phase = 0;
         this.bossPhase2Active = bossTier === 2;
         this.bossPhase3Active = bossTier >= 3;
@@ -2752,13 +2887,18 @@ export class GameEngine {
         this.bossPhase3Triggered = bossTier >= 3;
         b.leftTurretHp = bossTier >= 4 ? 220 : bossTier === 3 ? 150 : bossTier === 2 ? 70 : 45;
         b.rightTurretHp = bossTier >= 4 ? 220 : bossTier === 3 ? 150 : bossTier === 2 ? 70 : 45;
+        if (this.isStoryMode()) {
+          b.leftTurretActive = false;
+          b.rightTurretActive = false;
+          this.storyStageTimer = 0;
+        }
         this.enemies.push(b);
         this.bossEntity = b;
       }
       return;
     }
 
-    if (this.bossActive && this.bossEntity) {
+    if (!this.isStoryMode() && this.bossActive && this.bossEntity) {
       if (this.bossEntity.phase >= 1) {
         // Skip summoning during very first intro moment
         if (!this.player.isDead) {
@@ -2781,7 +2921,7 @@ export class GameEngine {
         e.lastShot = 0;
         e.shootTimer = 0;
       } else {
-        e.lastShot += dt;
+        e.lastShot += dt * (this.isStoryMode() ? (e.type === "boss" ? 0.68 : 0.52) : 1);
       }
 
       if (e.type === "boss") {
@@ -2812,17 +2952,7 @@ export class GameEngine {
             });
 
             this.resetBossPattern(e);
-            if (this.isSandbox && this.sandboxBossPhaseLock >= 1) {
-              this.assignBossPhase(e, this.sandboxBossPhaseLock, true);
-            } else if (this.stage >= 4 && this.bossPhase3Active) {
-              this.assignBossPhase(e, this.pickChapter4BossPhase(e.phase));
-            } else if (this.bossPhase3Active) {
-              this.assignBossPhase(e, this.pickNextFinalBossPhase(e.phase));
-            } else if (this.bossPhase2Active) {
-              this.assignBossPhase(e, this.pickOverdriveBossPhase(e.phase));
-            } else {
-              this.assignBossPhase(e, this.pickNormalBossPhase(e.phase));
-            }
+            this.assignNextBossPhase(e);
           }
           if (Math.random() < 0.25) {
             this.spawnExplosion(
@@ -2913,17 +3043,7 @@ export class GameEngine {
           });
 
           this.resetBossPattern(e);
-          if (this.isSandbox && this.sandboxBossPhaseLock >= 1) {
-            this.assignBossPhase(e, this.sandboxBossPhaseLock, true);
-          } else if (this.stage >= 4 && this.bossPhase3Active) {
-            this.assignBossPhase(e, this.pickChapter4BossPhase(e.phase));
-          } else if (this.bossPhase3Active) {
-            this.assignBossPhase(e, this.pickNextFinalBossPhase(e.phase));
-          } else if (this.bossPhase2Active) {
-            this.assignBossPhase(e, this.pickOverdriveBossPhase(e.phase));
-          } else {
-            this.assignBossPhase(e, this.pickNormalBossPhase(e.phase));
-          }
+          this.assignNextBossPhase(e);
         }
 
         if (e.phase === 0) {
@@ -5030,8 +5150,9 @@ export class GameEngine {
 
   private assignBossPhase(e: Enemy, phase: number, fixedDuration = false) {
     e.phase = phase;
-    e.phaseDuration = fixedDuration ? 8.5 : this.getBossPhaseDuration(phase);
-    e.spawnPoint = Math.floor(Math.random() * 3) + 2;
+    const baseDuration = fixedDuration ? 8.5 : this.getBossPhaseDuration(phase);
+    e.phaseDuration = this.isStoryMode() ? Math.min(baseDuration, 5.8) : baseDuration;
+    e.spawnPoint = this.isStoryMode() ? 2 : Math.floor(Math.random() * 3) + 2;
     if (phase === 24 || phase === 28) {
       e.spawnPoint = Math.floor(Math.random() * 3) + 1;
     } else if (phase === 47) {
@@ -5249,11 +5370,10 @@ export class GameEngine {
           2,
         );
         b.active = false;
-        this.score += 5; // Reward points for clearing bullets!
+        this.awardScore(5); // Reward points for clearing bullets!
       }
     });
     this.bullets = this.bullets.filter((b) => b.active);
-    if (this.onScoreUpdate) this.onScoreUpdate(this.score);
   }
 
   checkCollisions() {
@@ -5369,7 +5489,7 @@ export class GameEngine {
                   this.spawnExplosion(e.x - 7, e.y + 30, "#ef4444", 30);
                   e.bossStunTimer = 1.8; // Groggy/Stun boss for 1.8s!
                   this.clearAllEnemyBullets(); // Bullet clear for catharsis!
-                  this.score += 2500; // Large reward!
+                  this.awardScore(2500); // Large reward!
                 }
                 return; // Damaged left wing turret, do not hit main health
               } else if (hitRightTurret) {
@@ -5387,7 +5507,7 @@ export class GameEngine {
                   );
                   e.bossStunTimer = 1.8; // Groggy/Stun boss for 1.8s!
                   this.clearAllEnemyBullets(); // Bullet clear for catharsis!
-                  this.score += 2500; // Large reward!
+                  this.awardScore(2500); // Large reward!
                 }
                 return; // Damaged right wing turret, do not hit main health
               }
@@ -5461,8 +5581,7 @@ export class GameEngine {
               }
 
               if (e.type === "boss") {
-                this.score += 10000;
-                if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+                this.awardScore(10000);
                 this.bullets.forEach((b) => {
                   if (b.isEnemy) b.active = false;
                 });
@@ -5490,8 +5609,7 @@ export class GameEngine {
                   this.bullets.push(blt);
                 }
               }
-              this.score += e.type === "assault_commander" ? 2500 : e.type === "tank" ? 300 : 100;
-              if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+              this.awardScore(e.type === "assault_commander" ? 2500 : e.type === "tank" ? 300 : 100);
 
               this.spawnExplosion(
                 e.x + e.width / 2,
@@ -5551,7 +5669,7 @@ export class GameEngine {
         sfx.powerup();
         if (p.type === "power") {
           if (this.player.powerLevel >= 5) {
-            this.score += 1000; // Bonus points for full weapon
+            this.awardScore(1000); // Bonus points for full weapon
             this.spawnExplosion(
               p.x + p.width / 2,
               p.y + p.height / 2,
@@ -5563,7 +5681,7 @@ export class GameEngine {
           }
         } else if (p.type === "heal") {
           if (this.player.hp >= PLAYER_MAX_HP) {
-            this.score += 1000; // Bonus points for full health
+            this.awardScore(1000); // Bonus points for full health
             this.spawnExplosion(
               p.x + p.width / 2,
               p.y + p.height / 2,
@@ -5582,8 +5700,7 @@ export class GameEngine {
             20,
           );
         }
-        this.score += 200;
-        if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+        this.awardScore(200);
       }
     });
   }
@@ -5654,11 +5771,13 @@ export class GameEngine {
 
   spawnEntities(dt: number) {
     if (this.bossActive || this.clearingForBoss) return;
+    const storyMode = this.isStoryMode();
 
     // Dynamic Wave Flow: If all active enemies are cleared, accelerate the next beautiful major wave transition!
     const activeEnemiesCount = this.enemies.filter((e) => e.active).length;
-    if (activeEnemiesCount === 0 && this.waveTimer > 1.2) {
-      this.waveTimer = 1.2; // Bring down the next awesome wave in just 1.2 seconds!
+    const emptyFieldWaveDelay = storyMode ? 2.4 : 1.2;
+    if (activeEnemiesCount === 0 && this.waveTimer > emptyFieldWaveDelay) {
+      this.waveTimer = emptyFieldWaveDelay; // Bring down the next awesome wave soon after the field clears.
     }
 
     this.spawnTimer -= dt;
@@ -5670,6 +5789,7 @@ export class GameEngine {
     );
 
     if (
+      !storyMode &&
       this.stage >= 2 &&
       this.assaultCommanderStage !== this.stage &&
       this.score >= this.nextBossScore - (tier >= 3 ? 9000 : 7000) &&
@@ -5682,8 +5802,9 @@ export class GameEngine {
       return;
     }
 
+    const storyBossReady = storyMode && this.storyStageTimer >= this.getStoryBossDelay();
     if (
-      this.score >= this.nextBossScore &&
+      (storyBossReady || this.score >= this.nextBossScore) &&
       !this.bossActive &&
       !this.clearingForBoss &&
       !assaultCommanderActive
@@ -5693,10 +5814,11 @@ export class GameEngine {
     }
 
     if (this.waveTimer <= 0) {
-      this.waveTimer =
-        Math.random() * (tier === 1 ? 7 : tier === 2 ? 5 : tier === 3 ? 3.8 : 3.2) +
-        (tier === 1 ? 10 : tier === 2 ? 7.2 : tier === 3 ? 5.6 : 4.8);
-      const wavePoolSize = tier === 1 ? 8 : tier === 2 ? 14 : 18;
+      this.waveTimer = storyMode
+        ? Math.random() * 4.5 + 8.5
+        : Math.random() * (tier === 1 ? 7 : tier === 2 ? 5 : tier === 3 ? 3.8 : 3.2) +
+          (tier === 1 ? 10 : tier === 2 ? 7.2 : tier === 3 ? 5.6 : 4.8);
+      const wavePoolSize = storyMode ? (tier === 1 ? 5 : 6) : tier === 1 ? 8 : tier === 2 ? 14 : 18;
       const waveType = Math.floor(Math.random() * wavePoolSize);
       const waveStartIndex = this.enemies.length;
       if (waveType === 0) {
@@ -6101,16 +6223,18 @@ export class GameEngine {
     }
 
     if (this.sideSpawnTimer <= 0) {
-      this.sideSpawnTimer = Math.max(
-        3.2,
-        Math.random() * (tier === 1 ? 5 : tier === 2 ? 3.8 : tier === 3 ? 3 : 2.4) +
-          (tier === 1 ? 6 : tier === 2 ? 4.5 : tier === 3 ? 3.7 : 3.0),
-      );
+      this.sideSpawnTimer = storyMode
+        ? Math.random() * 5 + 10
+        : Math.max(
+          3.2,
+          Math.random() * (tier === 1 ? 5 : tier === 2 ? 3.8 : tier === 3 ? 3 : 2.4) +
+            (tier === 1 ? 6 : tier === 2 ? 4.5 : tier === 3 ? 3.7 : 3.0),
+        );
       // side squads
       const isLeft = Math.random() > 0.5;
       const startX = isLeft ? -50 : this.canvas.width + 50;
-      const vx = (isLeft ? 350 : -350) + (isLeft ? 1 : -1) * (tier - 1) * 45;
-      const count = tier >= 4 ? 8 : tier >= 3 ? 7 : tier === 2 ? 6 : 5;
+      const vx = storyMode ? (isLeft ? 185 : -185) : (isLeft ? 350 : -350) + (isLeft ? 1 : -1) * (tier - 1) * 45;
+      const count = storyMode ? 3 : tier >= 4 ? 8 : tier >= 3 ? 7 : tier === 2 ? 6 : 5;
       for (let i = 0; i < count; i++) {
         const e = new Enemy();
         e.x = startX + (isLeft ? -i * 60 : i * 60);
@@ -6128,13 +6252,13 @@ export class GameEngine {
     }
 
     if (this.spawnTimer <= 0) {
-      const stageSpeedMod = this.stage * 18 + (tier - 1) * 18;
-      this.spawnTimer = Math.max(0.42, 1.68 - this.stage * 0.13 - (tier - 1) * 0.25);
-      const speedMult = 1.35 + (tier - 1) * 0.18;
+      const stageSpeedMod = storyMode ? this.stage * 5 + (tier - 1) * 4 : this.stage * 18 + (tier - 1) * 18;
+      this.spawnTimer = storyMode ? Math.max(1.35, 2.35 - this.stage * 0.08) : Math.max(0.42, 1.68 - this.stage * 0.13 - (tier - 1) * 0.25);
+      const speedMult = storyMode ? 0.88 + (tier - 1) * 0.04 : 1.35 + (tier - 1) * 0.18;
 
       const randLayout = Math.random();
       // Decide a common type and properties for this wave unit
-      const typeRand = Math.min(0.98, Math.random() + (tier - 1) * 0.08);
+      const typeRand = storyMode ? Math.random() * 0.42 : Math.min(0.98, Math.random() + (tier - 1) * 0.08);
       let type: EnemyType = "aimed";
       let width = 28;
       let height = 28;
@@ -6189,7 +6313,7 @@ export class GameEngine {
       }
 
       // Higher tiers lean into organized squad pressure instead of isolated fodder.
-      const squadChance = tier === 1 ? 0.45 : tier === 2 ? 0.62 : 0.72;
+      const squadChance = storyMode ? 0.22 : tier === 1 ? 0.45 : tier === 2 ? 0.62 : 0.72;
       if (randLayout < squadChance && type !== "sweeper" && type !== "stationary") {
         const groupPattern = Math.floor(Math.random() * 3);
         const baseCX = Math.random() * (this.canvas.width - 240) + 120;
@@ -6894,9 +7018,41 @@ export class GameEngine {
     }
   }
 
+  private renderChapter1ParallaxBackground(isBoss: boolean): boolean {
+    if (!this.chapter1BackgroundReady || this.chapter1BackgroundLayers.length !== 3) return false;
+
+    this.ctx.fillStyle = "#02050a";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    const time = performance.now() / 1000;
+    this.chapter1BackgroundLayers.forEach((img, index) => {
+      const scale = Math.max(this.canvas.width / img.naturalWidth, this.canvas.height / img.naturalHeight);
+      const drawWidth = img.naturalWidth * scale;
+      const drawHeight = img.naturalHeight * scale;
+      const x = (this.canvas.width - drawWidth) / 2;
+      const y = ((time * STORY_CHAPTER1_PARALLAX_SPEEDS[index]) % drawHeight + drawHeight) % drawHeight;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = STORY_CHAPTER1_PARALLAX_ALPHAS[index];
+      this.ctx.drawImage(img, x, y, drawWidth, drawHeight);
+      this.ctx.drawImage(img, x, y - drawHeight, drawWidth, drawHeight);
+      this.ctx.restore();
+    });
+
+    if (isBoss) {
+      this.ctx.save();
+      this.ctx.fillStyle = "rgba(2, 6, 23, 0.18)";
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.restore();
+    }
+
+    return true;
+  }
+
   private renderBackground() {
     const tier = this.getCombatTier();
     const isBoss = this.bossActive || this.state === "BOSSCUTSCENE";
+    if (tier === 1 && this.renderChapter1ParallaxBackground(isBoss)) return;
     const time = performance.now();
     const topColors = isBoss
       ? tier >= 4
@@ -9595,7 +9751,7 @@ export class GameEngine {
   }
 
   updateDebrisAndMeteors(dt: number) {
-    if (this.isSandbox) {
+    if (this.isSandbox || this.isStoryMode()) {
       this.debrisCovers = [];
       this.meteors = [];
       return;
@@ -9755,8 +9911,7 @@ export class GameEngine {
               if (e.hp <= 0) {
                 this.deactivateEnemy(e);
                 sfx.enemyExplode();
-                this.score += e.type === "boss" ? 10000 : 100;
-                if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+                this.awardScore(e.type === "boss" ? 10000 : 100);
                 this.spawnExplosion(e.x + e.width / 2, e.y + e.height / 2, "#fbbf24", 15);
               }
             }
@@ -9792,8 +9947,7 @@ export class GameEngine {
                 if (e.hp <= 0) {
                   this.deactivateEnemy(e);
                   sfx.enemyExplode();
-                  this.score += e.type === "boss" ? 10000 : 100;
-                  if (this.onScoreUpdate) this.onScoreUpdate(this.score);
+                  this.awardScore(e.type === "boss" ? 10000 : 100);
                   this.spawnExplosion(e.x + e.width / 2, e.y + e.height / 2, "#c084fc", 15);
                 }
               }
@@ -9815,6 +9969,7 @@ export class GameEngine {
   startNextStageAfterReward() {
     this.stage++;
     this.nextBossScore = this.score + 10000 + this.stage * 3000;
+    this.storyStageTimer = 0;
     this.bossActive = false;
     this.bossEntity = null;
     this.bossPhase2Triggered = false;
