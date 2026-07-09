@@ -167,12 +167,20 @@ import {
   updateDebrisAndMeteorSystem,
 } from "./obstacles/debrisMeteorUpdateSystem";
 import { updateHelperDroneBehaviorSystem } from "./drones/helperDroneBehaviorSystem";
+import { fireEnemySubtypeWeaponSystem, type EnemySubtypeWeaponPattern } from "./enemies/enemySubtypeWeaponSystem";
+import { tuneStoryEnemyDifficultySystem } from "./enemies/storyEnemyDifficultyTuningSystem";
+import { initializeGameStartStateSystem } from "./lifecycle/gameStartStateInitializer";
+import { initializeStageRewardTransitionSystem } from "./lifecycle/stageRewardTransitionInitializer";
+import { loadChapter1BackgroundLayersSystem } from "./render/storyChapterBackgroundAssetLoader";
+import type { HelperDroneState } from "./drones/helperDroneTypes";
+import type { DebrisCoverState } from "./obstacles/debrisCoverTypes";
+import type { MeteorObstacleState } from "./obstacles/meteorObstacleTypes";
+import type { GameEngineRuntimeContext } from "./runtime/gameEngineRuntimeContext";
 
 import {
   Bullet,
   type BulletVisualType,
   Enemy,
-  type EnemyType,
   type EngineState,
   type GameInput,
   InkCloud,
@@ -182,20 +190,9 @@ import {
 } from "./entities";
 export type { EnemyType, EngineState, GameInput } from "./entities";
 
-const PLAYER_MAX_HP = 3;
-const PLAYER_MOVE_SPEED = 415;
-const PLAYER_BULLET_SPEED_MULT = 1.16;
-const PLAYER_FIRE_INTERVAL = 0.075;
 const MAX_CHAPTER = 4;
-const STORY_CHAPTER1_PARALLAX_LAYERS = [
-  "/assets/backgrounds/chapter1_parallax_layer_1.png",
-  "/assets/backgrounds/chapter1_parallax_layer_2.png",
-  "/assets/backgrounds/chapter1_parallax_layer_3.png",
-];
-const STORY_CHAPTER1_PARALLAX_SPEEDS = [18, 54, 120];
-const STORY_CHAPTER1_PARALLAX_ALPHAS = [1, 0.82, 0.5];
 
-export class GameEngine {
+export class GameEngine implements GameEngineRuntimeContext {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   input: GameInput = {
@@ -296,35 +293,9 @@ export class GameEngine {
   onBombsChanged?: (bombs: number) => void;
   onStageClear?: (choices: string[], onSelect: (choice: string) => void) => void;
 
-  drones: {
-    type: "attack" | "homing" | "defense" | "orbit" | "laser";
-    angleOffset: number;
-    lastShot: number;
-    laserChargeCount: number;
-  }[] = [];
-
-  debrisCovers: {
-    id: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    hp: number;
-    maxHp: number;
-    active: boolean;
-  }[] = [];
-
-  meteors: {
-    x: number;
-    y: number;
-    radius: number;
-    vx: number;
-    vy: number;
-    hp: number;
-    rotation: number;
-    rotSpeed: number;
-    active: boolean;
-  }[] = [];
+  drones: HelperDroneState[] = [];
+  debrisCovers: DebrisCoverState[] = [];
+  meteors: MeteorObstacleState[] = [];
 
   meteorTimer: number = 6.0;
   sandboxRespawnTimer: number = 0;
@@ -336,62 +307,7 @@ export class GameEngine {
   }
 
   start(color: ShipColor, mode: GameMode = "arcade") {
-    this.playMode = mode;
-    this.player = new Player();
-    this.player.width = 48;
-    this.player.height = 48;
-    this.player.hitWidth = 10;
-    this.player.hitHeight = 10;
-    this.player.x = this.canvas.width / 2 - 24;
-    this.player.y = this.canvas.height - 100;
-    this.player.color = color;
-    this.player.hp = PLAYER_MAX_HP;
-    this.player.bombs = 3;
-    this.needInitialPosition = true;
-    this.lastCanvasWidth = 0;
-    this.lastCanvasHeight = 0;
-
-    this.bullets = [];
-    this.enemies = [];
-    this.particles = [];
-    this.powerups = [];
-    this.score = 0;
-    this.stage = 1;
-    this.nextBossScore = 15000;
-    this.storyStageTimer = 0;
-    this.storyAdjustedBullets = new WeakSet();
-    this.storyAdjustedEnemies = new WeakSet();
-    this.storyBulletSerial = 0;
-    this.assaultCommanderStage = 0;
-    this.bossActive = false;
-    this.bossEntity = null;
-    this.bossPhase2Triggered = false;
-    this.bossPhase2Active = false;
-    this.bossPhase3Triggered = false;
-    this.bossPhase3Active = false;
-    this.screenShakeIntensity = 0;
-    this.state = "PLAYING";
-    this.bombActive = false;
-    this.bombRadius = 0;
-    this.bossBombHitSet.clear();
-    this.clearBossPatternHazards();
-
-    this.drones = [];
-    this.meteors = [];
-    this.meteorTimer = 6.0;
-    this.spawnInitialDebris();
-
-    // Reset Sandbox state & timers back to normal gameplay speed if not launched as sandbox
-    if (!this.isSandbox) {
-      this.isSandbox = false;
-      this.sandboxMode = "single";
-    }
-    this.waveTimer = 2.0;       // First epic wave emerges in 2 seconds!
-    this.spawnTimer = 4.5;      // Settle wave before simple random spawns start pumpin'
-    this.sideSpawnTimer = 8.0;
-
-    if (this.onScoreUpdate) this.onScoreUpdate(0);
-    if (this.onBombsChanged) this.onBombsChanged(this.player.bombs);
+    initializeGameStartStateSystem(this, color, mode);
 
     this.lastTime = performance.now();
     this.reqId = requestAnimationFrame((t) => this.loop(t));
@@ -454,24 +370,7 @@ export class GameEngine {
   }
 
   private tuneStoryEnemies() {
-    if (!this.isStoryMode()) return;
-
-    this.enemies.forEach((e) => {
-      if (!e.active || e.type === "boss" || this.storyAdjustedEnemies.has(e)) return;
-      this.storyAdjustedEnemies.add(e);
-
-      const lightTypes: EnemyType[] = ["basic", "sweeper", "aimed", "column_shooter", "tank"];
-      if (!lightTypes.includes(e.type)) {
-        e.type = Math.random() < 0.72 ? "aimed" : "column_shooter";
-      }
-
-      e.hp = Math.max(1, Math.ceil(e.hp * 0.58));
-      e.vx *= 0.68;
-      e.vy *= 0.68;
-      e.lastShot = Math.min(e.lastShot, -0.6);
-      e.shootTimer = 0;
-      if (e.spawnPoint > 0) e.spawnPoint += 18;
-    });
+    tuneStoryEnemyDifficultySystem(this, this.isStoryMode());
   }
 
   private tuneStoryEnemyBullets() {
@@ -479,16 +378,7 @@ export class GameEngine {
   }
 
   private loadChapter1BackgroundLayers() {
-    if (typeof Image === "undefined") return;
-
-    this.chapter1BackgroundLayers = STORY_CHAPTER1_PARALLAX_LAYERS.map((src) => {
-      const img = new Image();
-      img.onload = () => {
-        this.chapter1BackgroundReady = this.chapter1BackgroundLayers.every((layer) => layer.complete && layer.naturalWidth > 0);
-      };
-      img.src = src;
-      return img;
-    });
+    loadChapter1BackgroundLayersSystem(this);
   }
 
   private updatePlayerPositionHistory(dt: number) {
@@ -666,73 +556,9 @@ export class GameEngine {
 
   private fireSubtypeWeapon(
     e: Enemy,
-    pattern: "aimed" | "homing" | "shotgun" | "straight",
+    pattern: EnemySubtypeWeaponPattern,
   ) {
-    // Removed sfx.shoot() for enemies per request "적이 공격하는 탄환의 효과음은 없애줘."
-    const cx = e.x + e.width / 2;
-    const cy = e.y + e.height;
-    const tx = this.player.x + this.player.width / 2;
-    const ty = this.player.y + this.player.height / 2;
-    const angleToPlayer = Math.atan2(ty - cy, tx - cx);
-
-    if (pattern === "aimed") {
-      const b = new Bullet();
-      b.x = cx - 4;
-      b.y = cy;
-      b.width = 8;
-      b.height = 8;
-      b.vx = Math.cos(angleToPlayer) * 190;
-      b.vy = Math.sin(angleToPlayer) * 190; // Slower velocity!
-      b.isEnemy = true;
-      b.type = "needle";
-      b.color = "#39ff14"; // Fluorescent green
-      this.bullets.push(b);
-    } else if (pattern === "homing") {
-      const b = new Bullet();
-      b.x = cx - 7;
-      b.y = cy - 7;
-      b.width = 14;
-      b.height = 14;
-      b.vx = Math.cos(angleToPlayer) * 360;
-      b.vy = Math.sin(angleToPlayer) * 360;
-      b.isEnemy = true;
-      b.type = "homing";
-      b.homingTimer = 2.0;
-      b.turnRate = 1.35;
-      b.targetSpeed = 360;
-      b.color = "#67e8f9";
-      b.visualType = "tesla_spine_missile";
-      this.bullets.push(b);
-    } else if (pattern === "shotgun") {
-      const count = 20;
-      const spinOffset = Math.random() * Math.PI * 2;
-      for (let i = 0; i < count; i++) {
-        const a = spinOffset + (i / count) * Math.PI * 2;
-        const b = new Bullet();
-        b.x = cx - 4;
-        b.y = cy;
-        b.width = 8;
-        b.height = 8;
-        b.vx = Math.cos(a) * 175;
-        b.vy = Math.sin(a) * 175;
-        b.isEnemy = true;
-        b.type = "pellet";
-        b.color = i % 2 === 0 ? "#fb923c" : "#facc15";
-        this.bullets.push(b);
-      }
-    } else {
-      const b = new Bullet();
-      b.x = cx - 3;
-      b.y = cy;
-      b.width = 6;
-      b.height = 12;
-      b.vx = 0;
-      b.vy = 190;
-      b.isEnemy = true;
-      b.type = "needle"; // vertical straight needle
-      b.color = "#22c55e"; // Fluorescent green
-      this.bullets.push(b); // Slower straight shots!
-    }
+    fireEnemySubtypeWeaponSystem(this, e, pattern);
   }
 
   private resetBossPattern(e: Enemy) {
@@ -961,30 +787,6 @@ export class GameEngine {
   }
 
   startNextStageAfterReward() {
-    this.stage++;
-    this.nextBossScore = this.score + 10000 + this.stage * 3000;
-    this.storyStageTimer = 0;
-    this.bossActive = false;
-    this.bossEntity = null;
-    this.bossPhase2Triggered = false;
-    this.bossPhase2Active = false;
-    this.bossPhase3Triggered = false;
-    this.bossPhase3Active = false;
-    this.screenShakeIntensity = 0;
-    this.clearingForBoss = false;
-    
-    // Refresh shields/debris for next action stage!
-    this.spawnInitialDebris();
-
-    this.bullets = [];
-    this.enemies = [];
-    this.particles = [];
-    this.powerups = [];
-    this.clearBossPatternHazards();
-    this.state = "PLAYING";
-    sfx.startBgmForPhase(Math.min(MAX_CHAPTER, this.stage));
-    
-    this.waveTimer = 1.5;
-    this.spawnTimer = 4.0;
+    initializeStageRewardTransitionSystem(this, { maxChapter: MAX_CHAPTER });
   }
 }

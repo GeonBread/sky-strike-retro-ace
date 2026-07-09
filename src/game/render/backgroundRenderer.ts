@@ -5,8 +5,7 @@
  * 배경 색상, 스크롤 속도, 챕터 1 패럴랙스 레이어 표현을 조정할 때 이 파일을 수정한다.
  */
 
-const STORY_CHAPTER1_PARALLAX_SPEEDS = [18, 54, 120];
-const STORY_CHAPTER1_PARALLAX_ALPHAS = [1, 0.82, 0.5];
+import { STORY_CHAPTER1_PARALLAX_ALPHAS, STORY_CHAPTER1_PARALLAX_SPEEDS } from "../data/storyChapterBackgroundCatalog";
 
 type BackgroundRenderEngine = any;
 
