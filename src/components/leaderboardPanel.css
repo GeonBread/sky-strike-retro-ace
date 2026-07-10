@@ -1,0 +1,293 @@
+.hobanwooLeaderboardRoot {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+}
+
+.hobanwooLeaderboardFrame {
+  position: relative;
+  width: min(94vw, 620px);
+  height: min(90vh, 900px);
+  min-height: 620px;
+  background: url("/assets/ui/panels/leaderboard-panel.png") center / 100% 100% no-repeat;
+  color: #0b1c3b;
+  filter: drop-shadow(0 24px 40px rgba(0, 10, 31, 0.45));
+}
+
+.hobanwooLeaderboardContent {
+  position: absolute;
+  inset: 7.5% 8.8% 6.8%;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.hobanwooLeaderboardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.hobanwooLeaderboardHeader img {
+  width: clamp(48px, 8vw, 74px);
+  height: auto;
+}
+
+.hobanwooLeaderboardEyebrow {
+  color: #c61f2d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+}
+
+.hobanwooLeaderboardHeader h2 {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 46px);
+  font-weight: 1000;
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+
+.hobanwooLeaderboardHeader p {
+  margin: 5px 0 0;
+  color: #536074;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.hobanwooLeaderboardScopeGrid,
+.hobanwooLeaderboardActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px;
+}
+
+.hobanwooLeaderboardScopeGrid {
+  margin-bottom: 10px;
+}
+
+.hobanwooLeaderboardScopeGrid .hobanwooButtonWrap,
+.hobanwooLeaderboardActions .hobanwooButtonWrap,
+.hobanwooLeaderboardScopeGrid .hobanwooSpriteButton,
+.hobanwooLeaderboardActions .hobanwooSpriteButton {
+  width: 100%;
+}
+
+.hobanwooLeaderboardScopeGrid .hobanwooSpriteButton img,
+.hobanwooLeaderboardActions .hobanwooSpriteButton img {
+  width: 100%;
+}
+
+.hobanwooMyRankCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  border: 3px solid #0b1c3b;
+  border-radius: 14px;
+  padding: 10px 13px;
+  background: linear-gradient(180deg, #17345f, #0a1d3c);
+  color: #fff8e9;
+  box-shadow: inset 0 0 0 2px #d8ac4d;
+}
+
+.hobanwooMyRankLabel {
+  color: #f6c64a;
+  font-size: 9px;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+}
+
+.hobanwooMyRankName {
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.hobanwooMyRankValue {
+  display: grid;
+  justify-items: end;
+}
+
+.hobanwooMyRankValue strong {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.hobanwooMyRankValue span {
+  margin-top: 3px;
+  color: #f7c54b;
+  font-size: 10px;
+  font-weight: 1000;
+}
+
+.hobanwooRankList {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 3px 2px 0;
+}
+
+.hobanwooRankList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hobanwooRankList::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #17345f;
+}
+
+.hobanwooRankEmpty {
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  color: #657087;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.hobanwooRankRow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 7px;
+  border: 2px solid rgba(11, 28, 59, 0.17);
+  border-radius: 12px;
+  padding: 9px 11px;
+  background: rgba(255, 252, 243, 0.82);
+  box-shadow: 0 3px 0 rgba(11, 28, 59, 0.08);
+}
+
+.hobanwooRankRow.podium {
+  border-width: 3px;
+  padding-block: 10px;
+}
+
+.hobanwooRankRow.podium-1 {
+  border-color: #d5a52e;
+  background: linear-gradient(180deg, #fff8d9, #f7e1a3);
+}
+
+.hobanwooRankRow.podium-2 {
+  border-color: #76889f;
+  background: linear-gradient(180deg, #f8fbff, #dfe8f1);
+}
+
+.hobanwooRankRow.podium-3 {
+  border-color: #a7653a;
+  background: linear-gradient(180deg, #fff0e3, #edc5a5);
+}
+
+.hobanwooRankPosition {
+  display: grid;
+  justify-items: center;
+  color: #b21f2c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 1000;
+}
+
+.hobanwooRankPosition span {
+  font-size: 11px;
+}
+
+.hobanwooRankPlayer {
+  min-width: 0;
+}
+
+.hobanwooRankPlayerName {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  color: #0b1c3b;
+  font-size: 14px;
+  font-weight: 1000;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hobanwooRankMeta {
+  margin-top: 3px;
+  color: #677287;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.hobanwooRankScore {
+  display: grid;
+  justify-items: end;
+}
+
+.hobanwooRankScore strong {
+  color: #0b1c3b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.hobanwooRankScore span {
+  color: #b21f2c;
+  font-size: 8px;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+}
+
+.hobanwooLeaderboardActions {
+  margin-top: 8px;
+}
+
+@media (max-width: 560px) {
+  .hobanwooLeaderboardFrame {
+    width: min(98vw, 500px);
+    height: min(92vh, 820px);
+    min-height: 580px;
+  }
+
+  .hobanwooLeaderboardContent {
+    inset: 7.4% 8.3% 6.8%;
+  }
+
+  .hobanwooLeaderboardHeader {
+    gap: 7px;
+  }
+
+  .hobanwooLeaderboardHeader img {
+    width: 47px;
+  }
+
+  .hobanwooLeaderboardHeader h2 {
+    font-size: 30px;
+  }
+
+  .hobanwooLeaderboardHeader p {
+    font-size: 9px;
+  }
+
+  .hobanwooRankRow {
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    padding: 7px 8px;
+  }
+
+  .hobanwooRankPlayerName {
+    font-size: 12px;
+  }
+
+  .hobanwooRankScore strong {
+    font-size: 15px;
+  }
+}

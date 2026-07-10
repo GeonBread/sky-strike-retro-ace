@@ -6,6 +6,7 @@
  */
 
 import { Particle } from "../entities";
+import { updatePlayerBulletHitParticleSystem } from "./playerBulletHitEffectSystem";
 
 type ParticleEffectRuntime = any;
 
@@ -15,6 +16,11 @@ type ParticleEffectRuntime = any;
  */
 export function updateParticleEffectSystem(engine: ParticleEffectRuntime, dt: number) {
 engine.particles.forEach((p) => {
+  if (p.effectKind === "playerBulletHit") {
+    updatePlayerBulletHitParticleSystem(p, dt);
+    return;
+  }
+
   p.x += p.vx * dt;
   p.y += p.vy * dt;
   p.life -= dt;

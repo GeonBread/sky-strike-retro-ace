@@ -1,0 +1,102 @@
+.hobanwooNotificationDim {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  /* 기존 화면을 그대로 유지하고 알림 패널만 위에 띄운다. */
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.hobanwooNotificationPanel {
+  position: relative;
+  width: min(94vw, 680px);
+  aspect-ratio: 1448 / 1086;
+  background: url("/assets/ui/panels/notification-panel.png") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 28px 48px rgba(0, 8, 28, 0.52));
+  animation: hobanwooNotificationPop 180ms cubic-bezier(.2, .85, .25, 1);
+}
+
+.hobanwooNotificationContent {
+  position: absolute;
+  inset: 24% 9% 8%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  text-align: center;
+  color: #0a1c3a;
+}
+
+.hobanwooNotificationEyebrow {
+  color: #c81f30;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+}
+
+.hobanwooNotificationContent h2 {
+  margin: 4px 0 12px;
+  font-size: clamp(26px, 5vw, 42px);
+  font-weight: 1000;
+  letter-spacing: -0.06em;
+}
+
+.hobanwooNotificationContent p {
+  max-width: 490px;
+  margin: 0;
+  color: #536075;
+  font-size: clamp(13px, 2.1vw, 17px);
+  font-weight: 800;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.hobanwooNotificationActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: clamp(10px, 3vw, 24px);
+  width: min(100%, 470px);
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.hobanwooNotificationActions .hobanwooButtonWrap,
+.hobanwooNotificationActions .hobanwooSpriteButton {
+  width: 100%;
+}
+
+.hobanwooNotificationActions .hobanwooSpriteButton img {
+  width: 100%;
+}
+
+@media (max-width: 560px) {
+  .hobanwooNotificationContent {
+    inset: 23% 8% 8%;
+  }
+
+  .hobanwooNotificationContent h2 {
+    margin-bottom: 7px;
+    font-size: 25px;
+  }
+
+  .hobanwooNotificationContent p {
+    font-size: 12px;
+  }
+
+  .hobanwooNotificationActions {
+    gap: 7px;
+    padding-top: 10px;
+  }
+}
+
+
+@keyframes hobanwooNotificationPop {
+  from { opacity: 0; transform: translateY(12px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

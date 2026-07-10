@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Share2, Trophy, UploadCloud } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Share2, UploadCloud } from "lucide-react";
 import { useAppStore } from "../store";
 import { buildSubmission, localLeaderboard, onlineLeaderboard, sanitizePlayerName } from "../services/leaderboard";
 import { CompletedRunSummary } from "../services/leaderboard";
+import { HobanwooSpriteButton } from "./ui/buttons/HobanwooSpriteButton";
+import "./gameOverPanel.css";
 
 interface GameOverPanelProps {
   onShare: () => void;
@@ -128,7 +130,7 @@ export function GameOverPanel({ onShare, onLeaderboard }: GameOverPanelProps) {
   };
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className="hobanwooGameOverRoot">
       <h2 className="text-4xl font-mono font-black text-rose-500 mb-2 drop-shadow-[0_0_8px_rgba(244,63,94,0.4)]">GAME OVER</h2>
       <div className="text-sm font-semibold text-slate-400 mb-6">FINAL SCORE</div>
       <div className="text-6xl font-mono font-black text-white mb-5 tracking-wider">{score.toString().padStart(6, "0")}</div>
@@ -175,31 +177,29 @@ export function GameOverPanel({ onShare, onLeaderboard }: GameOverPanelProps) {
         )}
       </div>
 
-      <div className="flex gap-4 mb-8 w-full">
+      <div className="hobanwooGameOverActions">
         <button
           onClick={() => setGameState("PLAYING")}
-          className="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-500 hover:shadow-[0_0_12px_rgba(99,102,241,0.4)] text-white font-bold rounded-xl font-mono transition-all duration-200"
+          className="hobanwooRetryButton"
         >
           다시 하기
         </button>
-        <button
+        <HobanwooSpriteButton
+          variant="mainMenu"
+          size="wide"
           onClick={() => setGameState("MENU")}
-          className="flex-1 py-3.5 bg-slate-850 hover:bg-slate-750 text-white font-bold rounded-xl font-mono transition-all duration-200 border border-slate-750"
-        >
-          메인 메뉴
-        </button>
+        />
       </div>
 
-      <div className="flex items-center justify-center gap-5">
-        <button
+      <div className="hobanwooGameOverSecondaryActions">
+        <HobanwooSpriteButton
+          variant="redesignRanking"
+          size="wide"
           onClick={onLeaderboard}
-          className="flex items-center gap-2 text-sm font-mono text-yellow-400 hover:text-yellow-300 font-extrabold transition-all duration-150"
-        >
-          <Trophy size={16} /> 랭킹 보기
-        </button>
+        />
         <button
           onClick={onShare}
-          className="flex items-center gap-2 text-sm font-mono text-cyan-400 hover:text-cyan-300 font-extrabold transition-all duration-150"
+          className="hobanwooShareButton"
         >
           <Share2 size={16} /> 공유하기
         </button>

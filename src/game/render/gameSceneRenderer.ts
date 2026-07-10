@@ -7,6 +7,7 @@
 
 import { SHIP_COLORS } from "./palette";
 import type { PlayerWeaponStyle } from "../entities";
+import { renderPlayerBulletHitParticleSystem } from "../effects/playerBulletHitEffectSystem";
 
 type GameSceneRenderEngine = any;
 
@@ -1808,6 +1809,11 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
 
     // Particles
     engine.particles.forEach((p) => {
+      if (p.effectKind === "playerBulletHit") {
+        renderPlayerBulletHitParticleSystem(engine.ctx, p);
+        return;
+      }
+
       engine.ctx.fillStyle = p.color;
       engine.ctx.globalAlpha = p.life / p.maxLife;
       engine.ctx.fillRect(p.x, p.y, p.size, p.size);

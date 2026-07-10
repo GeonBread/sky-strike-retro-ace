@@ -8,6 +8,7 @@
 import { Bullet, PowerUp } from "../entities";
 import { sfx } from "../AudioSystem";
 import { getHobanwooEnemyBulletHitRadiusSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
+import { spawnPlayerBulletHitEffectSystem } from "../effects/playerBulletHitEffectSystem";
 
 const PLAYER_MAX_HP = 3;
 
@@ -149,7 +150,12 @@ engine.bullets.forEach((b) => {
           if (hitLeftTurret) {
             e.leftTurretHp -= b.damage;
             sfx.enemyHit();
-            engine.spawnExplosion(b.x, b.y, b.color, 4);
+            spawnPlayerBulletHitEffectSystem(engine, b, {
+              x: e.x - 14,
+              y: e.y + 10,
+              width: 14,
+              height: 40,
+            });
             if (e.leftTurretHp <= 0) {
               e.leftTurretActive = false;
               sfx.enemyExplode();
@@ -162,7 +168,12 @@ engine.bullets.forEach((b) => {
           } else if (hitRightTurret) {
             e.rightTurretHp -= b.damage;
             sfx.enemyHit();
-            engine.spawnExplosion(b.x, b.y, b.color, 4);
+            spawnPlayerBulletHitEffectSystem(engine, b, {
+              x: e.x + e.width,
+              y: e.y + 10,
+              width: 14,
+              height: 40,
+            });
             if (e.rightTurretHp <= 0) {
               e.rightTurretActive = false;
               sfx.enemyExplode();
@@ -182,7 +193,7 @@ engine.bullets.forEach((b) => {
 
         e.hp -= b.damage;
         e.type === "boss" ? sfx.bossHit() : sfx.enemyHit();
-        engine.spawnExplosion(b.x, b.y, b.color, 4);
+        spawnPlayerBulletHitEffectSystem(engine, b, e);
 
         if (
           e.type === "counter_on_death" &&

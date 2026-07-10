@@ -1,4 +1,4 @@
-import { CSSProperties, useState } from "react";
+import { type CSSProperties, useState } from "react";
 import "./hobanwooSpriteButton.css";
 
 type ButtonState = "normal" | "hover" | "pressed" | "disabled" | "selected";
@@ -8,7 +8,17 @@ export type HobanwooButtonVariant =
   | "redesignStoryMode"
   | "redesignScoreMode"
   | "redesignRanking"
-  | "redesignSettings";
+  | "redesignSettings"
+  | "pauseContinue"
+  | "mainMenu"
+  | "leaderboardLocal"
+  | "leaderboardOnline"
+  | "refresh"
+  | "back"
+  | "confirm"
+  | "cancel";
+
+type HobanwooButtonSize = "start" | "main" | "sub" | "wide" | "pause" | "dialog";
 
 type HobanwooSpriteButtonProps = {
   variant: HobanwooButtonVariant;
@@ -16,12 +26,12 @@ type HobanwooSpriteButtonProps = {
   disabled?: boolean;
   selected?: boolean;
   className?: string;
-  size?: "start" | "main" | "sub";
+  size?: HobanwooButtonSize;
 };
 
 type VariantMeta = {
   label: string;
-  size: "start" | "main" | "sub";
+  size: HobanwooButtonSize;
   normal: string;
   hover?: string;
   pressed?: string;
@@ -41,35 +51,71 @@ const variantMap: Record<HobanwooButtonVariant, VariantMeta> = {
   gameStart: {
     label: "게임 시작",
     size: "start",
-    normal: "game_start_state_normal.png",
-    hover: "game_start_state_hover.png",
-    pressed: "game_start_state_pressed.png",
-    disabled: "game_start_state_disabled.png",
-    selected: "game_start_state_selected.png",
+    normal: "game-start.png",
   },
   redesignStoryMode: {
     label: "스토리 모드",
     size: "main",
-    normal: "redesign_story_mode_large.png",
+    normal: "story-mode.png",
   },
   redesignScoreMode: {
-    label: "점수 모드",
+    label: "도전 모드",
     size: "main",
-    normal: "redesign_challenge_mode_large.png",
+    normal: "challenge-mode.png",
   },
   redesignRanking: {
     label: "순위",
     size: "sub",
-    normal: "redesign_rank_panel.png",
+    normal: "ranking.png",
   },
   redesignSettings: {
     label: "설정",
     size: "sub",
-    normal: "redesign_settings_panel.png",
+    normal: "settings.png",
+  },
+  pauseContinue: {
+    label: "계속하기",
+    size: "pause",
+    normal: "continue.png",
+  },
+  mainMenu: {
+    label: "메인 화면",
+    size: "pause",
+    normal: "main-menu.png",
+  },
+  leaderboardLocal: {
+    label: "로컬 랭킹",
+    size: "wide",
+    normal: "local.png",
+  },
+  leaderboardOnline: {
+    label: "온라인 랭킹",
+    size: "wide",
+    normal: "online.png",
+  },
+  refresh: {
+    label: "새로고침",
+    size: "wide",
+    normal: "refresh.png",
+  },
+  back: {
+    label: "돌아가기",
+    size: "wide",
+    normal: "back.png",
+  },
+  confirm: {
+    label: "확인",
+    size: "dialog",
+    normal: "confirm.png",
+  },
+  cancel: {
+    label: "취소",
+    size: "dialog",
+    normal: "cancel.png",
   },
 };
 
-function getImageSrc(variant: HobanwooButtonVariant, state: ButtonState) {
+function getImageSrc(variant: HobanwooButtonVariant, state: ButtonState): string {
   const item = variantMap[variant];
   return BASE_PATH + (item[state] ?? item.normal);
 }
@@ -102,9 +148,9 @@ export function HobanwooSpriteButton({
   const src = getImageSrc(variant, state);
 
   const createParticles = () => {
-    const nextParticles = Array.from({ length: 12 }, (_, index) => {
-      const angle = (Math.PI * 2 * index) / 12 + Math.random() * 0.35;
-      const dist = 42 + Math.random() * 48;
+    const nextParticles = Array.from({ length: 10 }, (_, index) => {
+      const angle = (Math.PI * 2 * index) / 10 + Math.random() * 0.28;
+      const dist = 34 + Math.random() * 42;
 
       return {
         id: Date.now() + index,

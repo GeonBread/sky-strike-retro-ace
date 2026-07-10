@@ -217,11 +217,19 @@ export class Bullet extends Entity {
   enemyVisualPhase?: number;
 }
 
+export type ParticleEffectKind = "default" | "playerBulletHit";
+
 export class Particle extends Entity {
   life: number = 1;
   maxLife: number = 1;
   color: string = "#fff";
   size: number = 4;
+
+  /** 파티클 렌더링과 업데이트 방식을 구분합니다. */
+  effectKind: ParticleEffectKind = "default";
+
+  /** playerBulletHit 파티클에 적용되는 아래 방향 가속도(px/s^2)입니다. */
+  gravity: number = 0;
 }
 
 export class PowerUp extends Entity {

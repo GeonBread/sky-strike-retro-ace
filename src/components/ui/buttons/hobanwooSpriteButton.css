@@ -2,12 +2,14 @@
   position: relative;
   display: inline-grid;
   place-items: center;
+  max-width: 100%;
 }
 
 .hobanwooSpriteButton {
   position: relative;
   display: inline-grid;
   place-items: center;
+  max-width: 100%;
   border: 0;
   padding: 0;
   background: transparent;
@@ -24,82 +26,56 @@
 
 .hobanwooSpriteButton img {
   display: block;
-  width: var(--button-width, 260px);
   max-width: 100%;
   height: auto;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  filter: none;
+  filter: drop-shadow(0 6px 7px rgba(3, 14, 31, 0.2));
 }
 
 .hobanwooSpriteButton.size-start img {
-  width: clamp(190px, 22vw, 315px);
+  width: clamp(250px, 28vw, 360px);
 }
 
-.hobanwooSpriteButton.size-main img,
+.hobanwooSpriteButton.size-main img {
+  width: clamp(230px, 28vw, 390px);
+}
+
 .hobanwooSpriteButton.size-sub img {
-  width: clamp(190px, 22vw, 320px);
+  width: clamp(210px, 25vw, 340px);
 }
 
-.hobanwooSpriteButton::before {
-  content: "";
-  position: absolute;
-  inset: 8%;
-  z-index: -1;
-  border-radius: 30px;
-  background: radial-gradient(circle, rgba(255,216,110,.72), transparent 70%);
-  opacity: 0;
-  filter: blur(15px);
-  transform: scale(.9);
-  transition: opacity 140ms ease, transform 140ms ease;
+.hobanwooSpriteButton.size-wide img {
+  width: min(100%, 340px);
 }
 
+.hobanwooSpriteButton.size-pause img {
+  width: min(76vw, 340px);
+}
+
+.hobanwooSpriteButton.size-dialog img {
+  width: min(34vw, 220px);
+}
+
+.hobanwooSpriteButton::before,
 .hobanwooSpriteButton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  border-radius: 30px;
-  background:
-    linear-gradient(
-      110deg,
-      transparent 0%,
-      transparent 35%,
-      rgba(255,255,255,0) 42%,
-      rgba(255,255,255,.58) 49%,
-      rgba(255,255,255,0) 56%,
-      transparent 100%
-    );
-  mix-blend-mode: screen;
-  opacity: 0;
-  transform: translateX(-38%);
+  content: none;
+  display: none;
 }
 
 .hobanwooSpriteButton:hover:not(:disabled) {
-  transform: translateY(-7px) scale(1.045) rotate(-.25deg);
-  filter: saturate(1.12) brightness(1.06);
-}
-
-.hobanwooSpriteButton:hover:not(:disabled)::before,
-.hobanwooSpriteButton.selected::before {
-  opacity: 1;
-  transform: scale(1.08);
-}
-
-.hobanwooSpriteButton:hover:not(:disabled)::after {
-  opacity: 1;
-  animation: hobanwooButtonShine 900ms ease-out infinite;
+  transform: translateY(-2px) scale(1.012);
+  filter: brightness(1.015);
 }
 
 .hobanwooSpriteButton:active:not(:disabled) {
-  transform: translateY(7px) scale(.975);
-  filter: brightness(.95);
+  transform: translateY(2px) scale(.99);
+  filter: brightness(.97);
 }
 
 .hobanwooSpriteButton.selected {
-  filter: saturate(1.08) brightness(1.04);
+  filter: brightness(1.015);
 }
 
 .hobanwooSpriteButton:disabled {
@@ -135,16 +111,9 @@
   animation: hobanwooButtonParticleFly 500ms ease-out forwards;
 }
 
-@keyframes hobanwooButtonShine {
-  0% { transform: translateX(-45%); opacity: 0; }
-  18% { opacity: .9; }
-  62% { opacity: .45; }
-  100% { transform: translateX(45%); opacity: 0; }
-}
-
 @keyframes hobanwooButtonClickPop {
-  0% { transform: translateY(7px) scale(.975); }
-  45% { transform: translateY(-7px) scale(1.045); }
+  0% { transform: translateY(2px) scale(.99); }
+  45% { transform: translateY(-2px) scale(1.012); }
   100% { transform: translateY(0) scale(1); }
 }
 
@@ -166,12 +135,23 @@
 
 @media (max-width: 760px) {
   .hobanwooSpriteButton.size-start img {
-    width: min(66vw, 260px);
+    width: min(72vw, 310px);
   }
 
-  .hobanwooSpriteButton.size-main img,
+  .hobanwooSpriteButton.size-main img {
+    width: min(82vw, 330px);
+  }
+
   .hobanwooSpriteButton.size-sub img {
-    width: min(70vw, 275px);
+    width: min(76vw, 300px);
+  }
+
+  .hobanwooSpriteButton.size-wide img {
+    width: min(82vw, 300px);
+  }
+
+  .hobanwooSpriteButton.size-dialog img {
+    width: min(39vw, 190px);
   }
 }
 

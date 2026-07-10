@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Database, Medal, RefreshCw, ShieldCheck, Trophy, Wifi } from "lucide-react";
+import { Medal, RefreshCw, ShieldCheck } from "lucide-react";
 import {
   LeaderboardEntry,
   LeaderboardScope,
@@ -7,6 +7,8 @@ import {
   onlineLeaderboard,
   sanitizePlayerName,
 } from "../services/leaderboard";
+import { HobanwooSpriteButton } from "./ui/buttons/HobanwooSpriteButton";
+import "./leaderboardPanel.css";
 
 interface LeaderboardPanelProps {
   onBack: () => void;
@@ -66,152 +68,128 @@ export function LeaderboardPanel({ onBack }: LeaderboardPanelProps) {
   };
 
   useEffect(() => {
-    loadEntries();
-    loadMyRank();
+    void loadEntries();
+    void loadMyRank();
   }, [scope]);
 
   return (
-    <div className="w-full flex flex-col items-center min-h-0">
-      <h2 className="text-3xl font-black text-white font-mono mb-1 flex items-center gap-2">
-        <Trophy className="text-yellow-400" /> LEADERBOARD
-      </h2>
-      <p className="text-xs text-slate-400 font-semibold mb-5">상위 기록과 내 순위를 확인합니다.</p>
-
-      <div className="grid grid-cols-2 gap-2 w-full mb-4">
-        <ScopeButton active={scope === "local"} icon={Database} label="LOCAL" onClick={() => setScope("local")} />
-        <ScopeButton active={scope === "online"} icon={Wifi} label="ONLINE" onClick={() => setScope("online")} />
-      </div>
-
-      {scope === "online" && (
-        <div className="w-full mb-4 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-4 py-3 font-mono">
-          <div className="flex items-center justify-between gap-3">
+    <div className="hobanwooLeaderboardRoot">
+      <section className="hobanwooLeaderboardFrame" aria-label="랭킹">
+        <div className="hobanwooLeaderboardContent">
+          <header className="hobanwooLeaderboardHeader">
+            <img src="/assets/ui/logos/site-logo.png" alt="" draggable={false} />
             <div>
-              <div className="text-[10px] text-indigo-200 font-black tracking-widest">MY ONLINE RANK</div>
-              <div className="text-sm text-slate-300 font-bold mt-1">{savedName}</div>
+              <div className="hobanwooLeaderboardEyebrow">GRADUATION OPERATION</div>
+              <h2>순위표</h2>
+              <p>상위 기록과 내 순위를 확인합니다.</p>
             </div>
-            <div className="text-right">
-              {myRank.loading ? (
-                <RefreshCw size={18} className="animate-spin text-indigo-300" />
-              ) : myRank.entry && myRank.rank ? (
-                <>
-                  <div className="text-2xl text-white font-black">#{myRank.rank}</div>
-                  <div className="text-xs text-yellow-300 font-black">{formatScore(myRank.entry.score)}</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-lg text-slate-400 font-black">NO RANK</div>
-                  <div className="text-[10px] text-slate-500">온라인 기록 없음</div>
-                </>
-              )}
+          </header>
+
+          <div className="hobanwooLeaderboardScopeGrid">
+            <HobanwooSpriteButton
+              variant="leaderboardLocal"
+              size="wide"
+              selected={scope === "local"}
+              onClick={() => setScope("local")}
+            />
+            <HobanwooSpriteButton
+              variant="leaderboardOnline"
+              size="wide"
+              selected={scope === "online"}
+              onClick={() => setScope("online")}
+            />
+          </div>
+
+          {scope === "online" && (
+            <div className="hobanwooMyRankCard">
+              <div>
+                <div className="hobanwooMyRankLabel">MY ONLINE RANK</div>
+                <div className="hobanwooMyRankName">{savedName}</div>
+              </div>
+              <div className="hobanwooMyRankValue">
+                {myRank.loading ? (
+                  <RefreshCw size={20} className="animate-spin" />
+                ) : myRank.entry && myRank.rank ? (
+                  <>
+                    <strong>#{myRank.rank}</strong>
+                    <span>{formatScore(myRank.entry.score)}</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>NO RANK</strong>
+                    <span>온라인 기록 없음</span>
+                  </>
+                )}
+              </div>
             </div>
+          )}
+
+          <div className="hobanwooRankList">
+            {loading && (
+              <div className="hobanwooRankEmpty">
+                <RefreshCw size={17} className="animate-spin" /> 불러오는 중
+              </div>
+            )}
+
+            {!loading && entries.length === 0 && (
+              <div className="hobanwooRankEmpty">
+                {message || "아직 등록된 기록이 없습니다."}
+              </div>
+            )}
+
+            {!loading && entries.map((entry, index) => (
+              <React.Fragment key={entry.id}>
+                {renderRankRow(entry, index + 1)}
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div className="hobanwooLeaderboardActions">
+            <HobanwooSpriteButton
+              variant="refresh"
+              size="wide"
+              onClick={() => {
+                void loadEntries();
+                void loadMyRank();
+              }}
+            />
+            <HobanwooSpriteButton variant="back" size="wide" onClick={onBack} />
           </div>
         </div>
-      )}
-
-      <div className="w-full min-h-0 max-h-[min(46vh,420px)] overflow-y-auto overscroll-contain pr-1 space-y-2.5 mb-6 font-mono">
-        {loading && (
-          <div className="h-32 flex items-center justify-center text-slate-500 text-xs">
-            <RefreshCw size={16} className="animate-spin mr-2" /> 불러오는 중
-          </div>
-        )}
-
-        {!loading && entries.length === 0 && (
-          <div className="h-32 flex items-center justify-center text-slate-500 text-xs text-center px-6">
-            {message || "아직 등록된 기록이 없습니다."}
-          </div>
-        )}
-
-        {!loading && entries.map((entry, index) => (
-          <div key={entry.id} className="contents">
-            {renderRankRow(entry, index + 1)}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 w-full">
-        <button
-          onClick={() => {
-            loadEntries();
-            loadMyRank();
-          }}
-          className="px-5 py-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 font-bold rounded-lg font-mono transition-all duration-200 flex items-center justify-center gap-2"
-        >
-          <RefreshCw size={16} /> 새로고침
-        </button>
-        <button
-          onClick={onBack}
-          className="px-5 py-3.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-white font-bold rounded-lg font-mono transition-all duration-200"
-        >
-          돌아가기
-        </button>
-      </div>
+      </section>
     </div>
-  );
-}
-
-function ScopeButton({
-  active,
-  icon: Icon,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  icon: React.ElementType;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`h-11 rounded-lg border font-mono text-xs font-black flex items-center justify-center gap-2 transition-all ${
-        active
-          ? "bg-cyan-500/15 border-cyan-400 text-cyan-100 shadow-[0_0_14px_rgba(34,211,238,0.18)]"
-          : "bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300"
-      }`}
-    >
-      <Icon size={15} /> {label}
-    </button>
   );
 }
 
 function renderRankRow(entry: LeaderboardEntry, rank: number) {
   const podium = rank <= 3;
-  const colors = rank === 1
-    ? "border-yellow-400/70 bg-yellow-400/12 text-yellow-100"
-    : rank === 2
-      ? "border-cyan-300/55 bg-cyan-300/10 text-cyan-100"
-      : rank === 3
-        ? "border-fuchsia-400/55 bg-fuchsia-400/10 text-fuchsia-100"
-        : "border-slate-800 bg-slate-950/60 text-slate-300";
 
   return (
-    <div className={`grid grid-cols-[3.25rem_1fr_auto] items-center gap-3 rounded-lg border ${podium ? "p-4" : "p-3"} ${colors}`}>
-      <div className="flex items-center justify-center">
+    <div className={`hobanwooRankRow ${podium ? `podium podium-${rank}` : ""}`}>
+      <div className="hobanwooRankPosition">
         {podium ? (
-          <div className="flex flex-col items-center leading-none">
-            <Medal size={22} className={rank === 1 ? "text-yellow-300" : rank === 2 ? "text-cyan-200" : "text-fuchsia-300"} />
-            <span className="text-[10px] font-black mt-1">#{rank}</span>
-          </div>
+          <>
+            <Medal size={22} />
+            <span>#{rank}</span>
+          </>
         ) : (
-          <span className="text-sm font-black text-slate-500">#{rank}</span>
+          <span>#{rank}</span>
         )}
       </div>
 
-      <div className="min-w-0">
-        <div className={`${podium ? "text-base" : "text-sm"} font-black truncate flex items-center gap-1.5`}>
+      <div className="hobanwooRankPlayer">
+        <div className="hobanwooRankPlayerName">
           {entry.playerName}
-          {entry.verified && <ShieldCheck size={12} className="text-emerald-400 shrink-0" />}
+          {entry.verified && <ShieldCheck size={13} />}
         </div>
-        <div className="text-[10px] text-slate-500 mt-1">
-          STAGE {entry.stage} / {formatDuration(entry.durationMs)}
+        <div className="hobanwooRankMeta">
+          STAGE {entry.stage} · {formatDuration(entry.durationMs)}
         </div>
       </div>
 
-      <div className="text-right">
-        <div className={`${podium ? "text-2xl" : "text-xl"} font-black text-white tracking-wide`}>
-          {formatScore(entry.score)}
-        </div>
-        {podium && <div className="text-[9px] font-black tracking-widest text-slate-400">SCORE</div>}
+      <div className="hobanwooRankScore">
+        <strong>{formatScore(entry.score)}</strong>
+        <span>SCORE</span>
       </div>
     </div>
   );

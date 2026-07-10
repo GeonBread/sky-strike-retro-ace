@@ -10,6 +10,9 @@ import { LeaderboardPanel } from "./components/LeaderboardPanel";
 import { createLocalRunSession, sanitizePlayerName } from "./services/leaderboard";
 import { HobanwooMainMenu } from "./components/ui/buttons/HobanwooMainMenu";
 import { HobanwooShipSelectPanel } from "./components/ui/buttons/HobanwooShipSelectPanel";
+import { HobanwooSpriteButton } from "./components/ui/buttons/HobanwooSpriteButton";
+import { NotificationDialog } from "./components/ui/NotificationDialog";
+import "./components/ui/hobanwooOverlayPanels.css";
 
 const MAX_HP = 3;
 
@@ -37,6 +40,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   const engineRef = useRef<GameEngine | null>(null);
   const inputRef = useRef<GameInput>({ up: false, down: false, left: false, right: false, fire: false, useBomb: false });
   const isPausedRef = useRef(false);
+  const showExitConfirmRef = useRef(false);
   const runSessionRef = useRef(createLocalRunSession());
   const runStartedAtRef = useRef(Date.now());
 
@@ -50,6 +54,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   const [bossPhase3Active, setBossPhase3Active] = useState(false);
   const [isBossCutscene, setIsBossCutscene] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [stageClearChoices, setStageClearChoices] = useState<string[] | null>(null);
   const [onSelectReward, setOnSelectReward] = useState<((selected: string) => void) | null>(null);
   const isStoryMode = mode === "story";
@@ -60,6 +65,10 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
     if (isPaused) sfx.pauseAll();
     else sfx.resumeAll();
   }, [isPaused]);
+
+  useEffect(() => {
+    showExitConfirmRef.current = showExitConfirm;
+  }, [showExitConfirm]);
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
@@ -146,6 +155,10 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Escape") {
         event.preventDefault();
+        if (showExitConfirmRef.current) {
+          setShowExitConfirm(false);
+          return;
+        }
         setIsPaused((prev) => !prev);
         return;
       }
@@ -207,7 +220,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
 
   return (
-    <div className="relative w-full h-full max-w-2xl mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col" ref={containerRef}>
+    <div className="relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col" ref={containerRef}>
       <canvas
         ref={canvasRef}
         className="block touch-none flex-grow"
@@ -308,30 +321,39 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
       )}
 
       {isPaused && (
-        <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 z-50 pointer-events-auto">
-          <div className="text-center max-w-sm w-full bg-slate-900 border-2 border-purple-500/30 p-8 rounded-3xl shadow-[0_0_25px_rgba(168,85,247,0.25)]">
-            <div className="inline-block px-3 py-1 mb-4 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 font-mono text-[10px] uppercase tracking-widest font-black">
-              GAME PAUSED
-            </div>
-            <h2 className="text-2xl font-black text-slate-100 font-mono tracking-wider mb-8">일시 정지</h2>
-            <div className="flex flex-col gap-3 w-full">
-              <button onClick={() => setIsPaused(false)} className="w-full p-4 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-slate-100 rounded-xl transition-all duration-300 border border-cyan-400 font-mono text-base font-bold">
-                계속하기
-              </button>
-              <button
+        <div className="hobanwooPauseDim">
+          <section className="hobanwooPausePanel" aria-label="일시 정지">
+            <div className="hobanwooPauseEyebrow">GAME PAUSED</div>
+            <h2>일시 정지</h2>
+            <div className="hobanwooPauseActions">
+              <HobanwooSpriteButton
+                variant="pauseContinue"
                 onClick={() => {
-                  sfx.resumeAll();
-                  engineRef.current?.stop();
-                  setGameState("MENU");
+                  setShowExitConfirm(false);
+                  setIsPaused(false);
                 }}
-                className="w-full p-4 bg-slate-950 hover:bg-slate-800 text-rose-400 hover:text-rose-300 rounded-xl transition-all duration-300 border border-slate-800 hover:border-rose-500 font-mono text-sm font-bold"
-              >
-                메인 메뉴
-              </button>
+              />
+              <HobanwooSpriteButton
+                variant="mainMenu"
+                onClick={() => setShowExitConfirm(true)}
+              />
             </div>
-          </div>
+          </section>
         </div>
       )}
+
+      <NotificationDialog
+        open={showExitConfirm}
+        title="메인 화면으로 이동"
+        message="현재 플레이 기록이 종료됩니다.\n메인 화면으로 돌아가시겠습니까?"
+        onCancel={() => setShowExitConfirm(false)}
+        onConfirm={() => {
+          setShowExitConfirm(false);
+          sfx.resumeAll();
+          engineRef.current?.stop();
+          setGameState("MENU");
+        }}
+      />
     </div>
   );
 }
@@ -455,6 +477,8 @@ export default function App() {
   const [playerId] = useState(() => getOrCreatePlayerId());
   const [storyResult, setStoryResult] = useState<StoryResult | null>(null);
   const [showShipSelect, setShowShipSelect] = useState(false);
+  // 시작 버튼을 한 번 누른 뒤에는 다른 화면을 다녀와도 모드 선택 메뉴 상태를 유지한다.
+  const [mainMenuOpen, setMainMenuOpen] = useState(false);
 
   useEffect(() => {
     sfx.init();
@@ -500,10 +524,15 @@ export default function App() {
     return <DevSandbox onBack={() => setGameState("MENU")} shipColor={shipColor} />;
   }
 
-  if (gameState === "MENU") {
+  if (gameState === "MENU" || gameState === "LEADERBOARD") {
+    const menuInteractive = gameState === "MENU";
+
     return (
       <div className="relative h-screen w-full overflow-hidden bg-slate-950 text-slate-100">
         <HobanwooMainMenu
+          menuOpen={mainMenuOpen}
+          onMenuOpenChange={setMainMenuOpen}
+          interactive={menuInteractive}
           onStoryMode={() => {
             setShowOptions(false);
             setShowShipSelect(false);
@@ -515,6 +544,7 @@ export default function App() {
             handleStartGame();
           }}
           onRanking={() => {
+            setMainMenuOpen(true);
             setShowOptions(false);
             setShowShipSelect(false);
             setLeaderboardReturnState("MENU");
@@ -535,8 +565,8 @@ export default function App() {
           }}
         />
 
-        {showOptions && (
-          <div className="absolute right-4 top-4 z-40 w-[min(92vw,320px)] rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl">
+        {menuInteractive && showOptions && (
+          <div className="hobanwooOptionsPanel absolute right-4 top-4 z-40 w-[min(92vw,320px)] rounded-2xl border p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <div className="font-mono text-sm font-black text-slate-100">OPTIONS</div>
               <button onClick={() => setShowOptions(false)} className="text-xs font-mono text-slate-500 hover:text-slate-200">CLOSE</button>
@@ -549,12 +579,18 @@ export default function App() {
           </div>
         )}
 
-        {showShipSelect && (
+        {menuInteractive && showShipSelect && (
           <HobanwooShipSelectPanel
             value={shipStyle}
             onChange={setShipStyle}
             onClose={() => setShowShipSelect(false)}
           />
+        )}
+
+        {gameState === "LEADERBOARD" && (
+          <div className="hobanwooLeaderboardOverlay">
+            <LeaderboardPanel onBack={() => setGameState(leaderboardReturnState)} />
+          </div>
         )}
       </div>
     );
@@ -564,7 +600,10 @@ export default function App() {
     <div className="w-full h-screen bg-slate-950 text-slate-200 flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: "radial-gradient(circle at center, #6366f1 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
 
-      <div className="z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-slate-900/95 border-2 border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center border-[rgba(99,102,241,0.2)]">
+      <div className={gameState === "LEADERBOARD"
+        ? "z-10 w-full max-w-2xl max-h-[calc(100vh-1rem)] overflow-hidden bg-transparent border-0 rounded-none p-0 shadow-none flex flex-col items-center"
+        : "z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-slate-900/95 border-2 border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center border-[rgba(99,102,241,0.2)]"
+      }>
         {gameState === "MENU" && (
           <>
             <div className="text-center mb-10">
@@ -615,6 +654,7 @@ export default function App() {
           <GameOverPanel
             onShare={handleShare}
             onLeaderboard={() => {
+              setMainMenuOpen(true);
               setLeaderboardReturnState("GAME_OVER");
               setGameState("LEADERBOARD");
             }}
@@ -751,7 +791,6 @@ export default function App() {
           </div>
         )}
 
-        {gameState === "LEADERBOARD" && <LeaderboardPanel onBack={() => setGameState(leaderboardReturnState)} />}
       </div>
 
       {gameState === "MENU" && (
@@ -774,7 +813,7 @@ export default function App() {
       )}
 
       {gameState === "MENU" && showOptions && (
-        <div className="absolute bottom-20 right-4 z-20 w-72 rounded-xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl">
+        <div className="hobanwooOptionsPanel absolute bottom-20 right-4 z-20 w-72 rounded-xl border p-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
             <div className="font-mono text-sm font-black text-slate-100">OPTIONS</div>
             <button onClick={() => setShowOptions(false)} className="text-xs font-mono text-slate-500 hover:text-slate-200">CLOSE</button>
