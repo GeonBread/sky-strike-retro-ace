@@ -5,7 +5,7 @@
  * 보스 페이즈 선택, 보스 특수 패턴, 보스 해저드 갱신/렌더링 구현은 boss 폴더의 기능 파일로 분리되어 있다.
  * 외부 UI와 연결되는 public API, 상태 보관, update/render 호출 순서를 바꿀 때 이 파일을 수정한다.
  */
-import { type GameMode, ShipColor } from "../types";
+import { type GameMode, ShipColor, type ShipStyle } from "../types";
 import { sfx } from "./AudioSystem";
 import {
   applyStageClearReward as applyStageClearRewardSystem,
@@ -112,6 +112,7 @@ import {
   addPlayerBulletEntitySystem,
   firePlayerWeaponBulletPatternSystem,
 } from "./player/playerWeaponBulletPatternSystem";
+import { updatePlayerWeaponBulletMotionSystem } from "./player/playerWeaponBulletMotionSystem";
 import {
   triggerPlayerSmartBombSystem,
   updatePlayerSmartBombSystem,
@@ -306,8 +307,9 @@ export class GameEngine implements GameEngineRuntimeContext {
     this.loadChapter1BackgroundLayers();
   }
 
-  start(color: ShipColor, mode: GameMode = "arcade") {
+  start(color: ShipColor, mode: GameMode = "arcade", style: ShipStyle = "science") {
     initializeGameStartStateSystem(this, color, mode);
+    this.player.weaponStyle = style;
 
     this.lastTime = performance.now();
     this.reqId = requestAnimationFrame((t) => this.loop(t));
@@ -526,11 +528,13 @@ export class GameEngine implements GameEngineRuntimeContext {
     vy: number,
     c: string,
     dmg: number = 1.0,
+    meta: Partial<Bullet> = {},
   ) {
-    addPlayerBulletEntitySystem(this, x, y, w, h, vx, vy, c, dmg);
+    addPlayerBulletEntitySystem(this, x, y, w, h, vx, vy, c, dmg, meta);
   }
 
   updateBullets(dt: number) {
+    updatePlayerWeaponBulletMotionSystem(this, dt);
     this.tuneStoryEnemyBullets();
     updateBulletMovementAndSpecialPatternSystem(this, dt, {
       isStoryMode: this.isStoryMode(),

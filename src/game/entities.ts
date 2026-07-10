@@ -1,4 +1,4 @@
-import { ShipColor } from "../types";
+import { ShipColor, ShipStyle } from "../types";
 import { Box } from "./utils/geometry";
 
 export class Entity implements Box {
@@ -14,8 +14,29 @@ export class Entity implements Box {
   active: boolean = true;
 }
 
+export type PlayerWeaponStyle = ShipStyle;
+export type HobanuPlayerBulletKind =
+  | "gear"
+  | "atom"
+  | "formula"
+  | "book"
+  | "letter"
+  | "speech"
+  | "palette"
+  | "janggu"
+  | "ball"
+  | "whistle"
+  | "musicBeam";
+
+export type HobanuPlayerBulletTrailPoint = {
+  x: number;
+  y: number;
+  size: number;
+};
+
 export class Player extends Entity {
   color: ShipColor = "blue";
+  weaponStyle: PlayerWeaponStyle = "science";
   powerLevel: number = 1; // 1 ~ 5
   invulnTimer: number = 0;
   lastShot: number = 0;
@@ -118,6 +139,25 @@ export type BulletVisualType =
 export class Bullet extends Entity {
   isEnemy: boolean = false;
   damage: number = 1;
+  playerWeaponStyle?: PlayerWeaponStyle;
+  playerWeaponLevel?: number;
+  playerBulletKind?: HobanuPlayerBulletKind;
+  playerBulletSprite?: string;
+  playerBulletLabel?: string;
+  playerBulletSize?: number;
+  playerBulletSpin?: number;
+  playerBulletRotation?: number;
+  playerBulletTrail?: HobanuPlayerBulletTrailPoint[];
+  playerBulletHoming?: boolean;
+  playerBulletWave?: number;
+  playerBulletLife?: number;
+  playerBulletMaxLife?: number;
+  playerBeamBig?: boolean;
+  playerBeamPhase?: number;
+  playerBeamThickness?: number;
+  playerBeamCore?: number;
+  playerBeamAmp?: number;
+  playerBeamMaxTargets?: number;
   type:
     | "normal"
     | "homing"

@@ -7,6 +7,8 @@ type HobanwooMainMenuProps = {
   onScoreMode: () => void;
   onRanking: () => void;
   onSettings: () => void;
+  onShipSelect: () => void;
+  onDevMode: () => void;
 };
 
 export function HobanwooMainMenu({
@@ -14,6 +16,8 @@ export function HobanwooMainMenu({
   onScoreMode,
   onRanking,
   onSettings,
+  onShipSelect,
+  onDevMode,
 }: HobanwooMainMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,24 +44,22 @@ export function HobanwooMainMenu({
       )}
 
       {menuOpen && (
-        <div className="hobanwooMainButtonColumn">
-          <HobanwooSpriteButton
-            variant="redesignStoryMode"
-            onClick={onStoryMode}
-          />
-          <HobanwooSpriteButton
-            variant="redesignScoreMode"
-            onClick={onScoreMode}
-          />
-          <HobanwooSpriteButton
-            variant="redesignRanking"
-            onClick={onRanking}
-          />
-          <HobanwooSpriteButton
-            variant="redesignSettings"
-            onClick={onSettings}
-          />
-        </div>
+        <>
+          <div className="hobanwooMainButtonColumn">
+            <HobanwooSpriteButton variant="redesignStoryMode" onClick={onStoryMode} />
+            <HobanwooSpriteButton variant="redesignScoreMode" onClick={onScoreMode} />
+            <HobanwooSpriteButton variant="redesignRanking" onClick={onRanking} />
+            <HobanwooSpriteButton variant="redesignSettings" onClick={onSettings} />
+            <button type="button" className="hobanwooTempShipButton" onClick={onShipSelect}>
+              <span className="hobanwooTempShipIcon">✦</span>
+              <span>기체 선택</span>
+            </button>
+          </div>
+
+          <button type="button" className="hobanwooDevModeButton" onClick={onDevMode}>
+            DEV
+          </button>
+        </>
       )}
     </section>
   );

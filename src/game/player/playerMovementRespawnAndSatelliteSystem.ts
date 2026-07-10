@@ -4,6 +4,11 @@
  * 이 파일은 플레이어의 캔버스 위치 보정, 입력 기반 이동, 사망 후 부활 처리,
  * 무적 시간 감소, 기본 발사 입력 처리, 위성 보조 사격 주기를 담당한다.
  * 플레이어 조작감, 부활 위치, 무적 시간, 위성 회전·발사 주기를 수정할 때 이 파일을 수정한다.
+ *
+ * 호반우 전공 계열 무기 리듬:
+ * - 이과/공대: 1.0초 집중 연사 후 0.2초 쉬는 리듬
+ * - 문과: 이과보다 느리고 예체능보다 빠른 중간 발사 주기
+ * - 예체능: 레벨과 상관없이 고정된 느린 발사 주기
  */
 
 import { Bullet } from "../entities";
@@ -11,9 +16,53 @@ import { sfx } from "../AudioSystem";
 
 const PLAYER_MAX_HP = 3;
 const PLAYER_MOVE_SPEED = 415;
-const PLAYER_FIRE_INTERVAL = 0.075;
+
+// 기존 기본 발사 주기. Vanguard 또는 스타일 정보가 없을 때만 fallback으로 사용한다.
+const DEFAULT_PLAYER_FIRE_INTERVAL = 0.075;
 
 type PlayerRuntime = any;
+
+function getHobanuPlayerFireInterval(engine: PlayerRuntime): number {
+  const level = Math.max(1, Math.min(5, engine.player?.powerLevel ?? 1));
+  const style = engine.player?.weaponStyle ?? "science";
+
+  if (engine.player?.color === "vanguard") {
+    return DEFAULT_PLAYER_FIRE_INTERVAL;
+  }
+
+  if (style === "science") {
+    // demo v26: interval = Math.max(34, 58 - level * 4) ms
+    return Math.max(34, 58 - level * 4) / 1000;
+  }
+
+  if (style === "humanities") {
+    // demo v26: interval = Math.max(80, 130 - level * 10) ms
+    return Math.max(80, 130 - level * 10) / 1000;
+  }
+
+  if (style === "arts") {
+    // demo v26: interval = 185 ms
+    return 0.185;
+  }
+
+  return DEFAULT_PLAYER_FIRE_INTERVAL;
+}
+
+function canHobanuPlayerShootNow(engine: PlayerRuntime): boolean {
+  const style = engine.player?.weaponStyle ?? "science";
+
+  if (engine.player?.color === "vanguard") {
+    return true;
+  }
+
+  if (style === "science") {
+    // demo v26: canShoot = (now % 1200) < 1000
+    // 1.0초 연사 + 0.2초 휴식
+    return (performance.now() % 1200) < 1000;
+  }
+
+  return true;
+}
 
 /**
  * 현재 입력 상태와 플레이어 생존 상태를 기준으로 위치, 부활, 발사 입력, 위성 보조탄을 갱신한다.
@@ -22,7 +71,7 @@ type PlayerRuntime = any;
 export function updatePlayerMovementRespawnAndSatelliteSystem(engine: PlayerRuntime, dt: number) {
   if (engine.canvas.width > 100 && engine.canvas.height > 100) {
     const isDefaultCanvas = engine.canvas.width === 300 && engine.canvas.height === 150;
-    
+
     if (engine.needInitialPosition || isDefaultCanvas) {
       engine.player.x = engine.canvas.width / 2 - engine.player.width / 2;
       engine.player.y = engine.canvas.height - 100;
@@ -90,7 +139,9 @@ export function updatePlayerMovementRespawnAndSatelliteSystem(engine: PlayerRunt
   }
 
   engine.player.lastShot += dt;
-  if (engine.input.fire && engine.player.lastShot > PLAYER_FIRE_INTERVAL) {
+  const fireInterval = getHobanuPlayerFireInterval(engine);
+  const canShoot = canHobanuPlayerShootNow(engine);
+  if (engine.input.fire && canShoot && engine.player.lastShot > fireInterval) {
     engine.player.lastShot = 0;
     engine.firePlayerBullet();
   }

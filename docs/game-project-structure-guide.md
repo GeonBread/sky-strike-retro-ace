@@ -76,8 +76,8 @@ src/game/entities.ts
 | 수정하고 싶은 것 | 먼저 볼 파일 |
 |---|---|
 | 게임 루프, 시작/정지, 상태 보관, public API | `src/game/engine.ts` |
-| 플레이어 이동, 부활, 무적, 위성 발사 | `src/game/player/playerMovementRespawnAndSatelliteSystem.ts` |
-| 플레이어 기본 탄환, Vanguard 탄환 | `src/game/player/playerWeaponBulletPatternSystem.ts` |
+| 플레이어 이동, 부활, 무적, 계열별 발사 주기, 위성 발사 | `src/game/player/playerMovementRespawnAndSatelliteSystem.ts` |
+| 플레이어 기본 탄환, Vanguard 탄환, 호반우 전공 계열 탄 생성 패턴 | `src/game/player/playerWeaponBulletPatternSystem.ts` |
 | 플레이어 피격, 사망, 게임오버 | `src/game/player/playerDamageAndRespawnSystem.ts` |
 | 플레이어 스마트 폭탄 | `src/game/player/playerSmartBombSystem.ts` |
 | 일반 몬스터 이동/공격 | `src/game/enemies/enemyMovementAndAttackSystem.ts` |
@@ -90,6 +90,7 @@ src/game/entities.ts
 | 보스 해저드 시각화 | `src/game/boss/bossHazardRenderer.ts` |
 | 보스 본체 외형 | `src/game/render/bossBodyRenderer.ts` |
 | 탄환 이동, 유도, 분열, 폭발, 회수 | `src/game/bullets/bulletMovementAndSpecialPatternSystem.ts` |
+| 호반우 플레이어 탄 유도, 파동, 수명, 음악 빔 후처리 | `src/game/player/playerWeaponBulletMotionSystem.ts` |
 | 탄환 디자인, 발광, 꼬리, 미사일 모양 | `src/game/render/enemyBulletVisualRenderer.ts` |
 | 충돌, 데미지, 파워업 획득 | `src/game/collision/collisionDamageAndPowerUpCollectionSystem.ts` |
 | 전투 화면 전체 렌더링 순서 | `src/game/render/gameSceneRenderer.ts` |
@@ -1806,6 +1807,242 @@ src/store.ts
 
 ---
 
+
+## 11.8 호반우 플레이어·전공 계열 탄 디자인을 바꾸고 싶을 때
+
+먼저 볼 파일:
+
+```txt
+src/App.tsx
+src/types.ts
+src/store.ts
+src/game/entities.ts
+src/game/engine.ts
+src/game/player/playerMovementRespawnAndSatelliteSystem.ts
+src/game/player/playerWeaponBulletPatternSystem.ts
+src/game/player/playerWeaponBulletMotionSystem.ts
+src/game/render/gameSceneRenderer.ts
+public/assets/player/hobanu_player.png
+public/assets/bullets/player/
+```
+
+필요할 수 있는 UI 파일:
+
+```txt
+src/components/ui/buttons/HobanwooMainMenu.tsx
+src/components/ui/buttons/hobanwooMainMenu.css
+src/components/ui/buttons/HobanwooShipSelectPanel.tsx
+src/components/ui/buttons/hobanwooShipSelectPanel.css
+```
+
+판단 기준:
+
+```txt
+메인 화면의 기체 선택 버튼 = HobanwooMainMenu.tsx
+이과 / 문과 / 예체능 선택 패널 = HobanwooShipSelectPanel.tsx
+선택한 계열 저장 = store.ts의 shipStyle
+선택 가능한 계열 타입 = types.ts의 ShipStyle, entities.ts의 PlayerWeaponStyle
+게임 시작 시 선택 계열을 엔진에 전달 = App.tsx의 GameCanvas와 engine.start 호출
+플레이어가 현재 쓰는 무기 계열 = engine.player.weaponStyle
+탄 생성 개수, 좌우 배치, 속도, 데미지, 스프라이트 지정 = playerWeaponBulletPatternSystem.ts
+계열별 발사 주기와 이과 탄의 연사/휴식 리듬 = playerMovementRespawnAndSatelliteSystem.ts
+유도탄, 파동탄, 수명 감소, 음악 빔 후처리 = playerWeaponBulletMotionSystem.ts
+호반우 플레이어 이미지, 부유, 미세 흔들림, 추진기 효과 = gameSceneRenderer.ts
+플레이어 탄 PNG drawImage 렌더링, 잔상, 회전, 음악 빔 시각화 = gameSceneRenderer.ts
+탄에 붙는 계열/레벨/스프라이트/특수 효과 필드 = entities.ts의 Bullet
+```
+
+**현재 적용 구조**
+
+```txt
+기체 선택 UI
+→ store.shipStyle
+→ GameCanvas prop
+→ GameEngine.start(color, mode, style)
+→ engine.player.weaponStyle
+→ playerWeaponBulletPatternSystem.ts
+→ Bullet.playerWeaponStyle / Bullet.playerWeaponLevel / Bullet.playerBulletSprite
+→ playerWeaponBulletMotionSystem.ts
+→ gameSceneRenderer.ts
+```
+
+**전공 계열**
+
+```txt
+science = 이과/공대
+humanities = 문과
+arts = 예체능
+```
+
+탄 레벨은 기존 게임과 동일하게 1~5단계를 유지합니다.
+
+```txt
+engine.player.powerLevel = 1 ~ 5
+```
+
+최종 탄 디자인은 내부 도형을 즉석으로 그리는 방식이 아니라, 실제 PNG 스프라이트 파일을 불러와서 사용합니다.
+
+```txt
+public/assets/bullets/player/science_gear.png
+public/assets/bullets/player/science_atom.png
+public/assets/bullets/player/science_formula_v_ir.png
+public/assets/bullets/player/humanities_book.png
+public/assets/bullets/player/humanities_letter.png
+public/assets/bullets/player/humanities_speech.png
+public/assets/bullets/player/arts_palette.png
+public/assets/bullets/player/arts_janggu.png
+public/assets/bullets/player/arts_ball.png
+public/assets/bullets/player/arts_whistle.png
+```
+
+플레이어 캐릭터도 캔버스 도형으로 새로 그리는 방식이 아니라 실제 이미지 파일을 사용합니다.
+
+```txt
+public/assets/player/hobanu_player.png
+```
+
+**플레이어 표시 기준**
+
+```txt
+화면 표시 크기 = engine.player.width * 2.85 기준
+충돌 판정 크기 = 기존 player width / height 유지
+효과 = 부유 + 미세 흔들림 + 양쪽 추진기 불꽃 + 약한 글로우
+```
+
+호반우 이미지가 커 보이거나 작아 보이면 `gameSceneRenderer.ts`의 호반우 플레이어 렌더링 크기 배율만 조정합니다. 충돌 판정 자체를 바꿀 목적이 아니라면 `entities.ts`의 player width / height는 그대로 둡니다.
+
+**계열별 발사 주기**
+
+```txt
+이과/공대:
+- interval = Math.max(34, 58 - level * 4) ms
+- canShoot = (performance.now() % 1200) < 1000
+- 1.0초 집중 연사 후 0.2초 휴식
+
+문과:
+- interval = Math.max(80, 130 - level * 10) ms
+- 이과보다 느리고 예체능보다 빠른 중간 발사 주기
+
+예체능:
+- interval = 185 ms
+- 레벨과 상관없이 고정된 느린 발사 주기
+
+Vanguard:
+- 기존 DEFAULT_PLAYER_FIRE_INTERVAL fallback 유지
+```
+
+이 값은 `playerMovementRespawnAndSatelliteSystem.ts`의 `getHobanuPlayerFireInterval`, `canHobanuPlayerShootNow`에서 관리합니다.
+
+**계열별 탄 생성 패턴**
+
+```txt
+이과/공대 Lv.1:
+- 톱니바퀴 1발
+
+이과/공대 Lv.2:
+- 좌우 톱니바퀴 2발
+
+이과/공대 Lv.3:
+- 중앙 톱니바퀴 1발
+- 좌우 V=IR 공식탄 2발
+
+이과/공대 Lv.4:
+- 좌우 톱니바퀴 2발
+- 좌우 원자력/원자 기호탄 2발
+
+이과/공대 Lv.5:
+- 중앙 톱니바퀴 1발
+- 좌우 V=IR 공식탄 2발
+- 좌우 원자력/원자 기호탄 2발
+```
+
+```txt
+문과 Lv.1:
+- 책탄 1발
+
+문과 Lv.2:
+- 책탄 1발
+- 자음탄 1발
+
+문과 Lv.3:
+- 넓은 4발 확산
+- 자음탄 / 책탄 / 말풍선탄 조합
+
+문과 Lv.4:
+- 넓은 6발 확산
+- 자음탄 / 책탄 / 말풍선탄 조합
+
+문과 Lv.5:
+- 넓은 8발 확산
+- 자음탄 / 책탄 / 말풍선탄 조합
+```
+
+```txt
+예체능 Lv.1:
+- 팔레트 유도탄 1발
+
+예체능 Lv.2:
+- 팔레트 유도탄 1발
+- 스포츠볼 유도탄 1발
+
+예체능 Lv.3:
+- 팔레트 유도탄 1발
+- 장구탄 1발
+- 스포츠볼 유도탄 1발
+
+예체능 Lv.4:
+- 음악 빔 1개
+- 팔레트 유도탄 1발
+- 장구탄 1발
+
+예체능 Lv.5:
+- 강화 음악 빔 1개
+- 팔레트 / 장구 / 스포츠볼 / 호루라기탄 4발
+```
+
+탄 생성 패턴을 바꾸려면 `playerWeaponBulletPatternSystem.ts`의 아래 함수들을 봅니다.
+
+```txt
+spawnScience
+spawnHumanities
+spawnArts
+addSpriteBullet
+addMusicBeam
+```
+
+탄의 유도, 파동, 수명, 음악 빔 후처리를 바꾸려면 `playerWeaponBulletMotionSystem.ts`를 봅니다.
+
+탄 이미지 표시 크기, 회전, 잔상, 빔 시각화를 바꾸려면 `gameSceneRenderer.ts`의 플레이어 탄 렌더링 구간을 봅니다.
+
+**탄 데이터 필드 기준**
+
+`Bullet`에는 플레이어 탄 렌더링을 위해 아래 계열 정보와 이미지 정보가 붙습니다.
+
+```txt
+playerWeaponStyle
+playerWeaponLevel
+playerBulletKind
+playerBulletSprite
+playerBulletLabel
+playerBulletSize
+playerBulletSpin
+playerBulletRotation
+playerBulletTrail
+playerBulletHoming
+playerBulletWave
+playerBulletLife
+playerBulletMaxLife
+playerBeamBig
+playerBeamPhase
+playerBeamThickness
+playerBeamCore
+playerBeamAmp
+playerBeamMaxTargets
+```
+
+이 필드들은 플레이어 탄에만 사용합니다. 적/보스 탄 디자인은 기존처럼 `enemyBulletVisualRenderer.ts`와 적/보스 탄 시스템을 기준으로 수정합니다.
+
+
 # 12. 리팩터링 시 유지할 기준
 
 앞으로 코드 작업을 할 때는 아래 기준을 유지합니다.
@@ -1846,3 +2083,382 @@ core.ts
 ```
 
 단, `src/game/utils/geometry.ts`, `src/lib/utils.ts`처럼 정말 범용 유틸리티만 모은 파일은 예외적으로 허용할 수 있습니다.
+
+## 최종 UI / 플레이어 / 탄환 디자인 적용 변경사항
+
+### 1. 메인 화면 UI 적용 범위
+
+메인 화면은 기존 텍스트 기반 메뉴를 호반우 테마 리디자인 UI로 교체하는 방향으로 정리한다.
+
+적용 구조는 다음과 같다.
+
+```txt
+1단계 메인 화면
+- 호반우의 졸업 대작전 로고
+- 게임 시작 버튼
+
+게임 시작 클릭 후 2단계 메뉴 화면
+- 스토리 모드
+- 점수 모드 / 도전 모드
+- 순위
+- 설정
+- 기체 선택
+- DEV 버튼
+```
+
+메인 화면 관련 수정 파일은 다음이다.
+
+```txt
+src/App.tsx
+src/components/ui/buttons/HobanwooMainMenu.tsx
+src/components/ui/buttons/hobanwooMainMenu.css
+src/components/ui/buttons/HobanwooSpriteButton.tsx
+src/components/ui/buttons/hobanwooSpriteButton.css
+```
+
+메인 화면 에셋은 다음 경로를 기준으로 둔다.
+
+```txt
+public/assets/ui/buttons/
+public/assets/ui/logos/
+public/assets/backgrounds/main_menu_campus_bg.png
+public/site_logo.png
+```
+
+브라우저 탭 / 사이트 대표 아이콘은 다음 파일을 사용한다.
+
+```txt
+public/site_logo.png
+```
+
+개발 서버 포트는 `3000`을 사용한다.
+
+```txt
+http://localhost:3000
+```
+
+포트 설정 파일은 다음이다.
+
+```txt
+vite.config.ts
+```
+
+---
+
+### 2. 개발자 모드 버튼 복구
+
+메인 화면 UI를 리디자인하면서 사라졌던 개발자 모드 진입 버튼은 메뉴 화면 옆에 작은 `DEV` 버튼으로 복구한다.
+
+수정 파일은 다음이다.
+
+```txt
+src/App.tsx
+src/components/ui/buttons/HobanwooMainMenu.tsx
+src/components/ui/buttons/hobanwooMainMenu.css
+```
+
+동작은 다음과 같다.
+
+```txt
+DEV 버튼 클릭
+→ setGameState("DEV_MODE")
+→ 기존 DevSandbox 화면 진입
+```
+
+---
+
+### 3. 기체 선택 기능 추가
+
+기존 게임은 탄 레벨만 존재하고, 탄 스타일 선택 기능은 없었다.  
+새 구조에서는 `기체 선택` 메뉴를 추가하고, 여기서 플레이어/탄 스타일을 선택한다.
+
+선택 가능한 스타일은 다음 3가지다.
+
+```txt
+science      이과 / 공대
+humanities   문과
+arts         예체능
+```
+
+관련 타입과 상태는 다음 파일에서 관리한다.
+
+```txt
+src/types.ts
+src/store.ts
+```
+
+기체 선택 UI는 다음 파일로 분리한다.
+
+```txt
+src/components/ui/buttons/HobanwooShipSelectPanel.tsx
+src/components/ui/buttons/hobanwooShipSelectPanel.css
+```
+
+선택한 스타일은 게임 시작 시 엔진으로 전달된다.
+
+```txt
+App.tsx
+→ GameCanvas
+→ GameEngine.start(...)
+→ player.weaponStyle
+→ playerWeaponBulletPatternSystem.ts
+→ gameSceneRenderer.ts
+```
+
+---
+
+### 4. 플레이어 호반우 이미지 적용
+
+플레이어 캐릭터는 코드 내부에서 임의로 그리는 방식이 아니라, 실제 PNG 이미지를 사용한다.
+
+사용 파일은 다음이다.
+
+```txt
+public/assets/player/hobanu_player.png
+```
+
+렌더링 파일은 다음이다.
+
+```txt
+src/game/render/gameSceneRenderer.ts
+```
+
+현재 적용 기준은 다음과 같다.
+
+```txt
+- 호반우 PNG 이미지 기반 렌더링
+- 미세 부유 효과
+- 미세 좌우 흔들림
+- 약한 글로우
+- 하단 추진기 / 불꽃 제거
+```
+
+호반우 하단 불꽃은 제거한다.  
+따라서 `drawHobanuThruster(...)` 호출은 호반우 렌더링에서 사용하지 않는다.
+
+---
+
+### 5. 플레이어 탄 PNG 에셋 적용
+
+탄 이미지는 새로 생성하지 않고, 제공된 PNG 파일을 그대로 사용한다.
+
+적용 경로는 다음이다.
+
+```txt
+public/assets/bullets/player/
+```
+
+사용 파일은 다음이다.
+
+```txt
+science_gear.png
+science_atom.png
+science_formula_v_ir.png
+
+humanities_book.png
+humanities_letter.png
+humanities_speech.png
+
+arts_palette.png
+arts_janggu.png
+arts_ball.png
+arts_whistle.png
+```
+
+탄 PNG는 게임 내부에서 새로 그려 저장하는 방식이 아니라, 위 실제 파일을 로드한 뒤 `drawImage(...)`로 렌더링한다.
+
+---
+
+### 6. 탄 계열별 발사 방식 적용
+
+탄 레벨은 기존 게임과 동일하게 `1 ~ 5`단계를 유지한다.
+
+탄 디자인은 다음 관계로 결정한다.
+
+```txt
+탄 디자인 = 기체 스타일 + 무기 레벨
+```
+
+즉 기존의 단순한 `powerLevel` 기준에서 다음 구조로 확장한다.
+
+```txt
+weaponStyle + powerLevel
+```
+
+핵심 수정 파일은 다음이다.
+
+```txt
+src/game/entities.ts
+src/game/engine.ts
+src/game/player/playerWeaponBulletPatternSystem.ts
+src/game/player/playerWeaponBulletMotionSystem.ts
+src/game/player/playerMovementRespawnAndSatelliteSystem.ts
+src/game/render/gameSceneRenderer.ts
+```
+
+---
+
+### 7. 발사 주기 반영
+
+발사 주기는 계열별로 다르게 적용한다.
+
+```txt
+이과 / 공대
+- 집중 연사형
+- 일정 시간 연사 후 짧게 멈췄다가 다시 발사
+- 원본 기준: 1.0초 집중 연사 + 0.2초 휴식
+
+문과
+- 이과보다 느린 주기
+- 레벨에 따라 약간 빨라짐
+
+예체능
+- 문과보다 더 느린 주기
+- 레벨 4~5에서는 음악 레이저 연출 포함
+```
+
+발사 입력과 주기 제어는 다음 파일에서 처리한다.
+
+```txt
+src/game/player/playerMovementRespawnAndSatelliteSystem.ts
+```
+
+탄 생성 자체는 다음 파일에서 처리한다.
+
+```txt
+src/game/player/playerWeaponBulletPatternSystem.ts
+```
+
+---
+
+### 8. 계열별 탄 패턴
+
+#### 이과 / 공대
+
+```txt
+Lv.1 = 톱니바퀴 1발
+Lv.2 = 톱니바퀴 좌우 2발
+Lv.3 = 중앙 톱니 + 좌우 V=IR
+Lv.4 = 좌우 톱니 + 좌우 원자력탄
+Lv.5 = 중앙 톱니 + 좌우 V=IR + 좌우 원자력탄
+```
+
+사용 PNG:
+
+```txt
+science_gear.png
+science_atom.png
+science_formula_v_ir.png
+```
+
+#### 문과
+
+```txt
+Lv.1 = 책탄 1발
+Lv.2 = 책탄 + 문자/기호 탄
+Lv.3 = 넓은 확산형 탄
+Lv.4 = 더 넓은 확산형 탄
+Lv.5 = 최대 확산형 탄
+```
+
+사용 PNG:
+
+```txt
+humanities_book.png
+humanities_letter.png
+humanities_speech.png
+```
+
+#### 예체능
+
+```txt
+Lv.1 = 팔레트 탄
+Lv.2 = 팔레트 + 스포츠볼 탄
+Lv.3 = 팔레트 + 장구 + 스포츠볼 탄
+Lv.4 = 음악 레이저 + 보조 탄
+Lv.5 = 강화 음악 레이저 + 팔레트/장구/공/호루라기 탄
+```
+
+사용 PNG:
+
+```txt
+arts_palette.png
+arts_janggu.png
+arts_ball.png
+arts_whistle.png
+```
+
+---
+
+### 9. 예체능 음악 레이저 디자인 반영
+
+예체능 레벨 4~5에서 사용하는 음악 레이저는 PNG 스프라이트가 아니라 Canvas 선으로 그린다.
+
+디자인 요소는 제공된 음악 레이저 코드의 디자인 부분을 기준으로 한다.
+
+```txt
+- 굵은 검은 외곽선
+- 메인 색상 레이저 선
+- 흰색 중앙 코어
+- 지터 하이라이트
+- 오선지 / 마디선 느낌의 수직선
+- 경로에 붙는 음표 장식
+- 시작점 원형 코어
+- 끝점 별 모양 노드
+- 끝점 음표 표시
+```
+
+렌더링 위치는 다음 파일이다.
+
+```txt
+src/game/render/gameSceneRenderer.ts
+```
+
+레이저는 실제 탄 PNG와는 별개이며, 매 프레임 Canvas 렌더링으로 처리한다.
+
+---
+
+### 10. 화살표 탄 수정 사항
+
+화살표 탄은 외곽 형태와 전체 실루엣은 유지하되, 내부의 노란색 삼각형만 제거한다.
+
+적용 기준은 다음과 같다.
+
+```txt
+- 바깥 검은 외곽선 유지
+- 하늘색 / 청록색 화살표 본체 유지
+- 내부 노란색 삼각형 제거
+- 새 이미지 생성 방식이 아니라 기존 코드 또는 PNG 수정 코드로 처리
+```
+
+해당 수정은 이미지 생성 작업이 아니라 코드/에셋 처리 작업으로 관리한다.
+
+---
+
+### 11. 최종 패치 기준
+
+최종 적용 패치 기준은 다음 흐름이다.
+
+```txt
+메인 화면 UI
+→ 호반우 로고 / 게임 시작 / 메뉴 버튼 / 기체 선택 / DEV 버튼
+
+기체 선택
+→ science / humanities / arts 선택
+
+게임 시작
+→ 선택한 shipStyle이 엔진에 전달
+
+플레이어 렌더링
+→ hobanu_player.png 사용
+→ 하단 불꽃 제거
+
+탄 생성
+→ playerWeaponBulletPatternSystem.ts에서 style + level 기준 생성
+
+탄 렌더링
+→ public/assets/bullets/player/*.png 실제 파일 사용
+
+예체능 음악 레이저
+→ Canvas 디자인 렌더링
+```

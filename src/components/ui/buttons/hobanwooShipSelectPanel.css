@@ -1,0 +1,135 @@
+.hobanwooShipSelectDim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(5px);
+}
+
+.hobanwooShipSelectPanel {
+  width: min(94vw, 760px);
+  border: 5px solid #050505;
+  border-radius: 28px;
+  padding: clamp(18px, 3vw, 28px);
+  background: linear-gradient(180deg, #fff7df 0%, #f7dfb6 100%);
+  box-shadow: 0 0 0 3px #ffd86e, 0 28px 60px rgba(0, 0, 0, 0.48);
+  color: #10233f;
+}
+
+.hobanwooShipSelectHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.hobanwooShipSelectEyebrow {
+  font-size: 12px;
+  font-weight: 1000;
+  color: #b91c1c;
+  letter-spacing: 0.12em;
+}
+
+.hobanwooShipSelectHeader h2 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 54px);
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+}
+
+.hobanwooShipSelectClose {
+  border: 3px solid #050505;
+  border-radius: 999px;
+  background: #b91c1c;
+  color: #fff7df;
+  padding: 9px 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.hobanwooShipSelectDescription {
+  margin: 10px 0 20px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.hobanwooShipStyleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.hobanwooShipStyleCard {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  min-height: 190px;
+  border: 4px solid #050505;
+  border-radius: 22px;
+  padding: 18px 12px;
+  background: #fffaf0;
+  color: #10233f;
+  cursor: pointer;
+  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+}
+
+.hobanwooShipStyleCard:hover {
+  transform: translateY(-5px) scale(1.025);
+  filter: brightness(1.04);
+}
+
+.hobanwooShipStyleCard.selected {
+  background: linear-gradient(180deg, #fee2e2, #fff7df);
+  box-shadow: inset 0 0 0 4px #ffd86e;
+}
+
+.hobanwooShipStyleIcon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  border: 3px solid #050505;
+  background: linear-gradient(180deg, #ffd86e, #f59e0b);
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 1000;
+  text-shadow: 1px 2px 0 rgba(0,0,0,0.35);
+}
+
+.hobanwooShipStyleTitle {
+  font-size: 24px;
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+}
+
+.hobanwooShipStyleSubtitle {
+  min-height: 34px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.hobanwooShipStyleLevel {
+  margin-top: 5px;
+  border-radius: 999px;
+  background: #10233f;
+  color: #fff7df;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .hobanwooShipStyleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .hobanwooShipStyleCard {
+    min-height: 132px;
+  }
+}

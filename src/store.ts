@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameMode, GameState, GameSettings, PlayerStats, ShipColor } from './types';
+import { GameMode, GameState, GameSettings, PlayerStats, ShipColor, ShipStyle } from './types';
 import { CompletedRunSummary } from './services/leaderboard';
 
 interface AppState {
@@ -14,6 +14,9 @@ interface AppState {
   
   shipColor: ShipColor;
   setShipColor: (color: ShipColor) => void;
+
+  shipStyle: ShipStyle;
+  setShipStyle: (style: ShipStyle) => void;
   
   settings: GameSettings;
   updateSettings: (settings: Partial<GameSettings>) => void;
@@ -69,6 +72,12 @@ export const useAppStore = create<AppState>((set) => ({
   
   shipColor: 'blue',
   setShipColor: (shipColor) => set({ shipColor }),
+
+  shipStyle: (localStorage.getItem('retro_shooter_ship_style') as ShipStyle | null) || 'science',
+  setShipStyle: (shipStyle) => {
+    localStorage.setItem('retro_shooter_ship_style', shipStyle);
+    set({ shipStyle });
+  },
   
   settings: getInitialSettings(),
   updateSettings: (newSettings) => set((state) => {

@@ -4,6 +4,8 @@ export type GameMode = 'arcade' | 'story';
 
 export type ShipColor = 'blue' | 'red' | 'green' | 'yellow' | 'vanguard';
 
+export type ShipStyle = 'science' | 'humanities' | 'arts';
+
 export interface GameSettings {
   bgmVolume: number;
   sfxVolume: number;

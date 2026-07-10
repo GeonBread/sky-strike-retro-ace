@@ -3,12 +3,13 @@ import { Bomb, BookOpen, HelpCircle, Keyboard, Palette, Play, Settings, Shield, 
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
-import { GameMode, GameState, ShipColor } from "./types";
+import { GameMode, GameState, ShipColor, ShipStyle } from "./types";
 import { DevSandbox } from "./components/DevSandbox";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { LeaderboardPanel } from "./components/LeaderboardPanel";
-import { HobanwooMainMenu } from "./components/ui/buttons/HobanwooMainMenu";
 import { createLocalRunSession, sanitizePlayerName } from "./services/leaderboard";
+import { HobanwooMainMenu } from "./components/ui/buttons/HobanwooMainMenu";
+import { HobanwooShipSelectPanel } from "./components/ui/buttons/HobanwooShipSelectPanel";
 
 const MAX_HP = 3;
 
@@ -30,7 +31,7 @@ function MenuButton({ icon: Icon, label, onClick }: { icon: React.ElementType; l
   );
 }
 
-function GameCanvas({ mode, onStoryResult }: { mode: GameMode; onStoryResult: (result: StoryResult) => void }) {
+function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipStyle: ShipStyle; onStoryResult: (result: StoryResult) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -132,7 +133,7 @@ function GameCanvas({ mode, onStoryResult }: { mode: GameMode; onStoryResult: (r
       setBossHp(engine.bossActive && engine.bossEntity ? engine.bossEntity.hp : null);
     }, 100);
 
-    engine.start(shipColor, mode);
+    engine.start(shipColor, mode, shipStyle);
 
     return () => {
       resizeObserver.disconnect();
@@ -447,12 +448,13 @@ function getOrCreatePlayerId(): string {
 }
 
 export default function App() {
-  const { gameState, setGameState, gameMode, setGameMode, stats, settings, updateSettings, shipColor, setShipColor } = useAppStore();
+  const { gameState, setGameState, gameMode, setGameMode, stats, settings, updateSettings, shipColor, setShipColor, shipStyle, setShipStyle } = useAppStore();
   const [leaderboardReturnState, setLeaderboardReturnState] = useState<GameState>("MENU");
   const [showOptions, setShowOptions] = useState(false);
   const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
   const [playerId] = useState(() => getOrCreatePlayerId());
   const [storyResult, setStoryResult] = useState<StoryResult | null>(null);
+  const [showShipSelect, setShowShipSelect] = useState(false);
 
   useEffect(() => {
     sfx.init();
@@ -489,7 +491,7 @@ export default function App() {
   if (gameState === "PLAYING") {
     return (
       <div className="w-full h-screen bg-slate-950 flex items-center justify-center p-2">
-        <GameCanvas mode={gameMode} onStoryResult={setStoryResult} />
+        <GameCanvas mode={gameMode} shipStyle={shipStyle} onStoryResult={setStoryResult} />
       </div>
     );
   }
@@ -504,22 +506,37 @@ export default function App() {
         <HobanwooMainMenu
           onStoryMode={() => {
             setShowOptions(false);
+            setShowShipSelect(false);
             handleStartStory();
           }}
           onScoreMode={() => {
             setShowOptions(false);
+            setShowShipSelect(false);
             handleStartGame();
           }}
           onRanking={() => {
             setShowOptions(false);
+            setShowShipSelect(false);
             setLeaderboardReturnState("MENU");
             setGameState("LEADERBOARD");
           }}
-          onSettings={() => setShowOptions((prev) => !prev)}
+          onSettings={() => {
+            setShowShipSelect(false);
+            setShowOptions((prev) => !prev);
+          }}
+          onShipSelect={() => {
+            setShowOptions(false);
+            setShowShipSelect(true);
+          }}
+          onDevMode={() => {
+            setShowOptions(false);
+            setShowShipSelect(false);
+            setGameState("DEV_MODE");
+          }}
         />
 
         {showOptions && (
-          <div className="absolute right-4 top-4 z-30 w-[min(92vw,320px)] rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl">
+          <div className="absolute right-4 top-4 z-40 w-[min(92vw,320px)] rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between">
               <div className="font-mono text-sm font-black text-slate-100">OPTIONS</div>
               <button onClick={() => setShowOptions(false)} className="text-xs font-mono text-slate-500 hover:text-slate-200">CLOSE</button>
@@ -530,6 +547,14 @@ export default function App() {
             <OptionSlider label="Enemy Hit" value={settings.enemyHitVolume} onChange={(value) => updateSettings({ enemyHitVolume: value })} />
             <OptionSlider label="Item Pickup" value={settings.itemVolume} onChange={(value) => updateSettings({ itemVolume: value })} />
           </div>
+        )}
+
+        {showShipSelect && (
+          <HobanwooShipSelectPanel
+            value={shipStyle}
+            onChange={setShipStyle}
+            onClose={() => setShowShipSelect(false)}
+          />
         )}
       </div>
     );
