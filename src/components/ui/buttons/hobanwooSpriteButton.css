@@ -1,0 +1,186 @@
+.hobanwooButtonWrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.hobanwooSpriteButton {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  isolation: isolate;
+  transform: translateY(0) scale(1);
+  transform-origin: center;
+  filter: none;
+  transition:
+    transform 140ms cubic-bezier(.2,.8,.2,1),
+    filter 140ms ease,
+    opacity 140ms ease;
+}
+
+.hobanwooSpriteButton img {
+  display: block;
+  width: var(--button-width, 260px);
+  max-width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: none;
+}
+
+.hobanwooSpriteButton.size-start img {
+  width: clamp(190px, 22vw, 315px);
+}
+
+.hobanwooSpriteButton.size-main img,
+.hobanwooSpriteButton.size-sub img {
+  width: clamp(190px, 22vw, 320px);
+}
+
+.hobanwooSpriteButton::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  z-index: -1;
+  border-radius: 30px;
+  background: radial-gradient(circle, rgba(255,216,110,.72), transparent 70%);
+  opacity: 0;
+  filter: blur(15px);
+  transform: scale(.9);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.hobanwooSpriteButton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 30px;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      transparent 35%,
+      rgba(255,255,255,0) 42%,
+      rgba(255,255,255,.58) 49%,
+      rgba(255,255,255,0) 56%,
+      transparent 100%
+    );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateX(-38%);
+}
+
+.hobanwooSpriteButton:hover:not(:disabled) {
+  transform: translateY(-7px) scale(1.045) rotate(-.25deg);
+  filter: saturate(1.12) brightness(1.06);
+}
+
+.hobanwooSpriteButton:hover:not(:disabled)::before,
+.hobanwooSpriteButton.selected::before {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.hobanwooSpriteButton:hover:not(:disabled)::after {
+  opacity: 1;
+  animation: hobanwooButtonShine 900ms ease-out infinite;
+}
+
+.hobanwooSpriteButton:active:not(:disabled) {
+  transform: translateY(7px) scale(.975);
+  filter: brightness(.95);
+}
+
+.hobanwooSpriteButton.selected {
+  filter: saturate(1.08) brightness(1.04);
+}
+
+.hobanwooSpriteButton:disabled {
+  cursor: not-allowed;
+  opacity: .58;
+  filter: grayscale(1);
+}
+
+.hobanwooSpriteButton.clicked {
+  animation: hobanwooButtonClickPop 300ms cubic-bezier(.2,.9,.3,1);
+}
+
+.hobanwooSpriteButton:focus-visible {
+  outline: 4px solid #ffd86e;
+  outline-offset: 6px;
+  border-radius: 24px;
+}
+
+.hobanwooButtonParticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  z-index: 20;
+  pointer-events: none;
+  border-radius: 999px;
+  background: #ffe9b3;
+  box-shadow:
+    0 0 10px rgba(255,216,110,.95),
+    0 0 18px rgba(223,31,45,.65);
+  transform: translate(-50%, -50%);
+  animation: hobanwooButtonParticleFly 500ms ease-out forwards;
+}
+
+@keyframes hobanwooButtonShine {
+  0% { transform: translateX(-45%); opacity: 0; }
+  18% { opacity: .9; }
+  62% { opacity: .45; }
+  100% { transform: translateX(45%); opacity: 0; }
+}
+
+@keyframes hobanwooButtonClickPop {
+  0% { transform: translateY(7px) scale(.975); }
+  45% { transform: translateY(-7px) scale(1.045); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes hobanwooButtonParticleFly {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(.8);
+  }
+  100% {
+    opacity: 0;
+    transform:
+      translate(
+        calc(-50% + var(--dx)),
+        calc(-50% + var(--dy))
+      )
+      scale(.1);
+  }
+}
+
+@media (max-width: 760px) {
+  .hobanwooSpriteButton.size-start img {
+    width: min(66vw, 260px);
+  }
+
+  .hobanwooSpriteButton.size-main img,
+  .hobanwooSpriteButton.size-sub img {
+    width: min(70vw, 275px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hobanwooSpriteButton,
+  .hobanwooSpriteButton::before,
+  .hobanwooSpriteButton::after,
+  .hobanwooButtonParticle {
+    transition: none;
+    animation: none;
+  }
+}

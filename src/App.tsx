@@ -7,6 +7,7 @@ import { GameMode, GameState, ShipColor } from "./types";
 import { DevSandbox } from "./components/DevSandbox";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { LeaderboardPanel } from "./components/LeaderboardPanel";
+import { HobanwooMainMenu } from "./components/ui/buttons/HobanwooMainMenu";
 import { createLocalRunSession, sanitizePlayerName } from "./services/leaderboard";
 
 const MAX_HP = 3;
@@ -495,6 +496,43 @@ export default function App() {
 
   if (gameState === "DEV_MODE") {
     return <DevSandbox onBack={() => setGameState("MENU")} shipColor={shipColor} />;
+  }
+
+  if (gameState === "MENU") {
+    return (
+      <div className="relative h-screen w-full overflow-hidden bg-slate-950 text-slate-100">
+        <HobanwooMainMenu
+          onStoryMode={() => {
+            setShowOptions(false);
+            handleStartStory();
+          }}
+          onScoreMode={() => {
+            setShowOptions(false);
+            handleStartGame();
+          }}
+          onRanking={() => {
+            setShowOptions(false);
+            setLeaderboardReturnState("MENU");
+            setGameState("LEADERBOARD");
+          }}
+          onSettings={() => setShowOptions((prev) => !prev)}
+        />
+
+        {showOptions && (
+          <div className="absolute right-4 top-4 z-30 w-[min(92vw,320px)] rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="font-mono text-sm font-black text-slate-100">OPTIONS</div>
+              <button onClick={() => setShowOptions(false)} className="text-xs font-mono text-slate-500 hover:text-slate-200">CLOSE</button>
+            </div>
+            <OptionSlider label="BGM" value={settings.bgmVolume} onChange={(value) => updateSettings({ bgmVolume: value })} />
+            <OptionSlider label="SFX" value={settings.sfxVolume} onChange={(value) => updateSettings({ sfxVolume: value })} />
+            <OptionSlider label="Player Shot" value={settings.playerShootVolume} onChange={(value) => updateSettings({ playerShootVolume: value })} />
+            <OptionSlider label="Enemy Hit" value={settings.enemyHitVolume} onChange={(value) => updateSettings({ enemyHitVolume: value })} />
+            <OptionSlider label="Item Pickup" value={settings.itemVolume} onChange={(value) => updateSettings({ itemVolume: value })} />
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (

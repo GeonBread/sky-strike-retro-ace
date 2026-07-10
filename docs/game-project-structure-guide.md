@@ -106,6 +106,7 @@ src/game/entities.ts
 | 로컬 랭킹 저장 | `src/services/leaderboard/localLeaderboard.ts` |
 | 온라인 랭킹 연동 | `src/services/leaderboard/onlineLeaderboard.ts` |
 | 앱 메뉴, 캔버스 연결, 게임 화면 UI | `src/App.tsx` |
+| 호반우 메인 화면 구성, 로고, 게임 시작 버튼, 모드/순위/설정 버튼 | `src/App.tsx`, `src/components/ui/buttons/HobanwooMainMenu.tsx`, `src/components/ui/buttons/HobanwooSpriteButton.tsx`, `public/assets/ui/`, `public/assets/backgrounds/main_menu_campus_bg.png` |
 | 개발자 샌드박스 UI | `src/components/DevSandbox.tsx` |
 | 게임오버/점수 제출 UI | `src/components/GameOverPanel.tsx` |
 | 랭킹 화면 UI | `src/components/LeaderboardPanel.tsx` |
@@ -224,6 +225,7 @@ UI 전역 상태, 사용자 설정, 플레이 기록 저장 구조를 바꿀 때
 | `App` | 현재 `GameState`에 따라 메뉴, 게임, 개발자 모드, 랭킹, 게임오버 화면을 전환 |
 | `GameCanvas` | `GameEngine`을 생성하고 캔버스 크기, 입력, HUD 상태, 콜백을 연결 |
 | `MenuButton` | 메인 메뉴 버튼 UI |
+| `HobanwooMainMenu` | 호반우 테마 메인 화면. 첫 화면에서 로고와 `게임 시작` 버튼을 보여주고, 클릭 후 스토리/점수/순위/설정 버튼을 표시 |
 | `StoryResultPanel` | 스토리 모드 클리어/실패 결과 표시 |
 | `OptionSlider` | 설정 화면의 볼륨 슬라이더 UI |
 | `getRewardDetail` | 스테이지 보상 선택지의 설명 텍스트 생성 |
@@ -234,6 +236,27 @@ UI 전역 상태, 사용자 설정, 플레이 기록 저장 구조를 바꿀 때
 | `handleTouchStart` / `handleTouchEnd` / `handleTouchMove` | 모바일 터치 조작을 게임 입력으로 변환 |
 | `handleStartGame` | 아케이드 모드 게임 시작 |
 | `handleStartStory` | 스토리 모드 게임 시작 |
+| `setLeaderboardReturnState("MENU")` + `setGameState("LEADERBOARD")` | 메인 화면에서 순위 버튼을 눌렀을 때 랭킹 화면으로 이동하고, 뒤로가기 기준을 메뉴로 지정 |
+| `setShowOptions` | 메인 화면의 설정 버튼으로 옵션 패널 표시 여부 제어 |
+
+**호반우 메인 화면 흐름**
+
+```txt
+1단계
+- 배경: public/assets/backgrounds/main_menu_campus_bg.png
+- 로고: public/assets/ui/logos/graduation_operation_logo.png
+- 버튼: 게임 시작
+
+게임 시작 클릭
+
+2단계
+- 스토리 모드
+- 점수 모드 역할 버튼
+- 순위
+- 설정
+```
+
+메인 화면 내부의 1단계/2단계 전환은 전역 `GameState`를 새로 만들지 않고 `HobanwooMainMenu` 내부 `useState`로 처리합니다. 실제 게임 진입은 기존 `handleStartStory`, `handleStartGame`을 그대로 연결합니다.
 
 **수정 시점**  
 메뉴 구성, 게임 시작 흐름, HUD 표시, 키보드/터치 입력, 스토리 결과 화면을 바꿀 때 확인합니다.
@@ -241,6 +264,76 @@ UI 전역 상태, 사용자 설정, 플레이 기록 저장 구조를 바꿀 때
 ---
 
 ## 4.2 UI 컴포넌트
+
+### `src/components/ui/buttons/HobanwooSpriteButton.tsx`
+
+**역할**  
+호반우 UI 버튼 이미지를 실제 클릭 가능한 React 버튼으로 감싸는 공통 컴포넌트입니다.
+
+**주요 기능**
+
+| 항목 | 역할 |
+|---|---|
+| `variant` | 사용할 버튼 에셋 종류 선택. 예: `gameStart`, `redesignStoryMode`, `redesignScoreMode`, `redesignRankPanel`, `redesignSettingsPanel` |
+| `onClick` | 버튼 클릭 시 실행할 콜백 연결 |
+| `disabled` | 버튼 비활성 상태 처리 |
+| `selected` | 선택 강조 상태 처리 |
+| hover/pressed 상태 | 마우스 오버, 클릭 중 눌림, 밝기 변화, shine 효과 처리 |
+
+**관련 파일**
+
+```txt
+src/components/ui/buttons/hobanwooSpriteButton.css
+public/assets/ui/buttons/
+```
+
+**확인 시점**  
+버튼 이미지 종류, hover/pressed 연출, 버튼 크기, 버튼 에셋 경로를 다룰 때 확인합니다.
+
+---
+
+### `src/components/ui/buttons/HobanwooMainMenu.tsx`
+
+**역할**  
+호반우 테마 메인 화면 전용 컴포넌트입니다. 배경, 게임 로고, 게임 시작 버튼, 스토리/점수/순위/설정 버튼 구성을 담당합니다.
+
+**화면 흐름**
+
+| 단계 | 표시 요소 | 동작 |
+|---|---|---|
+| 1단계 | `graduation_operation_logo.png`, 게임 시작 버튼 | 게임 시작 클릭 시 내부 메뉴 상태 열림 |
+| 2단계 | 스토리 모드, 점수 모드 역할 버튼, 순위, 설정 | 각 버튼이 `App.tsx`에서 전달한 콜백 실행 |
+
+**주요 props**
+
+| prop | 역할 |
+|---|---|
+| `onStoryMode` | 스토리 모드 시작 콜백 |
+| `onScoreMode` | 아케이드/점수 모드 시작 콜백 |
+| `onRanking` | 랭킹 화면 이동 콜백 |
+| `onSettings` | 옵션 패널 표시 콜백 |
+
+**관련 파일**
+
+```txt
+src/components/ui/buttons/hobanwooMainMenu.css
+src/components/ui/buttons/HobanwooSpriteButton.tsx
+public/assets/backgrounds/main_menu_campus_bg.png
+public/assets/ui/logos/graduation_operation_logo.png
+public/assets/ui/buttons/
+```
+
+**화면 배치 기준**
+
+```txt
+데스크톱: 16:9 가로 배경 기준 중앙 정렬
+모바일: 세로 화면 높이에 맞춰 배경을 표시하고, 가로 방향은 중앙 기준으로 잘림
+```
+
+**확인 시점**  
+메인 화면 배경, 로고 위치, 게임 시작 후 세부 메뉴 표시, 모바일 중앙 crop, 메인 메뉴 버튼 배치를 다룰 때 확인합니다.
+
+---
 
 ### `src/components/DevSandbox.tsx`
 
@@ -1406,10 +1499,26 @@ UI className 병합 유틸리티를 제공합니다.
 ```txt
 public/
 ├─ starblaze-icon.svg
+├─ site_logo.png
 ├─ assets/backgrounds/
 │  ├─ chapter1_parallax_layer_1.png
 │  ├─ chapter1_parallax_layer_2.png
-│  └─ chapter1_parallax_layer_3.png
+│  ├─ chapter1_parallax_layer_3.png
+│  └─ main_menu_campus_bg.png
+├─ assets/ui/
+│  ├─ buttons/
+│  │  ├─ game_start_state_normal.png
+│  │  ├─ game_start_state_hover.png
+│  │  ├─ game_start_state_pressed.png
+│  │  ├─ game_start_state_disabled.png
+│  │  ├─ game_start_state_selected.png
+│  │  ├─ redesign_story_mode_large.png
+│  │  ├─ redesign_challenge_mode_large.png
+│  │  ├─ redesign_rank_panel.png
+│  │  └─ redesign_settings_panel.png
+│  └─ logos/
+│     ├─ graduation_operation_logo.png
+│     └─ graduation_operation_site_logo.png
 └─ audio/
    ├─ 1phase bgm (Stellar Drift1).mp3
    ├─ 2phase (Stellar Drift2).mp3
@@ -1419,8 +1528,27 @@ public/
 | 경로 | 역할 |
 |---|---|
 | `public/starblaze-icon.svg` | 브라우저 favicon 또는 앱 아이콘 |
+| `public/site_logo.png` | 호반우 테마 사이트/브라우저 대표 아이콘으로 사용할 PNG |
 | `public/assets/backgrounds/` | 스토리/챕터 배경 이미지 원본 |
+| `public/assets/backgrounds/main_menu_campus_bg.png` | 호반우 메인 화면 배경 이미지 |
+| `public/assets/ui/buttons/` | 호반우 메인 화면 버튼 PNG 에셋 |
+| `public/assets/ui/logos/` | 게임 로고와 사이트/앱 로고 PNG 에셋 |
 | `public/audio/` | 게임 BGM 원본 파일 |
+
+**호반우 메인 화면 에셋 경로 기준**
+
+```txt
+/assets/backgrounds/main_menu_campus_bg.png
+/assets/ui/buttons/game_start_state_normal.png
+/assets/ui/buttons/redesign_story_mode_large.png
+/assets/ui/buttons/redesign_challenge_mode_large.png
+/assets/ui/buttons/redesign_rank_panel.png
+/assets/ui/buttons/redesign_settings_panel.png
+/assets/ui/logos/graduation_operation_logo.png
+/site_logo.png
+```
+
+React 코드에서 `public` 내부 파일을 접근할 때는 `public`을 경로에 포함하지 않습니다. 예를 들어 로고는 `/assets/ui/logos/graduation_operation_logo.png`로 접근합니다. 화면에 작은 깨진 이미지 아이콘과 alt 텍스트만 보이면, 대부분 `public/assets/ui/logos/` 또는 `public/assets/ui/buttons/` 복사 위치가 맞지 않거나 파일명이 코드와 다른 경우입니다.
 
 **수정 시점**  
 배경 이미지, 아이콘, BGM을 추가/교체할 때 수정합니다. 코드에서는 보통 `/audio/...`, `/assets/backgrounds/...` 같은 절대 경로로 접근합니다.
@@ -1616,6 +1744,65 @@ UI 표시 문제 = components
 점수 검증 기준 문제 = antiCheat.ts + submit-score/index.ts
 DB 구조 문제 = schema.sql
 ```
+
+---
+
+## 11.7 호반우 메인 화면 구성을 바꾸고 싶을 때
+
+먼저 볼 파일:
+
+```txt
+src/App.tsx
+src/components/ui/buttons/HobanwooMainMenu.tsx
+src/components/ui/buttons/hobanwooMainMenu.css
+src/components/ui/buttons/HobanwooSpriteButton.tsx
+src/components/ui/buttons/hobanwooSpriteButton.css
+public/assets/backgrounds/main_menu_campus_bg.png
+public/assets/ui/buttons/
+public/assets/ui/logos/
+```
+
+필요할 수 있는 추가 파일:
+
+```txt
+index.html
+public/site_logo.png
+src/types.ts
+src/store.ts
+```
+
+판단 기준:
+
+```txt
+메인 화면의 1단계/2단계 흐름 = HobanwooMainMenu.tsx
+로고 위치, 버튼 열 위치, 모바일 crop = hobanwooMainMenu.css
+버튼 이미지 종류와 클릭/hover 처리 = HobanwooSpriteButton.tsx + hobanwooSpriteButton.css
+스토리 모드 시작 연결 = App.tsx의 handleStartStory
+점수/아케이드 모드 시작 연결 = App.tsx의 handleStartGame
+순위 화면 이동 = App.tsx에서 setLeaderboardReturnState("MENU") 후 setGameState("LEADERBOARD")
+설정 패널 표시 = App.tsx에서 setShowOptions
+배경 이미지 교체 = public/assets/backgrounds/main_menu_campus_bg.png
+게임 로고 교체 = public/assets/ui/logos/graduation_operation_logo.png
+사이트 아이콘 교체 = public/site_logo.png 또는 index.html의 favicon 경로
+```
+
+**구성 기준**
+
+```txt
+첫 화면
+- 호반우의 졸업 대작전 로고
+- 게임 시작 버튼
+
+게임 시작 클릭 후
+- 로고 숨김
+- 게임 시작 버튼 숨김
+- 스토리 모드 버튼 표시
+- 점수 모드 역할 버튼 표시
+- 순위 버튼 표시
+- 설정 버튼 표시
+```
+
+이 구성은 기존 게임 엔진 파일을 건드리지 않고 React 메뉴 화면에서 처리합니다. 전투 시작 자체는 기존 `handleStartGame`, `handleStartStory` 흐름에 연결합니다.
 
 ---
 
