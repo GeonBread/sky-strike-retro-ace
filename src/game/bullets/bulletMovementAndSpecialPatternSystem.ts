@@ -8,6 +8,7 @@
 import { sfx } from "../AudioSystem";
 import { Bullet, Entity, Particle } from "../entities";
 import type { GameEngine } from "../engine";
+import { applyHobanwooEnemyBulletVisualSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
 
 /**
  * 총알 시스템이 엔진 내부 상태를 직접 물어보지 않도록 호출부에서 넘겨주는 실행 옵션이다.
@@ -250,6 +251,7 @@ export function updateBulletMovementAndSpecialPatternSystem(
               sub.vy = Math.sin(angle) * 200;
               sub.isEnemy = true;
               sub.color = "#facc15";
+              applyHobanwooEnemyBulletVisualSystem(sub, "f_fragment");
               engine.bullets.push(sub);
             }
             engine.spawnExplosion(cx, cy, "#f59e0b", 24);

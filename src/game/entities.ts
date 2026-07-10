@@ -134,7 +134,18 @@ export type BulletVisualType =
   | "tesla_spine_missile"
   | "rift_shard"
   | "phase_core"
-  | "star_beacon";
+  | "star_beacon"
+  | "corrupt_orb"
+  | "attendance_stamp"
+  | "notice_popup"
+  | "guide_arrow"
+  | "deadline_missile"
+  | "scanner_beam"
+  | "unsubmitted_missile"
+  | "f_bomb"
+  | "f_fragment"
+  | "atom"
+  | "flask";
 
 export class Bullet extends Entity {
   isEnemy: boolean = false;
@@ -202,6 +213,8 @@ export class Bullet extends Entity {
   bounceCount?: number;
   shootTimer?: number;
   visualType?: BulletVisualType;
+  /** 시각 효과의 위상만 저장합니다. 이동·속도·수명에는 사용하지 않습니다. */
+  enemyVisualPhase?: number;
 }
 
 export class Particle extends Entity {

@@ -6,6 +6,8 @@
  */
 
 import { Bullet, type BulletVisualType } from "../entities";
+import { isHobanwooEnemyBulletVisualType } from "../data/hobanwooEnemyBulletVisualCatalog";
+import { renderHobanwooEnemyBulletShapeSystem } from "./hobanwooEnemyBulletShapeRenderer";
 
 type BulletVisualRenderEngine = any;
 
@@ -36,6 +38,11 @@ export function getBulletVisualTypeSystem(b: Bullet): BulletVisualType {
  * 호출부는 탄환 중심 좌표를 넘기고, 이 함수는 실제 모양별 렌더러로 분기한다.
  */
 export function renderEnemyBulletVisualSystem(engine: BulletVisualRenderEngine, b: Bullet, visualType: BulletVisualType, cx: number, cy: number): void {
+
+    if (isHobanwooEnemyBulletVisualType(visualType)) {
+      renderHobanwooEnemyBulletShapeSystem(engine.ctx, b, visualType, cx, cy);
+      return;
+    }
 
     switch (visualType) {
       case "comet_needle":

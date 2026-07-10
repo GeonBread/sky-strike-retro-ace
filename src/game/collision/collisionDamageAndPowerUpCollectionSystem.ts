@@ -7,10 +7,29 @@
 
 import { Bullet, PowerUp } from "../entities";
 import { sfx } from "../AudioSystem";
+import { getHobanwooEnemyBulletHitRadiusSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
 
 const PLAYER_MAX_HP = 3;
 
 type CollisionDamageRuntime = any;
+
+
+function circleIntersectsCenteredBox(
+  centerX: number,
+  centerY: number,
+  radius: number,
+  box: { x: number; y: number; width: number; height: number; hitWidth?: number; hitHeight?: number },
+): boolean {
+  const width = box.hitWidth ?? box.width;
+  const height = box.hitHeight ?? box.height;
+  const left = box.x + (box.width - width) / 2;
+  const top = box.y + (box.height - height) / 2;
+  const nearestX = Math.max(left, Math.min(centerX, left + width));
+  const nearestY = Math.max(top, Math.min(centerY, top + height));
+  const dx = centerX - nearestX;
+  const dy = centerY - nearestY;
+  return dx * dx + dy * dy <= radius * radius;
+}
 
 /**
  * 현재 프레임의 모든 충돌 판정을 수행하고 충돌 결과에 따라 체력, 점수, 폭발, 파워업 상태를 갱신한다.
@@ -75,7 +94,15 @@ engine.bullets.forEach((b) => {
       if (blocked) return;
     }
 
-    let actualHit = engine.intersects(b, engine.player);
+    const visualHitRadius = getHobanwooEnemyBulletHitRadiusSystem(b.visualType);
+    let actualHit = visualHitRadius === null
+      ? engine.intersects(b, engine.player)
+      : circleIntersectsCenteredBox(
+          b.x + b.width / 2,
+          b.y + b.height / 2,
+          visualHitRadius,
+          engine.player,
+        );
     if (actualHit && b.type === "ring") {
       const bcx = b.x + b.width / 2;
       const bcy = b.y + b.height / 2;

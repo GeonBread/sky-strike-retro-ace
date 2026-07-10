@@ -7,6 +7,7 @@
  */
 
 import { Bullet, Enemy, type EnemyType, type SquadPattern } from "../entities";
+import { applyHobanwooEnemyBulletVisualSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
 
 type BossAttackRuntime = any;
 
@@ -28,6 +29,7 @@ export function fireBoss360Burst(engine: BossAttackRuntime, e: Enemy) {
     blt.vy = Math.sin(angle) * 250;
     blt.isEnemy = true;
     blt.color = "#facc15";
+    applyHobanwooEnemyBulletVisualSystem(blt, "corrupt_orb");
     engine.bullets.push(blt);
   }
 }
@@ -54,6 +56,7 @@ export function fireBossRapid(engine: BossAttackRuntime, e: Enemy) {
     blt.vy = Math.sin(a) * 450;
     blt.isEnemy = true;
     blt.color = "#f43f5e";
+    applyHobanwooEnemyBulletVisualSystem(blt, "scanner_beam");
     engine.bullets.push(blt);
   }
 }
@@ -79,6 +82,7 @@ export function triggerBossBulletCombos(engine: BossAttackRuntime, b: Enemy) {
     blt.vy = 320;
     blt.isEnemy = true;
     blt.color = "#22d3ee";
+    applyHobanwooEnemyBulletVisualSystem(blt, "guide_arrow");
     engine.bullets.push(blt);
   }
 
@@ -95,6 +99,7 @@ export function triggerBossBulletCombos(engine: BossAttackRuntime, b: Enemy) {
       blt.vx = (i - 1.5) * 120;
       blt.vy = 180;
       blt.color = "#c084fc";
+      applyHobanwooEnemyBulletVisualSystem(blt, "unsubmitted_missile");
       engine.bullets.push(blt);
     }
   }

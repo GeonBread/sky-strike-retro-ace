@@ -6,6 +6,7 @@
  */
 
 import { Bullet, Enemy } from "../entities";
+import { applyHobanwooEnemyBulletVisualSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
 
 export type EnemySubtypeWeaponPattern = "aimed" | "homing" | "shotgun" | "straight";
 
@@ -37,6 +38,7 @@ export function fireEnemySubtypeWeaponSystem(
     b.isEnemy = true;
     b.type = "needle";
     b.color = "#39ff14";
+    applyHobanwooEnemyBulletVisualSystem(b, "attendance_stamp");
     engine.bullets.push(b);
     return;
   }
@@ -55,7 +57,7 @@ export function fireEnemySubtypeWeaponSystem(
     b.turnRate = 1.35;
     b.targetSpeed = 360;
     b.color = "#67e8f9";
-    b.visualType = "tesla_spine_missile";
+    applyHobanwooEnemyBulletVisualSystem(b, "unsubmitted_missile");
     engine.bullets.push(b);
     return;
   }
@@ -75,6 +77,7 @@ export function fireEnemySubtypeWeaponSystem(
       b.isEnemy = true;
       b.type = "pellet";
       b.color = i % 2 === 0 ? "#fb923c" : "#facc15";
+      applyHobanwooEnemyBulletVisualSystem(b, "notice_popup");
       engine.bullets.push(b);
     }
     return;
@@ -90,5 +93,6 @@ export function fireEnemySubtypeWeaponSystem(
   b.isEnemy = true;
   b.type = "needle";
   b.color = "#22c55e";
+  applyHobanwooEnemyBulletVisualSystem(b, "scanner_beam");
   engine.bullets.push(b);
 }

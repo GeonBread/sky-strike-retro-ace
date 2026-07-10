@@ -9,6 +9,7 @@
 import { Bullet, Enemy, InkCloud } from "../entities";
 import { sfx } from "../AudioSystem";
 import { intersects as boxesIntersect } from "../utils/geometry";
+import { applyHobanwooEnemyBulletVisualSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
 
 const MAX_CHAPTER = 4;
 
@@ -1563,7 +1564,7 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
           b.isEnemy = true;
           b.type = "needle";
           b.color = "#facc15";
-          b.visualType = "comet_needle";
+          applyHobanwooEnemyBulletVisualSystem(b, "scanner_beam");
           engine.bullets.push(b);
         }
       } else if (e.type === "circle_shooter") {
@@ -1585,6 +1586,7 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
             b.isEnemy = true;
             b.type = "pellet";
             b.color = "#fb923c"; // Standard pellet orange
+            applyHobanwooEnemyBulletVisualSystem(b, "corrupt_orb");
             engine.bullets.push(b);
           }
         }
@@ -1610,6 +1612,7 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
           b.color = "#facc15"; // Standard pellet bright white-yellow
           b.width = 6;
           b.height = 6;
+          applyHobanwooEnemyBulletVisualSystem(b, "guide_arrow");
           engine.bullets.push(b);
         }
       } else if (e.type === "split_cluster" && e.lastShot > 1.8) {
@@ -1645,6 +1648,7 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
         b.type = "mine_orb";
         b.color = "#f59e0b";
         b.fuseTimer = 4.2;
+        applyHobanwooEnemyBulletVisualSystem(b, "f_bomb");
         engine.bullets.push(b);
       } else if (e.type === "boomerang_orbit" && e.lastShot > 1.8) {
         e.lastShot = 0;
@@ -1707,6 +1711,7 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
         b.isEnemy = true;
         b.type = "dash_paint_bullet";
         b.color = "#ea580c";
+        applyHobanwooEnemyBulletVisualSystem(b, "deadline_missile");
         engine.bullets.push(b);
       } else if (e.type === "aimed" && e.lastShot > 1.0) {
         e.lastShot = 0;
@@ -1743,6 +1748,7 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
           b.vy = 200;
           b.isEnemy = true;
           b.color = "#ef4444";
+          applyHobanwooEnemyBulletVisualSystem(b, i < 0 ? "flask" : "atom");
           engine.bullets.push(b);
         }
       } else if (e.type === "ricochet_shooter" && e.lastShot > 1.6) {
