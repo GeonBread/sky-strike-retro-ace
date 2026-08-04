@@ -497,6 +497,17 @@ function finishWave(engine: Chapter1WaveEngine): void {
       if (bullet.isEnemy) bullet.active = false;
     });
     engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
+
+    // Story integration can own the transition after the real chapter-1 waves.
+    // When this callback is present, do not enter the automatic boss path.
+    if (typeof engine.onChapter1WavesComplete === "function") {
+      runtime.enabled = false;
+      engine.clearingForBoss = false;
+      engine.paused = true;
+      engine.onChapter1WavesComplete();
+      return;
+    }
+
     engine.clearingForBoss = true;
     return;
   }

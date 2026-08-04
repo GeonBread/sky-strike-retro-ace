@@ -13,6 +13,7 @@ import type {
 import "./chapter1StoryPlayer.css";
 
 export interface Chapter1StoryPlayerHandle {
+  continueAfterWavesClear(): void;
   showBossPhase2Dialogue(): void;
   continueAfterBossClear(): void;
 }
@@ -51,6 +52,9 @@ export const Chapter1StoryPlayer = forwardRef<
   }, [part]);
 
   useImperativeHandle(ref, () => ({
+    continueAfterWavesClear() {
+      runtimeRef.current?.invoke("wavesCleared");
+    },
     showBossPhase2Dialogue() {
       runtimeRef.current?.invoke("showPhase2Dialogue");
     },

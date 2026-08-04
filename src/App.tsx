@@ -39,8 +39,10 @@ interface GameCanvasProps {
   mode: GameMode;
   shipStyle: ShipStyle;
   onStoryResult: (result: StoryResult) => void;
+  chapter1WaveOnly?: boolean;
   chapter1BossOnly?: boolean;
   active?: boolean;
+  onChapter1WaveComplete?: () => void;
   onChapter1BossPhase2?: () => void;
   onChapter1BossComplete?: () => void;
 }
@@ -49,8 +51,10 @@ function GameCanvas({
   mode,
   shipStyle,
   onStoryResult,
+  chapter1WaveOnly = false,
   chapter1BossOnly = false,
   active = true,
+  onChapter1WaveComplete,
   onChapter1BossPhase2,
   onChapter1BossComplete,
 }: GameCanvasProps) {
@@ -64,6 +68,7 @@ function GameCanvas({
   const runSessionRef = useRef(createLocalRunSession());
   const runStartedAtRef = useRef(Date.now());
   const externallyActiveRef = useRef(active);
+  const waveCompleteCallbackRef = useRef(onChapter1WaveComplete);
   const bossPhase2CallbackRef = useRef(onChapter1BossPhase2);
   const bossCompleteCallbackRef = useRef(onChapter1BossComplete);
 
@@ -84,10 +89,11 @@ function GameCanvas({
 
   useEffect(() => {
     externallyActiveRef.current = active;
+    waveCompleteCallbackRef.current = onChapter1WaveComplete;
     bossPhase2CallbackRef.current = onChapter1BossPhase2;
     bossCompleteCallbackRef.current = onChapter1BossComplete;
     if (engineRef.current) engineRef.current.paused = isPausedRef.current || !active;
-  }, [active, onChapter1BossPhase2, onChapter1BossComplete]);
+  }, [active, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -160,6 +166,9 @@ function GameCanvas({
       setStageClearChoices(choices);
       setOnSelectReward(() => onSelect);
     };
+    engine.onChapter1WavesComplete = chapter1WaveOnly
+      ? () => waveCompleteCallbackRef.current?.()
+      : undefined;
     engine.onChapter1BossPhase2Story = () => bossPhase2CallbackRef.current?.();
     engine.onChapter1BossComplete = () => bossCompleteCallbackRef.current?.();
 
@@ -175,6 +184,12 @@ function GameCanvas({
     }, 100);
 
     engine.start(shipColor, mode, shipStyle);
+    if (chapter1WaveOnly) {
+      engine.chapter1Wave.enabled = true;
+      engine.chapter1Wave.running = false;
+      engine.chapter1Wave.nextWave = 0;
+      engine.chapter1Wave.allWavesCleared = false;
+    }
     if (chapter1BossOnly) {
       engine.chapter1Wave.enabled = false;
       engine.startChapter1Boss(-1, true);
@@ -426,7 +441,7 @@ function GameCanvas({
 }
 
 
-type Chapter1StoryPhase = "story" | "boss" | "phase2-dialogue";
+type Chapter1StoryPhase = "story" | "wave" | "boss" | "phase2-dialogue";
 
 function Chapter1StoryExperience({
   shipStyle,
@@ -440,11 +455,28 @@ function Chapter1StoryExperience({
   const [part, setPart] = useState<1 | 2>(1);
   const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
 
-  const bossMounted = part === 2 && phase !== "story";
+  const waveMounted = part === 2 && phase === "wave";
+  const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
   const bossActive = phase === "boss";
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-black">
+      {waveMounted && (
+        <div className="chapter1-story-boss-layer">
+          <GameCanvas
+            mode="story"
+            shipStyle={shipStyle}
+            onStoryResult={onStoryResult}
+            chapter1WaveOnly
+            active={phase === "wave"}
+            onChapter1WaveComplete={() => {
+              setPhase("story");
+              window.setTimeout(() => storyPlayerRef.current?.continueAfterWavesClear(), 0);
+            }}
+          />
+        </div>
+      )}
+
       {bossMounted && (
         <div className="chapter1-story-boss-layer">
           <GameCanvas
@@ -468,11 +500,15 @@ function Chapter1StoryExperience({
       <Chapter1StoryPlayer
         ref={storyPlayerRef}
         part={part}
-        hidden={phase === "boss"}
+        hidden={phase === "wave" || phase === "boss"}
         onEvent={(event) => {
           if (event.type === "part1-complete") {
             setPart(2);
             setPhase("story");
+            return;
+          }
+          if (event.type === "wave-ready") {
+            setPhase("wave");
             return;
           }
           if (event.type === "boss-ready") {

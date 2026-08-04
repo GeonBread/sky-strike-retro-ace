@@ -303,6 +303,9 @@ export class GameEngine implements GameEngineRuntimeContext {
   onCutsceneChange?: (active: boolean) => void;
   onBombsChanged?: (bombs: number) => void;
   onStageClear?: (choices: string[], onSelect: (choice: string) => void) => void;
+  onChapter1WavesComplete?: () => void;
+  onChapter1BossPhase2Story?: () => void;
+  onChapter1BossComplete?: () => void;
 
   drones: HelperDroneState[] = [];
   debrisCovers: DebrisCoverState[] = [];
