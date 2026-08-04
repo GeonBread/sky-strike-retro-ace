@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="10" dy="12" stdDeviation="8" flood-color="#000000" flood-opacity="0.72"/>
+    </filter>
+    <linearGradient id="red" x1="40" y1="20" x2="470" y2="492" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff1515"/>
+      <stop offset="0.52" stop-color="#e60000"/>
+      <stop offset="1" stop-color="#7f0000"/>
+    </linearGradient>
+    <linearGradient id="gray" x1="70" y1="70" x2="450" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d8d8d6"/>
+      <stop offset="0.46" stop-color="#797977"/>
+      <stop offset="1" stop-color="#2c2d2f"/>
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M26 26H486V486H26V26ZM96 96V416H416V96H96Z" fill="#141416"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M38 38H474V474H38V38ZM70 70V442H442V70H70Z" fill="url(#gray)"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M52 52H460V460H52V52ZM82 82V430H430V82H82Z" fill="url(#red)"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M68 68H444V444H68V68ZM92 92V420H420V92H92Z" fill="#171719"/>
+
+    <path d="M32 32H144V50H50V144H32V32Z" fill="#bf7c26"/>
+    <path d="M480 32H368V50H462V144H480V32Z" fill="#bf7c26"/>
+    <path d="M32 480H144V462H50V368H32V480Z" fill="#bf7c26"/>
+    <path d="M480 480H368V462H462V368H480V480Z" fill="#bf7c26"/>
+
+    <rect x="92" y="92" width="328" height="328" rx="4" stroke="#cccccc" stroke-width="7"/>
+    <rect x="106" y="106" width="300" height="300" rx="2" stroke="#4a0000" stroke-width="5"/>
+
+    <path d="M62 194H82V318H62V194Z" fill="#e60000"/>
+    <path d="M430 194H450V318H430V194Z" fill="#e60000"/>
+    <path d="M194 62H318V82H194V62Z" fill="#e60000"/>
+    <path d="M194 430H318V450H194V430Z" fill="#e60000"/>
+
+    <rect x="45" y="45" width="32" height="32" fill="#cccccc"/>
+    <rect x="435" y="45" width="32" height="32" fill="#cccccc"/>
+    <rect x="45" y="435" width="32" height="32" fill="#cccccc"/>
+    <rect x="435" y="435" width="32" height="32" fill="#cccccc"/>
+  </g>
+</svg>

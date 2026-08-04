@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="공지사항 편지 아이콘">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffdf4"/>
+      <stop offset="0.55" stop-color="#ffe9a8"/>
+      <stop offset="1" stop-color="#ffc951"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff4bd"/>
+      <stop offset="1" stop-color="#d98b16"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="12" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <path d="M85 132h342c22 0 40 18 40 40v218c0 22-18 40-40 40H85c-22 0-40-18-40-40V172c0-22 18-40 40-40Z" fill="url(#paper)" stroke="#271b10" stroke-width="18" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M62 163 256 308 450 163" fill="none" stroke="#271b10" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m61 407 143-132M451 407 308 275" fill="none" stroke="url(#edge)" stroke-width="17" stroke-linecap="round"/>
+  <circle cx="390" cy="129" r="55" fill="#e60012" stroke="#fff7d7" stroke-width="13"/>
+  <path d="M390 90v48M390 161v4" stroke="#fff" stroke-width="18" stroke-linecap="round"/>
+  <path d="M112 375h288" stroke="#fff7d7" stroke-width="8" stroke-linecap="round" opacity=".75"/>
+</svg>
