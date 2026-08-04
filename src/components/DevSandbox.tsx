@@ -161,6 +161,10 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
     
     const handleKeyDown = (e: KeyboardEvent) => {
       const code = e.code;
+      if (/^[0-9]$/.test(e.key) && engineRef.current?.handleChapter1BossDigit(Number(e.key))) {
+        e.preventDefault();
+        return;
+      }
       if (code === 'ArrowUp' || code === 'KeyW') inputState.up = true;
       if (code === 'ArrowDown' || code === 'KeyS') inputState.down = true;
       if (code === 'ArrowLeft' || code === 'KeyA') inputState.left = true;
@@ -188,6 +192,16 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+
+  const handleCanvasPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    const engine = engineRef.current;
+    if (!canvas || !engine) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * (canvas.width / Math.max(1, rect.width));
+    const y = (event.clientY - rect.top) * (canvas.height / Math.max(1, rect.height));
+    if (engine.handleChapter1BossPointer(x, y)) event.preventDefault();
+  };
 
   const handleReset = () => {
     const engine = engineRef.current;
@@ -305,7 +319,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
 
           {/* Actual canvas simulation engine context */}
           <div className={`${developerMode === 'bossCombat' ? 'mx-auto w-full max-w-2xl h-full min-h-[620px] bg-slate-900 rounded-3xl border-2' : 'flex-grow bg-slate-950 rounded-xl border'} border-slate-800 relative overflow-hidden`} ref={containerRef}>
-            <canvas ref={canvasRef} className="block w-full h-full cursor-crosshair touch-none" />
+            <canvas ref={canvasRef} onPointerDown={handleCanvasPointerDown} className="block w-full h-full cursor-crosshair touch-none" />
             <div className="absolute bottom-4 left-4 font-mono text-[9px] text-slate-500 pointer-events-none bg-black/50 p-2 rounded border border-slate-800">
               [W, A, S, D / 방향키] - 테스터 기체 이동<br />
               [SPACEBAR] - 빔 발사장전 (격추 테스트)

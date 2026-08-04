@@ -9,6 +9,7 @@ import { SHIP_COLORS } from "./palette";
 import type { PlayerWeaponStyle } from "../entities";
 import { renderPlayerBulletHitParticleSystem } from "../effects/playerBulletHitEffectSystem";
 import { renderChapter1WaveHudSystem, renderChapter1WaveTelegraphsSystem } from "../chapter1/chapter1WaveRenderer";
+import { renderChapter1BossFullSceneSystem } from "../chapter1/chapter1BossRenderer";
 
 type GameSceneRenderEngine = any;
 
@@ -168,10 +169,10 @@ function drawHobanuMusicBeam(engine: GameSceneRenderEngine, b: any): void {
     .sort((a: any, c: any) => a.d - c.d)
     .slice(0, Math.min(2, b.playerBeamMaxTargets ?? 2));
 
-  if (engine.boss && engine.boss.active) {
+  if (engine.bossEntity && engine.bossEntity.active) {
     rawTargets.push({
-      x: engine.boss.x + engine.boss.width / 2,
-      y: engine.boss.y + engine.boss.height / 2,
+      x: engine.bossEntity.x + engine.bossEntity.width / 2,
+      y: engine.bossEntity.y + engine.bossEntity.height / 2,
       d: 0,
     });
   }
@@ -592,6 +593,8 @@ function renderPlayerBulletByStyle(
  */
 export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
 
+    if (renderChapter1BossFullSceneSystem(engine)) return;
+
     engine.ctx.save();
     if (engine.screenShakeIntensity > 0) {
       const shakeX = (Math.random() - 0.5) * engine.screenShakeIntensity;
@@ -601,9 +604,10 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
 
     engine.renderBackground();
     renderChapter1WaveTelegraphsSystem(engine);
+    const hidePlayerForChapter1Boss = false;
 
     // Player Rendering
-    if (!engine.player.isDead) {
+    if (!engine.player.isDead && !hidePlayerForChapter1Boss) {
       if (
         engine.player.invulnTimer <= 0 ||
         Math.floor(performance.now() / 80) % 2 === 0
@@ -749,6 +753,7 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
         engine.ctx.restore();
       }
     }
+
 
     // Enemies
     engine.enemies.forEach((e) => {

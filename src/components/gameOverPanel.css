@@ -1,73 +1,308 @@
 .hobanwooGameOverRoot {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.hobanwooGameOverActions {
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  place-items: center;
+}
+
+.hobanwooGameOverPanel {
+  position: relative;
+  width: min(92vw, 520px, calc(92vh * 0.697));
+  aspect-ratio: 983 / 1411;
+  filter: drop-shadow(0 26px 38px rgba(0, 0, 0, 0.48));
+}
+
+.hobanwooGameOverPanelImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hobanwooGameOverContent {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 24.5% 10.5% 7.7%;
+  color: #0b2147;
+}
+
+.hobanwooGameOverScoreBlock {
+  text-align: center;
+}
+
+.hobanwooGameOverScoreLabel,
+.hobanwooGameOverSmallLabel {
+  color: #4d6386;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(9px, 1.45vw, 12px);
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+}
+
+.hobanwooGameOverScore {
+  margin-top: 1.2%;
+  color: #0a1d43;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(40px, 10vw, 68px);
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: 0.035em;
+  text-shadow: 0 3px 0 rgba(230, 36, 48, 0.16);
+}
+
+.hobanwooGameOverNicknameCard {
+  margin-top: 5.5%;
+  border: 3px solid #0a1d43;
+  border-radius: 15px;
+  padding: 3.4% 4%;
+  background: rgba(255, 255, 255, 0.58);
+  text-align: center;
+  box-shadow: inset 0 0 0 2px rgba(230, 36, 48, 0.18);
+}
+
+.hobanwooGameOverNickname {
+  margin-top: 1.5%;
+  overflow: hidden;
+  color: #0a1d43;
+  font-size: clamp(16px, 4.4vw, 24px);
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hobanwooGameOverNewRecord {
+  margin-top: 3.2%;
+  border-radius: 999px;
+  background: rgba(230, 36, 48, 0.11);
+  color: #b51e2e;
+  padding: 2.3% 3%;
+  text-align: center;
+  font-size: clamp(10px, 2.2vw, 12px);
+  font-weight: 900;
+}
+
+.hobanwooGameOverUploadButton {
+  min-height: 42px;
+  margin-top: 2.5%;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  margin: 0 0 16px;
-}
-
-.hobanwooGameOverActions .hobanwooButtonWrap,
-.hobanwooGameOverActions .hobanwooSpriteButton,
-.hobanwooGameOverActions .hobanwooSpriteButton img {
-  width: 100%;
-}
-
-.hobanwooRetryButton {
-  min-height: 58px;
-  border: 5px solid #07152e;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #fffaf0, #f0d6a6);
-  box-shadow: inset 0 0 0 3px #c81f30, inset 0 0 0 6px #f2c44b;
-  color: #0a1c3a;
-  font-size: 20px;
+  justify-content: center;
+  gap: 8px;
+  border: 3px solid #0a1d43;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #173d6c, #0d294f);
+  color: #fff8e9;
+  font-size: clamp(10px, 2.3vw, 12px);
   font-weight: 1000;
   cursor: pointer;
-  transition: transform 140ms ease, filter 140ms ease;
+  transition: transform 120ms ease, filter 120ms ease;
 }
 
-.hobanwooRetryButton:hover {
-  transform: translateY(-4px) scale(1.025);
+.hobanwooGameOverUploadButton:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.01);
   filter: brightness(1.05);
 }
 
-.hobanwooRetryButton:active {
-  transform: translateY(4px) scale(.98);
+.hobanwooGameOverUploadButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  filter: grayscale(0.75);
 }
 
-.hobanwooGameOverSecondaryActions {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+.hobanwooGameOverStatusArea {
+  min-height: 18%;
+  margin-top: 3.3%;
+}
+
+.hobanwooGameOverMessage {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
+  justify-content: center;
+  gap: 6px;
+  min-height: 22px;
+  text-align: center;
+  font-size: clamp(9px, 2vw, 11px);
+  font-weight: 900;
 }
 
-.hobanwooGameOverSecondaryActions .hobanwooButtonWrap,
-.hobanwooGameOverSecondaryActions .hobanwooSpriteButton,
-.hobanwooGameOverSecondaryActions .hobanwooSpriteButton img {
-  width: 100%;
+.hobanwooGameOverMessage.is-success {
+  color: #047857;
 }
 
-.hobanwooShareButton {
-  min-height: 48px;
+.hobanwooGameOverMessage.is-error {
+  color: #be123c;
+}
+
+.hobanwooGameOverStatusGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 2.2%;
+}
+
+.hobanwooGameOverStatusBadge {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 2px solid rgba(10, 29, 67, 0.24);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.54);
+  color: #50617d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(8px, 1.75vw, 10px);
+  font-weight: 1000;
+}
+
+.hobanwooGameOverStatusBadge.status-done {
+  border-color: rgba(4, 120, 87, 0.55);
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.hobanwooGameOverStatusBadge.status-error {
+  border-color: rgba(190, 24, 93, 0.48);
+  background: rgba(244, 63, 94, 0.1);
+  color: #be123c;
+}
+
+.hobanwooGameOverStatusBadge strong {
+  color: #b7791f;
+}
+
+.hobanwooGameOverOfflineNote {
+  margin-top: 1.8%;
+  color: #71809a;
+  text-align: center;
+  font-size: clamp(8px, 1.7vw, 10px);
+  font-weight: 800;
+}
+
+.hobanwooGameOverActionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: auto;
+}
+
+.hobanwooGameOverImageButton {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(0) scale(1);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.hobanwooGameOverImageButton img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hobanwooGameOverImageButton:hover {
+  transform: translateY(-2px) scale(1.01);
+  filter: brightness(1.035);
+}
+
+.hobanwooGameOverImageButton:active {
+  transform: translateY(2px) scale(0.99);
+  filter: brightness(0.97);
+}
+
+.hobanwooGameOverImageButton:focus-visible,
+.hobanwooGameOverShareButton:focus-visible,
+.hobanwooGameOverUploadButton:focus-visible {
+  outline: 4px solid #f5bd3d;
+  outline-offset: 3px;
+}
+
+.hobanwooGameOverShareButton {
+  min-height: clamp(42px, 8vw, 54px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  border: 3px solid #07152e;
+  border: 4px solid #0a1d43;
   border-radius: 14px;
-  background: #132d50;
+  background: linear-gradient(180deg, #173d6c 0%, #0d294f 100%);
   color: #fff8e9;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 13px;
+  font-size: clamp(11px, 2.6vw, 14px);
   font-weight: 1000;
   cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.hobanwooGameOverShareButton:hover {
+  transform: translateY(-2px) scale(1.01);
+  filter: brightness(1.05);
+}
+
+.hobanwooGameOverShareButton:active {
+  transform: translateY(2px) scale(0.99);
+}
+
+@media (max-height: 720px) {
+  .hobanwooGameOverPanel {
+    width: min(88vw, 430px, calc(96vh * 0.697));
+  }
+
+  .hobanwooGameOverContent {
+    padding-top: 23.5%;
+    padding-bottom: 6.8%;
+  }
+
+  .hobanwooGameOverNicknameCard {
+    margin-top: 3.5%;
+    padding-top: 2.6%;
+    padding-bottom: 2.6%;
+  }
+
+  .hobanwooGameOverStatusArea {
+    min-height: 15%;
+    margin-top: 2.2%;
+  }
+}
+
+@media (max-width: 420px) {
+  .hobanwooGameOverContent {
+    padding-left: 10%;
+    padding-right: 10%;
+  }
+
+  .hobanwooGameOverActionGrid {
+    gap: 6px 8px;
+  }
+
+  .hobanwooGameOverShareButton {
+    border-width: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hobanwooGameOverImageButton,
+  .hobanwooGameOverShareButton,
+  .hobanwooGameOverUploadButton {
+    transition: none;
+  }
 }

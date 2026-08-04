@@ -178,6 +178,13 @@ import type { DebrisCoverState } from "./obstacles/debrisCoverTypes";
 import type { MeteorObstacleState } from "./obstacles/meteorObstacleTypes";
 import type { GameEngineRuntimeContext } from "./runtime/gameEngineRuntimeContext";
 import { createChapter1WaveRuntime, type Chapter1WaveRuntime } from "./chapter1/chapter1WaveTypes";
+import { createChapter1BossRuntime, type Chapter1BossRuntime } from "./chapter1/chapter1BossTypes";
+import {
+  handleChapter1BossDigitSystem,
+  handleChapter1BossPointerSystem,
+  startChapter1BossSystem,
+  updateChapter1BossSystem,
+} from "./chapter1/chapter1BossSystem";
 
 import {
   Bullet,
@@ -240,6 +247,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   powerups: PowerUp[] = [];
   inkClouds: InkCloud[] = [];
   chapter1Wave: Chapter1WaveRuntime = createChapter1WaveRuntime();
+  chapter1Boss: Chapter1BossRuntime = createChapter1BossRuntime();
 
   state: EngineState = "PLAYING";
   score: number = 0;
@@ -646,6 +654,23 @@ export class GameEngine implements GameEngineRuntimeContext {
 
   spawnEntities(dt: number) {
     spawnEnemyWaveSystem(this, dt);
+  }
+
+
+  public startChapter1Boss(patternLock = -1, skipIntro = false) {
+    startChapter1BossSystem(this, { sandboxPatternLock: patternLock, skipIntro });
+  }
+
+  public updateChapter1Boss(dt: number) {
+    updateChapter1BossSystem(this, dt);
+  }
+
+  public handleChapter1BossDigit(digit: number): boolean {
+    return handleChapter1BossDigitSystem(this, digit);
+  }
+
+  public handleChapter1BossPointer(canvasX: number, canvasY: number): boolean {
+    return handleChapter1BossPointerSystem(this, canvasX, canvasY);
   }
 
   public triggerSandboxWave(waveType: number) {

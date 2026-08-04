@@ -16,11 +16,15 @@ import {
   getChapter1BulletHitboxScale,
   getChapter1EnemyVisualScale,
 } from "./chapter1WaveVisualTuning";
-import { updateChapter1WaveImpactEffectsSystem } from "./chapter1WaveImpactSystem";
+import {
+  spawnChapter1ScheduleSlamEffectSystem,
+  updateChapter1WaveImpactEffectsSystem,
+} from "./chapter1WaveImpactSystem";
 
 const BASE_WIDTH = 800;
 const BASE_HEIGHT = 960;
 const TAU = Math.PI * 2;
+const CHAPTER1_ENEMY_HP_SCALE = 1.3;
 
 type Chapter1WaveEngine = any;
 
@@ -108,8 +112,8 @@ function applyEnemyOverrides(enemy: Enemy, overrides: SpawnOverrides): void {
     if (value === undefined) continue;
     if (key === "x") state.cx = value as number;
     else if (key === "y") state.cy = value as number;
-    else if (key === "hp") enemy.hp = value as number;
-    else if (key === "maxHp") state.maxHp = value as number;
+    else if (key === "hp") enemy.hp = Math.ceil((value as number) * CHAPTER1_ENEMY_HP_SCALE);
+    else if (key === "maxHp") state.maxHp = Math.ceil((value as number) * CHAPTER1_ENEMY_HP_SCALE);
     else if (key in state) (state as any)[key] = value;
   }
 }
@@ -118,7 +122,7 @@ function makeEnemy(engine: Chapter1WaveEngine, index: number): Enemy {
   const catalog = CHAPTER1_ENEMY_CATALOG[index];
   const enemy = new Enemy();
   enemy.type = catalog.id;
-  enemy.hp = catalog.hp;
+  enemy.hp = Math.ceil(catalog.hp * CHAPTER1_ENEMY_HP_SCALE);
   enemy.visualId = index + 1;
   enemy.chapter1 = {
     index,
@@ -127,7 +131,7 @@ function makeEnemy(engine: Chapter1WaveEngine, index: number): Enemy {
     vx: 0,
     vy: 0,
     age: 0,
-    maxHp: catalog.hp,
+    maxHp: Math.ceil(catalog.hp * CHAPTER1_ENEMY_HP_SCALE),
     attack: rand(0.4, 1),
     burst: 0,
     burstTimer: 0,
@@ -189,8 +193,8 @@ function spawnChapter1EnemyInternal(engine: Chapter1WaveEngine, index: number, o
   const enemy = makeEnemy(engine, index);
   applyEnemyOverrides(enemy, overrides);
   if (index === 6 && overrides.hp == null) {
-    enemy.hp = 90;
-    enemy.chapter1!.maxHp = 90;
+    enemy.hp = Math.ceil(90 * CHAPTER1_ENEMY_HP_SCALE);
+    enemy.chapter1!.maxHp = enemy.hp;
   }
   syncEnemyEntity(engine, enemy);
   engine.enemies.push(enemy);
@@ -206,7 +210,7 @@ export function spawnChapter1SandboxEnemySystem(engine: Chapter1WaveEngine, type
     state: "active",
     attack: 0.35,
   });
-  enemy.hp = Math.max(enemy.hp, 30);
+  enemy.hp = Math.max(enemy.hp, Math.ceil(30 * CHAPTER1_ENEMY_HP_SCALE));
   enemy.chapter1!.maxHp = enemy.hp;
   return enemy;
 }
@@ -1023,7 +1027,14 @@ export function updateChapter1WaveBulletsSystem(engine: Chapter1WaveEngine, dt: 
           state.rotation = 0;
           state.behavior = "blockInstalled";
           state.installed = true;
-          engine.spawnExplosion?.(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, "#ff695f", 20);
+          const scale = getScale(engine);
+          spawnChapter1ScheduleSlamEffectSystem(
+            engine,
+            state.cx * scale.x,
+            state.cy * scale.y,
+            (state.drawW ?? 98) * scale.x,
+            (state.drawH ?? 98) * scale.y,
+          );
         }
         break;
       case "blockInstalled":

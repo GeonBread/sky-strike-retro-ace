@@ -1,3 +1,4 @@
+import { sfx } from "../AudioSystem";
 import type {
   Chapter1WaveImpactParticle,
   Chapter1WaveVanishEffect,
@@ -218,4 +219,44 @@ export function renderChapter1WaveImpactEffectsSystem(engine: any): void {
     }
     ctx.restore();
   }
+}
+
+/**
+ * 시간표 충돌 블록이 바닥에 설치되는 순간의 원본 시뮬레이터식 충격 연출입니다.
+ * 강한 화면 진동, 넓은 충격 마름모, 수평 데이터 파편과 중심 폭발을 동시에 생성합니다.
+ */
+export function spawnChapter1ScheduleSlamEffectSystem(
+  engine: any,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): void {
+  const size = Math.max(width, height);
+  engine.screenShakeIntensity = Math.max(engine.screenShakeIntensity ?? 0, 22);
+  sfx.enemyExplode();
+  spawnChapter1WaveVanishEffectSystem(engine, x, y, "#fff2a8", Math.min(92, size * 0.88), 2.1);
+  spawnChapter1WaveVanishEffectSystem(engine, x, y, "#ff695f", Math.min(76, size * 0.72), 1.65);
+  spawnChapter1WaveBurstParticlesSystem(engine, x, y, "#fff7df", 18, 270);
+  spawnChapter1WaveBurstParticlesSystem(engine, x, y, "#ff695f", 14, 220);
+
+  // 바닥을 때리는 느낌이 나도록 좌우 방향 파편을 한 번 더 퍼뜨립니다.
+  const runtime = runtimeOf(engine);
+  const available = Math.max(0, MAX_IMPACT_PARTICLES - runtime.impactParticles.length);
+  const horizontalCount = Math.min(18, available);
+  for (let index = 0; index < horizontalCount; index += 1) {
+    const side = index % 2 === 0 ? -1 : 1;
+    runtime.impactParticles.push({
+      x: x + side * Math.random() * width * 0.18,
+      y: y + height * 0.16,
+      vx: side * rand(150, 360),
+      vy: rand(-125, -35),
+      age: 0,
+      life: rand(0.28, 0.58),
+      size: rand(2.4, 5.2),
+      color: index % 3 === 0 ? "#fff7df" : "#ff8a62",
+      shape: "streak",
+    });
+  }
+  engine.spawnExplosion?.(x, y, "#ff695f", 28);
 }

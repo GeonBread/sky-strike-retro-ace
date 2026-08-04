@@ -69,6 +69,11 @@ engine.player.isDead = false;
 engine.player.deadTimer = 0;
 engine.player.invulnTimer = 1.0;
 engine.needInitialPosition = true;
+if (tier === 1) {
+  engine.startChapter1Boss?.(engine.sandboxBossPhaseLock, true);
+  return;
+}
+engine.chapter1Boss.active = false;
 sfx.startBgmForPhase(tier);
 }
 

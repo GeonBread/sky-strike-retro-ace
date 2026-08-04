@@ -8,10 +8,11 @@
 import type { GameMode } from "../../types";
 import type { BossAbsorbOrb, BossAfterimageSlash, BossCompressionField, BossDashState, BossEdgeStriker, BossGridLaser, BossMazeState, BossSafeZoneBlast, ElectricTrail, PlayerHistoryPoint, SuicideDrone, TailMine, TimedExplosionZone } from "../boss/bossPatternHazardSystem";
 import type { Bullet, Enemy, EngineState, GameInput, InkCloud, Particle, Player, PowerUp } from "../entities";
+import type { Chapter1BossRuntime } from "../chapter1/chapter1BossTypes";
+import type { Chapter1WaveRuntime } from "../chapter1/chapter1WaveTypes";
 import type { HelperDroneState } from "../drones/helperDroneTypes";
 import type { DebrisCoverState } from "../obstacles/debrisCoverTypes";
 import type { MeteorObstacleState } from "../obstacles/meteorObstacleTypes";
-import type { Chapter1WaveRuntime } from "../chapter1/chapter1WaveTypes";
 
 export interface GameEngineRuntimeContext {
   canvas: HTMLCanvasElement;
@@ -46,6 +47,7 @@ export interface GameEngineRuntimeContext {
   powerups: PowerUp[];
   inkClouds: InkCloud[];
   chapter1Wave: Chapter1WaveRuntime;
+  chapter1Boss: Chapter1BossRuntime;
 
   state: EngineState;
   score: number;

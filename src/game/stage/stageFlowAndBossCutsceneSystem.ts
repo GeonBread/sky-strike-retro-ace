@@ -16,6 +16,24 @@ type StageFlowRuntime = any;
 export function updateStageFlowAndBossCutsceneSystem(engine: StageFlowRuntime, dt: number) {
 if (engine.state === "GAMEOVER" || engine.state === "VICTORY") return;
 
+if (engine.stage === 1 && engine.chapter1Boss?.active) {
+  if (engine.screenShakeIntensity > 0.1) {
+    engine.screenShakeIntensity *= Math.pow(0.08, dt);
+  } else {
+    engine.screenShakeIntensity = 0;
+  }
+  engine.updatePlayer(dt);
+  engine.updatePlayerPositionHistory(dt);
+  engine.updateBullets(dt);
+  engine.updateParticles(dt);
+  engine.updatePowerUps(dt);
+  engine.updateBomb(dt);
+  engine.updateDronesAndBehaviors(dt);
+  engine.updateChapter1Boss(dt);
+  engine.checkCollisions();
+  return;
+}
+
 if (engine.state === "STAGE_CLEAR_CHOICE") {
   engine.updateParticles(dt);
   return;

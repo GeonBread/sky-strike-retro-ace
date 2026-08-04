@@ -59,6 +59,7 @@ export function updatePlayerSmartBombSystem(engine: PlayerBombRuntime, dt: numbe
   });
 
   engine.enemies.forEach((e) => {
+    if ((e as any).chapter1ExactBossProxy) return;
     if (e.active) {
       const dx = e.x + e.width / 2 - (engine.player.x + engine.player.width / 2);
       const dy =

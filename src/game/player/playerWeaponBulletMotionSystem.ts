@@ -29,8 +29,8 @@ function findClosestEnemy(engine: Runtime, x: number, y: number) {
       bestDist = d;
     }
   }
-  if (engine.boss && engine.boss.active) {
-    const p = getEnemyCenter(engine.boss);
+  if (engine.bossEntity && engine.bossEntity.active) {
+    const p = getEnemyCenter(engine.bossEntity);
     const d = Math.hypot(p.x - x, p.y - y);
     if (d < bestDist) best = p;
   }

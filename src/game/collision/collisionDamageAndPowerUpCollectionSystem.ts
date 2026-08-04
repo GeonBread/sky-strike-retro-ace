@@ -130,6 +130,7 @@ engine.bullets.forEach((b) => {
     }
   } else {
     engine.enemies.forEach((e) => {
+      if ((e as any).chapter1ExactBossProxy) return;
       if (e.active && engine.intersects(b, e)) {
         if ((engine.state === "BOSSCUTSCENE" || engine.state === "BOSSPHASE2CUTSCENE" || engine.state === "BOSSPHASE3CUTSCENE") && e.type === "boss") {
           return;
@@ -345,6 +346,7 @@ engine.bullets.forEach((b) => {
 });
 
 engine.enemies.forEach((e) => {
+  if ((e as any).chapter1ExactBossProxy) return;
   if (
     e.active &&
     engine.player.invulnTimer <= 0 &&

@@ -41,6 +41,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   const inputRef = useRef<GameInput>({ up: false, down: false, left: false, right: false, fire: false, useBomb: false });
   const isPausedRef = useRef(false);
   const showExitConfirmRef = useRef(false);
+  const bossPointerConsumedRef = useRef(false);
   const runSessionRef = useRef(createLocalRunSession());
   const runStartedAtRef = useRef(Date.now());
 
@@ -164,6 +165,11 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
       }
       if (isPausedRef.current) return;
 
+      if (/^[0-9]$/.test(event.key) && engineRef.current?.handleChapter1BossDigit(Number(event.key))) {
+        event.preventDefault();
+        return;
+      }
+
       if (event.code === "ArrowUp" || event.code === "KeyW") inputRef.current.up = true;
       if (event.code === "ArrowDown" || event.code === "KeyS") inputRef.current.down = true;
       if (event.code === "ArrowLeft" || event.code === "KeyA") inputRef.current.left = true;
@@ -192,11 +198,23 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
     };
   }, []);
 
-  const handleTouchStart = () => {
-    if (!isPausedRef.current) inputRef.current.fire = true;
+  const handleTouchStart = (event: React.TouchEvent) => {
+    if (isPausedRef.current || !canvasRef.current || !engineRef.current) return;
+    const touch = event.touches[0];
+    const rect = canvasRef.current.getBoundingClientRect();
+    const canvasX = (touch.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
+    const canvasY = (touch.clientY - rect.top) * (canvasRef.current.height / Math.max(1, rect.height));
+    bossPointerConsumedRef.current = engineRef.current.handleChapter1BossPointer(canvasX, canvasY);
+    if (bossPointerConsumedRef.current) {
+      event.preventDefault();
+      inputRef.current.fire = false;
+      return;
+    }
+    inputRef.current.fire = true;
   };
 
   const handleTouchEnd = () => {
+    bossPointerConsumedRef.current = false;
     inputRef.current.fire = false;
     inputRef.current.left = false;
     inputRef.current.right = false;
@@ -205,13 +223,24 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   };
 
   const handleTouchMove = (event: React.TouchEvent) => {
-    if (!canvasRef.current || !engineRef.current || isPausedRef.current) return;
+    if (!canvasRef.current || !engineRef.current || isPausedRef.current || bossPointerConsumedRef.current) return;
     const touch = event.touches[0];
     const rect = canvasRef.current.getBoundingClientRect();
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
     engineRef.current.player.x = x - engineRef.current.player.width / 2;
     engineRef.current.player.y = y - engineRef.current.player.height * 2.2;
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current || !engineRef.current || isPausedRef.current || event.pointerType === "touch") return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const canvasX = (event.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
+    const canvasY = (event.clientY - rect.top) * (canvasRef.current.height / Math.max(1, rect.height));
+    if (engineRef.current.handleChapter1BossPointer(canvasX, canvasY)) {
+      event.preventDefault();
+      inputRef.current.fire = false;
+    }
   };
 
   const bossMaxHp = isStoryMode
@@ -224,6 +253,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
       <canvas
         ref={canvasRef}
         className="block touch-none flex-grow"
+        onPointerDown={handlePointerDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -602,7 +632,9 @@ export default function App() {
 
       <div className={gameState === "LEADERBOARD"
         ? "z-10 w-full max-w-2xl max-h-[calc(100vh-1rem)] overflow-hidden bg-transparent border-0 rounded-none p-0 shadow-none flex flex-col items-center"
-        : "z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-slate-900/95 border-2 border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center border-[rgba(99,102,241,0.2)]"
+        : gameState === "GAME_OVER"
+          ? "z-10 w-full max-w-[560px] max-h-[calc(100vh-0.5rem)] overflow-hidden bg-transparent border-0 rounded-none p-0 shadow-none flex flex-col items-center"
+          : "z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-slate-900/95 border-2 border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center border-[rgba(99,102,241,0.2)]"
       }>
         {gameState === "MENU" && (
           <>

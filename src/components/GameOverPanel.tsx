@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, Share2, UploadCloud } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  Share2,
+  UploadCloud,
+} from "lucide-react";
 import { useAppStore } from "../store";
-import { buildSubmission, localLeaderboard, onlineLeaderboard, sanitizePlayerName } from "../services/leaderboard";
+import {
+  buildSubmission,
+  localLeaderboard,
+  onlineLeaderboard,
+  sanitizePlayerName,
+} from "../services/leaderboard";
 import { CompletedRunSummary } from "../services/leaderboard";
-import { HobanwooSpriteButton } from "./ui/buttons/HobanwooSpriteButton";
 import "./gameOverPanel.css";
 
 interface GameOverPanelProps {
@@ -22,6 +32,12 @@ interface SubmitResult {
   onlineRank: number | null;
 }
 
+const GAME_OVER_ASSET_BASE = "/assets/ui";
+
+/**
+ * 이미지 기반 게임 오버 화면입니다.
+ * 기록 등록 로직은 기존 구현을 유지하고, 표시 패널과 주요 이동 버튼만 새 UI 자산으로 교체합니다.
+ */
 export function GameOverPanel({ onShare, onLeaderboard }: GameOverPanelProps) {
   const { score, lastRun, setGameState } = useAppStore();
   const [playerName] = useState(() => getSavedPlayerName());
@@ -72,7 +88,9 @@ export function GameOverPanel({ onShare, onLeaderboard }: GameOverPanelProps) {
         ...prev,
         local: "done",
         localRank,
-        message: lastRun.isNewHighScore ? "로컬 기록 등록 완료. 신기록입니다." : "로컬 기록 등록 완료.",
+        message: lastRun.isNewHighScore
+          ? "로컬 기록 등록 완료. 신기록입니다."
+          : "로컬 기록 등록 완료.",
       }));
     } catch (error) {
       setResult((prev) => ({
@@ -131,98 +149,158 @@ export function GameOverPanel({ onShare, onLeaderboard }: GameOverPanelProps) {
 
   return (
     <div className="hobanwooGameOverRoot">
-      <h2 className="text-4xl font-mono font-black text-rose-500 mb-2 drop-shadow-[0_0_8px_rgba(244,63,94,0.4)]">GAME OVER</h2>
-      <div className="text-sm font-semibold text-slate-400 mb-6">FINAL SCORE</div>
-      <div className="text-6xl font-mono font-black text-white mb-5 tracking-wider">{score.toString().padStart(6, "0")}</div>
-
-      <div className="w-full mb-4 rounded-lg border border-slate-800 bg-slate-950/70 p-3 text-center">
-        <div className="text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest">Nickname</div>
-        <div className="mt-1 font-mono text-lg font-black text-cyan-200 tracking-wider">{sanitizePlayerName(playerName)}</div>
-      </div>
-
-      {lastRun?.isNewHighScore && (
-        <div className="mb-4 w-full rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-3 text-center text-xs font-mono font-bold text-yellow-200">
-          온라인에 등록하시겠어요?
-        </div>
-      )}
-
-      {canUploadOnline && (
-        <button
-          onClick={submitOnlineScore}
-          disabled={isSubmitting || status === "done"}
-          className="w-full h-12 mb-4 bg-indigo-700 hover:bg-indigo-600 disabled:bg-slate-800 disabled:text-slate-500 border border-indigo-400 disabled:border-slate-700 rounded-lg text-white font-mono text-xs font-black flex items-center justify-center gap-2 transition-all"
-        >
-          {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
-          온라인 최고 기록 등록
-        </button>
-      )}
-
-      <div className="min-h-20 w-full mb-6 space-y-2">
-        {result.message && (
-          <div className={`text-xs font-semibold text-center flex items-center justify-center gap-2 ${status === "error" || result.local === "error" ? "text-rose-400" : "text-emerald-300"}`}>
-            {status === "error" || result.local === "error" ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
-            <span>{result.message}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-          <StatusBadge label="LOCAL" status={result.local} rank={result.localRank} />
-          <StatusBadge label="ONLINE" status={result.online} rank={result.onlineRank} />
-        </div>
-
-        {!onlineReady && (
-          <div className="text-[10px] text-slate-500 text-center font-mono">
-            Supabase 설정이 없으면 온라인 등록은 숨겨집니다.
-          </div>
-        )}
-      </div>
-
-      <div className="hobanwooGameOverActions">
-        <button
-          onClick={() => setGameState("PLAYING")}
-          className="hobanwooRetryButton"
-        >
-          다시 하기
-        </button>
-        <HobanwooSpriteButton
-          variant="mainMenu"
-          size="wide"
-          onClick={() => setGameState("MENU")}
+      <section className="hobanwooGameOverPanel" aria-label="게임 오버 결과">
+        <img
+          className="hobanwooGameOverPanelImage"
+          src={`${GAME_OVER_ASSET_BASE}/panels/game-over-panel.png`}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
         />
-      </div>
 
-      <div className="hobanwooGameOverSecondaryActions">
-        <HobanwooSpriteButton
-          variant="redesignRanking"
-          size="wide"
-          onClick={onLeaderboard}
-        />
-        <button
-          onClick={onShare}
-          className="hobanwooShareButton"
-        >
-          <Share2 size={16} /> 공유하기
-        </button>
-      </div>
+        <div className="hobanwooGameOverContent">
+          <div className="hobanwooGameOverScoreBlock">
+            <div className="hobanwooGameOverScoreLabel">FINAL SCORE</div>
+            <div className="hobanwooGameOverScore">
+              {score.toString().padStart(6, "0")}
+            </div>
+          </div>
+
+          <div className="hobanwooGameOverNicknameCard">
+            <div className="hobanwooGameOverSmallLabel">NICKNAME</div>
+            <div className="hobanwooGameOverNickname">
+              {sanitizePlayerName(playerName)}
+            </div>
+          </div>
+
+          {lastRun?.isNewHighScore && (
+            <div className="hobanwooGameOverNewRecord">
+              온라인 최고 기록으로 등록할 수 있습니다.
+            </div>
+          )}
+
+          {canUploadOnline && (
+            <button
+              type="button"
+              onClick={submitOnlineScore}
+              disabled={isSubmitting || status === "done"}
+              className="hobanwooGameOverUploadButton"
+            >
+              {isSubmitting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <UploadCloud size={16} />
+              )}
+              온라인 최고 기록 등록
+            </button>
+          )}
+
+          <div className="hobanwooGameOverStatusArea">
+            {result.message && (
+              <div
+                className={[
+                  "hobanwooGameOverMessage",
+                  status === "error" || result.local === "error"
+                    ? "is-error"
+                    : "is-success",
+                ].join(" ")}
+              >
+                {status === "error" || result.local === "error" ? (
+                  <AlertTriangle size={14} />
+                ) : (
+                  <CheckCircle2 size={14} />
+                )}
+                <span>{result.message}</span>
+              </div>
+            )}
+
+            <div className="hobanwooGameOverStatusGrid">
+              <StatusBadge label="LOCAL" status={result.local} rank={result.localRank} />
+              <StatusBadge label="ONLINE" status={result.online} rank={result.onlineRank} />
+            </div>
+
+            {!onlineReady && (
+              <div className="hobanwooGameOverOfflineNote">
+                온라인 랭킹은 Supabase 설정 후 사용할 수 있습니다.
+              </div>
+            )}
+          </div>
+
+          <div className="hobanwooGameOverActionGrid">
+            <ImageActionButton
+              src={`${GAME_OVER_ASSET_BASE}/buttons/game-over-retry.png`}
+              label="다시하기"
+              onClick={() => setGameState("PLAYING")}
+            />
+            <ImageActionButton
+              src={`${GAME_OVER_ASSET_BASE}/buttons/game-over-main-menu.png`}
+              label="메인화면"
+              onClick={() => setGameState("MENU")}
+            />
+            <ImageActionButton
+              src={`${GAME_OVER_ASSET_BASE}/buttons/game-over-ranking.png`}
+              label="순위"
+              onClick={onLeaderboard}
+            />
+            <button
+              type="button"
+              onClick={onShare}
+              className="hobanwooGameOverShareButton"
+            >
+              <Share2 size={17} />
+              공유하기
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
 
-function StatusBadge({ label, status, rank }: { label: string; status: ChannelStatus; rank: number | null }) {
-  const styles = {
-    idle: "border-slate-800 text-slate-500 bg-slate-950/60",
-    done: "border-emerald-500/40 text-emerald-300 bg-emerald-500/10",
-    skipped: "border-slate-800 text-slate-500 bg-slate-950/60",
-    error: "border-rose-500/40 text-rose-300 bg-rose-500/10",
-  } satisfies Record<ChannelStatus, string>;
+function ImageActionButton({
+  src,
+  label,
+  onClick,
+}: {
+  src: string;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="hobanwooGameOverImageButton"
+      aria-label={label}
+    >
+      <img src={src} alt="" aria-hidden="true" draggable={false} />
+    </button>
+  );
+}
 
-  const text = status === "done" ? "DONE" : status === "error" ? "FAIL" : status === "skipped" ? "SKIP" : "READY";
+function StatusBadge({
+  label,
+  status,
+  rank,
+}: {
+  label: string;
+  status: ChannelStatus;
+  rank: number | null;
+}) {
+  const text =
+    status === "done"
+      ? "DONE"
+      : status === "error"
+        ? "FAIL"
+        : status === "skipped"
+          ? "SKIP"
+          : "READY";
 
   return (
-    <div className={`h-9 rounded-lg border flex items-center justify-center gap-2 ${styles[status]}`}>
+    <div className={`hobanwooGameOverStatusBadge status-${status}`}>
       <span>{label}</span>
       <span>{text}</span>
-      {rank !== null && <span className="text-yellow-300">#{rank}</span>}
+      {rank !== null && <strong>#{rank}</strong>}
     </div>
   );
 }

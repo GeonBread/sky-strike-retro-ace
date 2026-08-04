@@ -76,6 +76,11 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
     engine.enemies = engine.enemies.filter((e) => e.active);
 
     if (engine.enemies.length === 0) {
+      if (engine.stage === 1 && engine.chapter1Wave?.allWavesCleared) {
+        engine.clearingForBoss = false;
+        engine.startChapter1Boss?.(-1, false);
+        return;
+      }
       engine.clearingForBoss = false;
       engine.bossActive = true;
       engine.state = "BOSSCUTSCENE";
