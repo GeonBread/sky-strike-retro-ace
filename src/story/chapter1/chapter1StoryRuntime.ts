@@ -1,4 +1,6 @@
-import { chapter1StoryDocument as part1Document } from "./chapter1StoryPart1Document";
+git commit `
+  -m "feat(story): add final Chapter 1 embedded story runtime" `
+  -m "Add the source-derived Chapter 1 story documents, React host, runtime bridge, categorized assets, and integration documentation without connecting the game flow yet."import { chapter1StoryDocument as part1Document } from "./chapter1StoryPart1Document";
 import { chapter1StoryDocument as part2Document } from "./chapter1StoryPart2Document";
 import {
   createChapter1StoryEmbeddedAssets,
