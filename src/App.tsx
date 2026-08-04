@@ -12,6 +12,7 @@ import { HobanwooMainMenu } from "./components/ui/buttons/HobanwooMainMenu";
 import { HobanwooShipSelectPanel } from "./components/ui/buttons/HobanwooShipSelectPanel";
 import { HobanwooSpriteButton } from "./components/ui/buttons/HobanwooSpriteButton";
 import { NotificationDialog } from "./components/ui/NotificationDialog";
+import { Chapter1StoryPlayer, type Chapter1StoryPlayerHandle } from "./components/story/Chapter1StoryPlayer";
 import "./components/ui/hobanwooOverlayPanels.css";
 
 const MAX_HP = 3;
@@ -34,7 +35,25 @@ function MenuButton({ icon: Icon, label, onClick }: { icon: React.ElementType; l
   );
 }
 
-function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipStyle: ShipStyle; onStoryResult: (result: StoryResult) => void }) {
+interface GameCanvasProps {
+  mode: GameMode;
+  shipStyle: ShipStyle;
+  onStoryResult: (result: StoryResult) => void;
+  chapter1BossOnly?: boolean;
+  active?: boolean;
+  onChapter1BossPhase2?: () => void;
+  onChapter1BossComplete?: () => void;
+}
+
+function GameCanvas({
+  mode,
+  shipStyle,
+  onStoryResult,
+  chapter1BossOnly = false,
+  active = true,
+  onChapter1BossPhase2,
+  onChapter1BossComplete,
+}: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -44,6 +63,9 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   const bossPointerConsumedRef = useRef(false);
   const runSessionRef = useRef(createLocalRunSession());
   const runStartedAtRef = useRef(Date.now());
+  const externallyActiveRef = useRef(active);
+  const bossPhase2CallbackRef = useRef(onChapter1BossPhase2);
+  const bossCompleteCallbackRef = useRef(onChapter1BossComplete);
 
   const { setGameState, setScore, shipColor, updateStats, setLastRun, score } = useAppStore();
   const [hp, setHp] = useState(MAX_HP);
@@ -61,9 +83,16 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   const isStoryMode = mode === "story";
 
   useEffect(() => {
+    externallyActiveRef.current = active;
+    bossPhase2CallbackRef.current = onChapter1BossPhase2;
+    bossCompleteCallbackRef.current = onChapter1BossComplete;
+    if (engineRef.current) engineRef.current.paused = isPausedRef.current || !active;
+  }, [active, onChapter1BossPhase2, onChapter1BossComplete]);
+
+  useEffect(() => {
     isPausedRef.current = isPaused;
-    if (engineRef.current) engineRef.current.paused = isPaused;
-    if (isPaused) sfx.pauseAll();
+    if (engineRef.current) engineRef.current.paused = isPaused || !externallyActiveRef.current;
+    if (isPaused || !externallyActiveRef.current) sfx.pauseAll();
     else sfx.resumeAll();
   }, [isPaused]);
 
@@ -125,12 +154,14 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
         lastPlayed: Date.now(),
       });
     };
-    engine.onCutsceneChange = setIsBossCutscene;
+    engine.onCutsceneChange = chapter1BossOnly ? undefined : setIsBossCutscene;
     engine.onBombsChanged = setBombs;
     engine.onStageClear = (choices, onSelect) => {
       setStageClearChoices(choices);
       setOnSelectReward(() => onSelect);
     };
+    engine.onChapter1BossPhase2Story = () => bossPhase2CallbackRef.current?.();
+    engine.onChapter1BossComplete = () => bossCompleteCallbackRef.current?.();
 
     const hudInterval = setInterval(() => {
       if (engine.player) {
@@ -144,6 +175,10 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
     }, 100);
 
     engine.start(shipColor, mode, shipStyle);
+    if (chapter1BossOnly) {
+      engine.chapter1Wave.enabled = false;
+      engine.startChapter1Boss(-1, true);
+    }
 
     return () => {
       resizeObserver.disconnect();
@@ -163,7 +198,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
         setIsPaused((prev) => !prev);
         return;
       }
-      if (isPausedRef.current) return;
+      if (isPausedRef.current || !externallyActiveRef.current) return;
 
       if (/^[0-9]$/.test(event.key) && engineRef.current?.handleChapter1BossDigit(Number(event.key))) {
         event.preventDefault();
@@ -180,7 +215,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (isPausedRef.current) return;
+      if (isPausedRef.current || !externallyActiveRef.current) return;
       if (event.code === "ArrowUp" || event.code === "KeyW") inputRef.current.up = false;
       if (event.code === "ArrowDown" || event.code === "KeyS") inputRef.current.down = false;
       if (event.code === "ArrowLeft" || event.code === "KeyA") inputRef.current.left = false;
@@ -199,7 +234,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   }, []);
 
   const handleTouchStart = (event: React.TouchEvent) => {
-    if (isPausedRef.current || !canvasRef.current || !engineRef.current) return;
+    if (isPausedRef.current || !externallyActiveRef.current || !canvasRef.current || !engineRef.current) return;
     const touch = event.touches[0];
     const rect = canvasRef.current.getBoundingClientRect();
     const canvasX = (touch.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
@@ -223,7 +258,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   };
 
   const handleTouchMove = (event: React.TouchEvent) => {
-    if (!canvasRef.current || !engineRef.current || isPausedRef.current || bossPointerConsumedRef.current) return;
+    if (!canvasRef.current || !engineRef.current || isPausedRef.current || !externallyActiveRef.current || bossPointerConsumedRef.current) return;
     const touch = event.touches[0];
     const rect = canvasRef.current.getBoundingClientRect();
     const x = touch.clientX - rect.left;
@@ -233,7 +268,7 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || !engineRef.current || isPausedRef.current || event.pointerType === "touch") return;
+    if (!canvasRef.current || !engineRef.current || isPausedRef.current || !externallyActiveRef.current || event.pointerType === "touch") return;
     const rect = canvasRef.current.getBoundingClientRect();
     const canvasX = (event.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
     const canvasY = (event.clientY - rect.top) * (canvasRef.current.height / Math.max(1, rect.height));
@@ -243,7 +278,9 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
     }
   };
 
-  const bossMaxHp = isStoryMode
+  const bossMaxHp = chapter1BossOnly
+    ? bossPhase2Active ? 600 : 400
+    : isStoryMode
     ? stage >= 4 ? 4200 : bossPhase3Active ? 3200 : bossPhase2Active ? 2400 : 1500
     : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
@@ -388,6 +425,77 @@ function GameCanvas({ mode, shipStyle, onStoryResult }: { mode: GameMode; shipSt
   );
 }
 
+
+type Chapter1StoryPhase = "story" | "boss" | "phase2-dialogue";
+
+function Chapter1StoryExperience({
+  shipStyle,
+  onStoryResult,
+}: {
+  shipStyle: ShipStyle;
+  onStoryResult: (result: StoryResult) => void;
+}) {
+  const storyPlayerRef = useRef<Chapter1StoryPlayerHandle>(null);
+  const startedAtRef = useRef(Date.now());
+  const [part, setPart] = useState<1 | 2>(1);
+  const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
+
+  const bossMounted = part === 2 && phase !== "story";
+  const bossActive = phase === "boss";
+
+  return (
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-black">
+      {bossMounted && (
+        <div className="chapter1-story-boss-layer">
+          <GameCanvas
+            mode="story"
+            shipStyle={shipStyle}
+            onStoryResult={onStoryResult}
+            chapter1BossOnly
+            active={bossActive}
+            onChapter1BossPhase2={() => {
+              setPhase("phase2-dialogue");
+              window.setTimeout(() => storyPlayerRef.current?.showBossPhase2Dialogue(), 0);
+            }}
+            onChapter1BossComplete={() => {
+              setPhase("story");
+              window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
+            }}
+          />
+        </div>
+      )}
+
+      <Chapter1StoryPlayer
+        ref={storyPlayerRef}
+        part={part}
+        hidden={phase === "boss"}
+        onEvent={(event) => {
+          if (event.type === "part1-complete") {
+            setPart(2);
+            setPhase("story");
+            return;
+          }
+          if (event.type === "boss-ready") {
+            setPhase("boss");
+            return;
+          }
+          if (event.type === "boss-phase2-dialogue-complete") {
+            setPhase("boss");
+            return;
+          }
+          if (event.type === "story-finished") {
+            onStoryResult({
+              outcome: "cleared",
+              stage: 1,
+              durationMs: Date.now() - startedAtRef.current,
+            });
+          }
+        }}
+      />
+    </div>
+  );
+}
+
 function getRewardDetail(choice: string) {
   if (choice.includes("유도탄")) {
     return {
@@ -500,7 +608,7 @@ function getOrCreatePlayerId(): string {
 }
 
 export default function App() {
-  const { gameState, setGameState, gameMode, setGameMode, stats, settings, updateSettings, shipColor, setShipColor, shipStyle, setShipStyle } = useAppStore();
+  const { gameState, setGameState, stats, settings, updateSettings, shipColor, setShipColor, shipStyle, setShipStyle } = useAppStore();
   const [leaderboardReturnState, setLeaderboardReturnState] = useState<GameState>("MENU");
   const [showOptions, setShowOptions] = useState(false);
   const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
@@ -520,14 +628,14 @@ export default function App() {
     const normalizedName = sanitizePlayerName(playerName);
     setPlayerName(normalizedName);
     savePlayerName(normalizedName);
-    setGameMode("arcade");
-    setGameState("PLAYING");
+    useAppStore.setState({ gameMode: "arcade", gameState: "PLAYING" });
   };
 
   const handleStartStory = () => {
     setStoryResult(null);
-    setGameMode("story");
-    setGameState("PLAYING");
+    // 모드와 화면 상태를 한 번의 store 갱신으로 바꾼다.
+    // STORY는 일반 게임의 PLAYING과 분리되어 있으므로 arcade 화면으로 갈 수 없다.
+    useAppStore.setState({ gameMode: "story", gameState: "STORY" });
   };
 
   const handleShare = async () => {
@@ -542,10 +650,21 @@ export default function App() {
     }
   };
 
+  const finishStory = (result: StoryResult) => {
+    setStoryResult(result);
+    setGameState("STORY_RESULT");
+  };
+
+  // 스토리 모드는 일반 게임과 완전히 다른 최상위 화면 상태다.
+  // 따라서 스토리 버튼을 눌렀을 때 arcade GameCanvas가 먼저 렌더링될 수 없다.
+  if (gameState === "STORY") {
+    return <Chapter1StoryExperience shipStyle={shipStyle} onStoryResult={finishStory} />;
+  }
+
   if (gameState === "PLAYING") {
     return (
       <div className="w-full h-screen bg-slate-950 flex items-center justify-center p-2">
-        <GameCanvas mode={gameMode} shipStyle={shipStyle} onStoryResult={setStoryResult} />
+        <GameCanvas mode="arcade" shipStyle={shipStyle} onStoryResult={finishStory} />
       </div>
     );
   }
