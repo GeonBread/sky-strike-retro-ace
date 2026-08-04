@@ -15,7 +15,7 @@ export function tuneStoryEnemyBulletsSystem(engine: EnemyBulletTuningRuntime) {
   if (!engine.isStoryMode()) return;
 
   engine.bullets.forEach((b) => {
-    if (!b.active || !b.isEnemy || engine.storyAdjustedBullets.has(b)) return;
+    if (!b.active || !b.isEnemy || b.chapter1 || engine.storyAdjustedBullets.has(b)) return;
     engine.storyAdjustedBullets.add(b);
     engine.storyBulletSerial++;
 

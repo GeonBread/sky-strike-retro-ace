@@ -7,6 +7,7 @@
 
 import type { GameMode, ShipColor } from "../../types";
 import { Player } from "../entities";
+import { resetChapter1WaveRuntimeSystem } from "../chapter1/chapter1WaveSystem";
 
 const PLAYER_MAX_HP = 3;
 
@@ -40,6 +41,7 @@ export function initializeGameStartStateSystem(engine: GameStartRuntime, color: 
   engine.stage = 1;
   engine.nextBossScore = 15000;
   engine.storyStageTimer = 0;
+  resetChapter1WaveRuntimeSystem(engine, true);
   engine.storyAdjustedBullets = new WeakSet();
   engine.storyAdjustedEnemies = new WeakSet();
   engine.storyBulletSerial = 0;

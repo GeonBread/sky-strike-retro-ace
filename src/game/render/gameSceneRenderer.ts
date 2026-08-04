@@ -8,6 +8,7 @@
 import { SHIP_COLORS } from "./palette";
 import type { PlayerWeaponStyle } from "../entities";
 import { renderPlayerBulletHitParticleSystem } from "../effects/playerBulletHitEffectSystem";
+import { renderChapter1WaveHudSystem, renderChapter1WaveTelegraphsSystem } from "../chapter1/chapter1WaveRenderer";
 
 type GameSceneRenderEngine = any;
 
@@ -599,6 +600,7 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
     }
 
     engine.renderBackground();
+    renderChapter1WaveTelegraphsSystem(engine);
 
     // Player Rendering
     if (!engine.player.isDead) {
@@ -2084,6 +2086,7 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
       });
     }
 
+    renderChapter1WaveHudSystem(engine);
     engine.renderBossClearOverlay();
     engine.ctx.restore();
   

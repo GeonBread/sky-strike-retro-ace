@@ -8,6 +8,8 @@
 import { Bullet, Enemy } from "../entities";
 import { sfx } from "../AudioSystem";
 import { getBossMaxHpForTier } from "../boss/bossPhaseSelectionSystem";
+import { spawnChapter1SandboxEnemySystem, updateChapter1WaveDirectorSystem } from "../chapter1/chapter1WaveSystem";
+import { isChapter1EnemyType } from "../chapter1/chapter1WaveTypes";
 
 const PLAYER_MAX_HP = 3;
 const MAX_CHAPTER = 4;
@@ -75,6 +77,7 @@ sfx.startBgmForPhase(tier);
  * 더미 적 재생성, 보스 티어 고정, 이동 반복, 샌드박스 무적 상태를 매 프레임 보정한다.
  */
 export function updateSandboxCombatPreviewSystem(engine: SandboxCombatRuntime, dt: number) {
+if (engine.sandboxMode === "wave") updateChapter1WaveDirectorSystem(engine, dt);
 const bossCombatMode = engine.sandboxBossCombatMode || engine.sandboxMode === "bossCombat";
 const sandboxBossTier = bossCombatMode
   ? Math.max(1, Math.min(MAX_CHAPTER, Math.floor(engine.sandboxBossChapter || 1)))
@@ -108,6 +111,7 @@ while (engine.player.satelliteHps.length > engine.player.satelliteCount) {
 // Wrap sandbox enemies that go off-screen bottom so they repeat their paths instead of getting deleted!
 if (engine.sandboxMovementEnabled) {
   engine.enemies.forEach((e) => {
+    if (isChapter1EnemyType(e.type)) return;
     if (e.y > engine.canvas.height + 30) {
       e.y = -60;
       if (e.type !== "boss") {
@@ -196,6 +200,12 @@ if (!activeSandboxEnemy) {
     return;
   }
   engine.sandboxRespawnTimer = 1.0; // Reset for the next destruction cycle!
+
+  if (isChapter1EnemyType(engine.sandboxEnemyType)) {
+    engine.enemies = [];
+    spawnChapter1SandboxEnemySystem(engine, engine.sandboxEnemyType);
+    return;
+  }
 
   const dummy = new Enemy();
   dummy.type = engine.sandboxEnemyType as any;

@@ -9,6 +9,11 @@ import { Bullet, PowerUp } from "../entities";
 import { sfx } from "../AudioSystem";
 import { getHobanwooEnemyBulletHitRadiusSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
 import { spawnPlayerBulletHitEffectSystem } from "../effects/playerBulletHitEffectSystem";
+import { checkChapter1WaveCollisionsSystem } from "../chapter1/chapter1WaveCollisionSystem";
+import {
+  spawnChapter1EnemyHitEffectSystem,
+  spawnChapter1WaveBurstParticlesSystem,
+} from "../chapter1/chapter1WaveImpactSystem";
 
 const PLAYER_MAX_HP = 3;
 
@@ -37,7 +42,10 @@ function circleIntersectsCenteredBox(
  * 적탄과 플레이어, 플레이어 탄환과 적/보스, 적 몸체와 플레이어, 파워업과 플레이어의 충돌을 한 번에 처리한다.
  */
 export function checkCollisionDamageAndPowerUpCollectionSystem(engine: CollisionDamageRuntime) {
+checkChapter1WaveCollisionsSystem(engine);
 engine.bullets.forEach((b) => {
+  if (!b.active) return;
+  if (b.isEnemy && b.chapter1) return;
   if (b.isEnemy) {
     // Intercept with active player guardian satellites
     if (!engine.player.isDead && engine.player.satelliteCount > 0) {
@@ -193,7 +201,19 @@ engine.bullets.forEach((b) => {
 
         e.hp -= b.damage;
         e.type === "boss" ? sfx.bossHit() : sfx.enemyHit();
-        spawnPlayerBulletHitEffectSystem(engine, b, e);
+        if (e.chapter1) {
+          const impactX = b.x + b.width / 2;
+          const impactY = b.y + b.height / 2;
+          const enemyCenterX = e.x + e.width / 2;
+          const enemyCenterY = e.y + e.height / 2;
+          e.chapter1.hitFlash = 0.12;
+          e.chapter1.hitX = impactX;
+          e.chapter1.hitY = impactY;
+          e.chapter1.hitAngle = Math.atan2(impactY - enemyCenterY, impactX - enemyCenterX);
+          spawnChapter1EnemyHitEffectSystem(engine, impactX, impactY);
+        } else {
+          spawnPlayerBulletHitEffectSystem(engine, b, e);
+        }
 
         if (
           e.type === "counter_on_death" &&
@@ -289,12 +309,23 @@ engine.bullets.forEach((b) => {
           }
           engine.awardScore(e.type === "assault_commander" ? 2500 : e.type === "tank" ? 300 : 100);
 
-          engine.spawnExplosion(
-            e.x + e.width / 2,
-            e.y + e.height / 2,
-            e.type === "assault_commander" ? "#22d3ee" : "#f43f5e",
-            e.type === "assault_commander" ? 48 : 25,
-          );
+          if (e.chapter1) {
+            spawnChapter1WaveBurstParticlesSystem(
+              engine,
+              e.x + e.width / 2,
+              e.y + e.height / 2,
+              "#ffe270",
+              16,
+              225,
+            );
+          } else {
+            engine.spawnExplosion(
+              e.x + e.width / 2,
+              e.y + e.height / 2,
+              e.type === "assault_commander" ? "#22d3ee" : "#f43f5e",
+              e.type === "assault_commander" ? 48 : 25,
+            );
+          }
           sfx.enemyExplode();
 
           if (Math.random() < (e.type === "assault_commander" ? 0.75 : 0.12)) {

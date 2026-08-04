@@ -77,7 +77,17 @@ export type EnemyType =
   | "counter_on_death"
   | "ink_shooter"
   | "gravity_vortex_mob"
-  | "assault_commander";
+  | "assault_commander"
+  | "chapter1_attendance_drone"
+  | "chapter1_absence_drone"
+  | "chapter1_notice_drone"
+  | "chapter1_student_id_terminal"
+  | "chapter1_login_guard"
+  | "chapter1_course_bug"
+  | "chapter1_schedule_block"
+  | "chapter1_seat_drone"
+  | "chapter1_cart_box"
+  | "chapter1_coordinate_warp";
 
 export class Enemy extends Entity {
   type: EnemyType = "basic";
@@ -107,6 +117,9 @@ export class Enemy extends Entity {
   lastCycleIndex?: number;
   laserSoundCycle?: number;
   laserAngle?: number;
+
+  /** 챕터 1 전용 몬스터 상태. 기존 보스/일반 몬스터 로직과 분리합니다. */
+  chapter1?: import("./chapter1/chapter1WaveTypes").Chapter1EnemyState;
 }
 
 export class InkCloud {
@@ -215,6 +228,9 @@ export class Bullet extends Entity {
   visualType?: BulletVisualType;
   /** 시각 효과의 위상만 저장합니다. 이동·속도·수명에는 사용하지 않습니다. */
   enemyVisualPhase?: number;
+
+  /** 챕터 1 웨이브 전용 탄/설치물 상태. */
+  chapter1?: import("./chapter1/chapter1WaveTypes").Chapter1BulletState;
 }
 
 export type ParticleEffectKind = "default" | "playerBulletHit";

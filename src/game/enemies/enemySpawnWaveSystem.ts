@@ -7,6 +7,7 @@
 
 import { Enemy, type EnemyType } from "../entities";
 import { sfx } from "../AudioSystem";
+import { triggerChapter1SandboxWaveSystem, updateChapter1WaveDirectorSystem } from "../chapter1/chapter1WaveSystem";
 
 const MAX_CHAPTER = 4;
 
@@ -18,6 +19,10 @@ type EnemySpawnRuntime = any;
  */
 export function spawnEnemyWaveSystem(engine: EnemySpawnRuntime, dt: number) {
   if (engine.bossActive || engine.clearingForBoss) return;
+  if (engine.stage === 1) {
+    updateChapter1WaveDirectorSystem(engine, dt);
+    return;
+  }
   const storyMode = engine.isStoryMode();
 
   // Dynamic Wave Flow: If all active enemies are cleared, accelerate the next beautiful major wave transition!
@@ -650,6 +655,10 @@ export function spawnEnemyWaveSystem(engine: EnemySpawnRuntime, dt: number) {
  * 샌드박스 테스트용 웨이브 구성이나 체력 배율을 조정할 때 이 함수를 수정한다.
  */
 export function triggerSandboxEnemyWaveSystem(engine: EnemySpawnRuntime, waveType: number) {
+  engine.sandboxMode = "wave";
+  engine.sandboxActiveWave = waveType;
+  triggerChapter1SandboxWaveSystem(engine, waveType);
+  return;
   engine.sandboxMode = "wave";
   engine.sandboxActiveWave = waveType;
   engine.enemies = []; // Clear current sandbox target

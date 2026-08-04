@@ -78,7 +78,7 @@ export function updatePlayerSmartBombSystem(engine: PlayerBombRuntime, dt: numbe
           }
         } else {
           e.hp = 0;
-          e.active = false;
+          engine.deactivateEnemy(e);
           engine.spawnExplosion(
             e.x + e.width / 2,
             e.y + e.height / 2,

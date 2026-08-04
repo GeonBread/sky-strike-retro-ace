@@ -11,6 +11,7 @@ import type { Bullet, Enemy, EngineState, GameInput, InkCloud, Particle, Player,
 import type { HelperDroneState } from "../drones/helperDroneTypes";
 import type { DebrisCoverState } from "../obstacles/debrisCoverTypes";
 import type { MeteorObstacleState } from "../obstacles/meteorObstacleTypes";
+import type { Chapter1WaveRuntime } from "../chapter1/chapter1WaveTypes";
 
 export interface GameEngineRuntimeContext {
   canvas: HTMLCanvasElement;
@@ -44,6 +45,7 @@ export interface GameEngineRuntimeContext {
   particles: Particle[];
   powerups: PowerUp[];
   inkClouds: InkCloud[];
+  chapter1Wave: Chapter1WaveRuntime;
 
   state: EngineState;
   score: number;

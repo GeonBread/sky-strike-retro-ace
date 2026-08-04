@@ -6,6 +6,7 @@
  */
 
 import { sfx } from "../AudioSystem";
+import { resetChapter1WaveRuntimeSystem } from "../chapter1/chapter1WaveSystem";
 
 type StageRewardTransitionRuntime = any;
 
@@ -22,6 +23,7 @@ export function initializeStageRewardTransitionSystem(
   options: StageRewardTransitionOptions,
 ) {
   engine.stage++;
+  resetChapter1WaveRuntimeSystem(engine, engine.stage === 1);
   engine.nextBossScore = engine.score + 10000 + engine.stage * 3000;
   engine.storyStageTimer = 0;
   engine.bossActive = false;

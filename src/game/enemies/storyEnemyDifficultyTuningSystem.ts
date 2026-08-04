@@ -6,6 +6,7 @@
  */
 
 import type { EnemyType } from "../entities";
+import { isChapter1EnemyType } from "../chapter1/chapter1WaveTypes";
 
 type StoryEnemyDifficultyRuntime = any;
 
@@ -17,7 +18,7 @@ export function tuneStoryEnemyDifficultySystem(engine: StoryEnemyDifficultyRunti
   if (!isStoryMode) return;
 
   engine.enemies.forEach((e: any) => {
-    if (!e.active || e.type === "boss" || engine.storyAdjustedEnemies.has(e)) return;
+    if (!e.active || e.type === "boss" || isChapter1EnemyType(e.type) || engine.storyAdjustedEnemies.has(e)) return;
     engine.storyAdjustedEnemies.add(e);
 
     const lightTypes: EnemyType[] = ["basic", "sweeper", "aimed", "column_shooter", "tank"];

@@ -177,6 +177,7 @@ import type { HelperDroneState } from "./drones/helperDroneTypes";
 import type { DebrisCoverState } from "./obstacles/debrisCoverTypes";
 import type { MeteorObstacleState } from "./obstacles/meteorObstacleTypes";
 import type { GameEngineRuntimeContext } from "./runtime/gameEngineRuntimeContext";
+import { createChapter1WaveRuntime, type Chapter1WaveRuntime } from "./chapter1/chapter1WaveTypes";
 
 import {
   Bullet,
@@ -238,6 +239,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   particles: Particle[] = [];
   powerups: PowerUp[] = [];
   inkClouds: InkCloud[] = [];
+  chapter1Wave: Chapter1WaveRuntime = createChapter1WaveRuntime();
 
   state: EngineState = "PLAYING";
   score: number = 0;

@@ -32,7 +32,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
 
   // Sandbox controller states
   const [developerMode, setDeveloperMode] = useState<DeveloperMode>('lab');
-  const [selectedType, setSelectedType] = useState<string>('stationary');
+  const [selectedType, setSelectedType] = useState<string>('chapter1_attendance_drone');
   const [invincible, setInvincible] = useState<boolean>(true);
   const [sandboxMovement, setSandboxMovement] = useState<boolean>(false);
   const [selectedWave, setSelectedWave] = useState<number>(0);
@@ -681,7 +681,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
                 <Sparkles size={18} className="text-yellow-400" /> 2. 실시간 웨이브 배치 시뮬레이터 (Wave Simulator)
               </h2>
               <p className="text-[11px] font-semibold text-slate-400 mb-3 leading-relaxed">
-                인게임 플레이 당시 등장하는 총 18개 유형의 정교하고 완벽한 대칭형 몬스터 군집 대열 기법을 원클릭으로 화면에 배치하고, 전멸 시 자동으로 동일 대칭 대열로 무한 루프 리폰하여 실시간으로 관찰할 수 있게 지원합니다.
+                인게임 플레이 당시 등장하는 총 30개 챕터 1 몬스터 웨이브 기법을 원클릭으로 화면에 배치하고, 전멸 시 자동으로 동일 대칭 대열로 무한 루프 리폰하여 실시간으로 관찰할 수 있게 지원합니다.
               </p>
               
               <div className="flex flex-col gap-3">
@@ -694,7 +694,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
                   >
                     {WAVES_DATA.map(w => (
                        <option key={w.id} value={w.id}>
-                          [웨이브 {w.id}] {w.title}
+                          [웨이브 {w.id + 1}] {w.title}
                        </option>
                     ))}
                   </select>

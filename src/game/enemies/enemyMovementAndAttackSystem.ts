@@ -10,6 +10,8 @@ import { Bullet, Enemy, InkCloud } from "../entities";
 import { sfx } from "../AudioSystem";
 import { intersects as boxesIntersect } from "../utils/geometry";
 import { applyHobanwooEnemyBulletVisualSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
+import { updateChapter1WaveEnemiesSystem } from "../chapter1/chapter1WaveSystem";
+import { isChapter1EnemyType } from "../chapter1/chapter1WaveTypes";
 
 const MAX_CHAPTER = 4;
 
@@ -122,7 +124,10 @@ export function updateEnemyMovementAndAttackSystem(engine: EnemyMovementRuntime,
     }
   }
 
+  updateChapter1WaveEnemiesSystem(engine, dt);
+
   engine.enemies.forEach((e) => {
+    if (isChapter1EnemyType(e.type)) return;
     if (e.counterTimer && e.counterTimer > 0) {
       e.counterTimer -= dt;
     }

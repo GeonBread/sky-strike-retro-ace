@@ -7,6 +7,7 @@
  */
 
 import { Enemy } from "../entities";
+import { renderChapter1EnemySystem } from "../chapter1/chapter1WaveRenderer";
 
 type EnemyRenderRuntime = any;
 
@@ -15,6 +16,7 @@ type EnemyRenderRuntime = any;
  * 이 함수는 현재 캔버스 렌더링 컨텍스트의 스타일과 변환 상태를 사용한다.
  */
 export function renderEnemyShapeSystem(engine: EnemyRenderRuntime, e: Enemy) {
+  if (renderChapter1EnemySystem(engine, e)) return;
   if (e.type === "ricochet_shooter") {
     engine.ctx.fillStyle = "#fbbf24"; // Golden Neon
   } else if (e.type === "counter_on_death") {

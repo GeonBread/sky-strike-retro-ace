@@ -6,6 +6,7 @@
  */
 
 import { Enemy } from "../entities";
+import { deactivateChapter1EnemySystem } from "../chapter1/chapter1WaveSystem";
 
 type EnemyLifecycleRuntime = any;
 
@@ -14,6 +15,7 @@ type EnemyLifecycleRuntime = any;
  * 이 함수는 몬스터 배열에서 즉시 제거하지 않고 active 상태와 부속 목록만 정리한다.
  */
 export function deactivateEnemyAndAttachmentsSystem(engine: EnemyLifecycleRuntime, e: Enemy) {
+  deactivateChapter1EnemySystem(engine, e);
   e.active = false;
   if (e.type === "satellite_shield" || (e.type as any) === "mini_shield_commander") {
     e.satellites.forEach((b) => {

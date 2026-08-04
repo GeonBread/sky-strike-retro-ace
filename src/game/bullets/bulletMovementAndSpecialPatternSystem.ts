@@ -9,6 +9,7 @@ import { sfx } from "../AudioSystem";
 import { Bullet, Entity, Particle } from "../entities";
 import type { GameEngine } from "../engine";
 import { applyHobanwooEnemyBulletVisualSystem } from "../data/hobanwooEnemyBulletVisualCatalog";
+import { updateChapter1WaveBulletsSystem } from "../chapter1/chapter1WaveSystem";
 
 /**
  * 총알 시스템이 엔진 내부 상태를 직접 물어보지 않도록 호출부에서 넘겨주는 실행 옵션이다.
@@ -29,7 +30,10 @@ export function updateBulletMovementAndSpecialPatternSystem(
   options: BulletMovementAndSpecialPatternOptions,
 ) {
 
+    const chapter1HandledBullets = updateChapter1WaveBulletsSystem(engine, dt);
+
     engine.bullets.forEach((b) => {
+      if (chapter1HandledBullets.has(b)) return;
       if (!b.active) return;
 
       const prevCx = b.x + b.width / 2;
