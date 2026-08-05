@@ -24,7 +24,8 @@ import {
 const BASE_WIDTH = 800;
 const BASE_HEIGHT = 960;
 const TAU = Math.PI * 2;
-const CHAPTER1_ENEMY_HP_SCALE = 1.3;
+// 이전 통합 과정에서 일반 몬스터 체력을 1.3배로 올렸던 값을 원래 기준치로 되돌린다.
+const CHAPTER1_ENEMY_HP_SCALE = 1.0;
 
 type Chapter1WaveEngine = any;
 

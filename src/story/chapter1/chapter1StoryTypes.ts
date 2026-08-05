@@ -12,9 +12,13 @@ export interface Chapter1StoryEvent {
   detail?: Record<string, unknown>;
 }
 
-export type Chapter1StoryCommand = "wavesCleared" | "showPhase2Dialogue" | "bossCleared";
+export type Chapter1StoryCommand =
+  | "wavesCleared"
+  | "showPhase2Dialogue"
+  | "bossCleared"
+  | "preview";
 
 export interface Chapter1StoryRuntimeHandle {
-  invoke(command: Chapter1StoryCommand): void;
+  invoke(command: Chapter1StoryCommand, detail?: Record<string, unknown>): void;
   dispose(): void;
 }

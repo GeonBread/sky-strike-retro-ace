@@ -16,18 +16,25 @@ export interface Chapter1StoryPlayerHandle {
   continueAfterWavesClear(): void;
   showBossPhase2Dialogue(): void;
   continueAfterBossClear(): void;
+  jumpToPreview(previewId: string): void;
+}
+
+export interface Chapter1StoryPreviewRequest {
+  id: string;
+  token: number;
 }
 
 interface Chapter1StoryPlayerProps {
   part: Chapter1StoryPart;
   hidden?: boolean;
+  previewRequest?: Chapter1StoryPreviewRequest | null;
   onEvent: (event: Chapter1StoryEvent) => void;
 }
 
 export const Chapter1StoryPlayer = forwardRef<
   Chapter1StoryPlayerHandle,
   Chapter1StoryPlayerProps
->(function Chapter1StoryPlayer({ part, hidden = false, onEvent }, ref) {
+>(function Chapter1StoryPlayer({ part, hidden = false, previewRequest = null, onEvent }, ref) {
   const mountRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<Chapter1StoryRuntimeHandle | null>(null);
   const onEventRef = useRef(onEvent);
@@ -51,6 +58,11 @@ export const Chapter1StoryPlayer = forwardRef<
     };
   }, [part]);
 
+  useEffect(() => {
+    if (!previewRequest) return;
+    runtimeRef.current?.invoke("preview", { previewId: previewRequest.id });
+  }, [part, previewRequest]);
+
   useImperativeHandle(ref, () => ({
     continueAfterWavesClear() {
       runtimeRef.current?.invoke("wavesCleared");
@@ -60,6 +72,9 @@ export const Chapter1StoryPlayer = forwardRef<
     },
     continueAfterBossClear() {
       runtimeRef.current?.invoke("bossCleared");
+    },
+    jumpToPreview(previewId: string) {
+      runtimeRef.current?.invoke("preview", { previewId });
     },
   }), []);
 

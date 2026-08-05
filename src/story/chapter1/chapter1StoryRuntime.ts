@@ -236,7 +236,15 @@ export function createChapter1StoryRuntime({
   }
 
   return {
-    invoke(command) {
+    invoke(command, detail) {
+      if (command === "preview") {
+        const previewId = String(detail?.previewId ?? "");
+        const debugApi = localWindowValues.get("__CHAPTER1_FLOW_DEBUG__") as
+          | { preview?: (id: string) => void }
+          | undefined;
+        if (previewId) debugApi?.preview?.(previewId);
+        return;
+      }
       commandHandlers[command]?.();
     },
     dispose,

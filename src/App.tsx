@@ -12,7 +12,11 @@ import { HobanwooMainMenu } from "./components/ui/buttons/HobanwooMainMenu";
 import { HobanwooShipSelectPanel } from "./components/ui/buttons/HobanwooShipSelectPanel";
 import { HobanwooSpriteButton } from "./components/ui/buttons/HobanwooSpriteButton";
 import { NotificationDialog } from "./components/ui/NotificationDialog";
-import { Chapter1StoryPlayer, type Chapter1StoryPlayerHandle } from "./components/story/Chapter1StoryPlayer";
+import {
+  Chapter1StoryPlayer,
+  type Chapter1StoryPlayerHandle,
+  type Chapter1StoryPreviewRequest,
+} from "./components/story/Chapter1StoryPlayer";
 import "./components/ui/hobanwooOverlayPanels.css";
 
 const MAX_HP = 3;
@@ -109,15 +113,23 @@ function GameCanvas({
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (canvasRef.current) {
-          canvasRef.current.width = entry.contentRect.width;
-          canvasRef.current.height = entry.contentRect.height;
+    let resizeObserver: ResizeObserver | null = null;
+    if (chapter1BossOnly) {
+      // 원본 보스 전용 시뮬레이터의 논리 해상도와 정확히 일치시킨다.
+      // CSS 표시 크기와 무관하게 보스 drawW/drawH, 패턴 좌표, UI 크기는 800x960 기준을 유지한다.
+      canvasRef.current.width = 800;
+      canvasRef.current.height = 960;
+    } else {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (canvasRef.current) {
+            canvasRef.current.width = Math.max(1, Math.round(entry.contentRect.width));
+            canvasRef.current.height = Math.max(1, Math.round(entry.contentRect.height));
+          }
         }
-      }
-    });
-    resizeObserver.observe(containerRef.current);
+      });
+      resizeObserver.observe(containerRef.current);
+    }
 
     const engine = new GameEngine(canvasRef.current);
     engineRef.current = engine;
@@ -196,7 +208,7 @@ function GameCanvas({
     }
 
     return () => {
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
       clearInterval(hudInterval);
       engine.stop();
     };
@@ -276,8 +288,8 @@ function GameCanvas({
     if (!canvasRef.current || !engineRef.current || isPausedRef.current || !externallyActiveRef.current || bossPointerConsumedRef.current) return;
     const touch = event.touches[0];
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    const x = (touch.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
+    const y = (touch.clientY - rect.top) * (canvasRef.current.height / Math.max(1, rect.height));
     engineRef.current.player.x = x - engineRef.current.player.width / 2;
     engineRef.current.player.y = y - engineRef.current.player.height * 2.2;
   };
@@ -299,12 +311,23 @@ function GameCanvas({
     ? stage >= 4 ? 4200 : bossPhase3Active ? 3200 : bossPhase2Active ? 2400 : 1500
     : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
+  const containerClassName = chapter1BossOnly
+    ? "relative mx-auto overflow-hidden bg-black shadow-2xl flex flex-col"
+    : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
 
   return (
-    <div className="relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col" ref={containerRef}>
+    <div
+      className={containerClassName}
+      ref={containerRef}
+      style={chapter1BossOnly ? {
+        width: "min(83.333dvh, 100vw)",
+        height: "min(100dvh, 120vw)",
+        aspectRatio: "5 / 6",
+      } : undefined}
+    >
       <canvas
         ref={canvasRef}
-        className="block touch-none flex-grow"
+        className={chapter1BossOnly ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
         onPointerDown={handlePointerDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -345,7 +368,7 @@ function GameCanvas({
         ))}
       </div>
 
-      {bossHp !== null && (
+      {!chapter1BossOnly && bossHp !== null && (
         <div className={`absolute top-16 left-1/2 -translate-x-1/2 w-4/5 max-w-sm pointer-events-none z-20 transition-all duration-300 bg-slate-950/95 border rounded-full px-4 py-1 text-center ${bossPhase3Active ? "border-purple-500 shadow-[0_0_22px_rgba(168,85,247,0.85)]" : bossPhase2Active ? "border-rose-500 shadow-[0_0_18px_rgba(244,63,94,0.65)]" : "border-cyan-700 shadow-[0_0_15px_rgba(34,211,238,0.35)]"}`}>
           <div className="flex justify-between items-center text-[10px] font-mono font-bold px-1 mb-0.5">
             <span className={bossPhase3Active ? "text-purple-300" : bossPhase2Active ? "text-rose-300" : "text-cyan-300"}>{bossLabel}</span>
@@ -452,15 +475,77 @@ function Chapter1StoryExperience({
 }) {
   const storyPlayerRef = useRef<Chapter1StoryPlayerHandle>(null);
   const startedAtRef = useRef(Date.now());
+  const jumpTokenRef = useRef(0);
   const [part, setPart] = useState<1 | 2>(1);
   const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
+  const [previewRequest, setPreviewRequest] = useState<Chapter1StoryPreviewRequest | null>(null);
+  const [showJumpMenu, setShowJumpMenu] = useState(false);
 
   const waveMounted = part === 2 && phase === "wave";
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
   const bossActive = phase === "boss";
 
+  const jumpToPreview = (targetPart: 1 | 2, previewId: string) => {
+    setPart(targetPart);
+    setPhase("story");
+    jumpTokenRef.current += 1;
+    setPreviewRequest({ id: previewId, token: jumpTokenRef.current });
+    setShowJumpMenu(false);
+  };
+
+  const jumpToWave = () => {
+    setPreviewRequest(null);
+    setPart(2);
+    setPhase("wave");
+    setShowJumpMenu(false);
+  };
+
+  const jumpToBoss = () => {
+    setPreviewRequest(null);
+    setPart(2);
+    setPhase("boss");
+    setShowJumpMenu(false);
+  };
+
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-black">
+      <div className="chapter1-story-test-navigation">
+        <button
+          type="button"
+          className="chapter1-story-test-toggle"
+          onClick={() => setShowJumpMenu((open) => !open)}
+        >
+          TEST 이동
+        </button>
+        {showJumpMenu && (
+          <aside className="chapter1-story-test-panel" aria-label="챕터 1 스토리 테스트 이동">
+            <div className="chapter1-story-test-title">CHAPTER 1 TEST</div>
+            <div className="chapter1-story-test-group">
+              <strong>전반부 스토리</strong>
+              <button onClick={() => jumpToPreview(1, "full-flow")}>처음부터</button>
+              <button onClick={() => jumpToPreview(1, "prologue-dialogue")}>프롤로그</button>
+              <button onClick={() => jumpToPreview(1, "entrance-dialogue")}>입학식</button>
+              <button onClick={() => jumpToPreview(1, "notice-dialogue")}>공지 폭주</button>
+              <button onClick={() => jumpToPreview(1, "room-dialogue")}>강의실 혼선</button>
+              <button onClick={() => jumpToPreview(1, "login-dialogue")}>로그인 감시</button>
+              <button onClick={() => jumpToPreview(1, "attendance-dialogue")}>출석 드론</button>
+              <button onClick={() => jumpToPreview(1, "first-purification-dialogue")}>첫 정화</button>
+            </div>
+            <div className="chapter1-story-test-group">
+              <strong>전투·후반부</strong>
+              <button onClick={() => jumpToPreview(2, "decision-dialogue")}>전투 결심</button>
+              <button onClick={() => jumpToPreview(2, "battle-guide-dialogue")}>전투 가이드</button>
+              <button className="is-combat" onClick={jumpToWave}>실제 웨이브 시작</button>
+              <button onClick={() => jumpToPreview(2, "energy100")}>정화율 100% 연출</button>
+              <button className="is-combat" onClick={jumpToBoss}>실제 보스 시작</button>
+              <button onClick={() => jumpToPreview(2, "boss-purification-dialogue")}>보스 격파 후 정화</button>
+              <button onClick={() => jumpToPreview(2, "star-recovery-dialogue")}>별 회수</button>
+              <button onClick={() => jumpToPreview(2, "chapter-end-dialogue")}>챕터 엔딩</button>
+            </div>
+          </aside>
+        )}
+      </div>
+
       {waveMounted && (
         <div className="chapter1-story-boss-layer">
           <GameCanvas
@@ -501,17 +586,21 @@ function Chapter1StoryExperience({
         ref={storyPlayerRef}
         part={part}
         hidden={phase === "wave" || phase === "boss"}
+        previewRequest={previewRequest}
         onEvent={(event) => {
           if (event.type === "part1-complete") {
+            setPreviewRequest(null);
             setPart(2);
             setPhase("story");
             return;
           }
           if (event.type === "wave-ready") {
+            setPreviewRequest(null);
             setPhase("wave");
             return;
           }
           if (event.type === "boss-ready") {
+            setPreviewRequest(null);
             setPhase("boss");
             return;
           }
