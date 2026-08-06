@@ -526,6 +526,7 @@ function Chapter1StoryExperience({
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
   const [chapter1PurificationExitStarted, setChapter1PurificationExitStarted] = useState(false);
   const [wavePurificationProgress, setWavePurificationProgress] = useState(0);
+  const [bossRestorationFlashVisible, setBossRestorationFlashVisible] = useState(false);
   const [waveGuideStep, setWaveGuideStep] = useState(0);
   const [waveRunKey, setWaveRunKey] = useState(0);
   const [showWaveGuideOverlay, setShowWaveGuideOverlay] = useState(false);
@@ -766,6 +767,21 @@ function Chapter1StoryExperience({
         </div>
       )}
 
+      {bossRestorationFlashVisible && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 120,
+            pointerEvents: "none",
+            background: "radial-gradient(circle at 50% 55%, rgba(255,248,200,0.98) 0%, rgba(255,236,122,0.92) 30%, rgba(255,218,79,0.58) 58%, rgba(255,211,64,0.18) 100%)",
+            opacity: 0.95,
+            mixBlendMode: "screen",
+          }}
+        />
+      )}
+
       {bossMounted && (
         <div className={`chapter1-story-boss-layer${phase === "boss" ? " is-active" : ""}`}>
           <GameCanvas
@@ -779,8 +795,12 @@ function Chapter1StoryExperience({
               window.setTimeout(() => storyPlayerRef.current?.showBossPhase2Dialogue(), 0);
             }}
             onChapter1BossComplete={() => {
-              setPhase("story");
-              window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
+              setBossRestorationFlashVisible(true);
+              window.setTimeout(() => setBossRestorationFlashVisible(false), 1700);
+              window.setTimeout(() => {
+                setPhase("story");
+                storyPlayerRef.current?.continueAfterBossClear();
+              }, 180);
             }}
             onChapter1CombatFailed={() => {
               setPhase("story");

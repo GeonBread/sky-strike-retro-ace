@@ -182,7 +182,7 @@ const STAGE1_MAX_HP = 1200;
 const STAGE2_MAX_HP = 1800;
 const TOTAL_BOSS_HP = STAGE1_MAX_HP + STAGE2_MAX_HP;
 const INTRO_DURATION = 5.8;
-const BOSS_DESTRUCTION_DURATION = 5.2;
+const BOSS_DESTRUCTION_DURATION = 6.0;
 const BOSS_HP_CHARGE_DURATION = 3.0;
 const BOSS_PATTERN_START_DELAY = 2.0;
 const STAGE2_PATTERN_START_DELAY = 0.65;
@@ -207,6 +207,34 @@ function getRandomPatternId(stage, excludedId = null) {
   const candidates = ids.filter(id => id !== excludedId);
   const pool = candidates.length ? candidates : ids;
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function resetStagePatternQueue(stage) {
+  const ids = [...getStagePatternIds(stage)];
+  if (stage === 1) state.stage1PatternQueue = ids;
+  else state.stage2PatternQueue = ids;
+}
+function shiftNextStagePatternId(stage, excludedId = null) {
+  let queue = stage === 1 ? state.stage1PatternQueue : state.stage2PatternQueue;
+  if (!Array.isArray(queue) || !queue.length) {
+    resetStagePatternQueue(stage);
+    queue = stage === 1 ? state.stage1PatternQueue : state.stage2PatternQueue;
+  }
+  if (queue.length > 1 && excludedId != null && queue[0] === excludedId) {
+    const first = queue.shift();
+    if (first != null) queue.push(first);
+  }
+  const nextId = queue.shift();
+  if (stage === 1) state.stage1PatternQueue = queue;
+  else state.stage2PatternQueue = queue;
+  return Number.isFinite(nextId) ? nextId : getRandomPatternId(stage, excludedId);
+}
+function getNextStagePatternId(stage, excludedId = null) {
+  const queue = stage === 1 ? state.stage1PatternQueue : state.stage2PatternQueue;
+  if (Array.isArray(queue) && queue.length) {
+    return shiftNextStagePatternId(stage, excludedId);
+  }
+  return getRandomPatternId(stage, excludedId);
 }
 function getStageDuration(stage) {
   return getStagePatternIds(stage).reduce((sum, id) => {
@@ -288,6 +316,8 @@ const state = {
   mouse: { x: W/2, y: H - 95, down: false },
   pattern: {},
   playerHistory: [],
+  stage1PatternQueue: [...STAGE1_PATTERN_IDS],
+  stage2PatternQueue: [...STAGE2_PATTERN_IDS],
   stars: Array.from({length: 105}, () => ({ x: Math.random()*W, y: Math.random()*H, s: .7+Math.random()*2.2, a: .12+Math.random()*.48, v: 10+Math.random()*32 })),
 };
 
@@ -516,7 +546,7 @@ function selectPattern(index) {
 function nextPattern() {
   if (!["stage1", "stage2"].includes(state.bossStageState)) return;
   const currentId = currentPattern().id;
-  const nextId = getRandomPatternId(state.bossStage, currentId);
+  const nextId = getNextStagePatternId(state.bossStage, currentId);
   setPattern(getPatternIndexById(nextId), { preserveProjectiles: true });
 }
 
@@ -625,7 +655,8 @@ function updateAwakening(dt) {
     // 체력 충전은 각성 중 이미 완료했으므로, 이후에는 정확히 2초간 대기한 뒤 패턴을 시작합니다.
     state.battleStartState = "waiting";
     state.battleStartElapsed = 0;
-    const firstStage2PatternId = getRandomPatternId(2);
+    resetStagePatternQueue(2);
+    const firstStage2PatternId = shiftNextStagePatternId(2);
     setPattern(getPatternIndexById(firstStage2PatternId), {
       preserveProjectiles: false,
       keepBossPosition: true,
@@ -646,7 +677,9 @@ function resetBattle() {
   state.battleDefeatedAt = -1;
   state.bullets.length = 0;
   state.waves.length = 0;
-  const firstStage1PatternId = getRandomPatternId(1);
+  resetStagePatternQueue(1);
+  resetStagePatternQueue(2);
+  const firstStage1PatternId = shiftNextStagePatternId(1);
   setPattern(getPatternIndexById(firstStage1PatternId), { preserveProjectiles: false });
   refreshButtons();
   startBossIntro();
@@ -1632,7 +1665,7 @@ function updateBroadcastConfusion(dt) {
       }
     }
   }
-  p.broadcastWaves = p.broadcastWaves.filter(wave => wave.age < wave.warning || wave.radius < 1520);
+  p.broadcastWaves = p.broadcastWaves.filter(wave => !wave.done && (wave.age < wave.warning || wave.radius < 1520));
   if (p.broadcastEventIndex >= p.broadcastEvents.length && p.broadcastWaves.length === 0 && !p.broadcastCompleted) {
     p.broadcastCompleted = true;
     p.broadcastStatus = "안내 방송 정상화";
@@ -5075,6 +5108,26 @@ function render() {
       if (dx * dx + dy * dy <= radiusSq) bullet.active = false;
     }
     state.bullets = state.bullets.filter(bullet => bullet.active);
+    for (const cursor of state.cursors) {
+      if (!cursor || cursor.done) continue;
+      const dx = cursor.x - x;
+      const dy = cursor.y - y;
+      if (dx * dx + dy * dy <= (radius + 28) * (radius + 28)) cursor.done = true;
+    }
+    const broadcastWaves = state.pattern?.broadcastWaves;
+    if (Array.isArray(broadcastWaves)) {
+      for (const wave of broadcastWaves) {
+        if (!wave || wave.done) continue;
+        const dx = (wave.x ?? 0) - x;
+        const dy = (wave.y ?? 0) - y;
+        const waveRadius = Math.max(28, wave.radius ?? 0, (wave.width ?? 0) * 0.5, (wave.height ?? 0) * 0.5);
+        if (dx * dx + dy * dy <= (radius + waveRadius) * (radius + waveRadius)) {
+          wave.done = true;
+          wave.clearedByBomb = true;
+          wave.fade = Math.max(wave.fade ?? 0, 0.45);
+        }
+      }
+    }
   }
 
   function inputDigitRuntime(digit) {

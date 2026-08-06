@@ -37,7 +37,6 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   if (!core) return;
   const state = core.state;
   if (state.cinematicMode !== "battle" && state.cinematicMode !== "destroy") return;
-  if (state.cinematicMode === "battle" && (state.bossStageState === "phase1clear" || state.bossStageState === "awakening")) return;
   if (engine.player.isDead) return;
 
   const time = performance.now();
