@@ -1,8 +1,16 @@
+/**
+ * 챕터 1 보스 장면 렌더러입니다.
+ *
+ * 800 × 960 원본 보스 장면은 공통 922 × 960 스토리 전투 캔버스 중앙에
+ * 비율을 유지해 배치하고, 플레이어·지원 몬스터·아이템·플레이어 탄은
+ * 공통 캔버스 좌표로 그려 웨이브와 표시 크기를 일치시킵니다.
+ */
+
 import type { Bullet, Particle } from "../entities";
 import { renderChapter1BulletSystem, renderChapter1EnemySystem } from "./chapter1WaveRenderer";
+import { CHAPTER1_STORY_PLAYER_VISUAL_WIDTH } from "./chapter1WaveVisualTuning";
+import { getChapter1BossViewportProjection } from "./chapter1BossViewportProjection";
 
-const W = 800;
-const H = 960;
 const PLAYER_IMAGE = new Image();
 PLAYER_IMAGE.src = "/assets/player/hobanu_player.png";
 const PLAYER_BULLET_BASE = "/assets/bullets/player/";
@@ -29,20 +37,27 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   if (!core) return;
   const state = core.state;
   if (state.cinematicMode !== "battle" && state.cinematicMode !== "destroy") return;
+  if (state.cinematicMode === "battle" && (state.bossStageState === "phase1clear" || state.bossStageState === "awakening")) return;
   if (engine.player.isDead) return;
-  const sx = engine.canvas.width / W;
-  const sy = engine.canvas.height / H;
-  const cx = (engine.player.x + engine.player.width / 2) / sx;
-  const cy = (engine.player.y + engine.player.height / 2) / sy;
-  if (engine.player.invulnTimer > 0 && Math.floor(performance.now() / 80) % 2 === 0) return;
-  const drawW = 137;
+
+  const time = performance.now();
+  const bob = Math.sin(time * 0.004) * 3.8;
+  const shake = Math.sin(time * 0.012) * 1.15;
+  const cx = engine.player.x + engine.player.width / 2 + shake;
+  const cy = engine.player.y + engine.player.height / 2 + bob;
+  if (engine.player.invulnTimer > 0 && Math.floor(time / 80) % 2 === 0) return;
+
+  const drawW = engine.playMode === "story"
+    ? CHAPTER1_STORY_PLAYER_VISUAL_WIDTH
+    : Math.max(54, engine.player.width * 2.85);
   const ratio = PLAYER_IMAGE.complete && PLAYER_IMAGE.naturalWidth > 0
     ? PLAYER_IMAGE.naturalHeight / PLAYER_IMAGE.naturalWidth
     : 1;
   const drawH = drawW * ratio;
+
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(Math.sin(performance.now() * 0.003) * 0.02);
+  ctx.rotate(Math.sin(time * 0.003) * 0.02);
   ctx.shadowColor = "rgba(255,255,255,0.75)";
   ctx.shadowBlur = 10;
   if (PLAYER_IMAGE.complete && PLAYER_IMAGE.naturalWidth > 0) {
@@ -63,12 +78,12 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   ctx.restore();
 }
 
-function drawPlayerBullet(ctx: CanvasRenderingContext2D, bullet: Bullet, sx: number, sy: number): void {
+function drawPlayerBullet(ctx: CanvasRenderingContext2D, bullet: Bullet): void {
   if (!bullet.active || bullet.isEnemy || bullet.playerBulletKind === "musicBeam") return;
-  const cx = (bullet.x + bullet.width / 2) / sx;
-  const cy = (bullet.y + bullet.height / 2) / sy;
-  const width = Math.max(9, bullet.width / sx);
-  const height = Math.max(9, bullet.height / sy);
+  const cx = bullet.x + bullet.width / 2;
+  const cy = bullet.y + bullet.height / 2;
+  const width = Math.max(9, bullet.width);
+  const height = Math.max(9, bullet.height);
   const image = bulletImage(bullet.playerBulletSprite);
   ctx.save();
   ctx.translate(cx, cy);
@@ -90,22 +105,25 @@ function drawPlayerBullet(ctx: CanvasRenderingContext2D, bullet: Bullet, sx: num
   ctx.restore();
 }
 
-function drawMusicBeam(engine: any, ctx: CanvasRenderingContext2D, bullet: Bullet, sx: number, sy: number): void {
+function drawMusicBeam(engine: any, ctx: CanvasRenderingContext2D, bullet: Bullet): void {
   if (!bullet.active || bullet.isEnemy || bullet.playerBulletKind !== "musicBeam") return;
   const core = engine.chapter1Boss?.core;
   if (!core) return;
-  const startX = (engine.player.x + engine.player.width / 2) / sx;
-  const startY = (engine.player.y - 8) / sy;
+  const projection = getChapter1BossViewportProjection(engine.canvas);
+  const startX = engine.player.x + engine.player.width / 2;
+  const startY = engine.player.y - 8;
   const hit = core.getBossHitArea();
+  const targetX = projection.offsetX + hit.x * projection.scale;
+  const targetY = projection.offsetY + hit.y * projection.scale;
   const phase = bullet.playerBeamPhase ?? 0;
   const amp = bullet.playerBeamAmp ?? 13;
-  const points: Array<{x:number;y:number}> = [];
+  const points: Array<{ x: number; y: number }> = [];
   for (let index = 0; index <= 18; index += 1) {
     const t = index / 18;
     const envelope = Math.sin(t * Math.PI);
     points.push({
-      x: startX + (hit.x - startX) * t + Math.sin(t * Math.PI * 3.8 + performance.now() * 0.018 + phase) * amp * envelope,
-      y: startY + (hit.y - startY) * t,
+      x: startX + (targetX - startX) * t + Math.sin(t * Math.PI * 3.8 + performance.now() * 0.018 + phase) * amp * envelope,
+      y: startY + (targetY - startY) * t,
     });
   }
   ctx.save();
@@ -122,7 +140,7 @@ function drawMusicBeam(engine: any, ctx: CanvasRenderingContext2D, bullet: Bulle
   ctx.restore();
 }
 
-function drawBossSupportObjects(engine: any, ctx: CanvasRenderingContext2D, sx: number, sy: number): void {
+function drawBossSupportObjects(engine: any, ctx: CanvasRenderingContext2D): void {
   for (const enemy of engine.enemies || []) {
     if (!(enemy as any).chapter1BossSupport) continue;
     renderChapter1EnemySystem(engine, enemy);
@@ -134,9 +152,9 @@ function drawBossSupportObjects(engine: any, ctx: CanvasRenderingContext2D, sx: 
 
   for (const powerup of engine.powerups || []) {
     if (!powerup.active) continue;
-    const cx = (powerup.x + powerup.width / 2) / sx;
-    const cy = (powerup.y + powerup.height / 2) / sy;
-    const pulse = 1 + Math.sin(performance.now() * .01 + cx) * .055;
+    const cx = powerup.x + powerup.width / 2;
+    const cy = powerup.y + powerup.height / 2;
+    const pulse = 1 + Math.sin(performance.now() * 0.01 + cx) * 0.055;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(pulse, pulse);
@@ -187,49 +205,64 @@ function drawBossSupportObjects(engine: any, ctx: CanvasRenderingContext2D, sx: 
     }
     ctx.restore();
   }
-
 }
 
-function drawEngineParticles(engine: any, ctx: CanvasRenderingContext2D, sx: number, sy: number): void {
+function drawEngineParticles(engine: any, ctx: CanvasRenderingContext2D): void {
   for (const particle of engine.particles as Particle[]) {
     const alpha = particle.maxLife > 0 ? Math.max(0, particle.life / particle.maxLife) : 1;
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = particle.color;
-    ctx.fillRect(particle.x / sx, particle.y / sy, particle.size / sx, particle.size / sy);
+    ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
     ctx.restore();
   }
 }
 
+/**
+ * 원본 보스 장면과 공통 캔버스 좌표의 플레이어 요소를 순서대로 렌더링합니다.
+ */
 export function renderChapter1BossFullSceneSystem(engine: any): boolean {
   const runtime = runtimeOf(engine);
   if (!runtime?.core) return false;
-  const sx = engine.canvas.width / W;
-  const sy = engine.canvas.height / H;
+  const projection = getChapter1BossViewportProjection(engine.canvas);
+
   engine.ctx.save();
-  engine.ctx.setTransform(sx, 0, 0, sy, 0, 0);
+  engine.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  engine.ctx.fillStyle = "#040507";
+  engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
+  engine.ctx.setTransform(
+    projection.scale,
+    0,
+    0,
+    projection.scale,
+    projection.offsetX,
+    projection.offsetY,
+  );
   runtime.core.render();
-  drawBossSupportObjects(engine, engine.ctx, sx, sy);
-  for (const bullet of engine.bullets as Bullet[]) drawPlayerBullet(engine.ctx, bullet, sx, sy);
-  for (const bullet of engine.bullets as Bullet[]) drawMusicBeam(engine, engine.ctx, bullet, sx, sy);
+  engine.ctx.restore();
+
+  drawBossSupportObjects(engine, engine.ctx);
+  for (const bullet of engine.bullets as Bullet[]) drawPlayerBullet(engine.ctx, bullet);
+  for (const bullet of engine.bullets as Bullet[]) drawMusicBeam(engine, engine.ctx, bullet);
   drawCurrentPlayer(engine, engine.ctx);
-  drawEngineParticles(engine, engine.ctx, sx, sy);
+  drawEngineParticles(engine, engine.ctx);
+
   if (engine.bombActive) {
     engine.ctx.save();
     engine.ctx.strokeStyle = `rgba(168,85,247,${Math.max(0, 1 - engine.bombRadius / engine.bombMaxRadius)})`;
     engine.ctx.lineWidth = 18;
     engine.ctx.beginPath();
     engine.ctx.arc(
-      (engine.bombOriginX ?? (engine.player.x + engine.player.width / 2)) / sx,
-      (engine.bombOriginY ?? (engine.player.y + engine.player.height / 2)) / sy,
-      engine.bombRadius / Math.min(sx, sy),
+      engine.bombOriginX ?? (engine.player.x + engine.player.width / 2),
+      engine.bombOriginY ?? (engine.player.y + engine.player.height / 2),
+      engine.bombRadius,
       0,
       Math.PI * 2,
     );
     engine.ctx.stroke();
     engine.ctx.restore();
   }
-  engine.ctx.restore();
+
   if ((engine.playerDamageFlashTimer || 0) > 0) {
     const alpha = Math.min(0.32, (engine.playerDamageFlashTimer / 0.85) * 0.32);
     engine.ctx.save();

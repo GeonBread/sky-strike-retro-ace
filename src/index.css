@@ -54,8 +54,8 @@ img {
 .combat-hud-life-icon {
   position: relative;
   display: block;
-  width: 30px;
-  height: 32px;
+  width: 36px;
+  height: 38px;
   background: #050506;
   clip-path: polygon(50% 0, 94% 18%, 86% 72%, 50% 100%, 14% 72%, 6% 18%);
   filter: drop-shadow(0 0 5px rgba(0, 0, 0, .9));
@@ -64,7 +64,7 @@ img {
 .combat-hud-life-icon::after {
   content: "";
   position: absolute;
-  inset: 4px;
+  inset: 5px;
   background: #34373d;
   clip-path: inherit;
 }
@@ -88,8 +88,8 @@ img {
 .combat-hud-bomb-icon {
   position: relative;
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border: 4px solid #050506;
   border-radius: 50%;
   background: #34373d;
@@ -127,12 +127,12 @@ img {
 
 @media (max-width: 560px) {
   .combat-hud-life-icon {
-    width: 27px;
-    height: 29px;
+    width: 32px;
+    height: 34px;
   }
 
   .combat-hud-bomb-icon {
-    width: 29px;
-    height: 29px;
+    width: 34px;
+    height: 34px;
   }
 }

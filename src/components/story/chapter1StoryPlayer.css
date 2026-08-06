@@ -40,6 +40,46 @@
   background: #020617;
 }
 
+/* 테스트용 다음 웨이브 버튼은 캔버스 내부를 가리지 않고 전투 프레임 바깥 여백에 둔다. */
+.chapter1-wave-skip-outside {
+  position: absolute;
+  left: calc(50% + min(48dvh, 50vw) + 14px);
+  bottom: 24px;
+  z-index: 45;
+  min-width: 126px;
+  padding: 11px 15px;
+  border: 3px solid #08090d;
+  outline: 2px solid #f6c34a;
+  border-radius: 9px;
+  color: #fff3bf;
+  background: rgba(8, 9, 13, .94);
+  box-shadow: 0 0 20px rgba(246, 195, 74, .32);
+  font-family: "Noto Sans KR", "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+
+.chapter1-wave-skip-outside:hover {
+  transform: translateY(-1px);
+  color: #08090d;
+  background: #f6c34a;
+}
+
+@media (max-aspect-ratio: 24 / 25) {
+  .chapter1-wave-skip-outside {
+    left: 50%;
+    top: calc(50% + min(50dvh, 52.083vw) + 10px);
+    bottom: auto;
+    transform: translateX(-50%);
+  }
+
+  .chapter1-wave-skip-outside:hover {
+    transform: translateX(-50%) translateY(-1px);
+  }
+}
+
 .chapter1-story-test-navigation {
   position: fixed;
   top: 12px;

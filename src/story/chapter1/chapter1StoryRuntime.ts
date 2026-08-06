@@ -42,28 +42,29 @@ function normalizeStoryMarkup(markup: string): string {
 function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): string {
   if (part !== 2) return source;
 
-  const embeddedBossTransition = `if (storyCompletionAction === 'startBossBattle') {
+  const bossTransitionHook = `if (storyCompletionAction === 'startBossBattle') {
       startBossBattleTransition();
       return;
     }`;
-  const directBossTransition = `if (storyCompletionAction === 'startBossBattle') {
-      if (EMBEDDED_STORY) {
-        stopTyping();
-        dialogueLayer.hidden = true;
-        document.documentElement.classList.remove('embedded-dialogue-overlay');
-        flowMode = 'external-boss';
-        document.body.dataset.flowMode = 'external-boss';
-        postStoryBridge('boss-ready');
-        return;
-      }
-      startBossBattleTransition();
-      return;
-    }`;
+  const debugPreviewHook = `    preview: playSelectedPreview
+  };`;
+  const flowPreviewHook = `    preview: playSelectedPreview,
+    resumeFlowPreview: previewId => {
+      playSelectedPreview(previewId);
+      activePreviewId = null;
+    }
+  };`;
 
-  if (!source.includes(embeddedBossTransition)) {
+  if (!source.includes(bossTransitionHook)) {
     throw new Error('Chapter 1 boss transition hook was not found in the final story runtime.');
   }
-  return source.replace(embeddedBossTransition, directBossTransition);
+  if (!source.includes(debugPreviewHook)) {
+    throw new Error('Chapter 1 preview debug hook was not found in the final story runtime.');
+  }
+
+  // 원본의 5.2초 보스전 전환 연출을 유지한 뒤 외부 보스 캔버스로 넘긴다.
+  // 웨이브 정화 이후의 스토리 호출만 activePreviewId를 해제해 실제 연속 진행으로 취급한다.
+  return source.replace(debugPreviewHook, flowPreviewHook);
 }
 
 function normalizeStoryStyles(styles: string): string {
@@ -76,8 +77,7 @@ html.is-embedded-story #previewMenuButton,
 html.is-embedded-story #endPanel,
 html.is-embedded-story .dialogue-progress,
 html.is-embedded-story .story-status,
-html.is-embedded-story .story-location-intro,
-html.is-embedded-story .scene-location {
+html.is-embedded-story .story-location-intro {
   display: none !important;
 }
 html.is-embedded-story body {
@@ -96,6 +96,9 @@ html.is-embedded-story .demo-shell {
 }
 html.is-embedded-story .story-stage {
   max-height: 100dvh !important;
+}
+html.is-embedded-story .story-stage.is-game-mode {
+  width: min(96dvh, 100vw) !important;
 }
 `;
 }
@@ -271,9 +274,15 @@ export function createChapter1StoryRuntime({
       if (command === "preview") {
         const previewId = String(detail?.previewId ?? "");
         const debugApi = localWindowValues.get("__CHAPTER1_FLOW_DEBUG__") as
-          | { preview?: (id: string) => void }
+          | {
+              preview?: (id: string) => void;
+              resumeFlowPreview?: (id: string) => void;
+            }
           | undefined;
-        if (previewId) debugApi?.preview?.(previewId);
+        if (previewId) {
+          if (detail?.flowContinuation === true) debugApi?.resumeFlowPreview?.(previewId);
+          else debugApi?.preview?.(previewId);
+        }
         return;
       }
       commandHandlers[command]?.();

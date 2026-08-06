@@ -15,14 +15,17 @@ height: min(100dvh, 104.167vw);
 aspect-ratio: 24 / 25;
 ```
 
-- 보스 전투의 원본 탄막·충돌·지원 몬스터 로직은 `800 × 960` 좌표계에 맞춰져 있으므로, 내부 보스 캔버스는 원본 해상도를 유지하고 넓어진 프레임 중앙에 배치했습니다.
-- 따라서 보스 패턴을 가로로 늘리거나 충돌 좌표를 바꾸지 않고도 외부 화면 크기를 스토리 모드와 맞췄습니다.
+- 웨이브와 보스의 실제 게임 캔버스도 공통 논리 해상도 `922 × 960`으로 통일했습니다.
+- 보스 원본 탄막·충돌 로직은 `800 × 960` 좌표계를 유지하되, `922 × 960` 캔버스 중앙에 오프셋 투영합니다.
+- 보스 패턴을 가로로 늘리지 않고 플레이어·지원 몬스터·아이템·탄환은 웨이브와 동일한 공통 캔버스 좌표를 사용합니다.
 
 ### 2. 플레이어 크기와 이동 속도 통일
 
 공통값을 `src/game/chapter1/chapter1WaveVisualTuning.ts`에 추가했습니다.
 
 ```ts
+CHAPTER1_STORY_CANVAS_WIDTH = 922;
+CHAPTER1_STORY_CANVAS_HEIGHT = 960;
 CHAPTER1_STORY_PLAYER_VISUAL_WIDTH = 137;
 CHAPTER1_STORY_PLAYER_MOVE_SPEED = 480;
 ```
@@ -64,8 +67,11 @@ CHAPTER1_STORY_PLAYER_MOVE_SPEED = 480;
 - `src/components/story/Chapter1StoryPlayer.tsx`
 - `src/components/story/chapter1StoryPlayer.css`
 - `src/game/chapter1/chapter1BossRenderer.ts`
+- `src/game/chapter1/chapter1BossSystem.ts`
+- `src/game/chapter1/chapter1BossViewportProjection.ts` (신규)
 - `src/game/chapter1/chapter1WaveVisualTuning.ts`
 - `src/game/player/playerMovementRespawnAndSatelliteSystem.ts`
+- `src/game/player/playerSmartBombSystem.ts`
 - `src/game/render/gameSceneRenderer.ts`
 - `src/index.css`
 - `src/story/chapter1/chapter1StoryRuntime.ts`

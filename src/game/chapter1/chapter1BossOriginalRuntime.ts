@@ -100,19 +100,16 @@ function drawBossBattleBackground(type = "battle", cinematicTime = 0) {
   const purify = 0;
   const profile = getBossBackgroundProfile();
   const time = state.t;
-  const cinematicOffset = type === "cinematic" ? cinematicTime * 36 : 0;
-  const scroll1 = state.backgroundScroll1 + cinematicOffset;
-  const scroll2 = state.backgroundScroll2 + cinematicOffset * 1.35;
-  const scroll3 = state.backgroundScroll3 + cinematicOffset * 1.7;
+  const baseTime = type === "cinematic" ? time * .92 + cinematicTime * .4 : time;
 
   ctx.fillStyle = "#040507";
   ctx.fillRect(0, 0, W, H);
 
-  const drewBase = drawRepeatingVerticalMap(bossBgStage1Image, scroll1, 1, 900, Math.sin(time * .22) * 4);
+  const drewBase = drawRepeatingVerticalMap(bossBgStage1Image, baseTime * profile.baseSpeed, 1, 900, Math.sin(time * .22) * 4);
   if (!drewBase) drawFallbackBattleBackground(purify);
 
-  drawRepeatingVerticalMap(bossBgStage2Image, scroll2, profile.overlay2Alpha, 910, Math.sin(time * .37) * 8);
-  drawRepeatingVerticalMap(bossBgStage3Image, scroll3, profile.overlay3Alpha, 920, Math.sin(time * .48 + .8) * 12);
+  drawRepeatingVerticalMap(bossBgStage2Image, baseTime * profile.overlay2Speed, profile.overlay2Alpha, 910, Math.sin(time * .37) * 8);
+  drawRepeatingVerticalMap(bossBgStage3Image, baseTime * profile.overlay3Speed, profile.overlay3Alpha, 920, Math.sin(time * .48 + .8) * 12);
 
   const vignette = ctx.createRadialGradient(W * .5, H * .5, H * .18, W * .5, H * .5, H * .82);
   vignette.addColorStop(0, "rgba(0,0,0,0)");
@@ -142,7 +139,7 @@ function drawBossBattleBackground(type = "battle", cinematicTime = 0) {
 
   ctx.strokeStyle = `rgba(255, 87, 107, ${type === "cinematic" ? .08 : .06})`;
   ctx.lineWidth = 1;
-  const scanOffset = ((scroll1 * .9) % 58 + 58) % 58;
+  const scanOffset = ((baseTime * 78) % 58 + 58) % 58;
   for (let y = scanOffset - 58; y < H; y += 58) {
     ctx.beginPath();
     ctx.moveTo(0, y);
@@ -185,7 +182,7 @@ const STAGE1_MAX_HP = 1200;
 const STAGE2_MAX_HP = 1800;
 const TOTAL_BOSS_HP = STAGE1_MAX_HP + STAGE2_MAX_HP;
 const INTRO_DURATION = 5.8;
-const BOSS_DESTRUCTION_DURATION = 5.9;
+const BOSS_DESTRUCTION_DURATION = 5.2;
 const BOSS_HP_CHARGE_DURATION = 3.0;
 const BOSS_PATTERN_START_DELAY = 2.0;
 const STAGE2_PATTERN_START_DELAY = 0.65;
@@ -210,19 +207,6 @@ function getRandomPatternId(stage, excludedId = null) {
   const candidates = ids.filter(id => id !== excludedId);
   const pool = candidates.length ? candidates : ids;
   return pool[Math.floor(Math.random() * pool.length)];
-}
-function resetStagePatternQueue(stage) {
-  const queue = [...getStagePatternIds(stage)];
-  if (stage === 1) state.stage1PatternQueue = queue;
-  else state.stage2PatternQueue = queue;
-}
-function getNextStagePatternId(stage, excludedId = null) {
-  const queue = stage === 1 ? state.stage1PatternQueue : state.stage2PatternQueue;
-  if (Array.isArray(queue) && queue.length > 0) {
-    const nextId = queue.shift();
-    return Number.isFinite(nextId) ? nextId : getRandomPatternId(stage, excludedId);
-  }
-  return getRandomPatternId(stage, excludedId);
 }
 function getStageDuration(stage) {
   return getStagePatternIds(stage).reduce((sum, id) => {
@@ -258,14 +242,6 @@ const state = {
   timeScale: 1,
   patternIndex: 0,
   patternElapsed: 0,
-  stage1PatternQueue: [...STAGE1_PATTERN_IDS],
-  stage2PatternQueue: [...STAGE2_PATTERN_IDS],
-  backgroundScroll1: 0,
-  backgroundScroll2: 0,
-  backgroundScroll3: 0,
-  backgroundSpeed1: 86,
-  backgroundSpeed2: 128,
-  backgroundSpeed3: 172,
   bossStage: 1,
   bossStageState: "stage1",
   stage1Hp: STAGE1_MAX_HP,
@@ -540,7 +516,7 @@ function selectPattern(index) {
 function nextPattern() {
   if (!["stage1", "stage2"].includes(state.bossStageState)) return;
   const currentId = currentPattern().id;
-  const nextId = getNextStagePatternId(state.bossStage, currentId);
+  const nextId = getRandomPatternId(state.bossStage, currentId);
   setPattern(getPatternIndexById(nextId), { preserveProjectiles: true });
 }
 
@@ -649,8 +625,7 @@ function updateAwakening(dt) {
     // 체력 충전은 각성 중 이미 완료했으므로, 이후에는 정확히 2초간 대기한 뒤 패턴을 시작합니다.
     state.battleStartState = "waiting";
     state.battleStartElapsed = 0;
-    resetStagePatternQueue(2);
-    const firstStage2PatternId = getNextStagePatternId(2);
+    const firstStage2PatternId = getRandomPatternId(2);
     setPattern(getPatternIndexById(firstStage2PatternId), {
       preserveProjectiles: false,
       keepBossPosition: true,
@@ -669,17 +644,9 @@ function resetBattle() {
   state.stage2LatentHp = STAGE2_MAX_HP;
   state.awakeningElapsed = 0;
   state.battleDefeatedAt = -1;
-  state.backgroundScroll1 = 0;
-  state.backgroundScroll2 = 0;
-  state.backgroundScroll3 = 0;
-  state.backgroundSpeed1 = 86;
-  state.backgroundSpeed2 = 128;
-  state.backgroundSpeed3 = 172;
   state.bullets.length = 0;
   state.waves.length = 0;
-  resetStagePatternQueue(1);
-  resetStagePatternQueue(2);
-  const firstStage1PatternId = getNextStagePatternId(1);
+  const firstStage1PatternId = getRandomPatternId(1);
   setPattern(getPatternIndexById(firstStage1PatternId), { preserveProjectiles: false });
   refreshButtons();
   startBossIntro();
@@ -727,7 +694,7 @@ function updateBattleStartSequence(dt) {
   // 페이즈 전환 대기 중에도 보스 좌표를 즉시 덮어쓰지 않고 중앙 전투 위치로 부드럽게 수렴시킵니다.
   if (stage2Sequence) {
     state.boss.x = lerp(state.boss.x, W / 2, 1 - Math.exp(-3.2 * dt));
-    state.boss.y = lerp(state.boss.y, 185, 1 - Math.exp(-3.0 * dt));
+    state.boss.y = lerp(state.boss.y, 175, 1 - Math.exp(-3.0 * dt));
   }
 
   if (state.battleStartState === "charging") {
@@ -1648,7 +1615,6 @@ function updateBroadcastConfusion(dt) {
   }
 
   for (const wave of p.broadcastWaves) {
-    if (wave.done) continue;
     wave.age += dt;
     if (wave.age < wave.warning) continue;
     wave.radius = 30 + (wave.age - wave.warning) * wave.speed;
@@ -1666,7 +1632,7 @@ function updateBroadcastConfusion(dt) {
       }
     }
   }
-  p.broadcastWaves = p.broadcastWaves.filter(wave => !wave.done && (wave.age < wave.warning || wave.radius < 1520));
+  p.broadcastWaves = p.broadcastWaves.filter(wave => wave.age < wave.warning || wave.radius < 1520);
   if (p.broadcastEventIndex >= p.broadcastEvents.length && p.broadcastWaves.length === 0 && !p.broadcastCompleted) {
     p.broadcastCompleted = true;
     p.broadcastStatus = "안내 방송 정상화";
@@ -3191,14 +3157,6 @@ function updatePlayerAttack(dt) {}
 function updatePlayerBullets(dt) {}
 
 function updateBackground(dt) {
-  const profile = getBossBackgroundProfile();
-  const speedBlend = 1 - Math.exp(-2.4 * dt);
-  state.backgroundSpeed1 = lerp(state.backgroundSpeed1, profile.baseSpeed, speedBlend);
-  state.backgroundSpeed2 = lerp(state.backgroundSpeed2, profile.overlay2Speed, speedBlend);
-  state.backgroundSpeed3 = lerp(state.backgroundSpeed3, profile.overlay3Speed, speedBlend);
-  state.backgroundScroll1 += state.backgroundSpeed1 * dt;
-  state.backgroundScroll2 += state.backgroundSpeed2 * dt;
-  state.backgroundScroll3 += state.backgroundSpeed3 * dt;
   for (const s of state.stars) {s.y+=s.v*dt;if(s.y>H+3){s.y=-3;s.x=Math.random()*W;}}
 }
 
@@ -4670,7 +4628,6 @@ function drawBroadcastConfusion() {
   ctx.restore();
 
   for (const wave of p.broadcastWaves || []) {
-    if (wave.done) continue;
     const warning = wave.age < wave.warning;
     drawBroadcastSpeaker(wave.side, wave, warning);
     if (warning) {
@@ -5118,22 +5075,6 @@ function render() {
       if (dx * dx + dy * dy <= radiusSq) bullet.active = false;
     }
     state.bullets = state.bullets.filter(bullet => bullet.active);
-
-    const broadcastWaves = state.pattern?.broadcastWaves;
-    if (Array.isArray(broadcastWaves)) {
-      for (const wave of broadcastWaves) {
-        if (!wave || wave.done) continue;
-        const distance = Math.hypot((wave.x ?? 0) - x, (wave.y ?? 0) - y);
-        const outerRadius = Math.max(0, wave.radius ?? 0) + Math.max(...(wave.bands ?? [0])) + (wave.thickness ?? 0);
-        const innerRadius = Math.max(0, (wave.radius ?? 0) - (wave.thickness ?? 0));
-        const bombMin = Math.max(0, distance - radius);
-        const bombMax = distance + radius;
-        if (bombMin <= outerRadius && bombMax >= innerRadius) {
-          wave.done = true;
-          wave.clearedByBomb = true;
-        }
-      }
-    }
   }
 
   function inputDigitRuntime(digit) {
