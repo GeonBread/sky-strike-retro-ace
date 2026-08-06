@@ -64,7 +64,13 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
 
   // 원본의 5.2초 보스전 전환 연출을 유지한 뒤 외부 보스 캔버스로 넘긴다.
   // 웨이브 정화 이후의 스토리 호출만 activePreviewId를 해제해 실제 연속 진행으로 취급한다.
-  return source.replace(debugPreviewHook, flowPreviewHook);
+  return source
+    .replace(debugPreviewHook, flowPreviewHook)
+    .replace(/if \(event\.code === 'Space' \|\| event\.code === 'Enter'\)/g, "if (event.code === 'Enter')")
+    .replace(/if \(event\.code === 'Enter' \|\| event\.code === 'Space'\)/g, "if (event.code === 'Enter')")
+    .replace(/text: '오염 신호\.\.\. 탐색 중입니다\.'/g, "text: '오염.. 탐색..'")
+    .replace(/text: '오염의 원점이 곧 확인됩니다\.'/g, "text: '오염.. 원점.. 탐색..'")
+    .replace(/text: '보스 위치\.\.\. 확인되었습니다\.'/g, "text: '보스.. 위치.. 확인..'");
 }
 
 function normalizeStoryStyles(styles: string): string {
@@ -99,6 +105,22 @@ html.is-embedded-story .story-stage {
 }
 html.is-embedded-story .story-stage.is-game-mode {
   width: min(96dvh, 100vw) !important;
+}
+html.is-embedded-story body[data-global-effect="gatekeeper-entrance"] .demo-shell,
+html.is-embedded-story body[data-global-effect="gatekeeper-entrance"] .story-stage,
+html.is-embedded-story body[data-global-effect="gatekeeper-entrance"] .story-player-root,
+html.is-embedded-story body[data-global-effect="gatekeeper-entrance"] .story-player-host,
+html.is-embedded-story body[data-global-effect="gatekeeper-entrance"] .gatekeeper-entrance-effect {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  border-radius: 0 !important;
+}
+html.is-embedded-story body[data-global-effect="gatekeeper-entrance"] .gatekeeper-entrance-effect {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2000 !important;
 }
 `;
 }

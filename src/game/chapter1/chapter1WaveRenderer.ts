@@ -1,6 +1,5 @@
 import type { Bullet, Enemy } from "../entities";
-import { CHAPTER1_ENEMY_CATALOG, CHAPTER1_WAVE_CATALOG } from "./chapter1WaveCatalog";
-import { getChapter1WaveProgressSystem } from "./chapter1WaveSystem";
+import { CHAPTER1_ENEMY_CATALOG } from "./chapter1WaveCatalog";
 import { isChapter1EnemyType } from "./chapter1WaveTypes";
 import {
   CHAPTER1_RING_VISUAL_AND_HIT_SCALE,
@@ -345,25 +344,4 @@ export function renderChapter1WaveTelegraphsSystem(engine: any): void {
 export function renderChapter1WaveHudSystem(engine: any): void {
   renderChapter1WaveImpactEffectsSystem(engine);
   if (engine.stage !== 1 || engine.bossActive || !engine.chapter1Wave?.enabled) return;
-  const progress = getChapter1WaveProgressSystem(engine);
-  const wave = CHAPTER1_WAVE_CATALOG[progress.waveIndex];
-  if (!wave) return;
-
-  const ctx = engine.ctx as CanvasRenderingContext2D;
-  ctx.save();
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.font = "900 15px system-ui, sans-serif";
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = "rgba(0,0,0,.88)";
-  ctx.fillStyle = "#fff7df";
-  const label = `WAVE ${String(progress.waveIndex + 1).padStart(2, "0")} / ${progress.waveCount}`;
-  ctx.strokeText(label, 18, 18);
-  ctx.fillText(label, 18, 18);
-  ctx.font = "800 12px system-ui, sans-serif";
-  ctx.fillStyle = "#9de9ff";
-  ctx.strokeText(wave.title, 18, 40);
-  ctx.fillText(wave.title, 18, 40);
-
-  ctx.restore();
 }

@@ -76,8 +76,8 @@ img {
 
 .combat-hud-bomb-row {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
+  right: 14px;
+  bottom: 14px;
   z-index: 20;
   display: flex;
   align-items: flex-end;
@@ -131,8 +131,19 @@ img {
     height: 34px;
   }
 
+  .combat-hud-bomb-row {
+    right: 10px;
+    bottom: 10px;
+    gap: 7px;
+  }
+
   .combat-hud-bomb-icon {
     width: 34px;
     height: 34px;
   }
+}
+
+.chapter1-boss-intro-canvas {
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }

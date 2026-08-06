@@ -611,12 +611,14 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
 
     // Player Rendering
     if (!engine.player.isDead && !engine.storyPlayerHidden && !hidePlayerForChapter1Boss) {
+      const isStoryPurificationExit = Boolean(engine.storyPurificationExitActive);
       if (
+        isStoryPurificationExit ||
         engine.player.invulnTimer <= 0 ||
         Math.floor(performance.now() / 80) % 2 === 0
       ) {
         engine.ctx.save();
-        if (engine.player.invulnTimer > 0) engine.ctx.globalAlpha = 0.45;
+        if (engine.player.invulnTimer > 0 && !isStoryPurificationExit) engine.ctx.globalAlpha = 0.45;
 
         if (engine.player.color === "vanguard") {
           // 1. Futuristic Purple Glowing Aura Base
