@@ -183,9 +183,10 @@ function updateBombDamage(engine: any, runtime: Chapter1BossRuntime): void {
     return;
   }
   const scale = scaleOf(engine);
-  const player = playerCanonical(engine);
+  const bombX = (engine.bombOriginX ?? (engine.player.x + engine.player.width / 2)) / scale.x;
+  const bombY = (engine.bombOriginY ?? (engine.player.y + engine.player.height / 2)) / scale.y;
   const radius = engine.bombRadius / scale.uniform;
-  if (!runtime.bombHit && Math.hypot(core.state.boss.x - player.x, core.state.boss.y - player.y) < radius + 160) {
+  if (!runtime.bombHit && Math.hypot(core.state.boss.x - bombX, core.state.boss.y - bombY) < radius + 160) {
     runtime.bombHit = true;
     core.applyDamage(50);
     sfx.bossHit();
@@ -257,6 +258,11 @@ export function updateChapter1BossSystem(engine: any, dt: number): void {
   const runtime = runtimeOf(engine);
   if (!runtime.active || !runtime.core) return;
   clampPlayerToOriginalBounds(engine, runtime);
+  if (engine.player?.isDead) {
+    // 게임오버 대기 중에는 보스 본체와 지원 몬스터가 새 공격을 진행하지 않는다.
+    syncBossEntity(engine, runtime);
+    return;
+  }
   const previousStageState = runtime.core.state.bossStageState;
   runtime.core.update(dt);
   updateBossSupportSpawnSystem(engine, runtime, dt);

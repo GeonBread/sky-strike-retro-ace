@@ -69,6 +69,8 @@ function canHobanuPlayerShootNow(engine: PlayerRuntime): boolean {
  * 이 함수는 플레이어 객체와 탄환 배열, 폭탄 입력 상태를 직접 갱신한다.
  */
 export function updatePlayerMovementRespawnAndSatelliteSystem(engine: PlayerRuntime, dt: number) {
+  engine.playerDamageFlashTimer = Math.max(0, (engine.playerDamageFlashTimer || 0) - dt);
+
   if (engine.canvas.width > 100 && engine.canvas.height > 100) {
     const isDefaultCanvas = engine.canvas.width === 300 && engine.canvas.height === 150;
 

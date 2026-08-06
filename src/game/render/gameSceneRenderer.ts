@@ -1833,8 +1833,8 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
       engine.ctx.lineWidth = 18;
       engine.ctx.beginPath();
       engine.ctx.arc(
-        engine.player.x + engine.player.width / 2,
-        engine.player.y + engine.player.height / 2,
+        engine.bombOriginX ?? (engine.player.x + engine.player.width / 2),
+        engine.bombOriginY ?? (engine.player.y + engine.player.height / 2),
         engine.bombRadius,
         0,
         Math.PI * 2,
@@ -1843,109 +1843,78 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
       engine.ctx.restore();
     }
 
-    // Powerups
+    // Powerups - 굵은 외곽선과 단순한 실루엣을 사용하는 챕터 공통 아이콘
     engine.powerups.forEach((p) => {
-      engine.ctx.save();
+      if (!p.active) return;
+      const ctx = engine.ctx;
       const cx = p.x + p.width / 2;
       const cy = p.y + p.height / 2;
+      const pulse = 1 + Math.sin(performance.now() * 0.01 + cx) * 0.055;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(pulse, pulse);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.shadowColor = "rgba(255,255,255,0.3)";
+      ctx.shadowBlur = 9;
 
       if (p.type === "power") {
-        // Golden Glowing Hexagon/Diamond (Bullet Upgrade)
-        const rot = performance.now() * 0.0035;
-        engine.ctx.translate(cx, cy);
-        engine.ctx.rotate(rot);
-
-        engine.ctx.shadowColor = "#fbbf24";
-        engine.ctx.shadowBlur = 20;
-
-        engine.ctx.fillStyle = "#fbbf24";
-        engine.ctx.beginPath();
-        for (let i = 0; i < 4; i++) {
-          const angle = (i * Math.PI) / 2;
-          engine.ctx.lineTo(Math.cos(angle) * 16, Math.sin(angle) * 16);
-        }
-        engine.ctx.closePath();
-        engine.ctx.fill();
-
-        engine.ctx.strokeStyle = "#ffffff";
-        engine.ctx.lineWidth = 2.5;
-        engine.ctx.stroke();
-
-        // Counter-rotated glowing bolt symbol
-        engine.ctx.rotate(-rot * 2);
-        engine.ctx.fillStyle = "#b45309";
-        engine.ctx.font = "900 13px sans-serif";
-        engine.ctx.textAlign = "center";
-        engine.ctx.textBaseline = "middle";
-        engine.ctx.fillText("*", 0, 0);
+        ctx.fillStyle = "#f7c948";
+        ctx.strokeStyle = "#07090d";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(20, 0);
+        ctx.lineTo(0, 20);
+        ctx.lineTo(-20, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#ef3f45";
+        ctx.strokeStyle = "#07090d";
+        ctx.lineWidth = 4;
+        ctx.font = "900 22px Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.strokeText("P", 0, 1);
+        ctx.fillText("P", 0, 1);
       } else if (p.type === "heal") {
-        // Emerald Green Pulsing Shield (Heal)
-        const pulse = Math.sin(performance.now() * 0.012) * 3 + 13;
-
-        // Outer glowing ripple rings
-        engine.ctx.strokeStyle = "#34d399";
-        engine.ctx.globalAlpha = 0.5;
-        engine.ctx.lineWidth = 2;
-        engine.ctx.beginPath();
-        engine.ctx.arc(cx, cy, pulse + 6, 0, Math.PI * 2);
-        engine.ctx.stroke();
-
-        // Saturated medical capsules
-        engine.ctx.globalAlpha = 1.0;
-        engine.ctx.shadowColor = "#10b981";
-        engine.ctx.shadowBlur = 20;
-        engine.ctx.fillStyle = "#059669";
-
-        engine.ctx.beginPath();
-        engine.ctx.arc(cx, cy, 14, 0, Math.PI * 2);
-        engine.ctx.fill();
-
-        engine.ctx.strokeStyle = "#6ee7b7";
-        engine.ctx.lineWidth = 2;
-        engine.ctx.stroke();
-
-        // Bold white medical cross
-        engine.ctx.fillStyle = "#ffffff";
-        const size = 11;
-        const thickness = 3.5;
-        engine.ctx.fillRect(cx - thickness / 2, cy - size / 2, thickness, size);
-        engine.ctx.fillRect(cx - size / 2, cy - thickness / 2, size, thickness);
+        ctx.fillStyle = "#3bc779";
+        ctx.strokeStyle = "#07090d";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.roundRect(-19, -19, 38, 38, 9);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = "#07090d";
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(0, -11); ctx.lineTo(0, 11);
+        ctx.moveTo(-11, 0); ctx.lineTo(11, 0);
+        ctx.stroke();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, -11); ctx.lineTo(0, 11);
+        ctx.moveTo(-11, 0); ctx.lineTo(11, 0);
+        ctx.stroke();
       } else if (p.type === "satellite") {
-        // Deep purple orbiting satellite core
-        engine.ctx.translate(cx, cy);
-        engine.ctx.rotate(performance.now() * 0.002);
-
-        engine.ctx.shadowColor = "#c084fc";
-        engine.ctx.shadowBlur = 22;
-
-        // Draw central purple core
-        engine.ctx.fillStyle = "#a855f7";
-        engine.ctx.beginPath();
-        engine.ctx.arc(0, 0, 9, 0, Math.PI * 2);
-        engine.ctx.fill();
-
-        engine.ctx.strokeStyle = "#e9d5ff";
-        engine.ctx.lineWidth = 1.8;
-        engine.ctx.stroke();
-
-        // Draw horizontal solar wings
-        engine.ctx.fillStyle = "#38bdf8"; // high tech cyber blue wings
-        engine.ctx.fillRect(-15, -2.5, 7, 5);
-        engine.ctx.fillRect(8, -2.5, 7, 5);
-
-        engine.ctx.strokeStyle = "#ffffff";
-        engine.ctx.lineWidth = 0.8;
-        engine.ctx.strokeRect(-15, -2.5, 7, 5);
-        engine.ctx.strokeRect(8, -2.5, 7, 5);
-
-        // Draw orbiting rings
-        engine.ctx.strokeStyle = "rgba(192, 132, 252, 0.75)";
-        engine.ctx.lineWidth = 1.2;
-        engine.ctx.beginPath();
-        engine.ctx.ellipse(0, 0, 18, 6, Math.PI / 6, 0, Math.PI * 2);
-        engine.ctx.stroke();
+        ctx.fillStyle = "#7f5af0";
+        ctx.strokeStyle = "#07090d";
+        ctx.lineWidth = 5;
+        ctx.fillRect(-10, -12, 20, 24);
+        ctx.strokeRect(-10, -12, 20, 24);
+        ctx.fillStyle = "#49c6e5";
+        ctx.fillRect(-24, -8, 11, 16);
+        ctx.fillRect(13, -8, 11, 16);
+        ctx.strokeRect(-24, -8, 11, 16);
+        ctx.strokeRect(13, -8, 11, 16);
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
       }
-      engine.ctx.restore();
+      ctx.restore();
     });
 
     // --- DRAW DEBRIS BARRICADES ---
@@ -2094,5 +2063,12 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
     renderChapter1WaveHudSystem(engine);
     engine.renderBossClearOverlay();
     engine.ctx.restore();
-  
+
+    if ((engine.playerDamageFlashTimer || 0) > 0) {
+      const alpha = Math.min(0.32, (engine.playerDamageFlashTimer / 0.85) * 0.32);
+      engine.ctx.save();
+      engine.ctx.fillStyle = `rgba(220, 32, 42, ${alpha})`;
+      engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
+      engine.ctx.restore();
+    }
 }

@@ -23,6 +23,7 @@ export interface Chapter1BossOriginalRuntime {
   render(): void;
   applyDamage(amount: number): void;
   clearEnemyProjectiles(): void;
+  clearEnemyProjectilesWithinRadius(x: number, y: number, radius: number): void;
   inputDigit(digit: number): boolean;
   pointerDown(x: number, y: number): boolean;
   getMovementBounds(): { minX: number; maxX: number; minY: number; maxY: number };
@@ -860,14 +861,7 @@ function updateCinematic(dt) {
 
 
 function tuneStoryBullet(b) {
-  if (!state.story) return true;
-  state.storySerial++;
-  const preserve = b.type === "gravity" || b.type === "rewind";
-  if (!preserve && state.storySerial % 5 < 2) return false;
-  b.vx *= .52;
-  b.vy *= .52;
-  if (b.targetSpeed != null) b.targetSpeed *= .52;
-  b.scale *= .86;
+  // 스토리 모드에서도 원본 보스 전용 코드의 탄속·탄 수·크기를 그대로 사용한다.
   return true;
 }
 function spawnBullet(opts) {
@@ -5072,6 +5066,17 @@ function render() {
     state.mouse.down = false;
   }
 
+  function clearEnemyProjectilesWithinRadiusRuntime(x, y, radius) {
+    const radiusSq = Math.max(0, radius) ** 2;
+    for (const bullet of state.bullets) {
+      if (!bullet.active) continue;
+      const dx = bullet.x - x;
+      const dy = bullet.y - y;
+      if (dx * dx + dy * dy <= radiusSq) bullet.active = false;
+    }
+    state.bullets = state.bullets.filter(bullet => bullet.active);
+  }
+
   function inputDigitRuntime(digit) {
     if (currentPattern().id !== 59 || state.cinematicMode !== "battle") return false;
     if (!Number.isInteger(digit) || digit < 0 || digit > 9) return false;
@@ -5109,6 +5114,7 @@ function render() {
     render,
     applyDamage: applyBossDamage,
     clearEnemyProjectiles: clearEnemyProjectilesRuntime,
+    clearEnemyProjectilesWithinRadius: clearEnemyProjectilesWithinRadiusRuntime,
     inputDigit: inputDigitRuntime,
     pointerDown: pointerDownRuntime,
     getMovementBounds: getPlayerMovementBounds,

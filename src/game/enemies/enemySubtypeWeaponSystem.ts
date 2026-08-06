@@ -21,6 +21,8 @@ export function fireEnemySubtypeWeaponSystem(
   e: Enemy,
   pattern: EnemySubtypeWeaponPattern,
 ) {
+  // 사망 상태의 플레이어 좌표를 향해 새 탄환을 발사하지 않는다.
+  if (engine.player?.isDead) return;
   const cx = e.x + e.width / 2;
   const cy = e.y + e.height;
   const tx = engine.player.x + engine.player.width / 2;

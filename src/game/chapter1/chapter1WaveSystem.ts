@@ -554,6 +554,23 @@ function finishWave(engine: Chapter1WaveEngine): void {
   startWave(engine, cleared + 1, true);
 }
 
+/**
+ * 테스트 중 현재 챕터 1 웨이브를 즉시 완료하고 다음 웨이브로 진행한다.
+ * 실제 게임 규칙에는 자동으로 호출되지 않으며, 스토리 테스트 UI에서만 사용한다.
+ */
+export function skipCurrentChapter1WaveSystem(engine: Chapter1WaveEngine): boolean {
+  const runtime = ensureRuntime(engine);
+  if (!runtime.enabled || runtime.allWavesCleared || engine.bossActive) return false;
+  if (!runtime.running) {
+    const next = engine.isSandbox ? runtime.selectedWave : runtime.nextWave;
+    startWave(engine, next, engine.isSandbox);
+  }
+  clearChapter1CombatObjects(engine);
+  runtime.eventCursor = runtime.events.length;
+  finishWave(engine);
+  return true;
+}
+
 function updateDeferred(engine: Chapter1WaveEngine): void {
   const runtime = ensureRuntime(engine);
   for (let index = runtime.deferred.length - 1; index >= 0; index -= 1) {
@@ -612,6 +629,10 @@ function aimedVelocity(x: number, y: number, targetX: number, targetY: number, s
 function addEnemyBullet(engine: Chapter1WaveEngine, options: Partial<Chapter1BulletState> & { x: number; y: number }): Bullet {
   const bullet = new Bullet();
   bullet.isEnemy = true;
+  if (engine.player?.isDead) {
+    bullet.active = false;
+    return bullet;
+  }
   bullet.damage = 1;
   bullet.type = "normal";
   const state: Chapter1BulletState = {
@@ -691,7 +712,7 @@ function occupiedScheduleSlots(engine: Chapter1WaveEngine): Set<string> {
 
 function attackEnemy(engine: Chapter1WaveEngine, enemy: Enemy): void {
   const state = enemy.chapter1;
-  if (!state) return;
+  if (!state || engine.player?.isDead) return;
   const player = getPlayerCanonical(engine);
   const rate = 1;
   const speed = 205;
@@ -882,7 +903,7 @@ export function updateChapter1WaveEnemiesSystem(engine: Chapter1WaveEngine, dt: 
     const oldY = state.cy;
     const freezeMovement = engine.isSandbox && engine.sandboxMode === "single" && !engine.sandboxMovementEnabled;
     state.age += dt;
-    state.attack -= dt;
+    if (!engine.player?.isDead) state.attack -= dt;
     state.stateTimer -= dt;
     state.phase += dt;
     state.hitFlash = Math.max(0, state.hitFlash - dt);
@@ -910,7 +931,7 @@ export function updateChapter1WaveEnemiesSystem(engine: Chapter1WaveEngine, dt: 
       case 3: {
         const targetX = BASE_WIDTH / 2 + Math.sin(state.age * 0.45 + state.motionSeed) * 185;
         state.cx = lerp(state.cx, targetX, Math.min(1, dt * 2.1));
-        if (state.burst > 0) {
+        if (state.burst > 0 && !engine.player?.isDead) {
           state.burstTimer -= dt;
           if (state.burstTimer <= 0) {
             const index = 3 - state.burst;
@@ -1001,7 +1022,7 @@ export function updateChapter1WaveEnemiesSystem(engine: Chapter1WaveEngine, dt: 
     state.motionY = lerp(state.motionY, (state.cy - oldY) / Math.max(dt, 0.001), Math.min(1, dt * 8));
     syncEnemyEntity(engine, enemy);
 
-    if (state.attack <= 0 && enemy.active && (state.state === "active" || state.index === 1 || state.index === 5)) attackEnemy(engine, enemy);
+    if (!engine.player?.isDead && state.attack <= 0 && enemy.active && (state.state === "active" || state.index === 1 || state.index === 5)) attackEnemy(engine, enemy);
   });
 }
 

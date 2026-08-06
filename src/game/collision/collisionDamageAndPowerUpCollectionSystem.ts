@@ -379,7 +379,7 @@ engine.enemies.forEach((e) => {
 
 engine.powerups.forEach((p) => {
   // 아이템 획득 판정만 넓게 잡고, 적탄 피격 판정에는 영향을 주지 않는다.
-  const pickupScale = 5.5;
+  const pickupScale = 7.5;
   const pickupPaddingX = engine.player.width * (pickupScale - 1) / 2;
   const pickupPaddingY = engine.player.height * (pickupScale - 1) / 2;
   const virtualPlayer = {

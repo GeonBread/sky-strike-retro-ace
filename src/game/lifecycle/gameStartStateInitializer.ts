@@ -59,9 +59,13 @@ export function initializeGameStartStateSystem(engine: GameStartRuntime, color: 
   engine.bossPhase3Triggered = false;
   engine.bossPhase3Active = false;
   engine.screenShakeIntensity = 0;
+  engine.playerDamageFlashTimer = 0;
   engine.state = "PLAYING";
   engine.bombActive = false;
   engine.bombRadius = 0;
+  engine.bombOriginX = engine.player.x + engine.player.width / 2;
+  engine.bombOriginY = engine.player.y + engine.player.height / 2;
+  engine.bombMaxRadius = Math.hypot(engine.canvas.width, engine.canvas.height) + 80;
   engine.bossBombHitSet.clear();
   engine.clearBossPatternHazards();
 

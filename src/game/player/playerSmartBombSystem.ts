@@ -1,8 +1,8 @@
 /**
  * 플레이어 스마트 폭탄 시스템
  *
- * 이 파일은 플레이어 폭탄 사용, 폭발 반경 확장, 적탄 제거, 일반 적·운석·방어 잔해 피해 처리를 담당한다.
- * 폭탄 개수 소모 방식, 폭발 속도, 피해 범위, 폭탄 이펙트를 수정할 때 이 파일을 수정한다.
+ * 이 파일은 플레이어 폭탄 사용, 정화 파동의 확장, 파동에 닿은 적탄·일반 적·장애물 제거를 담당한다.
+ * 폭탄을 누른 즉시 화면 전체를 지우지 않고, 실제 파동 반경이 도달한 대상부터 순서대로 제거한다.
  */
 
 import { Particle } from "../entities";
@@ -11,27 +11,26 @@ import { sfx } from "../AudioSystem";
 type PlayerBombRuntime = any;
 
 /**
- * 플레이어가 폭탄을 사용할 수 있는 상태인지 확인하고 폭탄 연출과 반경 확장을 시작한다.
- * 폭탄 개수와 화면 이펙트 배열, 보스 피격 기록을 함께 갱신한다.
+ * 현재 플레이어 위치를 정화 파동의 고정 중심으로 저장하고 폭탄 연출을 시작한다.
+ * 폭탄 사용 순간에는 적이나 탄환을 즉시 삭제하지 않는다.
  */
 export function triggerPlayerSmartBombSystem(engine: PlayerBombRuntime) {
-  if (engine.player.bombs <= 0 || engine.bombActive) return;
+  if (engine.player.bombs <= 0 || engine.bombActive || engine.player.isDead) return;
   engine.player.bombs--;
   if (engine.onBombsChanged) engine.onBombsChanged(engine.player.bombs);
 
   sfx.bossExplode();
   engine.bombActive = true;
   engine.bombRadius = 0;
+  engine.bombOriginX = engine.player.x + engine.player.width / 2;
+  engine.bombOriginY = engine.player.y + engine.player.height / 2;
+  engine.bombMaxRadius = Math.hypot(engine.canvas.width, engine.canvas.height) + 80;
   engine.bossBombHitSet.clear();
-
-  // 폭탄을 누르는 즉시 현재 화면의 일반 적탄과 원본 챕터 1 보스 탄막을 모두 초기화한다.
-  engine.clearAllEnemyBullets?.();
-  engine.chapter1Boss?.core?.clearEnemyProjectiles?.();
 
   for (let i = 0; i < 60; i++) {
     const p = new Particle();
-    p.x = engine.player.x + engine.player.width / 2;
-    p.y = engine.player.y + engine.player.height / 2;
+    p.x = engine.bombOriginX;
+    p.y = engine.bombOriginY;
     const angle = (i / 60) * Math.PI * 2;
     p.vx = Math.cos(angle) * 450;
     p.vy = Math.sin(angle) * 450;
@@ -43,88 +42,79 @@ export function triggerPlayerSmartBombSystem(engine: PlayerBombRuntime) {
 }
 
 /**
- * 진행 중인 스마트 폭탄의 반경을 넓히고 범위 안의 적탄, 적, 운석, 방어 잔해를 처리한다.
- * 반경이 최대치에 도달하면 폭탄 진행 상태를 종료한다.
+ * 정화 파동 반경을 확장하고 파동이 닿은 대상만 제거한다.
+ * 일반 탄환과 몬스터뿐 아니라 원본 챕터 1 보스 런타임의 탄환도 같은 반경 기준으로 처리한다.
  */
 export function updatePlayerSmartBombSystem(engine: PlayerBombRuntime, dt: number) {
   if (!engine.bombActive) return;
   engine.bombRadius += 1200 * dt;
+  const originX = engine.bombOriginX;
+  const originY = engine.bombOriginY;
 
-  engine.bullets = engine.bullets.filter((b) => {
+  engine.bullets = engine.bullets.filter((b: any) => {
     if (b.isEnemy) {
-      const dx = b.x - (engine.player.x + engine.player.width / 2);
-      const dy = b.y - (engine.player.y + engine.player.height / 2);
-      if (Math.hypot(dx, dy) < engine.bombRadius) {
-        engine.spawnExplosion(b.x, b.y, "#e879f9", 2);
+      const bx = b.x + b.width / 2;
+      const by = b.y + b.height / 2;
+      if (Math.hypot(bx - originX, by - originY) <= engine.bombRadius + Math.max(b.width, b.height) / 2) {
+        engine.spawnExplosion(bx, by, "#e879f9", 2);
         return false;
       }
     }
     return true;
   });
 
-  engine.enemies.forEach((e) => {
-    if ((e as any).chapter1ExactBossProxy) return;
-    if (e.active) {
-      const dx = e.x + e.width / 2 - (engine.player.x + engine.player.width / 2);
-      const dy =
-        e.y + e.height / 2 - (engine.player.y + engine.player.height / 2);
-      if (Math.hypot(dx, dy) < engine.bombRadius) {
-        if (e.type === "boss") {
-          if (!engine.bossBombHitSet.has(e)) {
-            engine.bossBombHitSet.add(e);
-            e.hp -= 50;
-            sfx.bossHit();
-            engine.spawnExplosion(
-              e.x + e.width / 2,
-              e.y + e.height / 2,
-              "#c084fc",
-              30,
-            );
-          }
-        } else {
-          e.hp = 0;
-          engine.deactivateEnemy(e);
-          engine.spawnExplosion(
-            e.x + e.width / 2,
-            e.y + e.height / 2,
-            "#c084fc",
-            12,
-          );
-          engine.awardScore(100);
-        }
+  // 원본 보스 런타임은 800x960 좌표계를 사용하므로 현재 캔버스 좌표를 환산한다.
+  const sx = engine.canvas.width / 800 || 1;
+  const sy = engine.canvas.height / 960 || 1;
+  engine.chapter1Boss?.core?.clearEnemyProjectilesWithinRadius?.(
+    originX / sx,
+    originY / sy,
+    engine.bombRadius / Math.min(sx, sy),
+  );
+
+  engine.enemies.forEach((e: any) => {
+    if ((e as any).chapter1ExactBossProxy || !e.active) return;
+    const ex = e.x + e.width / 2;
+    const ey = e.y + e.height / 2;
+    if (Math.hypot(ex - originX, ey - originY) > engine.bombRadius + Math.max(e.width, e.height) / 2) return;
+
+    if (e.type === "boss") {
+      if (!engine.bossBombHitSet.has(e)) {
+        engine.bossBombHitSet.add(e);
+        e.hp -= 50;
+        sfx.bossHit();
+        engine.spawnExplosion(ex, ey, "#c084fc", 30);
       }
+      return;
+    }
+
+    e.hp = 0;
+    engine.deactivateEnemy(e);
+    engine.spawnExplosion(ex, ey, "#c084fc", 12);
+    engine.awardScore(100);
+  });
+
+  engine.meteors.forEach((m: any) => {
+    if (!m.active) return;
+    if (Math.hypot(m.x - originX, m.y - originY) <= engine.bombRadius + m.radius) {
+      m.active = false;
+      sfx.enemyExplode();
+      engine.awardScore(80);
+      engine.spawnExplosion(m.x, m.y, "#64748b", 22);
     }
   });
 
-  // Destroy active meteors caught in the bomb radius
-  engine.meteors.forEach((m) => {
-    if (m.active) {
-      const dx = m.x - (engine.player.x + engine.player.width / 2);
-      const dy = m.y - (engine.player.y + engine.player.height / 2);
-      if (Math.hypot(dx, dy) < engine.bombRadius + m.radius) {
-        m.active = false;
-        sfx.enemyExplode();
-        engine.awardScore(80);
-        engine.spawnExplosion(m.x, m.y, "#64748b", 22);
-      }
+  engine.debrisCovers.forEach((d: any) => {
+    if (!d.active) return;
+    const dx = d.x + d.width / 2;
+    const dy = d.y + d.height / 2;
+    if (Math.hypot(dx - originX, dy - originY) <= engine.bombRadius + Math.max(d.width, d.height) / 2) {
+      d.hp = 0;
+      d.active = false;
+      sfx.enemyExplode();
+      engine.spawnExplosion(dx, dy, "#94a3b8", 15);
     }
   });
 
-  // Explode debris barricade covers caught in the bomb radius
-  engine.debrisCovers.forEach((d) => {
-    if (d.active) {
-      const dx = d.x + d.width / 2 - (engine.player.x + engine.player.width / 2);
-      const dy = d.y + d.height / 2 - (engine.player.y + engine.player.height / 2);
-      if (Math.hypot(dx, dy) < engine.bombRadius + Math.max(d.width, d.height) / 2) {
-        d.hp = 0;
-        d.active = false;
-        sfx.enemyExplode();
-        engine.spawnExplosion(d.x + d.width / 2, d.y + d.height / 2, "#94a3b8", 15);
-      }
-    }
-  });
-
-  if (engine.bombRadius >= engine.bombMaxRadius) {
-    engine.bombActive = false;
-  }
+  if (engine.bombRadius >= engine.bombMaxRadius) engine.bombActive = false;
 }

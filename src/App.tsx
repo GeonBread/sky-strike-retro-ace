@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import { HelpCircle, Keyboard, Palette, Smartphone, Trophy, User } from "lucide-react";
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
@@ -87,6 +87,7 @@ function GameCanvas({
   const [isPaused, setIsPaused] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const isStoryMode = mode === "story";
+  const isStoryWaveCanvas = isStoryMode && chapter1WaveOnly;
 
   useEffect(() => {
     externallyActiveRef.current = active;
@@ -332,21 +333,33 @@ function GameCanvas({
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
   const containerClassName = chapter1BossOnly
     ? "relative mx-auto overflow-hidden bg-black shadow-2xl flex flex-col"
-    : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
+    : isStoryWaveCanvas
+      ? "relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col"
+      : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
+  const containerStyle: React.CSSProperties | undefined = chapter1BossOnly
+    ? {
+        width: "min(83.333dvh, 100vw)",
+        height: "min(100dvh, 120vw)",
+        aspectRatio: "5 / 6",
+      }
+    : isStoryWaveCanvas
+      ? {
+          // 스토리 장면에서 사용하던 넓은 24:25 표시 폭을 실제 웨이브 전투에도 사용한다.
+          width: "min(96dvh, 100vw)",
+          height: "min(100dvh, 104.167vw)",
+          aspectRatio: "24 / 25",
+        }
+      : undefined;
 
   return (
     <div
       className={containerClassName}
       ref={containerRef}
-      style={chapter1BossOnly ? {
-        width: "min(83.333dvh, 100vw)",
-        height: "min(100dvh, 120vw)",
-        aspectRatio: "5 / 6",
-      } : undefined}
+      style={containerStyle}
     >
       <canvas
         ref={canvasRef}
-        className={chapter1BossOnly ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
+        className={chapter1BossOnly || isStoryWaveCanvas ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
         onPointerDown={handlePointerDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -378,6 +391,19 @@ function GameCanvas({
           <span key={i} className={`combat-hud-bomb-icon${i < bombs ? " is-active" : ""}`} />
         ))}
       </div>
+
+      {chapter1WaveOnly && active && inputEnabled && (
+        <button
+          type="button"
+          className="absolute bottom-4 right-4 z-40 rounded-lg border-2 border-amber-400 bg-black/88 px-4 py-2 font-mono text-xs font-black tracking-[0.12em] text-amber-200 shadow-[0_0_18px_rgba(251,191,36,0.32)] hover:bg-amber-950/90"
+          onClick={(event) => {
+            event.stopPropagation();
+            engineRef.current?.skipCurrentChapter1Wave();
+          }}
+        >
+          WAVE SKIP
+        </button>
+      )}
 
       {!chapter1BossOnly && bossHp !== null && (
         <div className={`absolute top-16 left-1/2 -translate-x-1/2 w-4/5 max-w-sm pointer-events-none z-20 transition-all duration-300 bg-slate-950/95 border rounded-full px-4 py-1 text-center ${bossPhase3Active ? "border-purple-500 shadow-[0_0_22px_rgba(168,85,247,0.85)]" : bossPhase2Active ? "border-rose-500 shadow-[0_0_18px_rgba(244,63,94,0.65)]" : "border-cyan-700 shadow-[0_0_15px_rgba(34,211,238,0.35)]"}`}>
@@ -442,7 +468,7 @@ function GameCanvas({
 }
 
 
-type Chapter1StoryPhase = "story" | "wave" | "wave-purification" | "boss" | "phase2-dialogue";
+type Chapter1StoryPhase = "story" | "wave-guide" | "wave" | "wave-purification" | "boss" | "phase2-dialogue";
 
 function Chapter1StoryExperience({
   shipStyle,
@@ -461,14 +487,28 @@ function Chapter1StoryExperience({
   const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [playerPosition, setPlayerPosition] = useState({ xPercent: 50, yPercent: 88 });
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
+  const [waveGuideStep, setWaveGuideStep] = useState(0);
+  const [waveRunKey, setWaveRunKey] = useState(0);
 
-  const waveMounted = part === 2 && (phase === "wave" || phase === "wave-purification");
+  const waveMounted = part === 2 && (phase === "wave-guide" || phase === "wave" || phase === "wave-purification");
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
   const bossActive = phase === "boss";
 
   useEffect(() => () => {
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    if (phase !== "wave-guide") return;
+    const handleGuideKey = (event: KeyboardEvent) => {
+      if (event.code !== "Enter" && event.code !== "Space") return;
+      event.preventDefault();
+      if (waveGuideStep < 3) setWaveGuideStep((step) => step + 1);
+      else setPhase("wave");
+    };
+    window.addEventListener("keydown", handleGuideKey);
+    return () => window.removeEventListener("keydown", handleGuideKey);
+  }, [phase, waveGuideStep]);
 
   const requestStoryPreview = (previewId: string) => {
     jumpTokenRef.current += 1;
@@ -495,9 +535,19 @@ function Chapter1StoryExperience({
     setShowJumpMenu(false);
   };
 
+  const openWaveGuide = () => {
+    setPreviewRequest(null);
+    setPart(2);
+    setWaveGuideStep(0);
+    setWaveRunKey((key) => key + 1);
+    setPhase("wave-guide");
+    setShowJumpMenu(false);
+  };
+
   const jumpToWave = () => {
     setPreviewRequest(null);
     setPart(2);
+    setWaveRunKey((key) => key + 1);
     setPhase("wave");
     setShowJumpMenu(false);
   };
@@ -542,7 +592,7 @@ function Chapter1StoryExperience({
             <div className="chapter1-story-test-group">
               <strong>전투·후반부</strong>
               <button onClick={() => jumpToPreview(2, "decision-dialogue")}>전투 결심</button>
-              <button onClick={() => jumpToPreview(2, "battle-guide-dialogue")}>전투 가이드</button>
+              <button onClick={openWaveGuide}>전투 가이드</button>
               <button className="is-combat" onClick={jumpToWave}>실제 웨이브 시작</button>
               <button onClick={jumpToPurification}>정화율 100% 연출</button>
               <button className="is-combat" onClick={jumpToBoss}>실제 보스 시작</button>
@@ -555,22 +605,71 @@ function Chapter1StoryExperience({
       </div>
 
       {waveMounted && (
-        <div className="chapter1-story-boss-layer">
-          <GameCanvas
-            mode="story"
-            shipStyle={shipStyle}
-            onStoryResult={onStoryResult}
-            chapter1WaveOnly
-            active={phase === "wave" || phase === "wave-purification"}
-            inputEnabled={phase === "wave"}
-            chapter1PurificationExit={phase === "wave-purification"}
-            onPlayerScreenPositionChange={setPlayerPosition}
-            onChapter1WaveComplete={startWavePurificationSequence}
-            onChapter1CombatFailed={() => {
-              setPhase("story");
-              requestStoryPreview("battle-guide-dialogue");
-            }}
-          />
+        <Fragment key={`chapter1-wave-${waveRunKey}`}>
+          <div className="chapter1-story-boss-layer">
+            <GameCanvas
+              mode="story"
+              shipStyle={shipStyle}
+              onStoryResult={onStoryResult}
+              chapter1WaveOnly
+              active={phase === "wave" || phase === "wave-purification"}
+              inputEnabled={phase === "wave"}
+              chapter1PurificationExit={phase === "wave-purification"}
+              onPlayerScreenPositionChange={setPlayerPosition}
+              onChapter1WaveComplete={startWavePurificationSequence}
+              onChapter1CombatFailed={() => {
+                openWaveGuide();
+              }}
+            />
+          </div>
+        </Fragment>
+      )}
+
+      {phase === "wave-guide" && (
+        <div className="chapter1-combat-guide-overlay" role="dialog" aria-modal="true" aria-label="챕터 1 전투 가이드">
+          <section className="chapter1-combat-guide-box">
+            <div className="chapter1-combat-guide-speaker">학생증 · 전투 가이드</div>
+            {waveGuideStep === 0 && (
+              <>
+                <h2>기본 조작</h2>
+                <p><span className="chapter1-guide-key">↑</span><span className="chapter1-guide-key">↓</span><span className="chapter1-guide-key">←</span><span className="chapter1-guide-key">→</span> 방향키로 호반우를 움직인다.</p>
+                <p><span className="chapter1-guide-key is-wide">SPACE</span>를 누르면 공격한다.</p>
+              </>
+            )}
+            {waveGuideStep === 1 && (
+              <>
+                <h2>정화 폭탄</h2>
+                <p><span className="chapter1-guide-key is-wide">SHIFT</span>를 누르면 정화 파동이 호반우를 중심으로 퍼진다.</p>
+                <p>파동에 닿은 몬스터와 적 탄환은 바깥쪽부터 차례로 사라진다.</p>
+              </>
+            )}
+            {waveGuideStep === 2 && (
+              <>
+                <h2>아이템</h2>
+                <div className="chapter1-guide-item-list">
+                  <div><span className="chapter1-guide-item-icon is-power" aria-label="화력 강화" /><span><strong>화력 강화</strong> · 공격 레벨이 1단계 상승한다.</span></div>
+                  <div><span className="chapter1-guide-item-icon is-heal">+</span><span><strong>체력 회복</strong> · 잃은 체력을 1 회복한다.</span></div>
+                </div>
+              </>
+            )}
+            {waveGuideStep === 3 && (
+              <>
+                <h2>전투 준비 완료</h2>
+                <p>오염된 학사 시스템 파편이 접근한다.</p>
+                <p className="chapter1-combat-guide-final">건투를 빈다.</p>
+              </>
+            )}
+            <button
+              type="button"
+              className="chapter1-combat-guide-next"
+              onClick={() => {
+                if (waveGuideStep < 3) setWaveGuideStep((step) => step + 1);
+                else setPhase("wave");
+              }}
+            >
+              {waveGuideStep < 3 ? "다음" : "웨이브 시작"}
+            </button>
+          </section>
         </div>
       )}
 
@@ -617,7 +716,7 @@ function Chapter1StoryExperience({
       <Chapter1StoryPlayer
         ref={storyPlayerRef}
         part={part}
-        hidden={phase === "wave" || phase === "wave-purification" || phase === "boss"}
+        hidden={phase === "wave-guide" || phase === "wave" || phase === "wave-purification" || phase === "boss"}
         previewRequest={previewRequest}
         onEvent={(event) => {
           if (event.type === "part1-complete") {
@@ -627,8 +726,7 @@ function Chapter1StoryExperience({
             return;
           }
           if (event.type === "wave-ready") {
-            setPreviewRequest(null);
-            setPhase("wave");
+            openWaveGuide();
             return;
           }
           if (event.type === "boss-ready") {

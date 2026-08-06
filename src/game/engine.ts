@@ -178,6 +178,7 @@ import type { DebrisCoverState } from "./obstacles/debrisCoverTypes";
 import type { MeteorObstacleState } from "./obstacles/meteorObstacleTypes";
 import type { GameEngineRuntimeContext } from "./runtime/gameEngineRuntimeContext";
 import { createChapter1WaveRuntime, type Chapter1WaveRuntime } from "./chapter1/chapter1WaveTypes";
+import { skipCurrentChapter1WaveSystem } from "./chapter1/chapter1WaveSystem";
 import { createChapter1BossRuntime, type Chapter1BossRuntime } from "./chapter1/chapter1BossTypes";
 import {
   handleChapter1BossDigitSystem,
@@ -269,6 +270,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   bossPhase3Triggered: boolean = false;
   bossPhase3Active: boolean = false;
   screenShakeIntensity: number = 0;
+  playerDamageFlashTimer: number = 0;
   cutsceneTimer: number = 0;
   clearingForBoss: boolean = false;
   squadTimer: number = 5.0;
@@ -297,6 +299,8 @@ export class GameEngine implements GameEngineRuntimeContext {
   bombActive: boolean = false;
   bombRadius: number = 0;
   bombMaxRadius: number = 800;
+  bombOriginX: number = 0;
+  bombOriginY: number = 0;
   bossBombHitSet: Set<Enemy> = new Set();
 
   lastTime: number = 0;
@@ -680,6 +684,11 @@ export class GameEngine implements GameEngineRuntimeContext {
     spawnEnemyWaveSystem(this, dt);
   }
 
+
+  /** 테스트 UI에서 현재 챕터 1 웨이브를 즉시 넘긴다. */
+  public skipCurrentChapter1Wave(): boolean {
+    return skipCurrentChapter1WaveSystem(this);
+  }
 
   public startChapter1Boss(patternLock = -1, skipIntro = false) {
     startChapter1BossSystem(this, { sandboxPatternLock: patternLock, skipIntro });

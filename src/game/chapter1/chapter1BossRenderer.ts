@@ -137,38 +137,58 @@ function drawBossSupportObjects(engine: any, ctx: CanvasRenderingContext2D, sx: 
     if (!powerup.active) continue;
     const cx = (powerup.x + powerup.width / 2) / sx;
     const cy = (powerup.y + powerup.height / 2) / sy;
-    const pulse = 1 + Math.sin(performance.now() * .012 + cx) * .12;
+    const pulse = 1 + Math.sin(performance.now() * .01 + cx) * .055;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(pulse, pulse);
-    ctx.shadowBlur = 18;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.shadowColor = "rgba(255,255,255,.3)";
+    ctx.shadowBlur = 9;
     if (powerup.type === "heal") {
-      ctx.shadowColor = "#34d399";
-      ctx.fillStyle = "#059669";
+      ctx.fillStyle = "#3bc779";
+      ctx.strokeStyle = "#07090d";
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.roundRect(-19, -19, 38, 38, 9);
       ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(-2.2, -8, 4.4, 16);
-      ctx.fillRect(-8, -2.2, 16, 4.4);
-    } else {
-      ctx.shadowColor = "#38bdf8";
-      ctx.fillStyle = "#0ea5e9";
+      ctx.stroke();
+      ctx.strokeStyle = "#07090d";
+      ctx.lineWidth = 10;
       ctx.beginPath();
-      ctx.moveTo(0, -15);
-      ctx.lineTo(13, 10);
-      ctx.lineTo(0, 6);
-      ctx.lineTo(-13, 10);
+      ctx.moveTo(0, -11); ctx.lineTo(0, 11);
+      ctx.moveTo(-11, 0); ctx.lineTo(11, 0);
+      ctx.stroke();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, -11); ctx.lineTo(0, 11);
+      ctx.moveTo(-11, 0); ctx.lineTo(11, 0);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = "#f7c948";
+      ctx.strokeStyle = "#07090d";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(0, -20);
+      ctx.lineTo(20, 0);
+      ctx.lineTo(0, 20);
+      ctx.lineTo(-20, 0);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.font = "900 13px system-ui";
+      ctx.stroke();
+      ctx.fillStyle = "#ef3f45";
+      ctx.strokeStyle = "#07090d";
+      ctx.lineWidth = 4;
+      ctx.font = "900 22px Arial, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("P", 0, 0);
+      ctx.strokeText("P", 0, 1);
+      ctx.fillText("P", 0, 1);
     }
     ctx.restore();
   }
+
 }
 
 function drawEngineParticles(engine: any, ctx: CanvasRenderingContext2D, sx: number, sy: number): void {
@@ -201,8 +221,8 @@ export function renderChapter1BossFullSceneSystem(engine: any): boolean {
     engine.ctx.lineWidth = 18;
     engine.ctx.beginPath();
     engine.ctx.arc(
-      (engine.player.x + engine.player.width / 2) / sx,
-      (engine.player.y + engine.player.height / 2) / sy,
+      (engine.bombOriginX ?? (engine.player.x + engine.player.width / 2)) / sx,
+      (engine.bombOriginY ?? (engine.player.y + engine.player.height / 2)) / sy,
       engine.bombRadius / Math.min(sx, sy),
       0,
       Math.PI * 2,
@@ -211,6 +231,13 @@ export function renderChapter1BossFullSceneSystem(engine: any): boolean {
     engine.ctx.restore();
   }
   engine.ctx.restore();
+  if ((engine.playerDamageFlashTimer || 0) > 0) {
+    const alpha = Math.min(0.32, (engine.playerDamageFlashTimer / 0.85) * 0.32);
+    engine.ctx.save();
+    engine.ctx.fillStyle = `rgba(220, 32, 42, ${alpha})`;
+    engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
+    engine.ctx.restore();
+  }
   return true;
 }
 
