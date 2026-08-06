@@ -19,19 +19,16 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
-function Write-Step {
-    param([string]$Message)
+function Write-Step([string]$Message) {
     Write-Host ""
     Write-Host "==> $Message" -ForegroundColor Cyan
 }
 
-function Write-Ok {
-    param([string]$Message)
+function Write-Ok([string]$Message) {
     Write-Host "[OK] $Message" -ForegroundColor Green
 }
 
-function Write-WarnMessage {
-    param([string]$Message)
+function Write-WarnMessage([string]$Message) {
     Write-Host "[WARN] $Message" -ForegroundColor Yellow
 }
 
@@ -58,152 +55,173 @@ function Get-CommandOutput {
     if ($LASTEXITCODE -ne 0) {
         return $null
     }
-
     return ($output | Out-String).Trim()
 }
 
-function Normalize-RelativePath {
-    param([string]$Path)
-
-    if ([string]::IsNullOrWhiteSpace($Path)) {
-        return ""
-    }
-
+function Normalize-RelativePath([string]$Path) {
+    if ([string]::IsNullOrWhiteSpace($Path)) { return "" }
     return $Path.Replace("\", "/").TrimStart("/")
 }
 
-function Assert-SafeRelativePath {
-    param([string]$Path)
-
+function Assert-SafeRelativePath([string]$Path) {
     $normalized = Normalize-RelativePath $Path
     if ([string]::IsNullOrWhiteSpace($normalized)) {
         throw "An empty patch path was found."
     }
-
     if ([System.IO.Path]::IsPathRooted($normalized)) {
         throw "Absolute paths are not allowed in a patch: $normalized"
     }
-
     if ($normalized -match '(^|/)\.\.(/|$)') {
         throw "Parent-directory traversal is not allowed: $normalized"
     }
-
     if ($normalized -match '^(\.git|node_modules|dist|coverage|\.vite)(/|$)') {
         throw "A protected path was included in the patch: $normalized"
     }
-
     if ($normalized -match '^\.env($|\.)' -and $normalized -ne '.env.example') {
         throw "Environment-secret files are not allowed in the patch: $normalized"
     }
-
     return $normalized
 }
 
-function Test-AutoIncludedPath {
-    param([string]$Path)
-
+function Test-AutoIncludedPath([string]$Path) {
     $normalized = Normalize-RelativePath $Path
-
-    if ($normalized -match '^(src|public|docs|supabase)/') {
-        return $true
-    }
+    if ($normalized -match '^(src|public|docs|supabase)/') { return $true }
 
     $fileName = [System.IO.Path]::GetFileName($normalized)
     $directoryName = [System.IO.Path]::GetDirectoryName($normalized)
-
     if ([string]::IsNullOrWhiteSpace($directoryName)) {
         $allowedRootFiles = @(
-            'package.json',
-            'package-lock.json',
-            'pnpm-lock.yaml',
-            'pnpm-workspace.yaml',
-            'tsconfig.json',
-            'vite.config.ts',
-            'vite.config.js',
-            '.env.example'
+            'package.json', 'package-lock.json', 'pnpm-lock.yaml',
+            'pnpm-workspace.yaml', 'tsconfig.json', 'vite.config.ts',
+            'vite.config.js', '.env.example'
         )
-
-        if ($allowedRootFiles -contains $fileName) {
-            return $true
-        }
-
-        if ($fileName -match '^README.*\.(md|txt)$') {
-            return $true
-        }
+        if ($allowedRootFiles -contains $fileName) { return $true }
+        if ($fileName -match '^README.*\.(md|txt)$') { return $true }
     }
-
     return $false
 }
 
-function Get-FileSha256 {
-    param([string]$Path)
+function Get-FileSha256([string]$Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
 }
 
-function Find-PatchRoot {
-    param([string]$ExtractRoot)
 
-    if ((Test-Path (Join-Path $ExtractRoot 'PATCH_MANIFEST.json')) -or
-        (Test-Path (Join-Path $ExtractRoot 'src')) -or
-        (Test-Path (Join-Path $ExtractRoot 'public')) -or
-        (Test-Path (Join-Path $ExtractRoot 'package.json'))) {
-        return $ExtractRoot
+function Get-RelativePathIfInside([string]$ParentPath, [string]$ChildPath) {
+    $parentFull = [System.IO.Path]::GetFullPath($ParentPath).TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    $childFull = [System.IO.Path]::GetFullPath($ChildPath)
+    if (-not $childFull.StartsWith($parentFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $null
+    }
+    return Normalize-RelativePath $childFull.Substring($parentFull.Length)
+}
+
+function Get-ParentCandidates([string]$StartPath) {
+    $results = @()
+    if ([string]::IsNullOrWhiteSpace($StartPath) -or -not (Test-Path $StartPath)) {
+        return $results
     }
 
-    $topDirectories = @(Get-ChildItem -LiteralPath $ExtractRoot -Directory)
-    $topFiles = @(Get-ChildItem -LiteralPath $ExtractRoot -File)
+    $item = Get-Item -LiteralPath $StartPath
+    if (-not $item.PSIsContainer) { $item = $item.Directory }
 
-    if ($topDirectories.Count -eq 1 -and $topFiles.Count -eq 0) {
-        return $topDirectories[0].FullName
+    while ($null -ne $item) {
+        $results += $item.FullName
+        $item = $item.Parent
+    }
+    return $results
+}
+
+function Select-ProjectFolder {
+    Add-Type -AssemblyName System.Windows.Forms
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dialog.Description = "Select the Git project folder containing .git and package.json"
+    $dialog.ShowNewFolderButton = $false
+    $result = $dialog.ShowDialog()
+    if ($result -ne [System.Windows.Forms.DialogResult]::OK) {
+        throw "Project-folder selection was cancelled."
+    }
+    return $dialog.SelectedPath
+}
+
+function Find-GitMarkerRoot([string]$StartPath) {
+    if ([string]::IsNullOrWhiteSpace($StartPath) -or -not (Test-Path -LiteralPath $StartPath)) {
+        return $null
     }
 
-    $candidates = @(Get-ChildItem -LiteralPath $ExtractRoot -Directory -Recurse | Where-Object {
-        (Test-Path (Join-Path $_.FullName 'PATCH_MANIFEST.json')) -or
-        (Test-Path (Join-Path $_.FullName 'src')) -or
-        (Test-Path (Join-Path $_.FullName 'public')) -or
-        (Test-Path (Join-Path $_.FullName 'package.json'))
-    } | Sort-Object { $_.FullName.Length })
+    $item = Get-Item -LiteralPath $StartPath
+    if (-not $item.PSIsContainer) { $item = $item.Directory }
 
-    if ($candidates.Count -gt 0) {
-        return $candidates[0].FullName
+    while ($null -ne $item) {
+        $gitMarker = Join-Path $item.FullName '.git'
+        if (Test-Path -LiteralPath $gitMarker) {
+            return $item.FullName
+        }
+        $item = $item.Parent
+    }
+    return $null
+}
+
+function Confirm-GitRepository([string]$Candidate) {
+    if ([string]::IsNullOrWhiteSpace($Candidate)) { return $null }
+    $result = & git -C $Candidate rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -eq 0 -and $result) {
+        return ($result | Select-Object -First 1).Trim()
+    }
+    return $null
+}
+
+function Get-RepositoryRoot([string]$PreferredPath) {
+    $searchStarts = @()
+    if (-not [string]::IsNullOrWhiteSpace($PreferredPath)) {
+        $searchStarts += $PreferredPath
+    }
+    $searchStarts += (Get-Location).Path
+    $searchStarts += $PSScriptRoot
+
+    foreach ($start in @($searchStarts | Select-Object -Unique)) {
+        $markerRoot = Find-GitMarkerRoot -StartPath $start
+        if (-not [string]::IsNullOrWhiteSpace($markerRoot)) {
+            $confirmed = Confirm-GitRepository -Candidate $markerRoot
+            if (-not [string]::IsNullOrWhiteSpace($confirmed)) { return $confirmed }
+        }
     }
 
-    throw "Could not identify the patch root. The ZIP must contain project-relative files such as src/, public/, or PATCH_MANIFEST.json."
+    if (-not [string]::IsNullOrWhiteSpace($PreferredPath)) {
+        throw "The supplied project folder is not a Git repository: $PreferredPath"
+    }
+
+    if (-not $NonInteractive) {
+        $selected = Select-ProjectFolder
+        $markerRoot = Find-GitMarkerRoot -StartPath $selected
+        $confirmed = Confirm-GitRepository -Candidate $markerRoot
+        if (-not [string]::IsNullOrWhiteSpace($confirmed)) { return $confirmed }
+        throw "The selected folder is not a Git repository: $selected"
+    }
+
+    throw "No Git repository was found. Pass -ProjectPath explicitly."
 }
 
 function Select-ZipFile {
     Add-Type -AssemblyName System.Windows.Forms
-
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
     $dialog.Title = "Select a ZIP patch"
     $dialog.Filter = "ZIP patch (*.zip)|*.zip"
     $dialog.Multiselect = $false
-
     $downloads = Join-Path ([Environment]::GetFolderPath('UserProfile')) 'Downloads'
-    if (Test-Path $downloads) {
-        $dialog.InitialDirectory = $downloads
-    }
-
+    if (Test-Path $downloads) { $dialog.InitialDirectory = $downloads }
     $result = $dialog.ShowDialog()
     if ($result -ne [System.Windows.Forms.DialogResult]::OK) {
         throw "ZIP selection was cancelled."
     }
-
     return $dialog.FileName
 }
 
-function Validate-ZipEntries {
-    param([string]$ArchivePath)
-
+function Validate-ZipEntries([string]$ArchivePath) {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [System.IO.Compression.ZipFile]::OpenRead($ArchivePath)
-
     try {
         foreach ($entry in $archive.Entries) {
-            if ([string]::IsNullOrEmpty($entry.Name)) {
-                continue
-            }
-
+            if ([string]::IsNullOrEmpty($entry.Name)) { continue }
             $name = $entry.FullName.Replace("\", "/")
             if ([System.IO.Path]::IsPathRooted($name) -or $name -match '(^|/)\.\.(/|$)') {
                 throw "Unsafe ZIP entry detected: $name"
@@ -215,70 +233,80 @@ function Validate-ZipEntries {
     }
 }
 
-function Get-RepositoryRoot {
-    param([string]$PreferredPath)
-
-    $candidates = @()
-    if (-not [string]::IsNullOrWhiteSpace($PreferredPath)) {
-        $candidates += $PreferredPath
-    }
-    $candidates += (Get-Location).Path
-    $candidates += $PSScriptRoot
-
-    foreach ($candidate in $candidates | Select-Object -Unique) {
-        if (-not (Test-Path $candidate)) {
-            continue
-        }
-
-        $root = & git -C $candidate rev-parse --show-toplevel 2>$null
-        if ($LASTEXITCODE -eq 0 -and $root) {
-            return ($root | Select-Object -First 1).Trim()
-        }
+function Find-PatchRoot([string]$ExtractRoot) {
+    if ((Test-Path (Join-Path $ExtractRoot 'PATCH_MANIFEST.json')) -or
+        (Test-Path (Join-Path $ExtractRoot 'src')) -or
+        (Test-Path (Join-Path $ExtractRoot 'public')) -or
+        (Test-Path (Join-Path $ExtractRoot 'package.json'))) {
+        return $ExtractRoot
     }
 
-    throw "No Git repository was found. Put this runner inside the project or pass -ProjectPath."
+    $topDirectories = @(Get-ChildItem -LiteralPath $ExtractRoot -Directory)
+    $topFiles = @(Get-ChildItem -LiteralPath $ExtractRoot -File)
+    if ($topDirectories.Count -eq 1 -and $topFiles.Count -eq 0) {
+        return $topDirectories[0].FullName
+    }
+
+    $candidates = @(Get-ChildItem -LiteralPath $ExtractRoot -Directory -Recurse | Where-Object {
+        (Test-Path (Join-Path $_.FullName 'PATCH_MANIFEST.json')) -or
+        (Test-Path (Join-Path $_.FullName 'src')) -or
+        (Test-Path (Join-Path $_.FullName 'public')) -or
+        (Test-Path (Join-Path $_.FullName 'package.json'))
+    } | Sort-Object { $_.FullName.Length })
+
+    if ($candidates.Count -gt 0) { return $candidates[0].FullName }
+    throw "Could not identify the patch root. The ZIP must contain src/, public/, package.json, or PATCH_MANIFEST.json."
 }
 
-function Invoke-Rollback {
+function Restore-AppliedPatch {
     param(
-        [string]$BaselineCommit,
-        [string]$RepositoryRoot
+        [string]$RepositoryRoot,
+        [object[]]$Plan
     )
 
-    Write-WarnMessage "Validation failed. Restoring the clean baseline automatically."
+    Write-WarnMessage "Validation failed after files were applied. Restoring only paths touched by this ZIP."
     Set-Location $RepositoryRoot
 
-    & git reset --hard $BaselineCommit | Out-Host
+    & git restore --staged --worktree -- . | Out-Host
     if ($LASTEXITCODE -ne 0) {
-        Write-WarnMessage "Automatic git reset failed. Use: git reset --hard $BaselineCommit"
-        return
+        Write-WarnMessage "git restore failed. Review git status manually."
     }
 
-    & git clean -fd | Out-Host
-    if ($LASTEXITCODE -ne 0) {
-        Write-WarnMessage "Automatic removal of new patch files failed. Use: git clean -fd"
-        return
+    foreach ($item in @($Plan | Where-Object { $_.Status -eq 'NEW' })) {
+        if (Test-Path -LiteralPath $item.Destination) {
+            Remove-Item -LiteralPath $item.Destination -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
 
-    Write-Ok "The repository was restored to $BaselineCommit"
+    Write-Ok "Tracked files were restored and only new files from this ZIP were removed."
+    Write-WarnMessage "No git reset --hard and no git clean command was used."
 }
 
 $originalLocation = (Get-Location).Path
 $temporaryRoot = $null
+$repositoryRoot = $null
 $baselineCommit = $null
 $backupBranch = $null
-$repositoryRoot = $null
 $reportPath = $null
-$appliedSuccessfully = $false
+$plan = @()
+$mutationStarted = $false
 
 try {
+    if ([string]::IsNullOrWhiteSpace($ZipPath)) {
+        if ($NonInteractive) { throw "-ZipPath is required in non-interactive mode." }
+        $ZipPath = Select-ZipFile
+    }
+    $ZipPath = (Resolve-Path -LiteralPath $ZipPath).Path
+    if ([System.IO.Path]::GetExtension($ZipPath).ToLowerInvariant() -ne '.zip') {
+        throw "The selected file is not a ZIP archive: $ZipPath"
+    }
+
     Write-Step "Locating the Git project"
     $repositoryRoot = Get-RepositoryRoot -PreferredPath $ProjectPath
     Set-Location $repositoryRoot
 
     $branchName = Get-CommandOutput -Command 'git' -Arguments @('branch', '--show-current')
     $baselineCommit = Get-CommandOutput -Command 'git' -Arguments @('rev-parse', 'HEAD')
-
     if ([string]::IsNullOrWhiteSpace($branchName) -or [string]::IsNullOrWhiteSpace($baselineCommit)) {
         throw "Could not determine the current branch or commit."
     }
@@ -288,23 +316,26 @@ try {
     Write-Host "Baseline: $baselineCommit"
 
     $workingTreeStatus = Get-CommandOutput -Command 'git' -Arguments @('status', '--porcelain', '--untracked-files=all')
+    $selectedZipRelativePath = Get-RelativePathIfInside -ParentPath $repositoryRoot -ChildPath $ZipPath
+    $statusLines = @()
     if (-not [string]::IsNullOrWhiteSpace($workingTreeStatus)) {
-        throw "The working tree is not clean. Commit or stash existing changes before applying a ZIP patch.`n$workingTreeStatus"
+        $statusLines = @($workingTreeStatus -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     }
 
+    if (-not [string]::IsNullOrWhiteSpace($selectedZipRelativePath)) {
+        $quotedZipPath = '"' + $selectedZipRelativePath + '"'
+        $statusLines = @($statusLines | Where-Object {
+            $linePath = if ($_.Length -gt 3) { $_.Substring(3).Trim() } else { '' }
+            -not ($linePath -eq $selectedZipRelativePath -or $linePath -eq $quotedZipPath)
+        })
+        Write-WarnMessage "The selected ZIP is inside the repository. It will not be staged or committed: $selectedZipRelativePath"
+    }
+
+    if ($statusLines.Count -gt 0) {
+        $remainingStatus = $statusLines -join "`n"
+        throw "The working tree is not clean. No project files were changed by this runner.`nCommit or stash these changes first:`n$remainingStatus"
+    }
     Write-Ok "Working tree is clean"
-
-    if ([string]::IsNullOrWhiteSpace($ZipPath)) {
-        if ($NonInteractive) {
-            throw "-ZipPath is required in non-interactive mode."
-        }
-        $ZipPath = Select-ZipFile
-    }
-
-    $ZipPath = (Resolve-Path -LiteralPath $ZipPath).Path
-    if ([System.IO.Path]::GetExtension($ZipPath).ToLowerInvariant() -ne '.zip') {
-        throw "The selected file is not a ZIP archive: $ZipPath"
-    }
 
     Write-Step "Checking ZIP safety"
     Validate-ZipEntries -ArchivePath $ZipPath
@@ -316,9 +347,6 @@ try {
     Write-Ok "Created safety branch: $backupBranch"
 
     $temporaryRoot = Join-Path $env:TEMP "sky-strike-zip-patch-$timestamp"
-    if (Test-Path $temporaryRoot) {
-        Remove-Item -LiteralPath $temporaryRoot -Recurse -Force
-    }
     New-Item -ItemType Directory -Path $temporaryRoot -Force | Out-Null
 
     Write-Step "Extracting ZIP"
@@ -335,25 +363,16 @@ try {
     if (Test-Path $manifestPath) {
         Write-Step "Reading PATCH_MANIFEST.json"
         $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
-        if ($manifest.PSObject.Properties.Name -contains 'files') {
-            $sourceRelativePaths = @($manifest.files)
-        }
-        if ($manifest.PSObject.Properties.Name -contains 'delete') {
-            $deleteRelativePaths = @($manifest.delete)
-        }
-        if ($manifest.PSObject.Properties.Name -contains 'commitMessage') {
-            $manifestCommitMessage = [string]$manifest.commitMessage
-        }
+        if ($manifest.PSObject.Properties.Name -contains 'files') { $sourceRelativePaths = @($manifest.files) }
+        if ($manifest.PSObject.Properties.Name -contains 'delete') { $deleteRelativePaths = @($manifest.delete) }
+        if ($manifest.PSObject.Properties.Name -contains 'commitMessage') { $manifestCommitMessage = [string]$manifest.commitMessage }
     }
     else {
         Write-Step "No manifest found; comparing supported project files by SHA-256"
         $sourceRelativePaths = @(Get-ChildItem -LiteralPath $patchRoot -Recurse -File | ForEach-Object {
             $relative = $_.FullName.Substring($patchRoot.Length).TrimStart('\', '/')
             $relative = Normalize-RelativePath $relative
-            if (Test-AutoIncludedPath $relative) {
-                $relative
-            }
+            if (Test-AutoIncludedPath $relative) { $relative }
         })
     }
 
@@ -365,12 +384,9 @@ try {
 
     $sourceRelativePaths = @($sourceRelativePaths | ForEach-Object { Assert-SafeRelativePath ([string]$_) } | Sort-Object -Unique)
     $deleteRelativePaths = @($deleteRelativePaths | ForEach-Object { Assert-SafeRelativePath ([string]$_) } | Sort-Object -Unique)
-
     if ($sourceRelativePaths.Count -eq 0 -and $deleteRelativePaths.Count -eq 0) {
         throw "No applicable project files were found in the ZIP."
     }
-
-    $plan = @()
 
     foreach ($relativePath in $sourceRelativePaths) {
         $sourcePath = Join-Path $patchRoot ($relativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar))
@@ -380,14 +396,8 @@ try {
 
         $destinationPath = Join-Path $repositoryRoot ($relativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar))
         $status = 'NEW'
-
         if (Test-Path -LiteralPath $destinationPath -PathType Leaf) {
-            $sourceHash = Get-FileSha256 -Path $sourcePath
-            $destinationHash = Get-FileSha256 -Path $destinationPath
-
-            if ($sourceHash -eq $destinationHash) {
-                continue
-            }
+            if ((Get-FileSha256 $sourcePath) -eq (Get-FileSha256 $destinationPath)) { continue }
             $status = 'MODIFIED'
         }
 
@@ -412,28 +422,26 @@ try {
     }
 
     $plan = @($plan | Sort-Object Path, Status)
-
     $reportDirectory = Join-Path $repositoryRoot '.git\patch-runner'
     New-Item -ItemType Directory -Path $reportDirectory -Force | Out-Null
     $reportPath = Join-Path $reportDirectory "patch-report-$timestamp.txt"
-
-    $reportLines = @(
+    @(
         "ZIP: $ZipPath",
+        "Project: $repositoryRoot",
         "Branch: $branchName",
         "Baseline: $baselineCommit",
         "Safety branch: $backupBranch",
         "Patch root: $patchRoot",
         "",
         "Planned changes:"
-    )
-    $reportLines += @($plan | ForEach-Object { "{0}`t{1}" -f $_.Status, $_.Path })
-    Set-Content -LiteralPath $reportPath -Value $reportLines -Encoding UTF8
+    ) + @($plan | ForEach-Object { "{0}`t{1}" -f $_.Status, $_.Path }) |
+        Set-Content -LiteralPath $reportPath -Encoding UTF8
 
     Write-Step "Patch plan"
     if ($plan.Count -eq 0) {
         Write-Ok "The ZIP contains no changes compared with the current project."
-        $appliedSuccessfully = $true
-        return
+        Write-Host "Report: $reportPath"
+        exit 0
     }
 
     $plan | Select-Object Status, Path | Format-Table -AutoSize | Out-Host
@@ -441,17 +449,16 @@ try {
     Write-Host "Report: $reportPath"
 
     Write-Step "Applying changed files"
+    $mutationStarted = $true
     foreach ($item in $plan) {
         if ($item.Status -eq 'DELETE') {
             Remove-Item -LiteralPath $item.Destination -Recurse -Force
             continue
         }
-
         $destinationDirectory = Split-Path -Parent $item.Destination
         if (-not (Test-Path $destinationDirectory)) {
             New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
         }
-
         Copy-Item -LiteralPath $item.Source -Destination $item.Destination -Force
     }
     Write-Ok "Patch files were applied"
@@ -460,7 +467,7 @@ try {
     Invoke-CheckedCommand -Command 'git' -Arguments @('diff', '--check') -FailureMessage "git diff --check found whitespace or patch errors."
     Write-Ok "git diff --check passed"
 
-    Write-Step "Scanning source files for merge markers and accidental shell commands"
+    Write-Step "Scanning source files"
     $scanFiles = @()
     foreach ($scanRootName in @('src', 'public', 'supabase')) {
         $scanRoot = Join-Path $repositoryRoot $scanRootName
@@ -492,7 +499,6 @@ try {
 
     $packageFilesChanged = @($plan | Where-Object { $_.Path -in @('package.json', 'package-lock.json', 'pnpm-lock.yaml') }).Count -gt 0
     $nodeModulesPath = Join-Path $repositoryRoot 'node_modules'
-
     if (-not (Test-Path $nodeModulesPath)) {
         Write-Step "Installing dependencies because node_modules is missing"
         if (Test-Path (Join-Path $repositoryRoot 'package-lock.json')) {
@@ -507,47 +513,35 @@ try {
         Invoke-CheckedCommand -Command 'npm.cmd' -Arguments @('install') -FailureMessage "npm install failed after package metadata changes."
     }
 
-    $packageJsonPath = Join-Path $repositoryRoot 'package.json'
-    $packageObject = $null
+    $packageObject = Get-Content -LiteralPath (Join-Path $repositoryRoot 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     $scriptNames = @()
-    if (Test-Path $packageJsonPath) {
-        $packageObject = Get-Content -LiteralPath $packageJsonPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($null -ne $packageObject.scripts) {
-            $scriptNames = @($packageObject.scripts.PSObject.Properties.Name)
-        }
-    }
+    if ($null -ne $packageObject.scripts) { $scriptNames = @($packageObject.scripts.PSObject.Properties.Name) }
 
     if ($scriptNames -contains 'typecheck') {
         Write-Step "Running npm typecheck"
         Invoke-CheckedCommand -Command 'npm.cmd' -Arguments @('run', 'typecheck') -FailureMessage "Type checking failed."
         Write-Ok "Type checking passed"
     }
-
     if ($scriptNames -contains 'lint') {
         Write-Step "Running npm lint"
         Invoke-CheckedCommand -Command 'npm.cmd' -Arguments @('run', 'lint') -FailureMessage "Linting failed."
         Write-Ok "Linting passed"
     }
-
-    if (-not $NoBuild) {
-        if ($scriptNames -contains 'build') {
-            Write-Step "Running production build"
-            Invoke-CheckedCommand -Command 'npm.cmd' -Arguments @('run', 'build') -FailureMessage "Production build failed."
-            Write-Ok "Production build passed"
-        }
-        else {
-            Write-WarnMessage "No npm build script was found; build validation was skipped."
-        }
+    if (-not $NoBuild -and $scriptNames -contains 'build') {
+        Write-Step "Running production build"
+        Invoke-CheckedCommand -Command 'npm.cmd' -Arguments @('run', 'build') -FailureMessage "Production build failed."
+        Write-Ok "Production build passed"
+    }
+    elseif ($NoBuild) {
+        Write-WarnMessage "Build validation was skipped by -NoBuild."
     }
     else {
-        Write-WarnMessage "Build validation was skipped by -NoBuild."
+        Write-WarnMessage "No npm build script was found."
     }
 
     Write-Step "Final Git summary"
     & git status --short --untracked-files=all | Out-Host
     & git diff --stat | Out-Host
-
-    $appliedSuccessfully = $true
 
     if (-not [string]::IsNullOrWhiteSpace($manifestCommitMessage) -and $CommitMessage -eq 'wip(chapter1): apply validated ZIP patch') {
         $CommitMessage = $manifestCommitMessage
@@ -555,26 +549,21 @@ try {
 
     $shouldCommit = $Commit -or $Push
     $shouldPush = $Push
-
     if (-not $NonInteractive -and -not $shouldCommit) {
         Write-Host ""
         Write-Host "Validation completed successfully." -ForegroundColor Green
         Write-Host "Press Enter to leave changes uncommitted."
         Write-Host "Enter C to commit, or P to commit and push."
         $choice = (Read-Host "Choice").Trim().ToUpperInvariant()
-        if ($choice -eq 'C') {
-            $shouldCommit = $true
-        }
-        elseif ($choice -eq 'P') {
-            $shouldCommit = $true
-            $shouldPush = $true
-        }
+        if ($choice -eq 'C') { $shouldCommit = $true }
+        elseif ($choice -eq 'P') { $shouldCommit = $true; $shouldPush = $true }
     }
 
     if ($shouldCommit) {
         Write-Step "Creating Git commit"
-        Invoke-CheckedCommand -Command 'git' -Arguments @('add', '-A') -FailureMessage "git add failed."
-
+        foreach ($item in $plan) {
+            Invoke-CheckedCommand -Command 'git' -Arguments @('add', '-A', '--', $item.Path) -FailureMessage "git add failed for $($item.Path)."
+        }
         $stagedStatus = Get-CommandOutput -Command 'git' -Arguments @('diff', '--cached', '--name-only')
         if ([string]::IsNullOrWhiteSpace($stagedStatus)) {
             Write-WarnMessage "There are no staged changes to commit."
@@ -601,49 +590,33 @@ try {
     Write-Host "PATCH COMPLETED SUCCESSFULLY" -ForegroundColor Green
     Write-Host "Safety branch: $backupBranch"
     Write-Host "Report       : $reportPath"
-
-    if (-not $shouldCommit) {
-        Write-Host ""
-        Write-Host "Review and save with:"
-        Write-Host "  git status"
-        Write-Host "  git diff --stat"
-        Write-Host "  git add -A"
-        Write-Host "  git commit -m `"$CommitMessage`""
-        Write-Host "  git push"
-    }
+    exit 0
 }
 catch {
     Write-Host ""
     Write-Host "PATCH FAILED" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
 
-    if (-not [string]::IsNullOrWhiteSpace($baselineCommit) -and
-        -not [string]::IsNullOrWhiteSpace($repositoryRoot) -and
-        (Test-Path $repositoryRoot)) {
+    if ($mutationStarted -and -not [string]::IsNullOrWhiteSpace($repositoryRoot) -and (Test-Path $repositoryRoot)) {
         try {
-            Invoke-Rollback -BaselineCommit $baselineCommit -RepositoryRoot $repositoryRoot
+            Restore-AppliedPatch -RepositoryRoot $repositoryRoot -Plan $plan
         }
         catch {
-            Write-WarnMessage "Rollback also failed: $($_.Exception.Message)"
-            Write-WarnMessage "Manual recovery command: git reset --hard $baselineCommit; git clean -fd"
+            Write-WarnMessage "Path-scoped restore also failed: $($_.Exception.Message)"
+            Write-WarnMessage "No destructive automatic recovery command was run. Review git status manually."
         }
     }
-
-    if (-not [string]::IsNullOrWhiteSpace($backupBranch)) {
-        Write-Host "Safety branch retained: $backupBranch"
-    }
-    if (-not [string]::IsNullOrWhiteSpace($reportPath)) {
-        Write-Host "Report: $reportPath"
+    else {
+        Write-WarnMessage "Failure occurred before patch files were applied. The project was not modified."
     }
 
+    if (-not [string]::IsNullOrWhiteSpace($backupBranch)) { Write-Host "Safety branch retained: $backupBranch" }
+    if (-not [string]::IsNullOrWhiteSpace($reportPath)) { Write-Host "Report: $reportPath" }
     exit 1
 }
 finally {
     if (-not [string]::IsNullOrWhiteSpace($temporaryRoot) -and (Test-Path $temporaryRoot)) {
         Remove-Item -LiteralPath $temporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
-
-    if (Test-Path $originalLocation) {
-        Set-Location $originalLocation
-    }
+    if (Test-Path $originalLocation) { Set-Location $originalLocation }
 }
