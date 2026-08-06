@@ -125,3 +125,87 @@
   color: #ffe4e6;
   background: rgba(76, 5, 25, .78);
 }
+
+
+/* 실제 챕터 1 웨이브 화면 위에서만 재생하는 100% 정화 효과 */
+.chapter1-wave-purification-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--purification-center-x, 50%) var(--purification-center-y, 88%), rgba(255, 226, 112, .1), transparent 42%);
+  animation: chapter1-purification-overlay-fade 3.2s ease both;
+}
+
+.chapter1-wave-purification-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff8cf;
+  mix-blend-mode: screen;
+  animation: chapter1-purification-flash 3.2s ease-out both;
+}
+
+.chapter1-wave-purification-ring,
+.chapter1-wave-purification-core {
+  position: absolute;
+  left: var(--purification-center-x, 50%);
+  top: var(--purification-center-y, 88%);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.chapter1-wave-purification-ring {
+  width: 90px;
+  height: 90px;
+  border: 5px solid rgba(255, 231, 132, .95);
+  box-shadow: 0 0 24px #fff3a8, inset 0 0 20px rgba(255, 243, 168, .8);
+}
+
+.chapter1-wave-purification-ring.ring-a {
+  animation: chapter1-purification-ring-a 2.5s cubic-bezier(.12,.74,.18,1) both;
+}
+
+.chapter1-wave-purification-ring.ring-b {
+  animation: chapter1-purification-ring-b 2.8s .18s cubic-bezier(.12,.74,.18,1) both;
+}
+
+.chapter1-wave-purification-core {
+  width: 44px;
+  height: 44px;
+  background: radial-gradient(circle, #fff 0 22%, #fff1a5 42%, rgba(255, 190, 51, .12) 76%);
+  box-shadow: 0 0 36px 14px rgba(255, 222, 93, .9), 0 0 110px 46px rgba(255, 187, 43, .42);
+  animation: chapter1-purification-core 3.2s ease-out both;
+}
+
+@keyframes chapter1-purification-ring-a {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.25); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(11); }
+}
+
+@keyframes chapter1-purification-ring-b {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+  22% { opacity: .9; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(8); }
+}
+
+@keyframes chapter1-purification-flash {
+  0%, 10% { opacity: 0; }
+  18% { opacity: .82; }
+  34% { opacity: .16; }
+  58% { opacity: .42; }
+  100% { opacity: 0; }
+}
+
+@keyframes chapter1-purification-core {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.4); }
+  70% { opacity: .9; transform: translate(-50%, -50%) scale(2.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(4.2); }
+}
+
+@keyframes chapter1-purification-overlay-fade {
+  0%, 82% { opacity: 1; }
+  100% { opacity: 0; }
+}

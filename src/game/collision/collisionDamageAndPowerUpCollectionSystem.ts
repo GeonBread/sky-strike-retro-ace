@@ -329,14 +329,26 @@ engine.bullets.forEach((b) => {
           }
           sfx.enemyExplode();
 
-          if (Math.random() < (e.type === "assault_commander" ? 0.75 : 0.12)) {
+          const chapter1BossSupport = !!(e as any).chapter1BossSupport;
+          const dropChance = chapter1BossSupport
+            ? 0.28
+            : e.type === "assault_commander"
+              ? 0.82
+              : 0.16;
+          if (Math.random() < dropChance) {
             const pu = new PowerUp();
             pu.x = e.x + e.width / 2;
             pu.y = e.y + e.height / 2;
             pu.width = 16;
             pu.height = 16;
             pu.vy = 120;
-            pu.type = Math.random() < 0.18 ? "satellite" : (Math.random() < 0.30 ? "heal" : "power");
+            const typeRoll = Math.random();
+            const allowSatellite = engine.stage !== 1;
+            pu.type = allowSatellite && typeRoll < 0.18
+              ? "satellite"
+              : typeRoll < (allowSatellite ? 0.42 : 0.34)
+                ? "heal"
+                : "power";
             engine.powerups.push(pu);
           }
         }
@@ -366,14 +378,17 @@ engine.enemies.forEach((e) => {
 });
 
 engine.powerups.forEach((p) => {
-  // Create a 4x larger virtual player bounding box to make item collection extremely generous!
+  // 아이템 획득 판정만 넓게 잡고, 적탄 피격 판정에는 영향을 주지 않는다.
+  const pickupScale = 5.5;
+  const pickupPaddingX = engine.player.width * (pickupScale - 1) / 2;
+  const pickupPaddingY = engine.player.height * (pickupScale - 1) / 2;
   const virtualPlayer = {
-    x: engine.player.x - engine.player.width * 1.5,
-    y: engine.player.y - engine.player.height * 1.5,
-    width: engine.player.width * 4,
-    height: engine.player.height * 4,
-    hitWidth: (engine.player.hitWidth || engine.player.width) * 4,
-    hitHeight: (engine.player.hitHeight || engine.player.height) * 4,
+    x: engine.player.x - pickupPaddingX,
+    y: engine.player.y - pickupPaddingY,
+    width: engine.player.width * pickupScale,
+    height: engine.player.height * pickupScale,
+    hitWidth: (engine.player.hitWidth || engine.player.width) * pickupScale,
+    hitHeight: (engine.player.hitHeight || engine.player.height) * pickupScale,
   };
   if (p.active && engine.intersects(virtualPlayer, p)) {
     p.active = false;

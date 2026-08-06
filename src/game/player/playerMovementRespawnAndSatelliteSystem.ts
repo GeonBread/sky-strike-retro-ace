@@ -90,6 +90,33 @@ export function updatePlayerMovementRespawnAndSatelliteSystem(engine: PlayerRunt
     }
   }
 
+  if (engine.storyPurificationExitActive) {
+    const holdDuration = 2.0;
+    const riseDuration = 1.25;
+    engine.storyPurificationExitElapsed += dt;
+    engine.input.up = false;
+    engine.input.down = false;
+    engine.input.left = false;
+    engine.input.right = false;
+    engine.input.fire = false;
+    engine.input.useBomb = false;
+    engine.player.invulnTimer = Math.max(engine.player.invulnTimer, 1);
+
+    if (engine.storyPurificationExitElapsed >= holdDuration) {
+      const rawProgress = (engine.storyPurificationExitElapsed - holdDuration) / riseDuration;
+      const progress = Math.max(0, Math.min(1, rawProgress));
+      const eased = progress * progress * (3 - 2 * progress);
+      const targetY = -engine.player.height - 90;
+      engine.player.y = engine.storyPurificationExitStartY + (targetY - engine.storyPurificationExitStartY) * eased;
+      engine.player.tilt *= Math.pow(0.03, dt);
+      if (progress >= 1) {
+        engine.storyPurificationExitActive = false;
+        engine.storyPlayerHidden = true;
+      }
+    }
+    return;
+  }
+
   if (engine.state === "BOSSPHASE2CUTSCENE" || engine.state === "BOSSPHASE3CUTSCENE") {
     engine.player.invulnTimer = 1.0; // Stay completely shielded (can still move and control since we don't return early!)
   }

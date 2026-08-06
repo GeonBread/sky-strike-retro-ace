@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Bomb, BookOpen, HelpCircle, Keyboard, Palette, Play, Settings, Shield, Smartphone, Trophy, User, Volume2, VolumeX } from "lucide-react";
+import { HelpCircle, Keyboard, Palette, Smartphone, Trophy, User } from "lucide-react";
 import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
@@ -27,18 +27,6 @@ interface StoryResult {
   durationMs: number;
 }
 
-function MenuButton({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-3 w-64 p-4 bg-slate-900 hover:bg-slate-800 text-slate-100 rounded-xl transition-all duration-300 border border-slate-700 hover:border-purple-500 hover:shadow-[0_0_12px_rgba(168,85,247,0.3)] font-mono text-lg font-bold"
-    >
-      <Icon size={24} className="text-purple-400" />
-      {label}
-    </button>
-  );
-}
-
 interface GameCanvasProps {
   mode: GameMode;
   shipStyle: ShipStyle;
@@ -49,6 +37,10 @@ interface GameCanvasProps {
   onChapter1WaveComplete?: () => void;
   onChapter1BossPhase2?: () => void;
   onChapter1BossComplete?: () => void;
+  onChapter1CombatFailed?: () => void;
+  inputEnabled?: boolean;
+  chapter1PurificationExit?: boolean;
+  onPlayerScreenPositionChange?: (position: { xPercent: number; yPercent: number }) => void;
 }
 
 function GameCanvas({
@@ -61,6 +53,10 @@ function GameCanvas({
   onChapter1WaveComplete,
   onChapter1BossPhase2,
   onChapter1BossComplete,
+  onChapter1CombatFailed,
+  inputEnabled = true,
+  chapter1PurificationExit = false,
+  onPlayerScreenPositionChange,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +71,9 @@ function GameCanvas({
   const waveCompleteCallbackRef = useRef(onChapter1WaveComplete);
   const bossPhase2CallbackRef = useRef(onChapter1BossPhase2);
   const bossCompleteCallbackRef = useRef(onChapter1BossComplete);
+  const combatFailedCallbackRef = useRef(onChapter1CombatFailed);
+  const inputEnabledRef = useRef(inputEnabled);
+  const playerPositionCallbackRef = useRef(onPlayerScreenPositionChange);
 
   const { setGameState, setScore, shipColor, updateStats, setLastRun, score } = useAppStore();
   const [hp, setHp] = useState(MAX_HP);
@@ -87,8 +86,6 @@ function GameCanvas({
   const [isBossCutscene, setIsBossCutscene] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [stageClearChoices, setStageClearChoices] = useState<string[] | null>(null);
-  const [onSelectReward, setOnSelectReward] = useState<((selected: string) => void) | null>(null);
   const isStoryMode = mode === "story";
 
   useEffect(() => {
@@ -96,8 +93,15 @@ function GameCanvas({
     waveCompleteCallbackRef.current = onChapter1WaveComplete;
     bossPhase2CallbackRef.current = onChapter1BossPhase2;
     bossCompleteCallbackRef.current = onChapter1BossComplete;
+    combatFailedCallbackRef.current = onChapter1CombatFailed;
+    inputEnabledRef.current = inputEnabled;
+    playerPositionCallbackRef.current = onPlayerScreenPositionChange;
+    if (!inputEnabled) {
+      inputRef.current = { up: false, down: false, left: false, right: false, fire: false, useBomb: false };
+      if (engineRef.current) engineRef.current.input = inputRef.current;
+    }
     if (engineRef.current) engineRef.current.paused = isPausedRef.current || !active;
-  }, [active, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete]);
+  }, [active, inputEnabled, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onPlayerScreenPositionChange]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -133,7 +137,7 @@ function GameCanvas({
 
     const engine = new GameEngine(canvasRef.current);
     engineRef.current = engine;
-    engine.paused = isPausedRef.current;
+    engine.paused = isPausedRef.current || !externallyActiveRef.current;
 
     const localRunSession = createLocalRunSession();
     runSessionRef.current = localRunSession;
@@ -146,6 +150,10 @@ function GameCanvas({
       if (isStoryMode) {
         setLastRun(null);
         setScore(0);
+        if ((chapter1WaveOnly || chapter1BossOnly) && combatFailedCallbackRef.current) {
+          combatFailedCallbackRef.current();
+          return;
+        }
         onStoryResult({
           outcome: engine.state === "VICTORY" ? "cleared" : "failed",
           stage: engine.stage,
@@ -174,10 +182,8 @@ function GameCanvas({
     };
     engine.onCutsceneChange = chapter1BossOnly ? undefined : setIsBossCutscene;
     engine.onBombsChanged = setBombs;
-    engine.onStageClear = (choices, onSelect) => {
-      setStageClearChoices(choices);
-      setOnSelectReward(() => onSelect);
-    };
+    // 챕터 클리어 보상 선택 UI는 사용하지 않는다.
+    engine.onStageClear = undefined;
     engine.onChapter1WavesComplete = chapter1WaveOnly
       ? () => waveCompleteCallbackRef.current?.()
       : undefined;
@@ -188,6 +194,12 @@ function GameCanvas({
       if (engine.player) {
         setHp(Math.max(0, Math.min(MAX_HP, engine.player.hp)));
         setPower(engine.player.powerLevel);
+        if (engine.canvas.width > 0 && engine.canvas.height > 0) {
+          playerPositionCallbackRef.current?.({
+            xPercent: ((engine.player.x + engine.player.width / 2) / engine.canvas.width) * 100,
+            yPercent: ((engine.player.y + engine.player.height / 2) / engine.canvas.height) * 100,
+          });
+        }
       }
       setStage(engine.stage);
       setBossPhase2Active(engine.bossPhase2Active);
@@ -206,6 +218,8 @@ function GameCanvas({
       engine.chapter1Wave.enabled = false;
       engine.startChapter1Boss(-1, true);
     }
+    // 테스트 바로가기처럼 비활성 상태로 처음 마운트되더라도 배경과 플레이어는 한 프레임 그려 둔다.
+    engine.render();
 
     return () => {
       resizeObserver?.disconnect();
@@ -213,6 +227,11 @@ function GameCanvas({
       engine.stop();
     };
   }, []);
+
+  useEffect(() => {
+    if (!chapter1PurificationExit) return;
+    engineRef.current?.beginChapter1PurificationExit();
+  }, [chapter1PurificationExit]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -225,7 +244,7 @@ function GameCanvas({
         setIsPaused((prev) => !prev);
         return;
       }
-      if (isPausedRef.current || !externallyActiveRef.current) return;
+      if (isPausedRef.current || !externallyActiveRef.current || !inputEnabledRef.current) return;
 
       if (/^[0-9]$/.test(event.key) && engineRef.current?.handleChapter1BossDigit(Number(event.key))) {
         event.preventDefault();
@@ -242,7 +261,7 @@ function GameCanvas({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (isPausedRef.current || !externallyActiveRef.current) return;
+      if (isPausedRef.current || !externallyActiveRef.current || !inputEnabledRef.current) return;
       if (event.code === "ArrowUp" || event.code === "KeyW") inputRef.current.up = false;
       if (event.code === "ArrowDown" || event.code === "KeyS") inputRef.current.down = false;
       if (event.code === "ArrowLeft" || event.code === "KeyA") inputRef.current.left = false;
@@ -261,7 +280,7 @@ function GameCanvas({
   }, []);
 
   const handleTouchStart = (event: React.TouchEvent) => {
-    if (isPausedRef.current || !externallyActiveRef.current || !canvasRef.current || !engineRef.current) return;
+    if (isPausedRef.current || !externallyActiveRef.current || !inputEnabledRef.current || !canvasRef.current || !engineRef.current) return;
     const touch = event.touches[0];
     const rect = canvasRef.current.getBoundingClientRect();
     const canvasX = (touch.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
@@ -285,7 +304,7 @@ function GameCanvas({
   };
 
   const handleTouchMove = (event: React.TouchEvent) => {
-    if (!canvasRef.current || !engineRef.current || isPausedRef.current || !externallyActiveRef.current || bossPointerConsumedRef.current) return;
+    if (!canvasRef.current || !engineRef.current || isPausedRef.current || !externallyActiveRef.current || !inputEnabledRef.current || bossPointerConsumedRef.current) return;
     const touch = event.touches[0];
     const rect = canvasRef.current.getBoundingClientRect();
     const x = (touch.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
@@ -295,7 +314,7 @@ function GameCanvas({
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || !engineRef.current || isPausedRef.current || !externallyActiveRef.current || event.pointerType === "touch") return;
+    if (!canvasRef.current || !engineRef.current || isPausedRef.current || !externallyActiveRef.current || !inputEnabledRef.current || event.pointerType === "touch") return;
     const rect = canvasRef.current.getBoundingClientRect();
     const canvasX = (event.clientX - rect.left) * (canvasRef.current.width / Math.max(1, rect.width));
     const canvasY = (event.clientY - rect.top) * (canvasRef.current.height / Math.max(1, rect.height));
@@ -306,7 +325,7 @@ function GameCanvas({
   };
 
   const bossMaxHp = chapter1BossOnly
-    ? bossPhase2Active ? 600 : 400
+    ? bossPhase2Active ? 1800 : 1200
     : isStoryMode
     ? stage >= 4 ? 4200 : bossPhase3Active ? 3200 : bossPhase2Active ? 2400 : 1500
     : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
@@ -336,20 +355,16 @@ function GameCanvas({
 
       <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-start pointer-events-none z-10 bg-gradient-to-b from-slate-950/80 to-transparent">
         <div>
-          {isStoryMode ? (
-            <div className="font-mono text-lg text-cyan-200 font-black tracking-widest drop-shadow-[0_0_8px_rgba(34,211,238,0.55)]">
-              STORY CHAPTER {stage}
-            </div>
-          ) : (
+          {!isStoryMode && (
             <div className="font-mono text-2xl text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]">
               점수 {score.toString().padStart(6, "0")}
             </div>
           )}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className="flex gap-1">
+          <div className="combat-hud-life-row" aria-label={`체력 ${hp} / ${MAX_HP}`}>
             {[...Array(MAX_HP)].map((_, i) => (
-              <Shield key={i} size={18} className={i < hp ? "text-rose-500 fill-rose-500" : "text-slate-800 fill-transparent"} />
+              <span key={i} className={`combat-hud-life-icon${i < hp ? " is-active" : ""}`} />
             ))}
           </div>
           <span className="font-mono text-[10px] text-yellow-300 border border-yellow-300/40 bg-yellow-400/10 px-2 py-0.5 rounded-md font-extrabold uppercase">
@@ -358,13 +373,9 @@ function GameCanvas({
         </div>
       </div>
 
-      <div className="absolute right-4 bottom-4 pointer-events-none z-20 flex gap-1.5">
+      <div className="combat-hud-bomb-row" aria-label={`폭탄 ${bombs} / 3`}>
         {[...Array(3)].map((_, i) => (
-          <Bomb
-            key={i}
-            size={19}
-            className={i < bombs ? "text-yellow-300 fill-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.65)]" : "text-slate-700 fill-transparent"}
-          />
+          <span key={i} className={`combat-hud-bomb-icon${i < bombs ? " is-active" : ""}`} />
         ))}
       </div>
 
@@ -388,39 +399,6 @@ function GameCanvas({
           <div className="text-center p-6 border-y-2 border-red-500 bg-black/80 w-full">
             <h1 className="text-5xl font-black text-rose-500 font-mono tracking-widest">BOSS APPROACH</h1>
             <p className="text-rose-200 font-mono text-sm mt-2">PHASE COMBAT READY</p>
-          </div>
-        </div>
-      )}
-
-      {stageClearChoices && (
-        <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-lg flex flex-col items-center justify-center p-6 z-50">
-          <div className="text-center max-w-md w-full">
-            <div className="inline-block px-3 py-1 mb-3 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-300 font-mono text-[10px] uppercase tracking-widest font-black">
-              SECTOR CLEAR
-            </div>
-            <h2 className="text-3xl font-black text-white font-mono tracking-widest">보상 선택</h2>
-            <p className="text-slate-400 text-xs mt-2">다음 구간을 위한 강화 하나를 고르세요.</p>
-
-            <div className="mt-7 flex flex-col gap-3 w-full">
-              {stageClearChoices.map((choice, i) => {
-                const detail = getRewardDetail(choice);
-                return (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      onSelectReward?.(choice);
-                      setStageClearChoices(null);
-                      setOnSelectReward(null);
-                      sfx.powerup();
-                    }}
-                    className={`border text-left p-4 rounded-xl cursor-pointer transition-all duration-200 flex flex-col gap-1 ${detail.className}`}
-                  >
-                    <span className="font-mono text-sm font-black tracking-wider">{detail.title}</span>
-                    <span className="text-[11px] text-slate-400 leading-relaxed">{detail.description}</span>
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </div>
       )}
@@ -464,7 +442,7 @@ function GameCanvas({
 }
 
 
-type Chapter1StoryPhase = "story" | "wave" | "boss" | "phase2-dialogue";
+type Chapter1StoryPhase = "story" | "wave" | "wave-purification" | "boss" | "phase2-dialogue";
 
 function Chapter1StoryExperience({
   shipStyle,
@@ -476,14 +454,38 @@ function Chapter1StoryExperience({
   const storyPlayerRef = useRef<Chapter1StoryPlayerHandle>(null);
   const startedAtRef = useRef(Date.now());
   const jumpTokenRef = useRef(0);
+  const purificationTimerRef = useRef<number | null>(null);
   const [part, setPart] = useState<1 | 2>(1);
   const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
   const [previewRequest, setPreviewRequest] = useState<Chapter1StoryPreviewRequest | null>(null);
   const [showJumpMenu, setShowJumpMenu] = useState(false);
+  const [playerPosition, setPlayerPosition] = useState({ xPercent: 50, yPercent: 88 });
+  const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
 
-  const waveMounted = part === 2 && phase === "wave";
+  const waveMounted = part === 2 && (phase === "wave" || phase === "wave-purification");
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
   const bossActive = phase === "boss";
+
+  useEffect(() => () => {
+    if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
+  }, []);
+
+  const requestStoryPreview = (previewId: string) => {
+    jumpTokenRef.current += 1;
+    setPreviewRequest({ id: previewId, token: jumpTokenRef.current });
+  };
+
+  const startWavePurificationSequence = () => {
+    if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
+    setPart(2);
+    setPurificationOrigin(playerPosition);
+    setPhase("wave-purification");
+    purificationTimerRef.current = window.setTimeout(() => {
+      purificationTimerRef.current = null;
+      setPhase("story");
+      requestStoryPreview("energy100-dialogue");
+    }, 5400);
+  };
 
   const jumpToPreview = (targetPart: 1 | 2, previewId: string) => {
     setPart(targetPart);
@@ -498,6 +500,12 @@ function Chapter1StoryExperience({
     setPart(2);
     setPhase("wave");
     setShowJumpMenu(false);
+  };
+
+  const jumpToPurification = () => {
+    setPreviewRequest(null);
+    setShowJumpMenu(false);
+    startWavePurificationSequence();
   };
 
   const jumpToBoss = () => {
@@ -536,7 +544,7 @@ function Chapter1StoryExperience({
               <button onClick={() => jumpToPreview(2, "decision-dialogue")}>전투 결심</button>
               <button onClick={() => jumpToPreview(2, "battle-guide-dialogue")}>전투 가이드</button>
               <button className="is-combat" onClick={jumpToWave}>실제 웨이브 시작</button>
-              <button onClick={() => jumpToPreview(2, "energy100")}>정화율 100% 연출</button>
+              <button onClick={jumpToPurification}>정화율 100% 연출</button>
               <button className="is-combat" onClick={jumpToBoss}>실제 보스 시작</button>
               <button onClick={() => jumpToPreview(2, "boss-purification-dialogue")}>보스 격파 후 정화</button>
               <button onClick={() => jumpToPreview(2, "star-recovery-dialogue")}>별 회수</button>
@@ -553,12 +561,32 @@ function Chapter1StoryExperience({
             shipStyle={shipStyle}
             onStoryResult={onStoryResult}
             chapter1WaveOnly
-            active={phase === "wave"}
-            onChapter1WaveComplete={() => {
+            active={phase === "wave" || phase === "wave-purification"}
+            inputEnabled={phase === "wave"}
+            chapter1PurificationExit={phase === "wave-purification"}
+            onPlayerScreenPositionChange={setPlayerPosition}
+            onChapter1WaveComplete={startWavePurificationSequence}
+            onChapter1CombatFailed={() => {
               setPhase("story");
-              window.setTimeout(() => storyPlayerRef.current?.continueAfterWavesClear(), 0);
+              requestStoryPreview("battle-guide-dialogue");
             }}
           />
+        </div>
+      )}
+
+      {phase === "wave-purification" && (
+        <div
+          className="chapter1-wave-purification-overlay"
+          aria-label="정화 에너지 100% 연출"
+          style={{
+            "--purification-center-x": `${purificationOrigin.xPercent}%`,
+            "--purification-center-y": `${purificationOrigin.yPercent}%`,
+          } as React.CSSProperties}
+        >
+          <div className="chapter1-wave-purification-flash" />
+          <div className="chapter1-wave-purification-ring ring-a" />
+          <div className="chapter1-wave-purification-ring ring-b" />
+          <div className="chapter1-wave-purification-core" />
         </div>
       )}
 
@@ -578,6 +606,10 @@ function Chapter1StoryExperience({
               setPhase("story");
               window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
             }}
+            onChapter1CombatFailed={() => {
+              setPhase("story");
+              requestStoryPreview("boss-dialogue");
+            }}
           />
         </div>
       )}
@@ -585,7 +617,7 @@ function Chapter1StoryExperience({
       <Chapter1StoryPlayer
         ref={storyPlayerRef}
         part={part}
-        hidden={phase === "wave" || phase === "boss"}
+        hidden={phase === "wave" || phase === "wave-purification" || phase === "boss"}
         previewRequest={previewRequest}
         onEvent={(event) => {
           if (event.type === "part1-complete") {
@@ -619,49 +651,6 @@ function Chapter1StoryExperience({
       />
     </div>
   );
-}
-
-function getRewardDetail(choice: string) {
-  if (choice.includes("유도탄")) {
-    return {
-      title: "유도탄 드론",
-      description: "가까운 적을 추적하는 보조탄을 발사합니다.",
-      className: "border-orange-500/30 bg-orange-950/20 hover:border-orange-400 text-orange-100",
-    };
-  }
-  if (choice.includes("레이저")) {
-    return {
-      title: "레이저 빔",
-      description: "주기적으로 관통 빔을 발사합니다.",
-      className: "border-purple-500/30 bg-purple-950/20 hover:border-purple-400 text-purple-100",
-    };
-  }
-  if (choice.includes("방어")) {
-    return {
-      title: "방어 드론",
-      description: "근처 적탄을 지웁니다.",
-      className: "border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-400 text-emerald-100",
-    };
-  }
-  if (choice.includes("회전")) {
-    return {
-      title: "회전 위성",
-      description: "주변 적에게 접촉 피해를 줍니다.",
-      className: "border-yellow-500/30 bg-yellow-950/20 hover:border-yellow-400 text-yellow-100",
-    };
-  }
-  if (choice.includes("수리")) {
-    return {
-      title: "기체 수리",
-      description: "체력을 1 회복합니다.",
-      className: "border-rose-500/30 bg-rose-950/20 hover:border-rose-400 text-rose-100",
-    };
-  }
-  return {
-    title: "공격 드론",
-    description: "전방 보조탄을 추가합니다.",
-    className: "border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400 text-cyan-100",
-  };
 }
 
 function OptionSlider({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
@@ -874,57 +863,11 @@ export default function App() {
     <div className="w-full h-screen bg-slate-950 text-slate-200 flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: "radial-gradient(circle at center, #6366f1 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
 
-      <div className={gameState === "LEADERBOARD"
-        ? "z-10 w-full max-w-2xl max-h-[calc(100vh-1rem)] overflow-hidden bg-transparent border-0 rounded-none p-0 shadow-none flex flex-col items-center"
-        : gameState === "GAME_OVER"
-          ? "z-10 w-full max-w-[560px] max-h-[calc(100vh-0.5rem)] overflow-hidden bg-transparent border-0 rounded-none p-0 shadow-none flex flex-col items-center"
-          : "z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-slate-900/95 border-2 border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center border-[rgba(99,102,241,0.2)]"
+      <div className={gameState === "GAME_OVER"
+        ? "z-10 w-full max-w-[560px] max-h-[calc(100vh-0.5rem)] overflow-hidden bg-transparent border-0 rounded-none p-0 shadow-none flex flex-col items-center"
+        : "z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-slate-900/95 border-2 border-slate-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center border-[rgba(99,102,241,0.2)]"
       }>
-        {gameState === "MENU" && (
-          <>
-            <div className="text-center mb-10">
-              <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 font-mono tracking-tighter mb-2 drop-shadow-[0_0_12px_rgba(99,102,241,0.4)]">
-                STARBLAZE
-              </h1>
-              <p className="text-slate-400 text-xs font-semibold tracking-wider mb-4 font-mono">RETRO ARCADE FIGHTER</p>
-              <div className="bg-slate-950 rounded-full px-5 py-2 inline-block border border-slate-800">
-                <span className="font-mono text-sm text-yellow-400 font-extrabold">최고 점수 {stats.highScore.toString().padStart(6, "0")}</span>
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-4">
-              <MenuButton icon={Play} label="게임 시작" onClick={handleStartGame} />
-              <MenuButton icon={BookOpen} label="스토리 모드" onClick={handleStartStory} />
-              <button
-                onClick={() => setGameState("DEV_MODE")}
-                className="flex items-center justify-center gap-2.5 w-64 p-3.5 bg-slate-950/95 hover:bg-slate-900 text-rose-400 hover:text-rose-300 rounded-xl transition-all duration-300 border border-slate-800 hover:border-rose-500/60 font-mono text-sm font-bold"
-              >
-                개발자 오피스
-              </button>
-              <div className="grid grid-cols-2 gap-3 w-64 mt-1">
-                <button onClick={() => setGameState("CUSTOMIZE")} className="p-3 bg-slate-950 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-1.5 text-xs font-mono font-bold text-slate-400 hover:text-slate-200 border border-slate-800 transition-all duration-200">
-                  <Palette size={18} className="text-purple-400" /> 기체 색상
-                </button>
-                <button onClick={() => setGameState("TUTORIAL")} className="p-3 bg-slate-950 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-1.5 text-xs font-mono font-bold text-slate-400 hover:text-slate-200 border border-slate-800 transition-all duration-200">
-                  <HelpCircle size={18} className="text-cyan-400" /> 조작법
-                </button>
-                <button onClick={() => setGameState("PROFILE")} className="col-span-2 p-3 bg-slate-950 rounded-xl hover:bg-slate-800 flex flex-col items-center gap-1.5 text-xs font-mono font-bold text-slate-400 hover:text-slate-200 border border-slate-800 transition-all duration-200">
-                  <User size={18} className="text-emerald-400" /> 프로필 설정
-                </button>
-              </div>
-            </div>
-
-              <button
-                onClick={() => {
-                  setLeaderboardReturnState("MENU");
-                  setGameState("LEADERBOARD");
-                }}
-                className="mt-8 text-xs font-mono font-semibold text-slate-500 hover:text-slate-300 underline underline-offset-4 transition-all duration-150"
-              >
-              랭킹 보기
-            </button>
-          </>
-        )}
 
         {gameState === "GAME_OVER" && (
           <GameOverPanel
@@ -1069,38 +1012,7 @@ export default function App() {
 
       </div>
 
-      {gameState === "MENU" && (
-        <div className="absolute bottom-4 right-4 flex gap-3">
-          <button
-            onClick={() => setShowOptions((prev) => !prev)}
-            className="p-3 bg-slate-900 border border-slate-800 rounded-full text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 shadow-lg transition-all duration-200"
-            title="Options"
-          >
-            <Settings size={22} />
-          </button>
-          <button
-            onClick={() => updateSettings({ bgmVolume: settings.bgmVolume > 0 ? 0 : 0.5, sfxVolume: settings.sfxVolume > 0 ? 0 : 0.8 })}
-            className="p-3 bg-slate-900 border border-slate-800 rounded-full text-slate-400 hover:text-indigo-400 hover:border-indigo-500/50 shadow-lg transition-all duration-200"
-            title="Mute"
-          >
-            {settings.bgmVolume > 0 ? <Volume2 size={22} /> : <VolumeX size={22} />}
-          </button>
-        </div>
-      )}
 
-      {gameState === "MENU" && showOptions && (
-        <div className="hobanwooOptionsPanel absolute bottom-20 right-4 z-20 w-72 rounded-xl border p-4 shadow-2xl">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="font-mono text-sm font-black text-slate-100">OPTIONS</div>
-            <button onClick={() => setShowOptions(false)} className="text-xs font-mono text-slate-500 hover:text-slate-200">CLOSE</button>
-          </div>
-          <OptionSlider label="BGM" value={settings.bgmVolume} onChange={(value) => updateSettings({ bgmVolume: value })} />
-          <OptionSlider label="SFX" value={settings.sfxVolume} onChange={(value) => updateSettings({ sfxVolume: value })} />
-          <OptionSlider label="Player Shot" value={settings.playerShootVolume} onChange={(value) => updateSettings({ playerShootVolume: value })} />
-          <OptionSlider label="Enemy Hit" value={settings.enemyHitVolume} onChange={(value) => updateSettings({ enemyHitVolume: value })} />
-          <OptionSlider label="Item Pickup" value={settings.itemVolume} onChange={(value) => updateSettings({ itemVolume: value })} />
-        </div>
-      )}
     </div>
   );
 }

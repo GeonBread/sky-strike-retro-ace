@@ -39,6 +39,33 @@ function normalizeStoryMarkup(markup: string): string {
   return rewriteChapter1StoryAssetReferences(markup);
 }
 
+function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): string {
+  if (part !== 2) return source;
+
+  const embeddedBossTransition = `if (storyCompletionAction === 'startBossBattle') {
+      startBossBattleTransition();
+      return;
+    }`;
+  const directBossTransition = `if (storyCompletionAction === 'startBossBattle') {
+      if (EMBEDDED_STORY) {
+        stopTyping();
+        dialogueLayer.hidden = true;
+        document.documentElement.classList.remove('embedded-dialogue-overlay');
+        flowMode = 'external-boss';
+        document.body.dataset.flowMode = 'external-boss';
+        postStoryBridge('boss-ready');
+        return;
+      }
+      startBossBattleTransition();
+      return;
+    }`;
+
+  if (!source.includes(embeddedBossTransition)) {
+    throw new Error('Chapter 1 boss transition hook was not found in the final story runtime.');
+  }
+  return source.replace(embeddedBossTransition, directBossTransition);
+}
+
 function normalizeStoryStyles(styles: string): string {
   return `${rewriteChapter1StoryAssetReferences(styles)}\n\n
 /* In-app integration overrides: the story owns the full viewport but is not a second app. */
@@ -46,7 +73,10 @@ html.is-embedded-story .demo-header,
 html.is-embedded-story .controls,
 html.is-embedded-story .scene-selector,
 html.is-embedded-story #previewMenuButton,
-html.is-embedded-story #endPanel {
+html.is-embedded-story #endPanel,
+html.is-embedded-story .dialogue-progress,
+html.is-embedded-story .story-status,
+html.is-embedded-story .story-location-intro {
   display: none !important;
 }
 html.is-embedded-story body {
@@ -210,7 +240,7 @@ export function createChapter1StoryRuntime({
 
   try {
     for (const bootstrapScript of storyDocument.bootstrapScripts) executeScript(bootstrapScript);
-    executeScript(storyDocument.runtimeScript);
+    executeScript(normalizeStoryRuntimeScript(storyDocument.runtimeScript, part));
   } catch (error) {
     dispose();
     throw error;

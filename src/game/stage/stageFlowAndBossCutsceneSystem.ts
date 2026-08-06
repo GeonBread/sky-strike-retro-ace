@@ -6,6 +6,7 @@
  */
 
 import { Particle } from "../entities";
+import { updateChapter1WaveEnemiesSystem } from "../chapter1/chapter1WaveSystem";
 
 type StageFlowRuntime = any;
 
@@ -24,6 +25,7 @@ if (engine.stage === 1 && engine.chapter1Boss?.active) {
   }
   engine.updatePlayer(dt);
   engine.updatePlayerPositionHistory(dt);
+  updateChapter1WaveEnemiesSystem(engine, dt);
   engine.updateBullets(dt);
   engine.updateParticles(dt);
   engine.updatePowerUps(dt);

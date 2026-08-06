@@ -607,7 +607,7 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
     const hidePlayerForChapter1Boss = false;
 
     // Player Rendering
-    if (!engine.player.isDead && !hidePlayerForChapter1Boss) {
+    if (!engine.player.isDead && !engine.storyPlayerHidden && !hidePlayerForChapter1Boss) {
       if (
         engine.player.invulnTimer <= 0 ||
         Math.floor(performance.now() / 80) % 2 === 0
@@ -2024,7 +2024,7 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
     });
 
     // --- DRAW HELPER PLAYER DRONES ---
-    if (!engine.player.isDead) {
+    if (!engine.player.isDead && !engine.storyPlayerHidden) {
       engine.drones.forEach((dr) => {
         const pcx = engine.player.x + engine.player.width / 2;
         const pcy = engine.player.y + engine.player.height / 2;

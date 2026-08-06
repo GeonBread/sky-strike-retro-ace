@@ -663,7 +663,7 @@ export function DevSandbox({ onBack, shipColor }: DevSandboxProps) {
             </p>
             <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
               {MOTION_PROFILES.map(profile => {
-                const isActive = activeMode === 'single' && profile.targets.includes(selectedType);
+                const isActive = activeMode === 'single' && profile.targets.some((target) => target === selectedType);
                 return (
                   <div 
                     key={profile.id}

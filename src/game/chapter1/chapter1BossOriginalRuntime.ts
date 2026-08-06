@@ -22,6 +22,7 @@ export interface Chapter1BossOriginalRuntime {
   update(dt: number): void;
   render(): void;
   applyDamage(amount: number): void;
+  clearEnemyProjectiles(): void;
   inputDigit(digit: number): boolean;
   pointerDown(x: number, y: number): boolean;
   getMovementBounds(): { minX: number; maxX: number; minY: number; maxY: number };
@@ -176,13 +177,14 @@ const PATTERNS = [
 
 const STAGE1_PATTERN_IDS = [17, 5, 8, 16, 19, 53];
 const STAGE2_PATTERN_IDS = [7, 54, 55, 59, 61, 62, 63, 64, 65, 66];
-const STAGE1_MAX_HP = 400;
-const STAGE2_MAX_HP = 600;
+const STAGE1_MAX_HP = 1200;
+const STAGE2_MAX_HP = 1800;
 const TOTAL_BOSS_HP = STAGE1_MAX_HP + STAGE2_MAX_HP;
 const INTRO_DURATION = 5.8;
 const BOSS_DESTRUCTION_DURATION = 5.2;
 const BOSS_HP_CHARGE_DURATION = 3.0;
 const BOSS_PATTERN_START_DELAY = 2.0;
+const STAGE2_PATTERN_START_DELAY = 0.65;
 const PHASE1_CLEAR_DURATION = 1.45;
 const PLAYER_FIRE_INTERVAL = 0.16;
 const PLAYER_BULLET_SPEED = 690;
@@ -343,6 +345,7 @@ function resetPattern(options = {}) {
     bossMovePhase: Math.random() * TAU,
     bossMoveStartX: state.boss.x,
     bossMoveStartY: state.boss.y,
+    bossMoveBlend: 0,
     lastShot: 0,
     shootTimer: 0,
     rapidFireCount: 0,
@@ -711,12 +714,17 @@ function updateBattleStartSequence(dt) {
     state.battleStartElapsed += dt;
     if (stage2Sequence) state.stage2Hp = targetMaxHp;
     else state.stage1Hp = targetMaxHp;
-    if (state.battleStartElapsed >= BOSS_PATTERN_START_DELAY) {
+    const startDelay = stage2Sequence ? STAGE2_PATTERN_START_DELAY : BOSS_PATTERN_START_DELAY;
+    if (state.battleStartElapsed >= startDelay) {
       state.battleStartState = "active";
       state.battleStartElapsed = 0;
       state.patternElapsed = 0;
       state.playerFireCooldown = 0;
-      state.playerBullets.length = 0;
+      state.pattern.bossMoveStartX = state.boss.x;
+      state.pattern.bossMoveStartY = state.boss.y;
+      state.pattern.bossMoveBlend = 0;
+      state.boss.moveVx *= .35;
+      state.boss.moveVy *= .35;
     }
   }
 }
@@ -1116,8 +1124,11 @@ function moveBoss(dt, factor = 1) {
 
   // 기존 패턴의 이동 배율은 속도에 작은 보정만 주고, 궤도 자체는 패턴별 프로필이 결정합니다.
   const legacyScale = clamp(.92 + factor * .34, .92, 1.22);
-  const targetX = clamp(profile.x, minX, maxX);
-  const targetY = clamp(profile.y, minY, maxY);
+  // 새 패턴 및 2페이즈 전환 직후에는 현재 위치에서 목표 궤도로 부드럽게 합류한다.
+  state.pattern.bossMoveBlend = clamp((state.pattern.bossMoveBlend ?? 0) + dt / 1.15, 0, 1);
+  const join = smoothstep(state.pattern.bossMoveBlend);
+  const targetX = clamp(lerp(state.pattern.bossMoveStartX ?? boss.x, profile.x, join), minX, maxX);
+  const targetY = clamp(lerp(state.pattern.bossMoveStartY ?? boss.y, profile.y, join), minY, maxY);
   const desiredVx = clamp((targetX - boss.x) * profile.response, -profile.maxSpeed * legacyScale, profile.maxSpeed * legacyScale);
   const desiredVy = clamp((targetY - boss.y) * profile.response, -profile.maxSpeedY, profile.maxSpeedY);
   const blend = 1 - Math.exp(-profile.acceleration * dt);
@@ -3650,7 +3661,7 @@ function drawBossHealthBar() {
   const percentText = `${Math.ceil(ratio * 100)}%`;
   const preBattleCharging = state.battleStartState === "charging";
   const preBattleWaiting = state.battleStartState === "waiting";
-  const waitRemaining = Math.max(0, BOSS_PATTERN_START_DELAY - state.battleStartElapsed);
+  const waitRemaining = Math.max(0, (state.bossStage === 2 ? STAGE2_PATTERN_START_DELAY : BOSS_PATTERN_START_DELAY) - state.battleStartElapsed);
   const stageBadge = preBattleCharging
     ? stage2Sequence ? "2페 준비" : "기동 중"
     : preBattleWaiting
@@ -5053,6 +5064,14 @@ function render() {
     }
   }
 
+  function clearEnemyProjectilesRuntime() {
+    state.bullets.length = 0;
+    state.waves.length = 0;
+    state.cursors.length = 0;
+    state.activeCursor = null;
+    state.mouse.down = false;
+  }
+
   function inputDigitRuntime(digit) {
     if (currentPattern().id !== 59 || state.cinematicMode !== "battle") return false;
     if (!Number.isInteger(digit) || digit < 0 || digit > 9) return false;
@@ -5089,6 +5108,7 @@ function render() {
     update: updateRuntime,
     render,
     applyDamage: applyBossDamage,
+    clearEnemyProjectiles: clearEnemyProjectilesRuntime,
     inputDigit: inputDigitRuntime,
     pointerDown: pointerDownRuntime,
     getMovementBounds: getPlayerMovementBounds,

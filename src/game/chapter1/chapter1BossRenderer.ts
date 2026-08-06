@@ -1,4 +1,5 @@
 import type { Bullet, Particle } from "../entities";
+import { renderChapter1BulletSystem, renderChapter1EnemySystem } from "./chapter1WaveRenderer";
 
 const W = 800;
 const H = 960;
@@ -27,7 +28,8 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   const core = engine.chapter1Boss?.core;
   if (!core) return;
   const state = core.state;
-  if (state.cinematicMode !== "battle" || state.bossStageState === "phase1clear" || state.bossStageState === "awakening") return;
+  if (state.cinematicMode !== "battle" && state.cinematicMode !== "destroy") return;
+  if (state.cinematicMode === "battle" && (state.bossStageState === "phase1clear" || state.bossStageState === "awakening")) return;
   if (engine.player.isDead) return;
   const sx = engine.canvas.width / W;
   const sy = engine.canvas.height / H;
@@ -121,6 +123,54 @@ function drawMusicBeam(engine: any, ctx: CanvasRenderingContext2D, bullet: Bulle
   ctx.restore();
 }
 
+function drawBossSupportObjects(engine: any, ctx: CanvasRenderingContext2D, sx: number, sy: number): void {
+  for (const enemy of engine.enemies || []) {
+    if (!(enemy as any).chapter1BossSupport) continue;
+    renderChapter1EnemySystem(engine, enemy);
+  }
+  for (const bullet of engine.bullets as Bullet[]) {
+    if (!bullet.isEnemy || !bullet.chapter1) continue;
+    renderChapter1BulletSystem(engine, bullet);
+  }
+
+  for (const powerup of engine.powerups || []) {
+    if (!powerup.active) continue;
+    const cx = (powerup.x + powerup.width / 2) / sx;
+    const cy = (powerup.y + powerup.height / 2) / sy;
+    const pulse = 1 + Math.sin(performance.now() * .012 + cx) * .12;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(pulse, pulse);
+    ctx.shadowBlur = 18;
+    if (powerup.type === "heal") {
+      ctx.shadowColor = "#34d399";
+      ctx.fillStyle = "#059669";
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(-2.2, -8, 4.4, 16);
+      ctx.fillRect(-8, -2.2, 16, 4.4);
+    } else {
+      ctx.shadowColor = "#38bdf8";
+      ctx.fillStyle = "#0ea5e9";
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.lineTo(13, 10);
+      ctx.lineTo(0, 6);
+      ctx.lineTo(-13, 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.font = "900 13px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("P", 0, 0);
+    }
+    ctx.restore();
+  }
+}
+
 function drawEngineParticles(engine: any, ctx: CanvasRenderingContext2D, sx: number, sy: number): void {
   for (const particle of engine.particles as Particle[]) {
     const alpha = particle.maxLife > 0 ? Math.max(0, particle.life / particle.maxLife) : 1;
@@ -140,6 +190,7 @@ export function renderChapter1BossFullSceneSystem(engine: any): boolean {
   engine.ctx.save();
   engine.ctx.setTransform(sx, 0, 0, sy, 0, 0);
   runtime.core.render();
+  drawBossSupportObjects(engine, engine.ctx, sx, sy);
   for (const bullet of engine.bullets as Bullet[]) drawPlayerBullet(engine.ctx, bullet, sx, sy);
   for (const bullet of engine.bullets as Bullet[]) drawMusicBeam(engine, engine.ctx, bullet, sx, sy);
   drawCurrentPlayer(engine, engine.ctx);

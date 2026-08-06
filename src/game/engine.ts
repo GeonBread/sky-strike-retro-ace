@@ -218,6 +218,10 @@ export class GameEngine implements GameEngineRuntimeContext {
   paused: boolean = false;
   playMode: GameMode = "arcade";
   storyStageTimer: number = 0;
+  storyPurificationExitActive: boolean = false;
+  storyPurificationExitElapsed: number = 0;
+  storyPurificationExitStartY: number = 0;
+  storyPlayerHidden: boolean = false;
   private storyAdjustedBullets: WeakSet<Bullet> = new WeakSet();
   private storyAdjustedEnemies: WeakSet<Enemy> = new WeakSet();
   private storyBulletSerial: number = 0;
@@ -518,6 +522,23 @@ export class GameEngine implements GameEngineRuntimeContext {
 
   updatePlayer(dt: number) {
     updatePlayerMovementRespawnAndSatelliteSystem(this, dt);
+  }
+
+  /**
+   * 챕터 1 정화 완료 연출에서 현재 호반우 위치를 시작점으로 상승 이탈 상태를 시작한다.
+   * 실제 이동은 플레이어 업데이트 시스템이 담당하며, 연출 중에는 조작과 사격을 차단한다.
+   */
+  public beginChapter1PurificationExit() {
+    this.storyPurificationExitActive = true;
+    this.storyPurificationExitElapsed = 0;
+    this.storyPurificationExitStartY = this.player.y;
+    this.storyPlayerHidden = false;
+    this.player.invulnTimer = Math.max(this.player.invulnTimer, 6);
+    this.input = { up: false, down: false, left: false, right: false, fire: false, useBomb: false };
+    this.bullets.forEach((bullet) => {
+      if (!bullet.isEnemy) bullet.active = false;
+    });
+    this.bullets = this.bullets.filter((bullet) => bullet.active);
   }
 
   triggerSmartBomb() {

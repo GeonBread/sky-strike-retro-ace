@@ -23,8 +23,8 @@ export function initializeGameStartStateSystem(engine: GameStartRuntime, color: 
   engine.player = new Player();
   engine.player.width = 48;
   engine.player.height = 48;
-  engine.player.hitWidth = 10;
-  engine.player.hitHeight = 10;
+  engine.player.hitWidth = 6;
+  engine.player.hitHeight = 6;
   engine.player.x = engine.canvas.width / 2 - 24;
   engine.player.y = engine.canvas.height - 100;
   engine.player.color = color;
@@ -42,6 +42,10 @@ export function initializeGameStartStateSystem(engine: GameStartRuntime, color: 
   engine.stage = 1;
   engine.nextBossScore = 15000;
   engine.storyStageTimer = 0;
+  engine.storyPurificationExitActive = false;
+  engine.storyPurificationExitElapsed = 0;
+  engine.storyPurificationExitStartY = 0;
+  engine.storyPlayerHidden = false;
   resetChapter1WaveRuntimeSystem(engine, true);
   resetChapter1BossSystem(engine);
   engine.storyAdjustedBullets = new WeakSet();

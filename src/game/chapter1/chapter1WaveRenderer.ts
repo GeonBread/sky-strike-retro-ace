@@ -365,15 +365,5 @@ export function renderChapter1WaveHudSystem(engine: any): void {
   ctx.strokeText(wave.title, 18, 40);
   ctx.fillText(wave.title, 18, 40);
 
-  if (progress.cueTimer > 0 && progress.cueText) {
-    ctx.textAlign = "center";
-    ctx.font = "900 14px system-ui, sans-serif";
-    ctx.globalAlpha = Math.min(1, progress.cueTimer * 2);
-    ctx.fillStyle = "#fff7df";
-    ctx.strokeStyle = "rgba(0,0,0,.9)";
-    ctx.lineWidth = 5;
-    ctx.strokeText(progress.cueText, engine.canvas.width / 2, 78);
-    ctx.fillText(progress.cueText, engine.canvas.width / 2, 78);
-  }
   ctx.restore();
 }

@@ -1,6 +1,7 @@
 import { Enemy, type Bullet } from "../entities";
 import { sfx } from "../AudioSystem";
 import { createChapter1BossOriginalRuntime } from "./chapter1BossOriginalRuntime";
+import { spawnChapter1BossSupportGroupSystem } from "./chapter1WaveSystem";
 import {
   CHAPTER1_BOSS_PHASE1_PATTERN_IDS,
   CHAPTER1_BOSS_PHASE2_PATTERN_IDS,
@@ -52,15 +53,27 @@ function playerCanonical(engine: any) {
   return {
     x: (engine.player.x + engine.player.width / 2) / scale.x,
     y: (engine.player.y + engine.player.height / 2) / scale.y,
+    // 원본 보스 탄막은 플레이어 이미지가 아니라 실제 코어 주변의 작은 판정점에만 맞는다.
     radius: Math.max(
-      7,
+      4,
       Math.min(
-        15,
-        ((engine.player.hitWidth ?? 10) / scale.x + (engine.player.hitHeight ?? 10) / scale.y) * 0.32,
+        8,
+        ((engine.player.hitWidth ?? 6) / scale.x + (engine.player.hitHeight ?? 6) / scale.y) * 0.22,
       ),
     ),
     invulnerable: !!engine.player.isDead || engine.player.invulnTimer > 0,
   };
+}
+
+function clearBossSupportObjects(engine: any): void {
+  engine.enemies.forEach((enemy: Enemy) => {
+    if ((enemy as any).chapter1BossSupport) enemy.active = false;
+  });
+  engine.enemies = engine.enemies.filter((enemy: Enemy) => !(enemy as any).chapter1BossSupport);
+  engine.bullets.forEach((bullet: Bullet) => {
+    if (bullet.isEnemy && bullet.chapter1) bullet.active = false;
+  });
+  engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
 }
 
 function completeBoss(engine: any, runtime: Chapter1BossRuntime): void {
@@ -68,7 +81,12 @@ function completeBoss(engine: any, runtime: Chapter1BossRuntime): void {
   runtime.active = false;
   engine.bossActive = false;
   engine.bossEntity = null;
+  clearBossSupportObjects(engine);
   engine.enemies = engine.enemies.filter((enemy: Enemy) => !(enemy as any).chapter1ExactBossProxy);
+  engine.bullets.forEach((bullet: Bullet) => {
+    if (bullet.isEnemy) bullet.active = false;
+  });
+  engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
   engine.bossPhase2Active = false;
   engine.onCutsceneChange?.(false);
   if (typeof engine.awardScore === "function") engine.awardScore(10000);
@@ -76,15 +94,14 @@ function completeBoss(engine: any, runtime: Chapter1BossRuntime): void {
     engine.state = "PLAYING";
     return;
   }
-  if (engine.onStageClear) {
-    engine.state = "STAGE_CLEAR_CHOICE";
-    engine.onStageClear(engine.getStageClearChoices(), (choice: string) => {
-      engine.applyStageClearReward(choice);
-      engine.startNextStageAfterReward();
-    });
-  } else {
-    engine.startNextStageAfterReward();
+  if (engine.playMode === "story") {
+    // 스토리 모드는 챕터 2로 넘기지 않고 챕터 1 보스 이후 대사로 복귀한다.
+    engine.stage = 1;
+    engine.state = "PLAYING";
+    engine.onChapter1BossComplete?.();
+    return;
   }
+  engine.startNextStageAfterReward();
 }
 
 function createBossCore(engine: any, runtime: Chapter1BossRuntime) {
@@ -183,12 +200,17 @@ export function startChapter1BossSystem(
   runtime.active = true;
   runtime.enabled = true;
   runtime.bombHit = false;
+  runtime.storyPhase2Notified = false;
+  runtime.supportSpawnTimer = 7.5;
+  runtime.supportWaveSerial = 0;
   runtime.sandboxPatternLock = options.sandboxPatternLock ?? -1;
   runtime.core = createBossCore(engine, runtime);
   runtime.core.start({
     skipIntro: !!options.skipIntro,
     patternId: runtime.sandboxPatternLock >= 0 ? runtime.sandboxPatternLock : undefined,
-    story: engine.playMode === "story",
+    // 스토리 모드에서도 원본 보스 시뮬레이터의 탄속·탄 수·발사 간격을 그대로 사용한다.
+    // 스토리 전용 탄 제거/감속은 사용하지 않고, 대사 전환만 외부 콜백으로 처리한다.
+    story: false,
   });
   engine.enemies = engine.enemies.filter((enemy: Enemy) => enemy.type !== "boss");
   engine.bullets = engine.bullets.filter((bullet: Bullet) => !bullet.isEnemy);
@@ -208,11 +230,52 @@ export function shouldUseChapter1BossSystem(engine: any): boolean {
   return engine.stage === 1 && !!engine.chapter1Boss?.active;
 }
 
+function updateBossSupportSpawnSystem(engine: any, runtime: Chapter1BossRuntime, dt: number): void {
+  const core = runtime.core;
+  if (!core || engine.isSandbox || engine.player?.isDead) return;
+  const state = core.state;
+  const battleReady = state.cinematicMode === "battle"
+    && state.battleStartState === "active"
+    && (state.bossStageState === "stage1" || state.bossStageState === "stage2");
+  if (!battleReady) return;
+
+  runtime.supportSpawnTimer -= dt;
+  if (runtime.supportSpawnTimer > 0) return;
+
+  const liveSupportCount = (engine.enemies as Enemy[]).filter(
+    (enemy) => enemy.active && (enemy as any).chapter1BossSupport,
+  ).length;
+  if (liveSupportCount <= 2) {
+    const count = 4 + Math.floor(Math.random() * 5);
+    spawnChapter1BossSupportGroupSystem(engine, count);
+    runtime.supportWaveSerial += 1;
+  }
+  runtime.supportSpawnTimer = 10.5 + Math.random() * 4.5;
+}
+
 export function updateChapter1BossSystem(engine: any, dt: number): void {
   const runtime = runtimeOf(engine);
   if (!runtime.active || !runtime.core) return;
   clampPlayerToOriginalBounds(engine, runtime);
+  const previousStageState = runtime.core.state.bossStageState;
   runtime.core.update(dt);
+  updateBossSupportSpawnSystem(engine, runtime, dt);
+  const nextStageState = runtime.core.state.bossStageState;
+  if (
+    (previousStageState === "stage1" && nextStageState === "phase1clear")
+    || (previousStageState !== "defeated" && nextStageState === "defeated")
+  ) {
+    clearBossSupportObjects(engine);
+  }
+  if (
+    !runtime.storyPhase2Notified &&
+    previousStageState === "stage1" &&
+    nextStageState === "phase1clear" &&
+    typeof engine.onChapter1BossPhase2Story === "function"
+  ) {
+    runtime.storyPhase2Notified = true;
+    engine.onChapter1BossPhase2Story();
+  }
   hitBossWithPlayerBullets(engine, runtime);
   updateBombDamage(engine, runtime);
   const mode = runtime.core.state.cinematicMode;

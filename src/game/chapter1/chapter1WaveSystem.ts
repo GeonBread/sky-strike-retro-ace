@@ -216,6 +216,43 @@ export function spawnChapter1SandboxEnemySystem(engine: Chapter1WaveEngine, type
   return enemy;
 }
 
+/**
+ * 챕터 1 보스전 중 아이템 획득 기회를 제공할 약한 지원 몬스터 묶음을 생성한다.
+ * 출석체크 드론과 결석확인 드론만 사용하며, 보스 본체와 별개로 기존 웨이브 이동·공격·드롭 규칙을 따른다.
+ */
+export function spawnChapter1BossSupportGroupSystem(engine: Chapter1WaveEngine, requestedCount: number): Enemy[] {
+  const runtime = ensureRuntime(engine);
+  const count = clamp(Math.floor(requestedCount), 4, 8);
+  runtime.waveInstanceId += 1;
+  const group: Enemy[] = [];
+
+  for (let index = 0; index < count; index += 1) {
+    const typeIndex = index % 2;
+    const lane = (index + 1) / (count + 1);
+    const x = 70 + lane * (BASE_WIDTH - 140);
+    const enemy = spawnChapter1EnemyInternal(engine, typeIndex, typeIndex === 0
+      ? {
+          x,
+          y: -70 - (index % 3) * 34,
+          targetY: 215 + (index % 2) * 42,
+          state: "enter",
+          attack: 0.8 + index * 0.06,
+        }
+      : {
+          x,
+          y: -80 - (index % 3) * 38,
+          vx: (index % 4 < 2 ? 1 : -1) * (35 + index * 3),
+          vy: 78 + index * 4,
+          state: "straight",
+          attack: 0.65 + index * 0.05,
+        });
+    (enemy as any).chapter1BossSupport = true;
+    group.push(enemy);
+  }
+
+  return group;
+}
+
 function buildWaveEvents(engine: Chapter1WaveEngine, index: number): Chapter1WaveEvent[] {
   const W = BASE_WIDTH;
   const H = BASE_HEIGHT;
@@ -465,7 +502,8 @@ function startWave(engine: Chapter1WaveEngine, index: number, skipClear = false)
   runtime.eventCursor = 0;
   runtime.cueText = "";
   runtime.cueTimer = 0;
-  runtime.bannerTimer = 1.6;
+  // 웨이브 전환 배너로 전투가 멈춘 것처럼 보이지 않도록 즉시 다음 웨이브를 진행한다.
+  runtime.bannerTimer = 0;
   runtime.clearTimer = 0;
 }
 
@@ -482,7 +520,7 @@ function finishWave(engine: Chapter1WaveEngine): void {
   if (!runtime.running) return;
   const cleared = runtime.selectedWave;
   runtime.running = false;
-  runtime.clearTimer = 0.55;
+  runtime.clearTimer = 0;
   if (typeof engine.awardScore === "function") engine.awardScore(450 + cleared * 75);
 
   if (engine.isSandbox || runtime.sandboxSingleWave) {

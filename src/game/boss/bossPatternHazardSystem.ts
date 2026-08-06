@@ -366,15 +366,8 @@ export function finishBossClearSequence(engine: BossPatternRuntime) {
     return;
   }
 
-  if (engine.onStageClear) {
-    engine.state = "STAGE_CLEAR_CHOICE";
-    engine.onStageClear(engine.getStageClearChoices(), (choice) => {
-      engine.applyStageClearReward(choice);
-      engine.startNextStageAfterReward();
-    });
-  } else {
-    engine.startNextStageAfterReward();
-  }
+  // 보상 선택 화면 없이 다음 챕터로 바로 진행한다.
+  engine.startNextStageAfterReward();
 }
 
 /**

@@ -24,6 +24,10 @@ export function triggerPlayerSmartBombSystem(engine: PlayerBombRuntime) {
   engine.bombRadius = 0;
   engine.bossBombHitSet.clear();
 
+  // 폭탄을 누르는 즉시 현재 화면의 일반 적탄과 원본 챕터 1 보스 탄막을 모두 초기화한다.
+  engine.clearAllEnemyBullets?.();
+  engine.chapter1Boss?.core?.clearEnemyProjectiles?.();
+
   for (let i = 0; i < 60; i++) {
     const p = new Particle();
     p.x = engine.player.x + engine.player.width / 2;

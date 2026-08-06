@@ -13,6 +13,9 @@ export interface Chapter1BossRuntime {
   core: Chapter1BossOriginalRuntime | null;
   sandboxPatternLock: number;
   bombHit: boolean;
+  storyPhase2Notified: boolean;
+  supportSpawnTimer: number;
+  supportWaveSerial: number;
 }
 
 export function createChapter1BossRuntime(): Chapter1BossRuntime {
@@ -22,5 +25,8 @@ export function createChapter1BossRuntime(): Chapter1BossRuntime {
     core: null,
     sandboxPatternLock: -1,
     bombHit: false,
+    storyPhase2Notified: false,
+    supportSpawnTimer: 8,
+    supportWaveSerial: 0,
   };
 }
