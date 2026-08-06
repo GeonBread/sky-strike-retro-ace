@@ -18,6 +18,10 @@ import {
   type Chapter1StoryPreviewRequest,
 } from "./components/story/Chapter1StoryPlayer";
 import "./components/ui/hobanwooOverlayPanels.css";
+import {
+  CHAPTER1_STORY_CANVAS_HEIGHT,
+  CHAPTER1_STORY_CANVAS_WIDTH,
+} from "./game/chapter1/chapter1WaveVisualTuning";
 
 const MAX_HP = 3;
 
@@ -78,7 +82,6 @@ function GameCanvas({
   const { setGameState, setScore, shipColor, updateStats, setLastRun, score } = useAppStore();
   const [hp, setHp] = useState(MAX_HP);
   const [bombs, setBombs] = useState(3);
-  const [power, setPower] = useState(1);
   const [stage, setStage] = useState(1);
   const [bossHp, setBossHp] = useState<number | null>(null);
   const [bossPhase2Active, setBossPhase2Active] = useState(false);
@@ -87,7 +90,7 @@ function GameCanvas({
   const [isPaused, setIsPaused] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const isStoryMode = mode === "story";
-  const isStoryWaveCanvas = isStoryMode && chapter1WaveOnly;
+  const isStoryCombatCanvas = isStoryMode && (chapter1WaveOnly || chapter1BossOnly);
 
   useEffect(() => {
     externallyActiveRef.current = active;
@@ -119,19 +122,20 @@ function GameCanvas({
     if (!canvasRef.current || !containerRef.current) return;
 
     let resizeObserver: ResizeObserver | null = null;
-    if (chapter1BossOnly) {
-      // 원본 보스 전용 시뮬레이터의 논리 해상도와 정확히 일치시킨다.
-      // CSS 표시 크기와 무관하게 보스 drawW/drawH, 패턴 좌표, UI 크기는 800x960 기준을 유지한다.
-      canvasRef.current.width = 800;
-      canvasRef.current.height = 960;
+    if (isStoryCombatCanvas) {
+      // 웨이브와 보스가 같은 논리 해상도를 사용해야 표시 크기와 이동 속도가 실제 화면에서도 일치한다.
+      canvasRef.current.width = CHAPTER1_STORY_CANVAS_WIDTH;
+      canvasRef.current.height = CHAPTER1_STORY_CANVAS_HEIGHT;
     } else {
+      const resizeCanvas = (width: number, height: number) => {
+        if (!canvasRef.current) return;
+        canvasRef.current.width = Math.max(1, Math.round(width));
+        canvasRef.current.height = Math.max(1, Math.round(height));
+      };
+      const initialRect = containerRef.current.getBoundingClientRect();
+      resizeCanvas(initialRect.width, initialRect.height);
       resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          if (canvasRef.current) {
-            canvasRef.current.width = Math.max(1, Math.round(entry.contentRect.width));
-            canvasRef.current.height = Math.max(1, Math.round(entry.contentRect.height));
-          }
-        }
+        for (const entry of entries) resizeCanvas(entry.contentRect.width, entry.contentRect.height);
       });
       resizeObserver.observe(containerRef.current);
     }
@@ -194,7 +198,6 @@ function GameCanvas({
     const hudInterval = setInterval(() => {
       if (engine.player) {
         setHp(Math.max(0, Math.min(MAX_HP, engine.player.hp)));
-        setPower(engine.player.powerLevel);
         if (engine.canvas.width > 0 && engine.canvas.height > 0) {
           playerPositionCallbackRef.current?.({
             xPercent: ((engine.player.x + engine.player.width / 2) / engine.canvas.width) * 100,
@@ -331,27 +334,20 @@ function GameCanvas({
     ? stage >= 4 ? 4200 : bossPhase3Active ? 3200 : bossPhase2Active ? 2400 : 1500
     : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
-  const containerClassName = chapter1BossOnly
-    ? "relative mx-auto overflow-hidden bg-black shadow-2xl flex flex-col"
-    : isStoryWaveCanvas
-      ? "relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col"
-      : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
-  const containerStyle: React.CSSProperties | undefined = chapter1BossOnly
+  const containerClassName = isStoryCombatCanvas
+    ? "relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col"
+    : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
+  const containerStyle: React.CSSProperties | undefined = isStoryCombatCanvas
     ? {
-        width: "min(83.333dvh, 100vw)",
-        height: "min(100dvh, 120vw)",
-        aspectRatio: "5 / 6",
+        // 스토리·웨이브·보스를 모두 동일한 24:25 전투 프레임으로 표시한다.
+        width: "min(96dvh, 100vw)",
+        height: "min(100dvh, 104.167vw)",
+        aspectRatio: "24 / 25",
       }
-    : isStoryWaveCanvas
-      ? {
-          // 스토리 장면에서 사용하던 넓은 24:25 표시 폭을 실제 웨이브 전투에도 사용한다.
-          width: "min(96dvh, 100vw)",
-          height: "min(100dvh, 104.167vw)",
-          aspectRatio: "24 / 25",
-        }
-      : undefined;
+    : undefined;
 
   return (
+    <>
     <div
       className={containerClassName}
       ref={containerRef}
@@ -359,7 +355,7 @@ function GameCanvas({
     >
       <canvas
         ref={canvasRef}
-        className={chapter1BossOnly || isStoryWaveCanvas ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
+        className={isStoryCombatCanvas ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
         onPointerDown={handlePointerDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -380,9 +376,6 @@ function GameCanvas({
               <span key={i} className={`combat-hud-life-icon${i < hp ? " is-active" : ""}`} />
             ))}
           </div>
-          <span className="font-mono text-[10px] text-yellow-300 border border-yellow-300/40 bg-yellow-400/10 px-2 py-0.5 rounded-md font-extrabold uppercase">
-            POWER LV {power}
-          </span>
         </div>
       </div>
 
@@ -391,19 +384,6 @@ function GameCanvas({
           <span key={i} className={`combat-hud-bomb-icon${i < bombs ? " is-active" : ""}`} />
         ))}
       </div>
-
-      {chapter1WaveOnly && active && inputEnabled && (
-        <button
-          type="button"
-          className="absolute bottom-4 right-4 z-40 rounded-lg border-2 border-amber-400 bg-black/88 px-4 py-2 font-mono text-xs font-black tracking-[0.12em] text-amber-200 shadow-[0_0_18px_rgba(251,191,36,0.32)] hover:bg-amber-950/90"
-          onClick={(event) => {
-            event.stopPropagation();
-            engineRef.current?.skipCurrentChapter1Wave();
-          }}
-        >
-          WAVE SKIP
-        </button>
-      )}
 
       {!chapter1BossOnly && bossHp !== null && (
         <div className={`absolute top-16 left-1/2 -translate-x-1/2 w-4/5 max-w-sm pointer-events-none z-20 transition-all duration-300 bg-slate-950/95 border rounded-full px-4 py-1 text-center ${bossPhase3Active ? "border-purple-500 shadow-[0_0_22px_rgba(168,85,247,0.85)]" : bossPhase2Active ? "border-rose-500 shadow-[0_0_18px_rgba(244,63,94,0.65)]" : "border-cyan-700 shadow-[0_0_15px_rgba(34,211,238,0.35)]"}`}>
@@ -464,6 +444,19 @@ function GameCanvas({
         }}
       />
     </div>
+    {chapter1WaveOnly && active && inputEnabled && (
+      <button
+        type="button"
+        className="chapter1-wave-skip-outside"
+        onClick={(event) => {
+          event.stopPropagation();
+          engineRef.current?.skipCurrentChapter1Wave();
+        }}
+      >
+        다음 웨이브
+      </button>
+    )}
+    </>
   );
 }
 
@@ -510,9 +503,9 @@ function Chapter1StoryExperience({
     return () => window.removeEventListener("keydown", handleGuideKey);
   }, [phase, waveGuideStep]);
 
-  const requestStoryPreview = (previewId: string) => {
+  const requestStoryPreview = (previewId: string, flowContinuation = false) => {
     jumpTokenRef.current += 1;
-    setPreviewRequest({ id: previewId, token: jumpTokenRef.current });
+    setPreviewRequest({ id: previewId, token: jumpTokenRef.current, flowContinuation });
   };
 
   const startWavePurificationSequence = () => {
@@ -523,7 +516,7 @@ function Chapter1StoryExperience({
     purificationTimerRef.current = window.setTimeout(() => {
       purificationTimerRef.current = null;
       setPhase("story");
-      requestStoryPreview("energy100-dialogue");
+      requestStoryPreview("energy100-dialogue", true);
     }, 5400);
   };
 

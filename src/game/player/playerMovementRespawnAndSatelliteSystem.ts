@@ -13,9 +13,10 @@
 
 import { Bullet } from "../entities";
 import { sfx } from "../AudioSystem";
+import { CHAPTER1_STORY_PLAYER_MOVE_SPEED } from "../chapter1/chapter1WaveVisualTuning";
 
 const PLAYER_MAX_HP = 3;
-const PLAYER_MOVE_SPEED = 415;
+const DEFAULT_PLAYER_MOVE_SPEED = 415;
 
 // 기존 기본 발사 주기. Vanguard 또는 스타일 정보가 없을 때만 fallback으로 사용한다.
 const DEFAULT_PLAYER_FIRE_INTERVAL = 0.075;
@@ -148,7 +149,9 @@ export function updatePlayerMovementRespawnAndSatelliteSystem(engine: PlayerRunt
     return;
   }
 
-  const speed = PLAYER_MOVE_SPEED;
+  const speed = engine.playMode === "story"
+    ? CHAPTER1_STORY_PLAYER_MOVE_SPEED
+    : DEFAULT_PLAYER_MOVE_SPEED;
   if (engine.input.left) engine.player.x -= speed * dt;
   if (engine.input.right) engine.player.x += speed * dt;
   if (engine.input.up) engine.player.y -= speed * dt;

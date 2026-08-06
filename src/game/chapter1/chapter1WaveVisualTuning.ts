@@ -3,6 +3,14 @@
  * 화면에서 잘 보이도록 시각 크기는 크게 올리고, 판정 크기는 완만하게만 확대합니다.
  */
 
+// 스토리·웨이브·보스 전투가 공유하는 고정 논리 해상도입니다.
+export const CHAPTER1_STORY_CANVAS_WIDTH = 922;
+export const CHAPTER1_STORY_CANVAS_HEIGHT = 960;
+
+// 스토리 전투에서 웨이브와 보스가 공유하는 플레이어 표시 크기와 이동 속도입니다.
+export const CHAPTER1_STORY_PLAYER_VISUAL_WIDTH = 137;
+export const CHAPTER1_STORY_PLAYER_MOVE_SPEED = 480;
+
 export const CHAPTER1_DEFAULT_ENEMY_VISUAL_SCALE = 1.42;
 export const CHAPTER1_SCHEDULE_ENEMY_VISUAL_SCALE = 1.27;
 export const CHAPTER1_ENEMY_HITBOX_SCALE = 1.10;
