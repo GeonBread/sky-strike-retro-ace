@@ -2,7 +2,6 @@ import { Enemy, type Bullet } from "../entities";
 import { sfx } from "../AudioSystem";
 import { createChapter1BossOriginalRuntime } from "./chapter1BossOriginalRuntime";
 import { spawnChapter1BossSupportGroupSystem } from "./chapter1WaveSystem";
-import { getChapter1BossViewportProjection } from "./chapter1BossViewportProjection";
 import {
   CHAPTER1_BOSS_PHASE1_PATTERN_IDS,
   CHAPTER1_BOSS_PHASE2_PATTERN_IDS,
@@ -10,6 +9,9 @@ import {
   type Chapter1BossPatternId,
   type Chapter1BossRuntime,
 } from "./chapter1BossTypes";
+
+const W = 800;
+const H = 960;
 
 export const CHAPTER1_BOSS_PATTERNS: ReadonlyArray<{
   id: Chapter1BossPatternId;
@@ -40,18 +42,23 @@ function runtimeOf(engine: any): Chapter1BossRuntime {
   return engine.chapter1Boss;
 }
 
+function scaleOf(engine: any): { x: number; y: number; uniform: number } {
+  const x = Math.max(0.0001, engine.canvas.width / W);
+  const y = Math.max(0.0001, engine.canvas.height / H);
+  return { x, y, uniform: Math.min(x, y) };
+}
 
 function playerCanonical(engine: any) {
-  const projection = getChapter1BossViewportProjection(engine.canvas);
+  const scale = scaleOf(engine);
   return {
-    x: (engine.player.x + engine.player.width / 2 - projection.offsetX) / projection.scale,
-    y: (engine.player.y + engine.player.height / 2 - projection.offsetY) / projection.scale,
+    x: (engine.player.x + engine.player.width / 2) / scale.x,
+    y: (engine.player.y + engine.player.height / 2) / scale.y,
     // 원본 보스 탄막은 플레이어 이미지가 아니라 실제 코어 주변의 작은 판정점에만 맞는다.
     radius: Math.max(
       4,
       Math.min(
         8,
-        ((engine.player.hitWidth ?? 6) + (engine.player.hitHeight ?? 6)) / projection.scale * 0.22,
+        ((engine.player.hitWidth ?? 6) / scale.x + (engine.player.hitHeight ?? 6) / scale.y) * 0.22,
       ),
     ),
     invulnerable: !!engine.player.isDead || engine.player.invulnTimer > 0,
@@ -81,6 +88,7 @@ function completeBoss(engine: any, runtime: Chapter1BossRuntime): void {
   });
   engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
   engine.bossPhase2Active = false;
+  engine.chapter1BossPlayerLocked = false;
   engine.onCutsceneChange?.(false);
   if (typeof engine.awardScore === "function") engine.awardScore(10000);
   if (engine.isSandbox) {
@@ -114,14 +122,14 @@ function syncBossEntity(engine: any, runtime: Chapter1BossRuntime): void {
   const core = runtime.core;
   if (!core) return;
   const state = core.state;
-  const projection = getChapter1BossViewportProjection(engine.canvas);
+  const scale = scaleOf(engine);
   const proxy = engine.bossEntity instanceof Enemy ? engine.bossEntity : new Enemy();
   proxy.type = "boss";
   proxy.active = true;
-  proxy.width = state.boss.drawW * projection.scale;
-  proxy.height = state.boss.drawH * projection.scale;
-  proxy.x = projection.offsetX + state.boss.x * projection.scale - proxy.width / 2;
-  proxy.y = projection.offsetY + state.boss.y * projection.scale - proxy.height / 2;
+  proxy.width = state.boss.drawW * scale.x;
+  proxy.height = state.boss.drawH * scale.y;
+  proxy.x = state.boss.x * scale.x - proxy.width / 2;
+  proxy.y = state.boss.y * scale.y - proxy.height / 2;
   proxy.hp = state.bossStageState === "stage2" ? state.stage2Hp : state.stage1Hp;
   proxy.phase = state.patternIndex;
   (proxy as any).chapter1ExactBossProxy = true;
@@ -135,25 +143,23 @@ function syncBossEntity(engine: any, runtime: Chapter1BossRuntime): void {
 function clampPlayerToOriginalBounds(engine: any, runtime: Chapter1BossRuntime): void {
   const core = runtime.core;
   if (!core) return;
-  const projection = getChapter1BossViewportProjection(engine.canvas);
+  const scale = scaleOf(engine);
   const bounds = core.getMovementBounds();
-  const canonicalX = (engine.player.x + engine.player.width / 2 - projection.offsetX) / projection.scale;
-  const canonicalY = (engine.player.y + engine.player.height / 2 - projection.offsetY) / projection.scale;
-  const centerX = Math.max(bounds.minX, Math.min(bounds.maxX, canonicalX));
-  const centerY = Math.max(bounds.minY, Math.min(bounds.maxY, canonicalY));
-  engine.player.x = projection.offsetX + centerX * projection.scale - engine.player.width / 2;
-  engine.player.y = projection.offsetY + centerY * projection.scale - engine.player.height / 2;
+  const centerX = Math.max(bounds.minX, Math.min(bounds.maxX, (engine.player.x + engine.player.width / 2) / scale.x));
+  const centerY = Math.max(bounds.minY, Math.min(bounds.maxY, (engine.player.y + engine.player.height / 2) / scale.y));
+  engine.player.x = centerX * scale.x - engine.player.width / 2;
+  engine.player.y = centerY * scale.y - engine.player.height / 2;
 }
 
 function hitBossWithPlayerBullets(engine: any, runtime: Chapter1BossRuntime): void {
   const core = runtime.core;
   if (!core || !core.isPlayerAttackAllowed()) return;
   const hitArea = core.getBossHitArea();
-  const projection = getChapter1BossViewportProjection(engine.canvas);
+  const scale = scaleOf(engine);
   for (const bullet of engine.bullets as Bullet[]) {
     if (!bullet.active || bullet.isEnemy) continue;
-    const cx = (bullet.x + bullet.width / 2 - projection.offsetX) / projection.scale;
-    const cy = (bullet.y + bullet.height / 2 - projection.offsetY) / projection.scale;
+    const cx = (bullet.x + bullet.width / 2) / scale.x;
+    const cy = (bullet.y + bullet.height / 2) / scale.y;
     const nx = (cx - hitArea.x) / Math.max(1, hitArea.rx);
     const ny = (cy - hitArea.y) / Math.max(1, hitArea.ry);
     if (nx * nx + ny * ny > 1) continue;
@@ -177,10 +183,10 @@ function updateBombDamage(engine: any, runtime: Chapter1BossRuntime): void {
     runtime.bombHit = false;
     return;
   }
-  const projection = getChapter1BossViewportProjection(engine.canvas);
-  const bombX = ((engine.bombOriginX ?? (engine.player.x + engine.player.width / 2)) - projection.offsetX) / projection.scale;
-  const bombY = ((engine.bombOriginY ?? (engine.player.y + engine.player.height / 2)) - projection.offsetY) / projection.scale;
-  const radius = engine.bombRadius / projection.scale;
+  const scale = scaleOf(engine);
+  const bombX = (engine.bombOriginX ?? (engine.player.x + engine.player.width / 2)) / scale.x;
+  const bombY = (engine.bombOriginY ?? (engine.player.y + engine.player.height / 2)) / scale.y;
+  const radius = engine.bombRadius / scale.uniform;
   if (!runtime.bombHit && Math.hypot(core.state.boss.x - bombX, core.state.boss.y - bombY) < radius + 160) {
     runtime.bombHit = true;
     core.applyDamage(50);
@@ -220,6 +226,9 @@ export function startChapter1BossSystem(
 
 export function resetChapter1BossSystem(engine: any): void {
   engine.chapter1Boss = createChapter1BossRuntime();
+  engine.chapter1BossPlayerLocked = false;
+  engine.chapter1BossPlayerLockX = 0;
+  engine.chapter1BossPlayerLockY = 0;
 }
 
 export function shouldUseChapter1BossSystem(engine: any): boolean {
@@ -281,6 +290,24 @@ export function updateChapter1BossSystem(engine: any, dt: number): void {
   updateBombDamage(engine, runtime);
   const mode = runtime.core.state.cinematicMode;
   const stageState = runtime.core.state.bossStageState;
+  const battleStartState = runtime.core.state.battleStartState;
+  const shouldLockPlayer = mode !== "battle"
+    || stageState === "phase1clear"
+    || stageState === "awakening"
+    || battleStartState !== "active";
+  engine.chapter1BossPlayerLocked = shouldLockPlayer;
+  engine.chapter1BossPlayerLockX = engine.canvas.width / 2 - engine.player.width / 2;
+  engine.chapter1BossPlayerLockY = engine.canvas.height - 120;
+  if (shouldLockPlayer) {
+    engine.input.left = false;
+    engine.input.right = false;
+    engine.input.up = false;
+    engine.input.down = false;
+    engine.input.fire = false;
+    engine.input.useBomb = false;
+    engine.player.invulnTimer = Math.max(engine.player.invulnTimer, 0.25);
+    engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet?.isEnemy);
+  }
   engine.onCutsceneChange?.(mode !== "battle" || stageState === "phase1clear" || stageState === "awakening");
   syncBossEntity(engine, runtime);
 }
@@ -299,11 +326,8 @@ export function getChapter1BossAuthPadButtonsSystem(engine?: any) {
 export function handleChapter1BossPointerSystem(engine: any, canvasX: number, canvasY: number): boolean {
   const runtime = runtimeOf(engine);
   if (!runtime.active || !runtime.core) return false;
-  const projection = getChapter1BossViewportProjection(engine.canvas);
-  return runtime.core.pointerDown(
-    (canvasX - projection.offsetX) / projection.scale,
-    (canvasY - projection.offsetY) / projection.scale,
-  );
+  const scale = scaleOf(engine);
+  return runtime.core.pointerDown(canvasX / scale.x, canvasY / scale.y);
 }
 
 export function getChapter1BossPatternIdsSystem(): readonly number[] {

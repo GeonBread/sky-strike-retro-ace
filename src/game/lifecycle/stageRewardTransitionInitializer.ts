@@ -36,6 +36,9 @@ export function initializeStageRewardTransitionSystem(
   engine.bossPhase3Active = false;
   engine.screenShakeIntensity = 0;
   engine.clearingForBoss = false;
+  engine.chapter1BossPlayerLocked = false;
+  engine.chapter1BossPlayerLockX = 0;
+  engine.chapter1BossPlayerLockY = 0;
 
   engine.spawnInitialDebris();
 

@@ -223,6 +223,9 @@ export class GameEngine implements GameEngineRuntimeContext {
   storyPurificationExitElapsed: number = 0;
   storyPurificationExitStartY: number = 0;
   storyPlayerHidden: boolean = false;
+  chapter1BossPlayerLocked: boolean = false;
+  chapter1BossPlayerLockX: number = 0;
+  chapter1BossPlayerLockY: number = 0;
   private storyAdjustedBullets: WeakSet<Bullet> = new WeakSet();
   private storyAdjustedEnemies: WeakSet<Enemy> = new WeakSet();
   private storyBulletSerial: number = 0;

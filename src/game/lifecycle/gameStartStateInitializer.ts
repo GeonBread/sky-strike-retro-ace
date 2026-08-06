@@ -46,6 +46,9 @@ export function initializeGameStartStateSystem(engine: GameStartRuntime, color: 
   engine.storyPurificationExitElapsed = 0;
   engine.storyPurificationExitStartY = 0;
   engine.storyPlayerHidden = false;
+  engine.chapter1BossPlayerLocked = false;
+  engine.chapter1BossPlayerLockX = 0;
+  engine.chapter1BossPlayerLockY = 0;
   resetChapter1WaveRuntimeSystem(engine, true);
   resetChapter1BossSystem(engine);
   engine.storyAdjustedBullets = new WeakSet();

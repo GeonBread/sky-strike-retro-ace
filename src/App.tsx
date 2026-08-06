@@ -18,11 +18,6 @@ import {
   type Chapter1StoryPreviewRequest,
 } from "./components/story/Chapter1StoryPlayer";
 import "./components/ui/hobanwooOverlayPanels.css";
-import {
-  CHAPTER1_STORY_CANVAS_HEIGHT,
-  CHAPTER1_STORY_CANVAS_WIDTH,
-} from "./game/chapter1/chapter1WaveVisualTuning";
-import { getChapter1WaveProgressSystem } from "./game/chapter1/chapter1WaveSystem";
 
 const MAX_HP = 3;
 
@@ -46,8 +41,6 @@ interface GameCanvasProps {
   inputEnabled?: boolean;
   chapter1PurificationExit?: boolean;
   onPlayerScreenPositionChange?: (position: { xPercent: number; yPercent: number }) => void;
-  chapter1WaveStandby?: boolean;
-  onChapter1WaveProgressChange?: (progress: number) => void;
 }
 
 function GameCanvas({
@@ -64,8 +57,6 @@ function GameCanvas({
   inputEnabled = true,
   chapter1PurificationExit = false,
   onPlayerScreenPositionChange,
-  chapter1WaveStandby = false,
-  onChapter1WaveProgressChange,
 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,11 +74,11 @@ function GameCanvas({
   const combatFailedCallbackRef = useRef(onChapter1CombatFailed);
   const inputEnabledRef = useRef(inputEnabled);
   const playerPositionCallbackRef = useRef(onPlayerScreenPositionChange);
-  const waveProgressCallbackRef = useRef(onChapter1WaveProgressChange);
 
   const { setGameState, setScore, shipColor, updateStats, setLastRun, score } = useAppStore();
   const [hp, setHp] = useState(MAX_HP);
   const [bombs, setBombs] = useState(3);
+  const [power, setPower] = useState(1);
   const [stage, setStage] = useState(1);
   const [bossHp, setBossHp] = useState<number | null>(null);
   const [bossPhase2Active, setBossPhase2Active] = useState(false);
@@ -96,7 +87,7 @@ function GameCanvas({
   const [isPaused, setIsPaused] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const isStoryMode = mode === "story";
-  const isStoryCombatCanvas = isStoryMode && (chapter1WaveOnly || chapter1BossOnly);
+  const isStoryWaveCanvas = isStoryMode && chapter1WaveOnly;
 
   useEffect(() => {
     externallyActiveRef.current = active;
@@ -106,13 +97,12 @@ function GameCanvas({
     combatFailedCallbackRef.current = onChapter1CombatFailed;
     inputEnabledRef.current = inputEnabled;
     playerPositionCallbackRef.current = onPlayerScreenPositionChange;
-    waveProgressCallbackRef.current = onChapter1WaveProgressChange;
     if (!inputEnabled) {
       inputRef.current = { up: false, down: false, left: false, right: false, fire: false, useBomb: false };
       if (engineRef.current) engineRef.current.input = inputRef.current;
     }
     if (engineRef.current) engineRef.current.paused = isPausedRef.current || !active;
-  }, [active, inputEnabled, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onPlayerScreenPositionChange, onChapter1WaveProgressChange]);
+  }, [active, inputEnabled, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onPlayerScreenPositionChange]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -129,20 +119,19 @@ function GameCanvas({
     if (!canvasRef.current || !containerRef.current) return;
 
     let resizeObserver: ResizeObserver | null = null;
-    if (isStoryCombatCanvas) {
-      // 웨이브와 보스가 같은 논리 해상도를 사용해야 표시 크기와 이동 속도가 실제 화면에서도 일치한다.
-      canvasRef.current.width = CHAPTER1_STORY_CANVAS_WIDTH;
-      canvasRef.current.height = CHAPTER1_STORY_CANVAS_HEIGHT;
+    if (chapter1BossOnly) {
+      // 원본 보스 전용 시뮬레이터의 논리 해상도와 정확히 일치시킨다.
+      // CSS 표시 크기와 무관하게 보스 drawW/drawH, 패턴 좌표, UI 크기는 800x960 기준을 유지한다.
+      canvasRef.current.width = 800;
+      canvasRef.current.height = 960;
     } else {
-      const resizeCanvas = (width: number, height: number) => {
-        if (!canvasRef.current) return;
-        canvasRef.current.width = Math.max(1, Math.round(width));
-        canvasRef.current.height = Math.max(1, Math.round(height));
-      };
-      const initialRect = containerRef.current.getBoundingClientRect();
-      resizeCanvas(initialRect.width, initialRect.height);
       resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) resizeCanvas(entry.contentRect.width, entry.contentRect.height);
+        for (const entry of entries) {
+          if (canvasRef.current) {
+            canvasRef.current.width = Math.max(1, Math.round(entry.contentRect.width));
+            canvasRef.current.height = Math.max(1, Math.round(entry.contentRect.height));
+          }
+        }
       });
       resizeObserver.observe(containerRef.current);
     }
@@ -192,7 +181,7 @@ function GameCanvas({
         lastPlayed: Date.now(),
       });
     };
-    engine.onCutsceneChange = setIsBossCutscene;
+    engine.onCutsceneChange = chapter1BossOnly ? undefined : setIsBossCutscene;
     engine.onBombsChanged = setBombs;
     // 챕터 클리어 보상 선택 UI는 사용하지 않는다.
     engine.onStageClear = undefined;
@@ -205,15 +194,13 @@ function GameCanvas({
     const hudInterval = setInterval(() => {
       if (engine.player) {
         setHp(Math.max(0, Math.min(MAX_HP, engine.player.hp)));
+        setPower(engine.player.powerLevel);
         if (engine.canvas.width > 0 && engine.canvas.height > 0) {
           playerPositionCallbackRef.current?.({
             xPercent: ((engine.player.x + engine.player.width / 2) / engine.canvas.width) * 100,
             yPercent: ((engine.player.y + engine.player.height / 2) / engine.canvas.height) * 100,
           });
         }
-      }
-      if (chapter1WaveOnly) {
-        waveProgressCallbackRef.current?.(getChapter1WaveProgressSystem(engine));
       }
       setStage(engine.stage);
       setBossPhase2Active(engine.bossPhase2Active);
@@ -223,11 +210,10 @@ function GameCanvas({
 
     engine.start(shipColor, mode, shipStyle);
     if (chapter1WaveOnly) {
-      engine.chapter1Wave.enabled = !chapter1WaveStandby;
+      engine.chapter1Wave.enabled = true;
       engine.chapter1Wave.running = false;
       engine.chapter1Wave.nextWave = 0;
       engine.chapter1Wave.allWavesCleared = false;
-      waveProgressCallbackRef.current?.(0);
     }
     if (chapter1BossOnly) {
       engine.chapter1Wave.enabled = false;
@@ -244,34 +230,8 @@ function GameCanvas({
   }, []);
 
   useEffect(() => {
-    const engine = engineRef.current;
-    if (!engine || !chapter1WaveOnly) return;
-
-    if (chapter1WaveStandby) {
-      engine.chapter1Wave.enabled = false;
-      engine.chapter1Wave.running = false;
-      engine.chapter1Wave.currentWave = null;
-      engine.chapter1Wave.transitionTimer = 0;
-      engine.chapter1Wave.transitionIndex = 0;
-      engine.chapter1Wave.titleCardTimer = 0;
-      waveProgressCallbackRef.current?.(0);
-      return;
-    }
-
-    engine.chapter1Wave.enabled = true;
-    if (engine.chapter1Wave.completed) {
-      engine.chapter1Wave.completed = false;
-      engine.chapter1Wave.allWavesCleared = false;
-      engine.chapter1Wave.nextWave = 0;
-    }
-  }, [chapter1WaveOnly, chapter1WaveStandby]);
-
-  useEffect(() => {
     if (!chapter1PurificationExit) return;
-    const timer = window.setTimeout(() => {
-      engineRef.current?.beginChapter1PurificationExit();
-    }, 1800);
-    return () => window.clearTimeout(timer);
+    engineRef.current?.beginChapter1PurificationExit();
   }, [chapter1PurificationExit]);
 
   useEffect(() => {
@@ -371,27 +331,27 @@ function GameCanvas({
     ? stage >= 4 ? 4200 : bossPhase3Active ? 3200 : bossPhase2Active ? 2400 : 1500
     : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
-  const isFullscreenBossIntro = chapter1BossOnly && isBossCutscene;
-  const containerClassName = isStoryCombatCanvas
-    ? `relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col${isFullscreenBossIntro ? " chapter1-boss-intro-canvas" : ""}`
-    : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
-  const containerStyle: React.CSSProperties | undefined = isStoryCombatCanvas
-    ? isFullscreenBossIntro
+  const containerClassName = chapter1BossOnly
+    ? "relative mx-auto overflow-hidden bg-black shadow-2xl flex flex-col"
+    : isStoryWaveCanvas
+      ? "relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col"
+      : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
+  const containerStyle: React.CSSProperties | undefined = chapter1BossOnly
+    ? {
+        width: "min(83.333dvh, 100vw)",
+        height: "min(100dvh, 120vw)",
+        aspectRatio: "5 / 6",
+      }
+    : isStoryWaveCanvas
       ? {
-          width: "100vw",
-          height: "100dvh",
-          aspectRatio: "auto",
-        }
-      : {
-          // 스토리·웨이브·보스를 모두 동일한 24:25 전투 프레임으로 표시한다.
+          // 스토리 장면에서 사용하던 넓은 24:25 표시 폭을 실제 웨이브 전투에도 사용한다.
           width: "min(96dvh, 100vw)",
           height: "min(100dvh, 104.167vw)",
           aspectRatio: "24 / 25",
         }
-    : undefined;
+      : undefined;
 
   return (
-    <>
     <div
       className={containerClassName}
       ref={containerRef}
@@ -399,7 +359,7 @@ function GameCanvas({
     >
       <canvas
         ref={canvasRef}
-        className={isStoryCombatCanvas ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
+        className={chapter1BossOnly || isStoryWaveCanvas ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
         onPointerDown={handlePointerDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -414,12 +374,15 @@ function GameCanvas({
             </div>
           )}
         </div>
-        <div className="mr-2 flex flex-col items-end gap-2">
+        <div className="flex flex-col items-end gap-2">
           <div className="combat-hud-life-row" aria-label={`체력 ${hp} / ${MAX_HP}`}>
             {[...Array(MAX_HP)].map((_, i) => (
               <span key={i} className={`combat-hud-life-icon${i < hp ? " is-active" : ""}`} />
             ))}
           </div>
+          <span className="font-mono text-[10px] text-yellow-300 border border-yellow-300/40 bg-yellow-400/10 px-2 py-0.5 rounded-md font-extrabold uppercase">
+            POWER LV {power}
+          </span>
         </div>
       </div>
 
@@ -428,6 +391,19 @@ function GameCanvas({
           <span key={i} className={`combat-hud-bomb-icon${i < bombs ? " is-active" : ""}`} />
         ))}
       </div>
+
+      {chapter1WaveOnly && active && inputEnabled && (
+        <button
+          type="button"
+          className="absolute bottom-4 right-4 z-40 rounded-lg border-2 border-amber-400 bg-black/88 px-4 py-2 font-mono text-xs font-black tracking-[0.12em] text-amber-200 shadow-[0_0_18px_rgba(251,191,36,0.32)] hover:bg-amber-950/90"
+          onClick={(event) => {
+            event.stopPropagation();
+            engineRef.current?.skipCurrentChapter1Wave();
+          }}
+        >
+          WAVE SKIP
+        </button>
+      )}
 
       {!chapter1BossOnly && bossHp !== null && (
         <div className={`absolute top-16 left-1/2 -translate-x-1/2 w-4/5 max-w-sm pointer-events-none z-20 transition-all duration-300 bg-slate-950/95 border rounded-full px-4 py-1 text-center ${bossPhase3Active ? "border-purple-500 shadow-[0_0_22px_rgba(168,85,247,0.85)]" : bossPhase2Active ? "border-rose-500 shadow-[0_0_18px_rgba(244,63,94,0.65)]" : "border-cyan-700 shadow-[0_0_15px_rgba(34,211,238,0.35)]"}`}>
@@ -445,8 +421,8 @@ function GameCanvas({
       )}
 
       {isBossCutscene && (
-        <div className="fixed inset-0 flex items-center justify-center bg-red-950/72 backdrop-blur-[3px] pointer-events-none z-[140]">
-          <div className="text-center p-6 border-y-2 border-red-500 bg-black/88 w-full shadow-[0_0_48px_rgba(239,68,68,0.34)]">
+        <div className="absolute inset-0 flex items-center justify-center bg-red-950/45 pointer-events-none z-30">
+          <div className="text-center p-6 border-y-2 border-red-500 bg-black/80 w-full">
             <h1 className="text-5xl font-black text-rose-500 font-mono tracking-widest">BOSS APPROACH</h1>
             <p className="text-rose-200 font-mono text-sm mt-2">PHASE COMBAT READY</p>
           </div>
@@ -488,19 +464,6 @@ function GameCanvas({
         }}
       />
     </div>
-    {chapter1WaveOnly && active && inputEnabled && (
-      <button
-        type="button"
-        className="chapter1-wave-skip-outside"
-        onClick={(event) => {
-          event.stopPropagation();
-          engineRef.current?.skipCurrentChapter1Wave();
-        }}
-      >
-        다음 웨이브
-      </button>
-    )}
-    </>
   );
 }
 
@@ -524,12 +487,8 @@ function Chapter1StoryExperience({
   const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [playerPosition, setPlayerPosition] = useState({ xPercent: 50, yPercent: 88 });
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
-  const [chapter1PurificationExitStarted, setChapter1PurificationExitStarted] = useState(false);
-  const [wavePurificationProgress, setWavePurificationProgress] = useState(0);
-  const [bossRestorationFlashVisible, setBossRestorationFlashVisible] = useState(false);
   const [waveGuideStep, setWaveGuideStep] = useState(0);
   const [waveRunKey, setWaveRunKey] = useState(0);
-  const [showWaveGuideOverlay, setShowWaveGuideOverlay] = useState(false);
 
   const waveMounted = part === 2 && (phase === "wave-guide" || phase === "wave" || phase === "wave-purification");
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
@@ -542,7 +501,7 @@ function Chapter1StoryExperience({
   useEffect(() => {
     if (phase !== "wave-guide") return;
     const handleGuideKey = (event: KeyboardEvent) => {
-      if (event.code !== "Enter") return;
+      if (event.code !== "Enter" && event.code !== "Space") return;
       event.preventDefault();
       if (waveGuideStep < 3) setWaveGuideStep((step) => step + 1);
       else setPhase("wave");
@@ -551,33 +510,21 @@ function Chapter1StoryExperience({
     return () => window.removeEventListener("keydown", handleGuideKey);
   }, [phase, waveGuideStep]);
 
-  useEffect(() => {
-    if (phase !== "wave-guide") {
-      setShowWaveGuideOverlay(false);
-      return;
-    }
-    const timer = window.setTimeout(() => setShowWaveGuideOverlay(true), 700);
-    return () => window.clearTimeout(timer);
-  }, [phase]);
-
-  const requestStoryPreview = (previewId: string, flowContinuation = false) => {
+  const requestStoryPreview = (previewId: string) => {
     jumpTokenRef.current += 1;
-    setPreviewRequest({ id: previewId, token: jumpTokenRef.current, flowContinuation });
+    setPreviewRequest({ id: previewId, token: jumpTokenRef.current });
   };
 
   const startWavePurificationSequence = () => {
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     setPart(2);
     setPurificationOrigin(playerPosition);
-    setChapter1PurificationExitStarted(false);
     setPhase("wave-purification");
-    window.setTimeout(() => setChapter1PurificationExitStarted(true), 3200);
     purificationTimerRef.current = window.setTimeout(() => {
       purificationTimerRef.current = null;
-      setChapter1PurificationExitStarted(false);
       setPhase("story");
-      requestStoryPreview("energy100-dialogue", true);
-    }, 6100);
+      requestStoryPreview("energy100-dialogue");
+    }, 5400);
   };
 
   const jumpToPreview = (targetPart: 1 | 2, previewId: string) => {
@@ -592,9 +539,7 @@ function Chapter1StoryExperience({
     setPreviewRequest(null);
     setPart(2);
     setWaveGuideStep(0);
-    setWavePurificationProgress(0);
     setWaveRunKey((key) => key + 1);
-    setShowWaveGuideOverlay(false);
     setPhase("wave-guide");
     setShowJumpMenu(false);
   };
@@ -602,9 +547,7 @@ function Chapter1StoryExperience({
   const jumpToWave = () => {
     setPreviewRequest(null);
     setPart(2);
-    setWavePurificationProgress(0);
     setWaveRunKey((key) => key + 1);
-    setShowWaveGuideOverlay(false);
     setPhase("wave");
     setShowJumpMenu(false);
   };
@@ -669,12 +612,10 @@ function Chapter1StoryExperience({
               shipStyle={shipStyle}
               onStoryResult={onStoryResult}
               chapter1WaveOnly
-              active={phase === "wave-guide" || phase === "wave" || phase === "wave-purification"}
+              active={phase === "wave" || phase === "wave-purification"}
               inputEnabled={phase === "wave"}
-              chapter1PurificationExit={chapter1PurificationExitStarted}
-              chapter1WaveStandby={phase === "wave-guide"}
+              chapter1PurificationExit={phase === "wave-purification"}
               onPlayerScreenPositionChange={setPlayerPosition}
-              onChapter1WaveProgressChange={setWavePurificationProgress}
               onChapter1WaveComplete={startWavePurificationSequence}
               onChapter1CombatFailed={() => {
                 openWaveGuide();
@@ -684,7 +625,7 @@ function Chapter1StoryExperience({
         </Fragment>
       )}
 
-      {phase === "wave-guide" && showWaveGuideOverlay && (
+      {phase === "wave-guide" && (
         <div className="chapter1-combat-guide-overlay" role="dialog" aria-modal="true" aria-label="챕터 1 전투 가이드">
           <section className="chapter1-combat-guide-box">
             <div className="chapter1-combat-guide-speaker">학생증 · 전투 가이드</div>
@@ -715,7 +656,7 @@ function Chapter1StoryExperience({
               <>
                 <h2>전투 준비 완료</h2>
                 <p>오염된 학사 시스템 파편이 접근한다.</p>
-                <p className="chapter1-combat-guide-final">준비가 끝나면 진입 버튼으로 전투를 시작한다.</p>
+                <p className="chapter1-combat-guide-final">건투를 빈다.</p>
               </>
             )}
             <button
@@ -723,31 +664,12 @@ function Chapter1StoryExperience({
               className="chapter1-combat-guide-next"
               onClick={() => {
                 if (waveGuideStep < 3) setWaveGuideStep((step) => step + 1);
-                else {
-                  setShowWaveGuideOverlay(false);
-                  setPhase("wave");
-                }
+                else setPhase("wave");
               }}
             >
               {waveGuideStep < 3 ? "다음" : "웨이브 시작"}
             </button>
           </section>
-        </div>
-      )}
-
-      {phase === "wave" && (
-        <div className="chapter1-wave-progress-overlay" aria-label="정화 에너지 진행률">
-          <div className="chapter1-wave-progress-card">
-            <div className="chapter1-wave-progress-label">정화 에너지 진행률</div>
-            <div className="chapter1-wave-progress-stage">현재 정화 단계 {Math.max(1, Math.ceil(Math.max(0.01, wavePurificationProgress) * 4))} / 4</div>
-            <div className="chapter1-wave-progress-bar">
-              <div
-                className="chapter1-wave-progress-fill"
-                style={{ width: `${Math.max(0, Math.min(100, wavePurificationProgress * 100))}%` }}
-              />
-            </div>
-            <div className="chapter1-wave-progress-value">정화 에너지 {Math.round(Math.max(0, Math.min(100, wavePurificationProgress * 100)))}%</div>
-          </div>
         </div>
       )}
 
@@ -767,23 +689,8 @@ function Chapter1StoryExperience({
         </div>
       )}
 
-      {bossRestorationFlashVisible && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 120,
-            pointerEvents: "none",
-            background: "radial-gradient(circle at 50% 55%, rgba(255,248,200,0.98) 0%, rgba(255,236,122,0.92) 30%, rgba(255,218,79,0.58) 58%, rgba(255,211,64,0.18) 100%)",
-            opacity: 0.95,
-            mixBlendMode: "screen",
-          }}
-        />
-      )}
-
       {bossMounted && (
-        <div className={`chapter1-story-boss-layer${phase === "boss" ? " is-active" : ""}`}>
+        <div className="chapter1-story-boss-layer">
           <GameCanvas
             mode="story"
             shipStyle={shipStyle}
@@ -795,12 +702,8 @@ function Chapter1StoryExperience({
               window.setTimeout(() => storyPlayerRef.current?.showBossPhase2Dialogue(), 0);
             }}
             onChapter1BossComplete={() => {
-              setBossRestorationFlashVisible(true);
-              window.setTimeout(() => setBossRestorationFlashVisible(false), 1700);
-              window.setTimeout(() => {
-                setPhase("story");
-                storyPlayerRef.current?.continueAfterBossClear();
-              }, 180);
+              setPhase("story");
+              window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
             }}
             onChapter1CombatFailed={() => {
               setPhase("story");

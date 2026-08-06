@@ -22,7 +22,6 @@ export interface Chapter1StoryPlayerHandle {
 export interface Chapter1StoryPreviewRequest {
   id: string;
   token: number;
-  flowContinuation?: boolean;
 }
 
 interface Chapter1StoryPlayerProps {
@@ -61,10 +60,7 @@ export const Chapter1StoryPlayer = forwardRef<
 
   useEffect(() => {
     if (!previewRequest) return;
-    runtimeRef.current?.invoke("preview", {
-      previewId: previewRequest.id,
-      flowContinuation: previewRequest.flowContinuation === true,
-    });
+    runtimeRef.current?.invoke("preview", { previewId: previewRequest.id });
   }, [part, previewRequest]);
 
   useImperativeHandle(ref, () => ({

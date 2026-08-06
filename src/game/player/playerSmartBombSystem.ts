@@ -7,7 +7,6 @@
 
 import { Particle } from "../entities";
 import { sfx } from "../AudioSystem";
-import { getChapter1BossViewportProjection } from "../chapter1/chapter1BossViewportProjection";
 
 type PlayerBombRuntime = any;
 
@@ -64,12 +63,13 @@ export function updatePlayerSmartBombSystem(engine: PlayerBombRuntime, dt: numbe
     return true;
   });
 
-  // 원본 보스 런타임의 중앙 배치 오프셋과 배율을 반영해 정화 파동 좌표를 환산한다.
-  const bossProjection = getChapter1BossViewportProjection(engine.canvas);
+  // 원본 보스 런타임은 800x960 좌표계를 사용하므로 현재 캔버스 좌표를 환산한다.
+  const sx = engine.canvas.width / 800 || 1;
+  const sy = engine.canvas.height / 960 || 1;
   engine.chapter1Boss?.core?.clearEnemyProjectilesWithinRadius?.(
-    (originX - bossProjection.offsetX) / bossProjection.scale,
-    (originY - bossProjection.offsetY) / bossProjection.scale,
-    engine.bombRadius / bossProjection.scale,
+    originX / sx,
+    originY / sy,
+    engine.bombRadius / Math.min(sx, sy),
   );
 
   engine.enemies.forEach((e: any) => {

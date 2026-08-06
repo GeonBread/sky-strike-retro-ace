@@ -100,16 +100,19 @@ function drawBossBattleBackground(type = "battle", cinematicTime = 0) {
   const purify = 0;
   const profile = getBossBackgroundProfile();
   const time = state.t;
-  const baseTime = type === "cinematic" ? time * .92 + cinematicTime * .4 : time;
+  const cinematicOffset = type === "cinematic" ? cinematicTime * 36 : 0;
+  const scroll1 = state.backgroundScroll1 + cinematicOffset;
+  const scroll2 = state.backgroundScroll2 + cinematicOffset * 1.35;
+  const scroll3 = state.backgroundScroll3 + cinematicOffset * 1.7;
 
   ctx.fillStyle = "#040507";
   ctx.fillRect(0, 0, W, H);
 
-  const drewBase = drawRepeatingVerticalMap(bossBgStage1Image, baseTime * profile.baseSpeed, 1, 900, Math.sin(time * .22) * 4);
+  const drewBase = drawRepeatingVerticalMap(bossBgStage1Image, scroll1, 1, 900, Math.sin(time * .22) * 4);
   if (!drewBase) drawFallbackBattleBackground(purify);
 
-  drawRepeatingVerticalMap(bossBgStage2Image, baseTime * profile.overlay2Speed, profile.overlay2Alpha, 910, Math.sin(time * .37) * 8);
-  drawRepeatingVerticalMap(bossBgStage3Image, baseTime * profile.overlay3Speed, profile.overlay3Alpha, 920, Math.sin(time * .48 + .8) * 12);
+  drawRepeatingVerticalMap(bossBgStage2Image, scroll2, profile.overlay2Alpha, 910, Math.sin(time * .37) * 8);
+  drawRepeatingVerticalMap(bossBgStage3Image, scroll3, profile.overlay3Alpha, 920, Math.sin(time * .48 + .8) * 12);
 
   const vignette = ctx.createRadialGradient(W * .5, H * .5, H * .18, W * .5, H * .5, H * .82);
   vignette.addColorStop(0, "rgba(0,0,0,0)");
@@ -139,7 +142,7 @@ function drawBossBattleBackground(type = "battle", cinematicTime = 0) {
 
   ctx.strokeStyle = `rgba(255, 87, 107, ${type === "cinematic" ? .08 : .06})`;
   ctx.lineWidth = 1;
-  const scanOffset = ((baseTime * 78) % 58 + 58) % 58;
+  const scanOffset = ((scroll1 * .9) % 58 + 58) % 58;
   for (let y = scanOffset - 58; y < H; y += 58) {
     ctx.beginPath();
     ctx.moveTo(0, y);
@@ -182,7 +185,7 @@ const STAGE1_MAX_HP = 1200;
 const STAGE2_MAX_HP = 1800;
 const TOTAL_BOSS_HP = STAGE1_MAX_HP + STAGE2_MAX_HP;
 const INTRO_DURATION = 5.8;
-const BOSS_DESTRUCTION_DURATION = 6.0;
+const BOSS_DESTRUCTION_DURATION = 5.9;
 const BOSS_HP_CHARGE_DURATION = 3.0;
 const BOSS_PATTERN_START_DELAY = 2.0;
 const STAGE2_PATTERN_START_DELAY = 0.65;
@@ -208,31 +211,16 @@ function getRandomPatternId(stage, excludedId = null) {
   const pool = candidates.length ? candidates : ids;
   return pool[Math.floor(Math.random() * pool.length)];
 }
-
 function resetStagePatternQueue(stage) {
-  const ids = [...getStagePatternIds(stage)];
-  if (stage === 1) state.stage1PatternQueue = ids;
-  else state.stage2PatternQueue = ids;
-}
-function shiftNextStagePatternId(stage, excludedId = null) {
-  let queue = stage === 1 ? state.stage1PatternQueue : state.stage2PatternQueue;
-  if (!Array.isArray(queue) || !queue.length) {
-    resetStagePatternQueue(stage);
-    queue = stage === 1 ? state.stage1PatternQueue : state.stage2PatternQueue;
-  }
-  if (queue.length > 1 && excludedId != null && queue[0] === excludedId) {
-    const first = queue.shift();
-    if (first != null) queue.push(first);
-  }
-  const nextId = queue.shift();
+  const queue = [...getStagePatternIds(stage)];
   if (stage === 1) state.stage1PatternQueue = queue;
   else state.stage2PatternQueue = queue;
-  return Number.isFinite(nextId) ? nextId : getRandomPatternId(stage, excludedId);
 }
 function getNextStagePatternId(stage, excludedId = null) {
   const queue = stage === 1 ? state.stage1PatternQueue : state.stage2PatternQueue;
-  if (Array.isArray(queue) && queue.length) {
-    return shiftNextStagePatternId(stage, excludedId);
+  if (Array.isArray(queue) && queue.length > 0) {
+    const nextId = queue.shift();
+    return Number.isFinite(nextId) ? nextId : getRandomPatternId(stage, excludedId);
   }
   return getRandomPatternId(stage, excludedId);
 }
@@ -270,6 +258,14 @@ const state = {
   timeScale: 1,
   patternIndex: 0,
   patternElapsed: 0,
+  stage1PatternQueue: [...STAGE1_PATTERN_IDS],
+  stage2PatternQueue: [...STAGE2_PATTERN_IDS],
+  backgroundScroll1: 0,
+  backgroundScroll2: 0,
+  backgroundScroll3: 0,
+  backgroundSpeed1: 86,
+  backgroundSpeed2: 128,
+  backgroundSpeed3: 172,
   bossStage: 1,
   bossStageState: "stage1",
   stage1Hp: STAGE1_MAX_HP,
@@ -316,8 +312,6 @@ const state = {
   mouse: { x: W/2, y: H - 95, down: false },
   pattern: {},
   playerHistory: [],
-  stage1PatternQueue: [...STAGE1_PATTERN_IDS],
-  stage2PatternQueue: [...STAGE2_PATTERN_IDS],
   stars: Array.from({length: 105}, () => ({ x: Math.random()*W, y: Math.random()*H, s: .7+Math.random()*2.2, a: .12+Math.random()*.48, v: 10+Math.random()*32 })),
 };
 
@@ -656,7 +650,7 @@ function updateAwakening(dt) {
     state.battleStartState = "waiting";
     state.battleStartElapsed = 0;
     resetStagePatternQueue(2);
-    const firstStage2PatternId = shiftNextStagePatternId(2);
+    const firstStage2PatternId = getNextStagePatternId(2);
     setPattern(getPatternIndexById(firstStage2PatternId), {
       preserveProjectiles: false,
       keepBossPosition: true,
@@ -675,11 +669,17 @@ function resetBattle() {
   state.stage2LatentHp = STAGE2_MAX_HP;
   state.awakeningElapsed = 0;
   state.battleDefeatedAt = -1;
+  state.backgroundScroll1 = 0;
+  state.backgroundScroll2 = 0;
+  state.backgroundScroll3 = 0;
+  state.backgroundSpeed1 = 86;
+  state.backgroundSpeed2 = 128;
+  state.backgroundSpeed3 = 172;
   state.bullets.length = 0;
   state.waves.length = 0;
   resetStagePatternQueue(1);
   resetStagePatternQueue(2);
-  const firstStage1PatternId = shiftNextStagePatternId(1);
+  const firstStage1PatternId = getNextStagePatternId(1);
   setPattern(getPatternIndexById(firstStage1PatternId), { preserveProjectiles: false });
   refreshButtons();
   startBossIntro();
@@ -727,7 +727,7 @@ function updateBattleStartSequence(dt) {
   // 페이즈 전환 대기 중에도 보스 좌표를 즉시 덮어쓰지 않고 중앙 전투 위치로 부드럽게 수렴시킵니다.
   if (stage2Sequence) {
     state.boss.x = lerp(state.boss.x, W / 2, 1 - Math.exp(-3.2 * dt));
-    state.boss.y = lerp(state.boss.y, 175, 1 - Math.exp(-3.0 * dt));
+    state.boss.y = lerp(state.boss.y, 185, 1 - Math.exp(-3.0 * dt));
   }
 
   if (state.battleStartState === "charging") {
@@ -1648,6 +1648,7 @@ function updateBroadcastConfusion(dt) {
   }
 
   for (const wave of p.broadcastWaves) {
+    if (wave.done) continue;
     wave.age += dt;
     if (wave.age < wave.warning) continue;
     wave.radius = 30 + (wave.age - wave.warning) * wave.speed;
@@ -3190,6 +3191,14 @@ function updatePlayerAttack(dt) {}
 function updatePlayerBullets(dt) {}
 
 function updateBackground(dt) {
+  const profile = getBossBackgroundProfile();
+  const speedBlend = 1 - Math.exp(-2.4 * dt);
+  state.backgroundSpeed1 = lerp(state.backgroundSpeed1, profile.baseSpeed, speedBlend);
+  state.backgroundSpeed2 = lerp(state.backgroundSpeed2, profile.overlay2Speed, speedBlend);
+  state.backgroundSpeed3 = lerp(state.backgroundSpeed3, profile.overlay3Speed, speedBlend);
+  state.backgroundScroll1 += state.backgroundSpeed1 * dt;
+  state.backgroundScroll2 += state.backgroundSpeed2 * dt;
+  state.backgroundScroll3 += state.backgroundSpeed3 * dt;
   for (const s of state.stars) {s.y+=s.v*dt;if(s.y>H+3){s.y=-3;s.x=Math.random()*W;}}
 }
 
@@ -4661,6 +4670,7 @@ function drawBroadcastConfusion() {
   ctx.restore();
 
   for (const wave of p.broadcastWaves || []) {
+    if (wave.done) continue;
     const warning = wave.age < wave.warning;
     drawBroadcastSpeaker(wave.side, wave, warning);
     if (warning) {
@@ -5108,23 +5118,19 @@ function render() {
       if (dx * dx + dy * dy <= radiusSq) bullet.active = false;
     }
     state.bullets = state.bullets.filter(bullet => bullet.active);
-    for (const cursor of state.cursors) {
-      if (!cursor || cursor.done) continue;
-      const dx = cursor.x - x;
-      const dy = cursor.y - y;
-      if (dx * dx + dy * dy <= (radius + 28) * (radius + 28)) cursor.done = true;
-    }
+
     const broadcastWaves = state.pattern?.broadcastWaves;
     if (Array.isArray(broadcastWaves)) {
       for (const wave of broadcastWaves) {
         if (!wave || wave.done) continue;
-        const dx = (wave.x ?? 0) - x;
-        const dy = (wave.y ?? 0) - y;
-        const waveRadius = Math.max(28, wave.radius ?? 0, (wave.width ?? 0) * 0.5, (wave.height ?? 0) * 0.5);
-        if (dx * dx + dy * dy <= (radius + waveRadius) * (radius + waveRadius)) {
+        const distance = Math.hypot((wave.x ?? 0) - x, (wave.y ?? 0) - y);
+        const outerRadius = Math.max(0, wave.radius ?? 0) + Math.max(...(wave.bands ?? [0])) + (wave.thickness ?? 0);
+        const innerRadius = Math.max(0, (wave.radius ?? 0) - (wave.thickness ?? 0));
+        const bombMin = Math.max(0, distance - radius);
+        const bombMax = distance + radius;
+        if (bombMin <= outerRadius && bombMax >= innerRadius) {
           wave.done = true;
           wave.clearedByBomb = true;
-          wave.fade = Math.max(wave.fade ?? 0, 0.45);
         }
       }
     }

@@ -10,7 +10,6 @@ import type { PlayerWeaponStyle } from "../entities";
 import { renderPlayerBulletHitParticleSystem } from "../effects/playerBulletHitEffectSystem";
 import { renderChapter1WaveHudSystem, renderChapter1WaveTelegraphsSystem } from "../chapter1/chapter1WaveRenderer";
 import { renderChapter1BossFullSceneSystem } from "../chapter1/chapter1BossRenderer";
-import { CHAPTER1_STORY_PLAYER_VISUAL_WIDTH } from "../chapter1/chapter1WaveVisualTuning";
 
 type GameSceneRenderEngine = any;
 
@@ -128,9 +127,7 @@ function renderMascotPlayerByStyle(engine: GameSceneRenderEngine): void {
   // 실제 플레이 화면에서 피격 판정 영역보다 훨씬 크게 보인다.
   // 충돌 판정은 그대로 두고, 화면에 보이는 호반우 이미지만 작게 그린다.
   // 하단 추진기/불꽃은 사용자 요청에 따라 렌더링하지 않는다.
-  const drawW = engine.playMode === "story"
-    ? CHAPTER1_STORY_PLAYER_VISUAL_WIDTH
-    : Math.max(54, engine.player.width * 2.85);
+  const drawW = Math.max(54, engine.player.width * 2.85);
   const scale = drawW / 182;
   const x = cx + shake;
   const y = cy + bob;
@@ -611,14 +608,12 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
 
     // Player Rendering
     if (!engine.player.isDead && !engine.storyPlayerHidden && !hidePlayerForChapter1Boss) {
-      const isStoryPurificationExit = Boolean(engine.storyPurificationExitActive);
       if (
-        isStoryPurificationExit ||
         engine.player.invulnTimer <= 0 ||
         Math.floor(performance.now() / 80) % 2 === 0
       ) {
         engine.ctx.save();
-        if (engine.player.invulnTimer > 0 && !isStoryPurificationExit) engine.ctx.globalAlpha = 0.45;
+        if (engine.player.invulnTimer > 0) engine.ctx.globalAlpha = 0.45;
 
         if (engine.player.color === "vanguard") {
           // 1. Futuristic Purple Glowing Aura Base

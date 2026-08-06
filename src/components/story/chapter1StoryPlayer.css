@@ -40,50 +40,6 @@
   background: #020617;
 }
 
-.chapter1-story-boss-layer.is-active {
-  z-index: 80;
-}
-
-/* 테스트용 다음 웨이브 버튼은 캔버스 내부를 가리지 않고 전투 프레임 바깥 여백에 둔다. */
-.chapter1-wave-skip-outside {
-  position: absolute;
-  left: calc(50% + min(48dvh, 50vw) + 14px);
-  bottom: 24px;
-  z-index: 45;
-  min-width: 126px;
-  padding: 11px 15px;
-  border: 3px solid #08090d;
-  outline: 2px solid #f6c34a;
-  border-radius: 9px;
-  color: #fff3bf;
-  background: rgba(8, 9, 13, .94);
-  box-shadow: 0 0 20px rgba(246, 195, 74, .32);
-  font-family: "Noto Sans KR", "Courier New", monospace;
-  font-size: 13px;
-  font-weight: 950;
-  letter-spacing: .04em;
-  cursor: pointer;
-}
-
-.chapter1-wave-skip-outside:hover {
-  transform: translateY(-1px);
-  color: #08090d;
-  background: #f6c34a;
-}
-
-@media (max-aspect-ratio: 24 / 25) {
-  .chapter1-wave-skip-outside {
-    left: 50%;
-    top: calc(50% + min(50dvh, 52.083vw) + 10px);
-    bottom: auto;
-    transform: translateX(-50%);
-  }
-
-  .chapter1-wave-skip-outside:hover {
-    transform: translateX(-50%) translateY(-1px);
-  }
-}
-
 .chapter1-story-test-navigation {
   position: fixed;
   top: 12px;
@@ -260,15 +216,15 @@
   inset: 0;
   z-index: 70;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 24px 18px;
+  padding: 0 18px 24px;
   pointer-events: none;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, .06), rgba(0, 0, 0, .34));
+  background: linear-gradient(to bottom, transparent 48%, rgba(0, 0, 0, .18));
 }
 
 .chapter1-combat-guide-box {
-  width: min(720px, calc(100% - 24px));
+  width: min(900px, 100%);
   min-height: 218px;
   padding: 22px 24px 18px;
   border: 4px solid #08090d;
@@ -279,69 +235,6 @@
   box-shadow: 0 0 0 2px #f6c34a, 0 18px 44px rgba(0, 0, 0, .72);
   font-family: "Noto Sans KR", "Pretendard", sans-serif;
   pointer-events: auto;
-}
-
-.chapter1-wave-progress-overlay {
-  position: absolute;
-  left: 50%;
-  top: 78px;
-  z-index: 72;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.chapter1-wave-progress-card {
-  min-width: min(250px, calc(100vw - 80px));
-  padding: 9px 12px 10px;
-  border: 3px solid rgba(220, 38, 53, .88);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(12, 16, 28, .92), rgba(2, 6, 16, .88));
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .42), 0 0 0 2px rgba(8, 9, 13, .9), 0 0 24px rgba(220, 38, 53, .14);
-  backdrop-filter: blur(3px);
-}
-
-.chapter1-wave-progress-label {
-  margin-bottom: 4px;
-  color: #f6c34a;
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: .12em;
-  text-align: center;
-}
-
-.chapter1-wave-progress-stage {
-  margin-bottom: 6px;
-  color: #dbeafe;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: .06em;
-  text-align: center;
-}
-
-.chapter1-wave-progress-bar {
-  height: 10px;
-  overflow: hidden;
-  border: 2px solid rgba(8, 9, 13, .95);
-  border-radius: 999px;
-  background: rgba(15, 23, 42, .95);
-}
-
-.chapter1-wave-progress-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #34d399, #fde047 60%, #fb7185 100%);
-  box-shadow: 0 0 16px rgba(251, 191, 36, .42);
-  transition: width .18s ease-out;
-}
-
-.chapter1-wave-progress-value {
-  margin-top: 6px;
-  color: #f8fafc;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: .08em;
-  text-align: center;
 }
 
 .chapter1-combat-guide-speaker {
@@ -465,9 +358,7 @@
 }
 
 @media (max-width: 720px) {
-  .chapter1-combat-guide-overlay { padding: 14px 10px; }
+  .chapter1-combat-guide-overlay { padding: 0 10px 12px; }
   .chapter1-combat-guide-box { min-height: 196px; padding: 17px 17px 14px; }
   .chapter1-guide-item-icon { width: 42px; height: 42px; font-size: 22px; }
-  .chapter1-wave-progress-overlay { top: 68px; }
-  .chapter1-wave-progress-card { min-width: min(220px, calc(100vw - 32px)); padding: 8px 10px 9px; }
 }
