@@ -1160,6 +1160,8 @@ export function getChapter1WaveProgressSystem(engine: Chapter1WaveEngine) {
     cueText: runtime.cueText,
     cueTimer: runtime.cueTimer,
     bannerTimer: runtime.bannerTimer,
+    eventCursor: runtime.eventCursor,
+    eventCount: runtime.events.length,
     allWavesCleared: runtime.allWavesCleared,
   };
 }

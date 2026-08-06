@@ -94,7 +94,8 @@ export function updatePlayerMovementRespawnAndSatelliteSystem(engine: PlayerRunt
   }
 
   if (engine.storyPurificationExitActive) {
-    const holdDuration = 2.0;
+    // 정화 이펙트는 React 오버레이 단계에서 끝까지 재생한 뒤 이 상태를 시작한다.
+    const holdDuration = 0.0;
     const riseDuration = 1.25;
     engine.storyPurificationExitElapsed += dt;
     engine.input.up = false;

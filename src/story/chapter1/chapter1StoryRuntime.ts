@@ -64,7 +64,39 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
 
   // 원본의 5.2초 보스전 전환 연출을 유지한 뒤 외부 보스 캔버스로 넘긴다.
   // 웨이브 정화 이후의 스토리 호출만 activePreviewId를 해제해 실제 연속 진행으로 취급한다.
-  return source.replace(debugPreviewHook, flowPreviewHook);
+  let normalized = source.replace(debugPreviewHook, flowPreviewHook);
+
+  // 학생증은 오염 추적 직후 정상 문장으로 말하지 못하고 끊어진 단어만 출력한다.
+  normalized = normalized
+    .replace('"정화 에너지 충전 완료."', '"정화 에너지…… 충전……."')
+    .replace('"오염 신호 역추적을 시작합니다."', '"오염…… 탐색……."')
+    .replace('"핵심 오염 신호 확인."', '"핵심 신호…… 확인……."')
+    .replace('"학사 서버 관리 영역."', '"학사 서버…… 관리 영역……."');
+
+  // 비상 통제 전환 레이어를 story-stage 밖으로 옮겨 컨테이너의 overflow와 비율 제한을 받지 않게 한다.
+  const battleTransitionDeclaration = `  const battleTransition = document.getElementById('battleTransition');`;
+  const fullscreenBattleTransitionDeclaration = `${battleTransitionDeclaration}
+  battleTransition?.closest('.chapter1-story-mount')?.appendChild(battleTransition);`;
+  if (!normalized.includes(battleTransitionDeclaration)) {
+    throw new Error('Chapter 1 battle transition element declaration was not found.');
+  }
+  normalized = normalized.replace(battleTransitionDeclaration, fullscreenBattleTransitionDeclaration);
+
+  // 배경·전환 시네마틱 중에는 Space가 대사를 다시 호출해 연출을 처음부터 재시작하지 못하게 한다.
+  const storyKeyGuard = `    if (flowMode === 'story') {
+      const target = event.target;`;
+  const guardedStoryKey = `    if (flowMode === 'story') {
+      if (event.code === 'Space' && dialogueLayer.hidden) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      const target = event.target;`;
+  if (!normalized.includes(storyKeyGuard)) {
+    throw new Error('Chapter 1 story key handler was not found.');
+  }
+  normalized = normalized.replace(storyKeyGuard, guardedStoryKey);
+  return normalized;
 }
 
 function normalizeStoryStyles(styles: string): string {
@@ -99,6 +131,17 @@ html.is-embedded-story .story-stage {
 }
 html.is-embedded-story .story-stage.is-game-mode {
   width: min(96dvh, 100vw) !important;
+}
+/* 학사 시스템 비상 통제 전환은 스토리 프레임에 갇히지 않고 브라우저 전체를 덮는다. */
+html.is-embedded-story .battle-transition {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: 100000 !important;
+}
+html.is-embedded-story .battle-transition-title strong {
+  font-size: clamp(56px, 10vw, 150px) !important;
 }
 `;
 }

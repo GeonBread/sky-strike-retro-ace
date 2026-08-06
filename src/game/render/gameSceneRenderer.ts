@@ -54,6 +54,14 @@ function getRuntimePlayerStyle(engine: GameSceneRenderEngine): PlayerWeaponStyle
 const HOBANU_PLAYER_IMAGE = new Image();
 HOBANU_PLAYER_IMAGE.src = "/assets/player/hobanu_player.png";
 
+/**
+ * 전투 가이드를 열기 전에 호반우 스프라이트가 실제로 디코딩되어 그릴 수 있는지 반환한다.
+ * 스토리 전투의 첫 프레임 준비 상태를 판단할 때 사용한다.
+ */
+export function isHobanuPlayerVisualReady(): boolean {
+  return HOBANU_PLAYER_IMAGE.complete && HOBANU_PLAYER_IMAGE.naturalWidth > 0;
+}
+
 const HOBANU_BULLET_BASE = "/assets/bullets/player/";
 const HOBANU_BULLET_IMAGE_CACHE = new Map<string, HTMLImageElement>();
 
@@ -611,12 +619,15 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
 
     // Player Rendering
     if (!engine.player.isDead && !engine.storyPlayerHidden && !hidePlayerForChapter1Boss) {
+      // 정화 완료 후 상승 이탈 중에는 무적 시간 때문에 캐릭터가 깜빡이지 않도록 항상 표시한다.
+      const suppressInvulnerabilityBlink = engine.storyPurificationExitActive;
       if (
+        suppressInvulnerabilityBlink ||
         engine.player.invulnTimer <= 0 ||
         Math.floor(performance.now() / 80) % 2 === 0
       ) {
         engine.ctx.save();
-        if (engine.player.invulnTimer > 0) engine.ctx.globalAlpha = 0.45;
+        if (engine.player.invulnTimer > 0 && !suppressInvulnerabilityBlink) engine.ctx.globalAlpha = 0.45;
 
         if (engine.player.color === "vanguard") {
           // 1. Futuristic Purple Glowing Aura Base

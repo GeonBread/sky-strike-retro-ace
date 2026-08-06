@@ -23,7 +23,12 @@
   overflow: hidden;
 }
 
-.chapter1-story-mount > #globalCinematicOverlay,
+.chapter1-story-mount > #globalCinematicOverlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100000 !important;
+}
+
 .chapter1-story-mount > .demo-shell {
   position: relative;
   z-index: 0;
@@ -170,7 +175,12 @@
 /* 실제 챕터 1 웨이브 화면 위에서만 재생하는 100% 정화 효과 */
 .chapter1-wave-purification-overlay {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: min(96dvh, 100vw);
+  height: min(100dvh, 104.167vw);
+  aspect-ratio: 24 / 25;
+  transform: translate(-50%, -50%);
   z-index: 40;
   overflow: hidden;
   pointer-events: none;
@@ -256,15 +266,15 @@
   inset: 0;
   z-index: 70;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding: 0 18px 24px;
+  padding: 18px;
   pointer-events: none;
   background: linear-gradient(to bottom, transparent 48%, rgba(0, 0, 0, .18));
 }
 
 .chapter1-combat-guide-box {
-  width: min(900px, 100%);
+  width: min(760px, 100%);
   min-height: 218px;
   padding: 22px 24px 18px;
   border: 4px solid #08090d;
@@ -398,7 +408,19 @@
 }
 
 @media (max-width: 720px) {
-  .chapter1-combat-guide-overlay { padding: 0 10px 12px; }
+  .chapter1-combat-guide-overlay { padding: 10px; }
   .chapter1-combat-guide-box { min-height: 196px; padding: 17px 17px 14px; }
   .chapter1-guide-item-icon { width: 42px; height: 42px; font-size: 22px; }
+}
+
+
+/* 보스 최초 등장 시네마틱은 일반 전투 프레임을 넘어 전체 뷰포트를 덮는다. */
+.chapter1-boss-intro-fullscreen {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.chapter1-boss-intro-fullscreen canvas {
+  width: 100% !important;
+  height: 100% !important;
 }

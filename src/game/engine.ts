@@ -34,7 +34,7 @@ import {
   renderTeslaSparkSystem,
   renderTeslaSpineMissileSystem,
 } from "./render/enemyBulletVisualRenderer";
-import { renderGameSceneSystem } from "./render/gameSceneRenderer";
+import { isHobanuPlayerVisualReady, renderGameSceneSystem } from "./render/gameSceneRenderer";
 import {
   assignBossPhase as assignBossPhaseSystem,
   assignNextBossPhase as assignNextBossPhaseSystem,
@@ -217,6 +217,8 @@ export class GameEngine implements GameEngineRuntimeContext {
   lastCanvasWidth: number = 0;
   lastCanvasHeight: number = 0;
   paused: boolean = false;
+  // false일 때는 배경과 캐릭터를 계속 렌더링하되 적 생성·이동·공격만 정지한다.
+  simulationEnabled: boolean = true;
   playMode: GameMode = "arcade";
   storyStageTimer: number = 0;
   storyPurificationExitActive: boolean = false;
@@ -352,7 +354,7 @@ export class GameEngine implements GameEngineRuntimeContext {
     const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
     this.lastTime = timestamp;
 
-    this.update(dt);
+    if (this.simulationEnabled) this.update(dt);
     this.render();
 
     this.reqId = requestAnimationFrame((t) => this.loop(t));
@@ -402,6 +404,22 @@ export class GameEngine implements GameEngineRuntimeContext {
 
   private loadChapter1BackgroundLayers() {
     loadChapter1BackgroundLayersSystem(this);
+  }
+
+  /**
+   * 스토리 전투 가이드가 열리기 전에 배경 레이어와 호반우 스프라이트가 모두 준비됐는지 반환한다.
+   */
+  public areChapter1StoryVisualsReady(): boolean {
+    return this.chapter1BackgroundReady && isHobanuPlayerVisualReady();
+  }
+
+  /**
+   * 챕터 1 보스의 최초 등장 시네마틱이 진행 중인지 반환한다.
+   * React 전투 프레임을 전체 화면으로 확장할 때 사용한다.
+   */
+  public isChapter1BossIntroActive(): boolean {
+    return !!this.chapter1Boss?.active
+      && this.chapter1Boss.core?.state?.cinematicMode === "intro";
   }
 
   private updatePlayerPositionHistory(dt: number) {

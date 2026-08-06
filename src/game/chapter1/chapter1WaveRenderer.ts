@@ -346,24 +346,77 @@ export function renderChapter1WaveHudSystem(engine: any): void {
   renderChapter1WaveImpactEffectsSystem(engine);
   if (engine.stage !== 1 || engine.bossActive || !engine.chapter1Wave?.enabled) return;
   const progress = getChapter1WaveProgressSystem(engine);
-  const wave = CHAPTER1_WAVE_CATALOG[progress.waveIndex];
-  if (!wave) return;
+  if (!CHAPTER1_WAVE_CATALOG[progress.waveIndex]) return;
+
+  const waveCount = Math.max(1, progress.waveCount);
+  const eventRatio = progress.eventCount > 0
+    ? Math.min(1, progress.eventCursor / progress.eventCount)
+    : 0;
+  const liveEnemies = (engine.enemies as Enemy[]).filter(
+    (enemy) => enemy.active && isChapter1EnemyType(enemy.type),
+  );
+  const totalMaxHp = liveEnemies.reduce((sum, enemy) => sum + Math.max(1, enemy.chapter1?.maxHp ?? enemy.hp), 0);
+  const remainingHp = liveEnemies.reduce((sum, enemy) => sum + Math.max(0, enemy.hp), 0);
+  const defeatedRatio = totalMaxHp > 0 ? 1 - remainingHp / totalMaxHp : (eventRatio >= 1 ? 1 : 0);
+  const currentWaveRatio = progress.allWavesCleared
+    ? 1
+    : Math.min(0.985, eventRatio * 0.7 + defeatedRatio * 0.3);
+  const completedWaves = progress.allWavesCleared ? waveCount : progress.waveIndex;
+  const purificationRatio = Math.max(0, Math.min(1, (completedWaves + currentWaveRatio) / waveCount));
+  const percent = Math.round(purificationRatio * 100);
 
   const ctx = engine.ctx as CanvasRenderingContext2D;
-  ctx.save();
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-  ctx.font = "900 15px system-ui, sans-serif";
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = "rgba(0,0,0,.88)";
-  ctx.fillStyle = "#fff7df";
-  const label = `WAVE ${String(progress.waveIndex + 1).padStart(2, "0")} / ${progress.waveCount}`;
-  ctx.strokeText(label, 18, 18);
-  ctx.fillText(label, 18, 18);
-  ctx.font = "800 12px system-ui, sans-serif";
-  ctx.fillStyle = "#9de9ff";
-  ctx.strokeText(wave.title, 18, 40);
-  ctx.fillText(wave.title, 18, 40);
+  const centerX = engine.canvas.width / 2;
+  const panelWidth = Math.min(330, engine.canvas.width * 0.42);
+  const panelHeight = 48;
+  const panelX = centerX - panelWidth / 2;
+  const panelY = 15;
+  const barX = panelX + 14;
+  const barY = panelY + 27;
+  const barWidth = panelWidth - 28;
+  const barHeight = 9;
 
+  ctx.save();
+  ctx.shadowColor = "rgba(246,195,74,.34)";
+  ctx.shadowBlur = 13;
+  ctx.fillStyle = "rgba(4,8,15,.88)";
+  ctx.strokeStyle = "rgba(246,195,74,.9)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(panelX, panelY, panelWidth, panelHeight, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  ctx.textBaseline = "middle";
+  ctx.font = "900 12px 'Noto Sans KR', system-ui, sans-serif";
+  ctx.fillStyle = "#fff1b5";
+  ctx.textAlign = "left";
+  ctx.fillText("정화 에너지", panelX + 14, panelY + 15);
+  ctx.textAlign = "right";
+  ctx.fillStyle = percent >= 100 ? "#fff7cf" : "#9de9ff";
+  ctx.fillText(`${percent}%`, panelX + panelWidth - 14, panelY + 15);
+
+  ctx.fillStyle = "rgba(2,6,13,.95)";
+  ctx.strokeStyle = "rgba(255,255,255,.22)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(barX, barY, barWidth, barHeight, 5);
+  ctx.fill();
+  ctx.stroke();
+
+  const fillWidth = Math.max(0, barWidth * purificationRatio);
+  if (fillWidth > 0) {
+    const gradient = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
+    gradient.addColorStop(0, "#38d8e8");
+    gradient.addColorStop(0.62, "#f6c34a");
+    gradient.addColorStop(1, "#fff4a8");
+    ctx.shadowColor = percent >= 100 ? "#fff3a8" : "#38d8e8";
+    ctx.shadowBlur = percent >= 100 ? 14 : 7;
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, fillWidth, barHeight, 5);
+    ctx.fill();
+  }
   ctx.restore();
 }
