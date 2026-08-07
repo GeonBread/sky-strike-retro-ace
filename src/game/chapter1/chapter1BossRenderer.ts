@@ -43,8 +43,20 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   const bob = Math.sin(time * 0.004) * 3.8;
   const shake = Math.sin(time * 0.012) * 1.15;
   const cx = engine.player.x + engine.player.width / 2 + shake;
-  const cy = engine.player.y + engine.player.height / 2 + bob;
-  if (engine.player.invulnTimer > 0 && Math.floor(time / 80) % 2 === 0) return;
+  let cy = engine.player.y + engine.player.height / 2 + bob;
+  // 보스 클리어 문구를 약 3초간 보여준 뒤 호반우가 위로 상승해 화면 밖으로 이탈합니다.
+  // 이탈 중에는 무적 깜빡임을 적용하지 않습니다.
+  if (state.cinematicMode === "destroy") {
+    const exitStart = 6.05;
+    const exitEnd = 7.45;
+    const exitProgress = Math.max(0, Math.min(1, (state.cinematicTime - exitStart) / (exitEnd - exitStart)));
+    if (exitProgress > 0) {
+      const eased = exitProgress * exitProgress * exitProgress;
+      cy = cy + (-engine.canvas.height - CHAPTER1_STORY_PLAYER_VISUAL_WIDTH - cy) * eased;
+    }
+  } else if (engine.player.invulnTimer > 0 && Math.floor(time / 80) % 2 === 0) {
+    return;
+  }
 
   const drawW = engine.playMode === "story"
     ? CHAPTER1_STORY_PLAYER_VISUAL_WIDTH

@@ -183,7 +183,7 @@ const STAGE1_MAX_HP = 1200;
 const STAGE2_MAX_HP = 1800;
 const TOTAL_BOSS_HP = STAGE1_MAX_HP + STAGE2_MAX_HP;
 const INTRO_DURATION = 5.8;
-const BOSS_DESTRUCTION_DURATION = 5.2;
+const BOSS_DESTRUCTION_DURATION = 7.8;
 const BOSS_HP_CHARGE_DURATION = 3.0;
 const BOSS_PATTERN_START_DELAY = 2.0;
 const STAGE2_PATTERN_START_DELAY = 0.65;
@@ -856,10 +856,8 @@ function updateCinematic(dt) {
   state.cinematicTime = Math.min(BOSS_DESTRUCTION_DURATION, state.cinematicTime + dt);
   const t = state.cinematicTime;
   const explosionEnd = 3.0;
-  const dipStart = 3.0;
-  const dipEnd = 3.34;
-  const launchStart = 3.34;
-  const launchEnd = 4.18;
+  const clearStart = 3.05;
+  const clearEnd = 6.05;
 
   if (t >= .04) seedCinematicDeathEffects();
 
@@ -883,21 +881,13 @@ function updateCinematic(dt) {
       triggerScreenShake(rand(3.5, 8), .1);
     }
     state.destructionBossY = state.purifyStartY + Math.sin(t * 48) * 3;
-  } else if (t < dipEnd) {
-    const p = easeInOutCubic(clamp((t - dipStart) / (dipEnd - dipStart), 0, 1));
-    state.destructionBossY = lerp(state.purifyStartY, state.purifyStartY + 62, p);
-    if (Math.random() < dt * 40) {
-      spawnCinematicParticle(state.destructionBossX + rand(-85, 85), state.destructionBossY + rand(-70, 70), Math.random() < .5 ? "#ffd84a" : "#ff8b22", 170, 2, .45);
-    }
   } else {
-    const p = easeInCubic(clamp((t - launchStart) / (launchEnd - launchStart), 0, 1));
-    state.destructionBossY = lerp(state.purifyStartY + 62, -state.boss.drawH - 160, p);
-    if (Math.random() < dt * 30) {
-      state.cinematicRings.push({ x: state.destructionBossX + rand(-55, 55), y: state.destructionBossY + rand(-30, 40), age: 0, life: .22, maxR: rand(28, 70), color: Math.random() < .5 ? "#ffd84a" : "#fff4b0", width: rand(4, 8) });
-    }
+    // 폭발이 끝난 뒤에는 보스를 즉시 화면에서 제거합니다.
+    // 이후 약 3초간 BOSS CLEAR 문구를 보여준 다음 플레이어 상승 연출로 이어집니다.
+    state.destructionBossY = -state.boss.drawH - 220;
   }
 
-  if (t >= 3.9) state.destructionClearShown = true;
+  state.destructionClearShown = t >= clearStart && t < clearEnd;
   updateCinematicEffects(dt);
 }
 
@@ -1731,15 +1721,30 @@ function updateStudentScanGates(dt) {
     ring.gapAngle += ring.spin * dt;
     const oldRadius = ring.radius;
     if (ring.age >= ring.warning) ring.radius += ring.speed * dt;
-    const playerDistance = Math.hypot(state.player.x-ring.x, state.player.y-ring.y);
-    if (!ring.resolved && oldRadius < playerDistance && ring.radius >= playerDistance) {
+
+    const dx = state.player.x - ring.x;
+    const dy = state.player.y - ring.y;
+    const playerDistance = Math.hypot(dx, dy);
+    // 플레이어 중심점 하나가 아니라 실제 판정 크기까지 포함해 링 통과를 감지합니다.
+    // 빠르게 움직이거나 프레임 간 링이 크게 진행해도 인증 누락이 나지 않도록
+    // 이전/현재 반지름 사이의 swept annulus와 플레이어 원의 교차를 사용합니다.
+    const playerPassRadius = Math.max(18, state.player.r + 12);
+    const crossedPlayer = oldRadius - playerPassRadius <= playerDistance
+      && ring.radius + playerPassRadius >= playerDistance;
+
+    if (!ring.resolved && ring.age >= ring.warning && crossedPlayer) {
       ring.resolved = true;
-      const playerAngle = Math.atan2(state.player.y-ring.y, state.player.x-ring.x);
-      const safe = Math.abs(angleDelta(playerAngle, ring.gapAngle)) <= ring.gapHalf;
+      const playerAngle = Math.atan2(dy, dx);
+      // 민트색 구간 경계에 플레이어 몸체가 걸친 경우도 정상 통과로 인정합니다.
+      const angularBodyMargin = Math.asin(
+        Math.min(0.24, playerPassRadius / Math.max(playerDistance, playerPassRadius + 1)),
+      );
+      const safeMargin = angularBodyMargin + 0.055;
+      const safe = Math.abs(angleDelta(playerAngle, ring.gapAngle)) <= ring.gapHalf + safeMargin;
       ring.result = safe ? 'success' : 'fail';
       if (safe) {
         p.nfcSuccessCount++;
-        spawnParticleBurst(state.player.x, state.player.y, '#74d84d', 18);
+        spawnParticleBurst(state.player.x, state.player.y, '#74d84d', 22);
       } else {
         hitPlayer();
         spawnParticleBurst(state.player.x, state.player.y, '#ff5f6d', 18);
@@ -3411,25 +3416,24 @@ function drawDestroyingProjectiles() {
 
 function drawCinematicDestructionBoss(t) {
   const explosionEnd = 3.0;
-  const launchStart = 3.34;
-  const launchEnd = 4.18;
+  const clearStart = 3.05;
+  const clearEnd = 6.05;
   const preLaunch = clamp(t / explosionEnd, 0, 1);
-  const launchP = t < launchStart ? 0 : easeInCubic(clamp((t - launchStart) / (launchEnd - launchStart), 0, 1));
   const x = state.destructionBossX;
   const y = state.destructionBossY;
   const w = state.boss.drawW;
   const h = state.boss.drawH;
-  const shakeStrength = t < explosionEnd ? (5 + preLaunch * 10) : Math.max(0, 8 * (1 - launchP));
+  const shakeStrength = t < explosionEnd ? (5 + preLaunch * 10) : 0;
   const sx = Math.sin(t * 70) * shakeStrength;
   const sy = Math.cos(t * 58) * shakeStrength * .62;
 
-  // 파괴되기 전까지는 2페이즈 외형을 유지한 채 폭발에 휩싸이게 합니다.
-  ctx.save();
-  ctx.translate(sx, sy);
-  drawCinematicBossLayer(bossPhase2Image, x, y, w, h, 1);
-  ctx.restore();
-
+  // 파괴되는 약 3초 동안만 2페이즈 외형을 유지하고, 폭발 완료 후에는 보스를 숨깁니다.
   if (t < explosionEnd) {
+    ctx.save();
+    ctx.translate(sx, sy);
+    drawCinematicBossLayer(bossPhase2Image, x, y, w, h, 1);
+    ctx.restore();
+
     const pulse = .52 + Math.sin(t * 15) * .16;
     ctx.save();
     ctx.translate(x, y);
@@ -3463,7 +3467,9 @@ function drawCinematicDestructionBoss(t) {
   // 위로 이탈하는 동안 별도의 불꽃이나 추진광은 표시하지 않습니다.
 
   if (state.destructionClearShown) {
-    const p = smoothstep((t - 3.9) / .55);
+    const fadeIn = smoothstep(clamp((t - clearStart) / .32, 0, 1));
+    const fadeOut = 1 - smoothstep(clamp((t - (clearEnd - .32)) / .32, 0, 1));
+    const p = fadeIn * fadeOut;
     ctx.save();
     ctx.globalAlpha = p;
     ctx.textAlign = "center";
