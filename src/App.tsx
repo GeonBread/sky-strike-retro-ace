@@ -527,6 +527,7 @@ function Chapter1StoryExperience({
   const [waveGuideVisualReady, setWaveGuideVisualReady] = useState(false);
   const [waveRunKey, setWaveRunKey] = useState(0);
   const [bossClearTransitionActive, setBossClearTransitionActive] = useState(false);
+  const [bossClearBackdrop, setBossClearBackdrop] = useState<string | null>(null);
 
   const waveMounted = part === 2 && (phase === "wave-guide" || phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit");
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
@@ -752,12 +753,25 @@ function Chapter1StoryExperience({
               if (bossClearTransitionTimerRef.current !== null) {
                 window.clearTimeout(bossClearTransitionTimerRef.current);
               }
-              // 보스 클리어 문구와 호반우 상승 이탈이 끝난 뒤,
-              // 전체 화면을 노란색으로 채웠다가 검게 전환한 후에만 후속 대사를 시작한다.
+
+              // 클리어 시점의 실제 전투 캔버스를 한 장 고정해 둡니다.
+              // 이후 엔진 상태가 바뀌더라도 노란 페이드 뒤 배경이 다른 보스/장면으로 바뀌지 않습니다.
+              let frozenBackdrop: string | null = null;
+              const bossCanvas = document.querySelector<HTMLCanvasElement>(".chapter1-story-boss-layer canvas");
+              if (bossCanvas) {
+                try {
+                  frozenBackdrop = bossCanvas.toDataURL("image/png");
+                } catch {
+                  frozenBackdrop = null;
+                }
+              }
+              setBossClearBackdrop(frozenBackdrop);
               setBossClearTransitionActive(true);
+
               bossClearTransitionTimerRef.current = window.setTimeout(() => {
                 bossClearTransitionTimerRef.current = null;
                 setBossClearTransitionActive(false);
+                setBossClearBackdrop(null);
                 setPhase("story");
                 window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
               }, 7200);
@@ -773,8 +787,11 @@ function Chapter1StoryExperience({
       {bossClearTransitionActive && (
         <div
           className="chapter1-boss-clear-screen-transition"
+          style={bossClearBackdrop ? { backgroundImage: `url(${JSON.stringify(bossClearBackdrop)})` } : undefined}
           aria-hidden="true"
-        />
+        >
+          <div className="chapter1-boss-clear-screen-color" />
+        </div>
       )}
 
       <Chapter1StoryPlayer

@@ -426,7 +426,7 @@
 }
 
 
-/* 보스 클리어 후: 노란 정화광 전체화면 → 3초 유지 → 검은 화면 → 2초 유지 */
+/* 보스 클리어 후: 클리어 직전 전투 배경을 그대로 고정한 채 노란 정화광 → 검은 화면으로 전환 */
 .chapter1-boss-clear-screen-transition {
   position: fixed;
   inset: 0;
@@ -434,7 +434,18 @@
   width: 100vw;
   height: 100dvh;
   pointer-events: auto;
+  overflow: hidden;
+  background-color: #040507;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.chapter1-boss-clear-screen-color {
+  position: absolute;
+  inset: 0;
   background: rgba(255, 226, 78, 0);
+  box-shadow: inset 0 0 0 rgba(255, 246, 182, 0);
   animation: chapter1BossClearScreenTransition 7.2s linear both;
 }
 
@@ -444,19 +455,19 @@
     box-shadow: inset 0 0 0 rgba(255, 246, 182, 0);
   }
   16.666% {
-    background: rgb(255, 224, 72);
+    background: rgba(255, 224, 72, 1);
     box-shadow: inset 0 0 180px rgba(255, 250, 205, .88);
   }
   58.333% {
-    background: rgb(255, 224, 72);
+    background: rgba(255, 224, 72, 1);
     box-shadow: inset 0 0 180px rgba(255, 250, 205, .88);
   }
   72.222% {
-    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 1);
     box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
   }
   100% {
-    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 1);
     box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
   }
 }
