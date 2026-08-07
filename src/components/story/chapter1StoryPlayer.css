@@ -424,3 +424,39 @@
   width: 100% !important;
   height: 100% !important;
 }
+
+
+/* 보스 클리어 후: 노란 정화광 전체화면 → 3초 유지 → 검은 화면 → 2초 유지 */
+.chapter1-boss-clear-screen-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  width: 100vw;
+  height: 100dvh;
+  pointer-events: auto;
+  background: rgba(255, 226, 78, 0);
+  animation: chapter1BossClearScreenTransition 7.2s linear both;
+}
+
+@keyframes chapter1BossClearScreenTransition {
+  0% {
+    background: rgba(255, 226, 78, 0);
+    box-shadow: inset 0 0 0 rgba(255, 246, 182, 0);
+  }
+  16.666% {
+    background: rgb(255, 224, 72);
+    box-shadow: inset 0 0 180px rgba(255, 250, 205, .88);
+  }
+  58.333% {
+    background: rgb(255, 224, 72);
+    box-shadow: inset 0 0 180px rgba(255, 250, 205, .88);
+  }
+  72.222% {
+    background: rgb(0, 0, 0);
+    box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
+  }
+  100% {
+    background: rgb(0, 0, 0);
+    box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
+  }
+}

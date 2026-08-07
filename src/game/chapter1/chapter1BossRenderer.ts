@@ -47,8 +47,8 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   // 보스 클리어 문구를 약 3초간 보여준 뒤 호반우가 위로 상승해 화면 밖으로 이탈합니다.
   // 이탈 중에는 무적 깜빡임을 적용하지 않습니다.
   if (state.cinematicMode === "destroy") {
-    const exitStart = 6.05;
-    const exitEnd = 7.45;
+    const exitStart = 6.6;
+    const exitEnd = 8.0;
     const exitProgress = Math.max(0, Math.min(1, (state.cinematicTime - exitStart) / (exitEnd - exitStart)));
     if (exitProgress > 0) {
       const eased = exitProgress * exitProgress * exitProgress;

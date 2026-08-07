@@ -183,7 +183,7 @@ const STAGE1_MAX_HP = 1200;
 const STAGE2_MAX_HP = 1800;
 const TOTAL_BOSS_HP = STAGE1_MAX_HP + STAGE2_MAX_HP;
 const INTRO_DURATION = 5.8;
-const BOSS_DESTRUCTION_DURATION = 7.8;
+const BOSS_DESTRUCTION_DURATION = 8.35;
 const BOSS_HP_CHARGE_DURATION = 3.0;
 const BOSS_PATTERN_START_DELAY = 2.0;
 const STAGE2_PATTERN_START_DELAY = 0.65;
@@ -856,8 +856,9 @@ function updateCinematic(dt) {
   state.cinematicTime = Math.min(BOSS_DESTRUCTION_DURATION, state.cinematicTime + dt);
   const t = state.cinematicTime;
   const explosionEnd = 3.0;
-  const clearStart = 3.05;
-  const clearEnd = 6.05;
+  const bossExitEnd = 3.55;
+  const clearStart = 3.6;
+  const clearEnd = 6.6;
 
   if (t >= .04) seedCinematicDeathEffects();
 
@@ -881,9 +882,12 @@ function updateCinematic(dt) {
       triggerScreenShake(rand(3.5, 8), .1);
     }
     state.destructionBossY = state.purifyStartY + Math.sin(t * 48) * 3;
+  } else if (t < bossExitEnd) {
+    // 폭발이 끝난 보스가 짧게 위로 솟구쳐 실제로 화면 밖으로 빠져나간 뒤 CLEAR 문구를 띄운다.
+    const exitProgress = smoothstep(clamp((t - explosionEnd) / (bossExitEnd - explosionEnd), 0, 1));
+    const exitTargetY = -state.boss.drawH - 220;
+    state.destructionBossY = lerp(state.purifyStartY, exitTargetY, exitProgress);
   } else {
-    // 폭발이 끝난 뒤에는 보스를 즉시 화면에서 제거합니다.
-    // 이후 약 3초간 BOSS CLEAR 문구를 보여준 다음 플레이어 상승 연출로 이어집니다.
     state.destructionBossY = -state.boss.drawH - 220;
   }
 
@@ -1608,10 +1612,11 @@ function spawnBroadcastWave(side, label) {
   let source;
   let baseAngle;
   if (side === "left") {
-    source = { x: 18, y: rand(390, 520) };
+    // 좌우 확성기는 기존보다 아래쪽에서 등장해 플레이어가 회피 방향을 읽을 시간을 확보한다.
+    source = { x: 18, y: rand(520, 650) };
     baseAngle = 0;
   } else if (side === "right") {
-    source = { x: W - 18, y: rand(390, 520) };
+    source = { x: W - 18, y: rand(520, 650) };
     baseAngle = Math.PI;
   } else {
     source = { x: rand(430, 850), y: 190 };
@@ -1628,7 +1633,8 @@ function spawnBroadcastWave(side, label) {
     radius: 30,
     speed: side === "top" ? 205 : 220,
     gapAngle: baseAngle + gapOffset,
-    gapHalf: side === "top" ? .18 : .16,
+    // 민트색 통과 구간을 넓혀 좌우 방송 파동 사이에서 실제 회피 가능한 영역을 확보한다.
+    gapHalf: side === "top" ? .24 : .27,
     thickness: 15,
     bands: [0, 28, 56],
   });
@@ -3416,8 +3422,9 @@ function drawDestroyingProjectiles() {
 
 function drawCinematicDestructionBoss(t) {
   const explosionEnd = 3.0;
-  const clearStart = 3.05;
-  const clearEnd = 6.05;
+  const bossExitEnd = 3.55;
+  const clearStart = 3.6;
+  const clearEnd = 6.6;
   const preLaunch = clamp(t / explosionEnd, 0, 1);
   const x = state.destructionBossX;
   const y = state.destructionBossY;
@@ -3427,13 +3434,15 @@ function drawCinematicDestructionBoss(t) {
   const sx = Math.sin(t * 70) * shakeStrength;
   const sy = Math.cos(t * 58) * shakeStrength * .62;
 
-  // 파괴되는 약 3초 동안만 2페이즈 외형을 유지하고, 폭발 완료 후에는 보스를 숨깁니다.
-  if (t < explosionEnd) {
+  // 약 3초간 폭발한 뒤, 0.55초 동안 보스 본체가 위로 이탈하는 모습까지 보여준다.
+  if (t < bossExitEnd) {
     ctx.save();
     ctx.translate(sx, sy);
     drawCinematicBossLayer(bossPhase2Image, x, y, w, h, 1);
     ctx.restore();
+  }
 
+  if (t < explosionEnd) {
     const pulse = .52 + Math.sin(t * 15) * .16;
     ctx.save();
     ctx.translate(x, y);

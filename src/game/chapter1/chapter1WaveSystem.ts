@@ -236,7 +236,7 @@ export function spawnChapter1BossSupportGroupSystem(engine: Chapter1WaveEngine, 
           y: -70 - (index % 3) * 34,
           targetY: 215 + (index % 2) * 42,
           state: "enter",
-          attack: 0.8 + index * 0.06,
+          attack: 1.6 + index * 0.12,
         }
       : {
           x,
@@ -244,7 +244,7 @@ export function spawnChapter1BossSupportGroupSystem(engine: Chapter1WaveEngine, 
           vx: (index % 4 < 2 ? 1 : -1) * (35 + index * 3),
           vy: 78 + index * 4,
           state: "straight",
-          attack: 0.65 + index * 0.05,
+          attack: 1.3 + index * 0.10,
         });
     (enemy as any).chapter1BossSupport = true;
     group.push(enemy);
@@ -721,15 +721,20 @@ function attackEnemy(engine: Chapter1WaveEngine, enemy: Enemy): void {
     case 0: {
       const velocity = aimedVelocity(state.cx, state.cy + 22, player.x, player.y, 220);
       addEnemyBullet(engine, { x: state.cx, y: state.cy + 25, vx: velocity.vx, vy: velocity.vy, sprite: 0, r: 11, spin: 0.7, ownerType: 0 });
-      state.attack = 1.35 * rate;
+      // 보스전 지원 출석체크 드론만 공격 주기를 기존의 2배로 늘린다. 일반 웨이브는 그대로 유지한다.
+      state.attack = ((enemy as any).chapter1BossSupport ? 2.7 : 1.35) * rate;
       break;
     }
     case 1: {
       const base = Math.atan2(state.vy || 1, state.vx || 0);
-      [-0.27, -0.09, 0.09, 0.27].forEach((offset) => {
+      const offsets = (enemy as any).chapter1BossSupport
+        ? [-0.22, 0, 0.22]
+        : [-0.27, -0.09, 0.09, 0.27];
+      offsets.forEach((offset) => {
         addEnemyBullet(engine, { x: state.cx, y: state.cy + 18, vx: Math.cos(base + offset) * speed, vy: Math.sin(base + offset) * speed, sprite: 1, r: 11, spin: offset * 2, ownerType: 1 });
       });
-      state.attack = 2 * rate;
+      // 보스전 지원 결석확인 드론만 공격 주기를 2배로 늘리고, 확산탄을 3발로 줄인다.
+      state.attack = ((enemy as any).chapter1BossSupport ? 4 : 2) * rate;
       break;
     }
     case 2:

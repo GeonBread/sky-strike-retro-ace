@@ -516,6 +516,7 @@ function Chapter1StoryExperience({
   const startedAtRef = useRef(Date.now());
   const jumpTokenRef = useRef(0);
   const purificationTimerRef = useRef<number | null>(null);
+  const bossClearTransitionTimerRef = useRef<number | null>(null);
   const [part, setPart] = useState<1 | 2>(1);
   const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
   const [previewRequest, setPreviewRequest] = useState<Chapter1StoryPreviewRequest | null>(null);
@@ -525,6 +526,7 @@ function Chapter1StoryExperience({
   const [waveGuideStep, setWaveGuideStep] = useState(0);
   const [waveGuideVisualReady, setWaveGuideVisualReady] = useState(false);
   const [waveRunKey, setWaveRunKey] = useState(0);
+  const [bossClearTransitionActive, setBossClearTransitionActive] = useState(false);
 
   const waveMounted = part === 2 && (phase === "wave-guide" || phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit");
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
@@ -532,6 +534,7 @@ function Chapter1StoryExperience({
 
   useEffect(() => () => {
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
+    if (bossClearTransitionTimerRef.current !== null) window.clearTimeout(bossClearTransitionTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -740,13 +743,24 @@ function Chapter1StoryExperience({
             onStoryResult={onStoryResult}
             chapter1BossOnly
             active={bossActive}
+            inputEnabled={bossActive && !bossClearTransitionActive}
             onChapter1BossPhase2={() => {
               setPhase("phase2-dialogue");
               window.setTimeout(() => storyPlayerRef.current?.showBossPhase2Dialogue(), 0);
             }}
             onChapter1BossComplete={() => {
-              setPhase("story");
-              window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
+              if (bossClearTransitionTimerRef.current !== null) {
+                window.clearTimeout(bossClearTransitionTimerRef.current);
+              }
+              // 보스 클리어 문구와 호반우 상승 이탈이 끝난 뒤,
+              // 전체 화면을 노란색으로 채웠다가 검게 전환한 후에만 후속 대사를 시작한다.
+              setBossClearTransitionActive(true);
+              bossClearTransitionTimerRef.current = window.setTimeout(() => {
+                bossClearTransitionTimerRef.current = null;
+                setBossClearTransitionActive(false);
+                setPhase("story");
+                window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
+              }, 7200);
             }}
             onChapter1CombatFailed={() => {
               setPhase("story");
@@ -754,6 +768,13 @@ function Chapter1StoryExperience({
             }}
           />
         </div>
+      )}
+
+      {bossClearTransitionActive && (
+        <div
+          className="chapter1-boss-clear-screen-transition"
+          aria-hidden="true"
+        />
       )}
 
       <Chapter1StoryPlayer
