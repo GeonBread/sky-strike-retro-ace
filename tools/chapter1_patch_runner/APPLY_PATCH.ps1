@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Position = 0)]
     [string]$ZipPath,
@@ -13,7 +13,7 @@ param(
 
     [switch]$NonInteractive,
 
-    [string]$CommitMessage = "wip(chapter1): apply validated ZIP patch"
+    [string]$CommitMessage
 )
 
 Set-StrictMode -Version 2.0
@@ -103,6 +103,33 @@ function Test-AutoIncludedPath([string]$Path) {
 
 function Get-FileSha256([string]$Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+}
+
+function Get-AutomaticCommitMessage {
+    param(
+        [Parameter(Mandatory = $true)][string]$PatchRoot,
+        [Parameter(Mandatory = $true)][string]$TemporaryRoot,
+        [Parameter(Mandatory = $true)][string]$ArchivePath
+    )
+
+    $patchFolderName = Split-Path -Leaf $PatchRoot
+    $temporaryFolderName = Split-Path -Leaf $TemporaryRoot
+    $zipBaseName = [System.IO.Path]::GetFileNameWithoutExtension($ArchivePath)
+
+    # If the patch root is the runner's temporary extraction folder itself,
+    # that random folder name is not useful in Git history. Fall back to the
+    # original ZIP filename in that case.
+    if ([string]::IsNullOrWhiteSpace($patchFolderName) -or
+        $patchFolderName -eq $temporaryFolderName -or
+        $patchFolderName -match '^sky-strike-zip-patch-\d{8}-\d{6}$') {
+        $patchFolderName = $zipBaseName
+    }
+
+    if ([string]::IsNullOrWhiteSpace($patchFolderName)) {
+        return 'validated ZIP patch'
+    }
+
+    return $patchFolderName.Trim()
 }
 
 
@@ -233,29 +260,89 @@ function Validate-ZipEntries([string]$ArchivePath) {
     }
 }
 
+function Test-PatchRootMarker([string]$CandidatePath) {
+    if ([string]::IsNullOrWhiteSpace($CandidatePath) -or -not (Test-Path -LiteralPath $CandidatePath -PathType Container)) {
+        return $false
+    }
+
+    return (
+        (Test-Path -LiteralPath (Join-Path $CandidatePath 'PATCH_MANIFEST.json') -PathType Leaf) -or
+        (Test-Path -LiteralPath (Join-Path $CandidatePath 'src') -PathType Container) -or
+        (Test-Path -LiteralPath (Join-Path $CandidatePath 'public') -PathType Container) -or
+        (Test-Path -LiteralPath (Join-Path $CandidatePath 'docs') -PathType Container) -or
+        (Test-Path -LiteralPath (Join-Path $CandidatePath 'supabase') -PathType Container) -or
+        (Test-Path -LiteralPath (Join-Path $CandidatePath 'package.json') -PathType Leaf)
+    )
+}
+
+function Get-PatchRootScore([string]$CandidatePath) {
+    $score = 0
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'PATCH_MANIFEST.json') -PathType Leaf) { $score += 100000 }
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'package.json') -PathType Leaf) { $score += 10000 }
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'src') -PathType Container) { $score += 5000 }
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'public') -PathType Container) { $score += 3000 }
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'docs') -PathType Container) { $score += 500 }
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'supabase') -PathType Container) { $score += 500 }
+
+    $applicableCount = @(Get-ChildItem -LiteralPath $CandidatePath -Recurse -File -ErrorAction SilentlyContinue | Where-Object {
+        $relative = Normalize-RelativePath $_.FullName.Substring($CandidatePath.Length).TrimStart('\', '/')
+        Test-AutoIncludedPath $relative
+    }).Count
+
+    return $score + $applicableCount
+}
+
 function Find-PatchRoot([string]$ExtractRoot) {
-    if ((Test-Path (Join-Path $ExtractRoot 'PATCH_MANIFEST.json')) -or
-        (Test-Path (Join-Path $ExtractRoot 'src')) -or
-        (Test-Path (Join-Path $ExtractRoot 'public')) -or
-        (Test-Path (Join-Path $ExtractRoot 'package.json'))) {
+    if (Test-PatchRootMarker -CandidatePath $ExtractRoot) {
         return $ExtractRoot
     }
 
-    $topDirectories = @(Get-ChildItem -LiteralPath $ExtractRoot -Directory)
-    $topFiles = @(Get-ChildItem -LiteralPath $ExtractRoot -File)
-    if ($topDirectories.Count -eq 1 -and $topFiles.Count -eq 0) {
-        return $topDirectories[0].FullName
+    # Repeatedly unwrap ZIPs that contain only one folder. Unlike v3, do not
+    # return that folder until it actually contains a supported project root.
+    $current = $ExtractRoot
+    for ($depth = 0; $depth -lt 12; $depth++) {
+        if (Test-PatchRootMarker -CandidatePath $current) {
+            return $current
+        }
+
+        $directories = @(Get-ChildItem -LiteralPath $current -Directory -ErrorAction SilentlyContinue)
+        $files = @(Get-ChildItem -LiteralPath $current -File -ErrorAction SilentlyContinue)
+        if ($directories.Count -eq 1 -and $files.Count -eq 0) {
+            $current = $directories[0].FullName
+            continue
+        }
+        break
     }
 
-    $candidates = @(Get-ChildItem -LiteralPath $ExtractRoot -Directory -Recurse | Where-Object {
-        (Test-Path (Join-Path $_.FullName 'PATCH_MANIFEST.json')) -or
-        (Test-Path (Join-Path $_.FullName 'src')) -or
-        (Test-Path (Join-Path $_.FullName 'public')) -or
-        (Test-Path (Join-Path $_.FullName 'package.json'))
-    } | Sort-Object { $_.FullName.Length })
+    # Search every nested directory and choose the strongest project-root
+    # candidate rather than blindly selecting the first top-level folder.
+    $candidatePaths = @($ExtractRoot)
+    $candidatePaths += @(Get-ChildItem -LiteralPath $ExtractRoot -Directory -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+    $candidates = @($candidatePaths | Select-Object -Unique | Where-Object {
+        Test-PatchRootMarker -CandidatePath $_
+    } | ForEach-Object {
+        [PSCustomObject]@{
+            Path = $_
+            Score = Get-PatchRootScore -CandidatePath $_
+            Length = $_.Length
+        }
+    } | Sort-Object @{ Expression = 'Score'; Descending = $true }, @{ Expression = 'Length'; Descending = $false })
 
-    if ($candidates.Count -gt 0) { return $candidates[0].FullName }
-    throw "Could not identify the patch root. The ZIP must contain src/, public/, package.json, or PATCH_MANIFEST.json."
+    if ($candidates.Count -gt 0) {
+        if ($candidates.Count -gt 1) {
+            Write-WarnMessage "Multiple possible patch roots were found. Using the highest-scoring candidate."
+            $candidates | Select-Object -First 5 Path, Score | Format-Table -AutoSize | Out-Host
+        }
+        return $candidates[0].Path
+    }
+
+    Write-WarnMessage "No supported project root was detected. First ZIP entries after extraction:"
+    Get-ChildItem -LiteralPath $ExtractRoot -Recurse -File -ErrorAction SilentlyContinue |
+        Select-Object -First 40 |
+        ForEach-Object { $_.FullName.Substring($ExtractRoot.Length).TrimStart('\', '/') } |
+        ForEach-Object { Write-Host "  $_" }
+
+    throw "Could not identify the patch root. The ZIP must contain src/, public/, docs/, supabase/, package.json, or PATCH_MANIFEST.json at some nested level."
 }
 
 function Restore-AppliedPatch {
@@ -543,20 +630,43 @@ try {
     & git status --short --untracked-files=all | Out-Host
     & git diff --stat | Out-Host
 
-    if (-not [string]::IsNullOrWhiteSpace($manifestCommitMessage) -and $CommitMessage -eq 'wip(chapter1): apply validated ZIP patch') {
-        $CommitMessage = $manifestCommitMessage
+    # Commit-message priority:
+    # 1) explicit -CommitMessage supplied by the user/caller
+    # 2) PATCH_MANIFEST.json commitMessage, when present
+    # 3) extracted patch folder name
+    # 4) ZIP filename when the patch folder name is not meaningful
+    if ([string]::IsNullOrWhiteSpace($CommitMessage)) {
+        if (-not [string]::IsNullOrWhiteSpace($manifestCommitMessage)) {
+            $CommitMessage = $manifestCommitMessage.Trim()
+        }
+        else {
+            $CommitMessage = Get-AutomaticCommitMessage -PatchRoot $patchRoot -TemporaryRoot $temporaryRoot -ArchivePath $ZipPath
+        }
     }
+
+    Write-Host "Default commit message: $CommitMessage" -ForegroundColor DarkCyan
 
     $shouldCommit = $Commit -or $Push
     $shouldPush = $Push
     if (-not $NonInteractive -and -not $shouldCommit) {
         Write-Host ""
         Write-Host "Validation completed successfully." -ForegroundColor Green
+        Write-Host "Commit message: $CommitMessage" -ForegroundColor Cyan
         Write-Host "Press Enter to leave changes uncommitted."
-        Write-Host "Enter C to commit, or P to commit and push."
+        Write-Host "Enter C to commit, P to commit and push, or M to enter a custom commit message."
         $choice = (Read-Host "Choice").Trim().ToUpperInvariant()
         if ($choice -eq 'C') { $shouldCommit = $true }
         elseif ($choice -eq 'P') { $shouldCommit = $true; $shouldPush = $true }
+        elseif ($choice -eq 'M') {
+            $customCommitMessage = (Read-Host "Commit message").Trim()
+            if ([string]::IsNullOrWhiteSpace($customCommitMessage)) {
+                Write-WarnMessage "No custom message was entered. Using the automatic message: $CommitMessage"
+            }
+            else {
+                $CommitMessage = $customCommitMessage
+            }
+            $shouldCommit = $true
+        }
     }
 
     if ($shouldCommit) {
