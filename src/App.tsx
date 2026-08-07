@@ -485,6 +485,19 @@ function GameCanvas({
         다음 웨이브
       </button>
     )}
+    {chapter1BossOnly && active && inputEnabled && (
+      <button
+        type="button"
+        className="chapter1-wave-skip-outside"
+        style={{ top: 72 }}
+        onClick={(event) => {
+          event.stopPropagation();
+          engineRef.current?.skipCurrentChapter1BossPhase?.();
+        }}
+      >
+        보스 페이즈 넘기기
+      </button>
+    )}
     </>
   );
 }

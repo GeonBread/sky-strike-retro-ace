@@ -306,6 +306,12 @@ export function handleChapter1BossPointerSystem(engine: any, canvasX: number, ca
   );
 }
 
+export function skipCurrentChapter1BossPhaseSystem(engine: any): boolean {
+  const runtime = runtimeOf(engine);
+  if (!runtime.active || !runtime.core) return false;
+  return !!runtime.core.skipToNextPhase?.();
+}
+
 export function getChapter1BossPatternIdsSystem(): readonly number[] {
   return [...CHAPTER1_BOSS_PHASE1_PATTERN_IDS, ...CHAPTER1_BOSS_PHASE2_PATTERN_IDS];
 }

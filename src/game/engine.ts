@@ -183,6 +183,7 @@ import { createChapter1BossRuntime, type Chapter1BossRuntime } from "./chapter1/
 import {
   handleChapter1BossDigitSystem,
   handleChapter1BossPointerSystem,
+  skipCurrentChapter1BossPhaseSystem,
   startChapter1BossSystem,
   updateChapter1BossSystem,
 } from "./chapter1/chapter1BossSystem";
@@ -722,6 +723,10 @@ export class GameEngine implements GameEngineRuntimeContext {
 
   public handleChapter1BossPointer(canvasX: number, canvasY: number): boolean {
     return handleChapter1BossPointerSystem(this, canvasX, canvasY);
+  }
+
+  public skipCurrentChapter1BossPhase(): boolean {
+    return skipCurrentChapter1BossPhaseSystem(this);
   }
 
   public triggerSandboxWave(waveType: number) {

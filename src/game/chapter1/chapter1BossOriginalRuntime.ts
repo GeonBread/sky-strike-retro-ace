@@ -30,6 +30,7 @@ export interface Chapter1BossOriginalRuntime {
   getBossHitArea(): { x: number; y: number; rx: number; ry: number };
   setPattern(patternId: number): boolean;
   isPlayerAttackAllowed(): boolean;
+  skipToNextPhase(): boolean;
 }
 
 export function createChapter1BossOriginalRuntime(adapter: Chapter1BossOriginalAdapter): Chapter1BossOriginalRuntime {
@@ -632,6 +633,29 @@ function updateAwakening(dt) {
     });
     refreshButtons();
   }
+}
+
+function skipToNextPhase() {
+  if (state.cinematicMode !== "battle") return false;
+  if (state.bossStageState === "stage1") {
+    beginAwakening();
+    return true;
+  }
+  if (state.bossStageState === "phase1clear") {
+    state.phaseClearElapsed = state.phaseClearDuration;
+    updatePhase1Clear(0);
+    return true;
+  }
+  if (state.bossStageState === "awakening") {
+    state.awakeningElapsed = state.awakeningDuration;
+    updateAwakening(0);
+    return true;
+  }
+  if (state.bossStageState === "stage2") {
+    applyBossDamage(state.stage2Hp + 1);
+    return true;
+  }
+  return false;
 }
 
 function resetBattle() {
@@ -3824,31 +3848,85 @@ function drawAwakeningOverlay() {
   const t = state.awakeningElapsed;
   const progress = clamp(t / state.awakeningDuration, 0, 1);
   const flash = Math.max(0, 1 - t / .6);
+  const textAlpha = clamp((t - .35) / .45, 0, 1) * (1 - clamp((t - 2.9) / .5, 0, 1));
+  const ringProgress = easeOutCubic(clamp((t - .2) / 2.45, 0, 1));
+  const worldRadius = Math.max(W, H) * (0.42 + ringProgress * 0.34);
 
   ctx.save();
-  ctx.globalAlpha = flash * .32;
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, `rgba(34, 0, 6, ${0.26 + flash * 0.24})`);
+  bg.addColorStop(.5, `rgba(80, 0, 12, ${0.08 + flash * 0.12})`);
+  bg.addColorStop(1, `rgba(5, 7, 14, ${0.74 + flash * 0.12})`);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = flash * .34;
   ctx.fillStyle = "#ff3345";
   ctx.fillRect(0, 0, W, H);
   ctx.restore();
 
-  const ringProgress = easeOutCubic(clamp((t - .25) / 2.4, 0, 1));
+  ctx.save();
+  ctx.globalAlpha = .18 + (1 - progress) * .14;
+  ctx.strokeStyle = "rgba(255,58,76,.25)";
+  ctx.lineWidth = 2;
+  for (let x = -W * .1; x <= W * 1.1; x += 64) {
+    ctx.beginPath();
+    ctx.moveTo(x, H * .18);
+    ctx.lineTo(x + W * .12, H);
+    ctx.stroke();
+  }
+  for (let y = H * .22; y <= H; y += 58) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = textAlpha * .9;
+  const panelWidth = W * .24;
+  const panelHeight = H * .66;
+  const panelY = H * .17;
+  const leftX = -panelWidth * .18;
+  const rightX = W - panelWidth * .82;
+  const makePanelGradient = (x0: number, x1: number) => {
+    const g = ctx.createLinearGradient(x0, panelY, x1, panelY + panelHeight);
+    g.addColorStop(0, "rgba(86, 0, 12, .74)");
+    g.addColorStop(1, "rgba(9, 12, 22, .38)");
+    return g;
+  };
+  ctx.fillStyle = makePanelGradient(leftX, leftX + panelWidth);
+  ctx.fillRect(leftX, panelY, panelWidth, panelHeight);
+  ctx.fillStyle = makePanelGradient(rightX + panelWidth, rightX);
+  ctx.fillRect(rightX, panelY, panelWidth, panelHeight);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(255, 74, 94, .68)";
+  ctx.strokeRect(leftX, panelY, panelWidth, panelHeight);
+  ctx.strokeRect(rightX, panelY, panelWidth, panelHeight);
+  ctx.restore();
+
   ctx.save();
   ctx.translate(state.boss.x, state.boss.y + 18);
-  ctx.strokeStyle = `rgba(255,95,109,${.9 - progress * .35})`;
+  ctx.strokeStyle = `rgba(255,95,109,${.92 - progress * .28})`;
   ctx.shadowColor = "#ff5f6d";
-  ctx.shadowBlur = 28;
-  ctx.lineWidth = 9;
+  ctx.shadowBlur = 32;
+  ctx.lineWidth = 10;
   ctx.beginPath();
-  ctx.arc(0, 0, 55 + ringProgress * 270, 0, TAU);
+  ctx.arc(0, 0, 72 + worldRadius, 0, TAU);
   ctx.stroke();
-  ctx.strokeStyle = `rgba(79,213,255,${.75 - progress * .2})`;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = `rgba(79,213,255,${.76 - progress * .18})`;
   ctx.beginPath();
-  ctx.arc(0, 0, 30 + ringProgress * 210, -state.t * 2.2, -state.t * 2.2 + Math.PI * 1.45);
+  ctx.arc(0, 0, 42 + worldRadius * .78, -state.t * 2.2, -state.t * 2.2 + Math.PI * 1.45);
+  ctx.stroke();
+  ctx.lineWidth = 4;
+  ctx.setLineDash([12, 10]);
+  ctx.strokeStyle = `rgba(255, 214, 110, ${.48 - progress * .16})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, 28 + worldRadius * .54, state.t * 2.4, state.t * 2.4 + Math.PI * 1.86);
   ctx.stroke();
   ctx.restore();
 
-  const textAlpha = clamp((t - .35) / .45, 0, 1) * (1 - clamp((t - 2.9) / .5, 0, 1));
   ctx.save();
   ctx.globalAlpha = textAlpha;
   ctx.textAlign = "center";
@@ -3864,6 +3942,7 @@ function drawAwakeningOverlay() {
   ctx.fillText("학사 시스템 전투 프로토콜 해제", W / 2, 397);
   ctx.restore();
 }
+
 
 function drawDefeatOverlay() {
   if (state.bossStageState !== "defeated" || state.cinematicMode !== "battle") return;
