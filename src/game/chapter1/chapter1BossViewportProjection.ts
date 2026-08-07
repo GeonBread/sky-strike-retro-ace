@@ -1,12 +1,11 @@
 /**
- * 챕터 1 보스 원본 좌표계를 공통 스토리 전투 캔버스에 배치하는 투영 규칙입니다.
+ * 챕터 1 보스 런타임과 실제 전투 캔버스 사이의 좌표 투영 규칙입니다.
  *
- * 보스 패턴은 800 × 960 좌표계를 그대로 사용하고, 실제 게임 캔버스에서는
- * 비율을 유지한 채 중앙 정렬합니다. 이 파일은 보스 렌더링, 충돌, 포인터 입력,
- * 정화 폭탄 좌표 변환을 모두 같은 기준으로 맞출 때 수정합니다.
+ * 현재 보스 원본 런타임은 실제 캔버스 크기(스토리 전투 기준 922 × 960)를 직접 사용합니다.
+ * 따라서 별도의 800 × 960 중앙 레터박스 투영을 하지 않고 1:1 좌표를 사용합니다.
  */
 
-export const CHAPTER1_BOSS_CANONICAL_WIDTH = 800;
+export const CHAPTER1_BOSS_CANONICAL_WIDTH = 922;
 export const CHAPTER1_BOSS_CANONICAL_HEIGHT = 960;
 
 export interface Chapter1BossViewportProjection {
@@ -16,16 +15,12 @@ export interface Chapter1BossViewportProjection {
 }
 
 /**
- * 현재 캔버스 안에 800 × 960 보스 좌표계를 왜곡 없이 중앙 배치할 투영값을 반환합니다.
+ * 보스 패턴·충돌·포인터·정화 파동이 넓어진 전투 화면 전체를 같은 좌표로 사용하도록 1:1 투영값을 반환합니다.
  */
-export function getChapter1BossViewportProjection(canvas: HTMLCanvasElement): Chapter1BossViewportProjection {
-  const scale = Math.min(
-    canvas.width / CHAPTER1_BOSS_CANONICAL_WIDTH,
-    canvas.height / CHAPTER1_BOSS_CANONICAL_HEIGHT,
-  );
+export function getChapter1BossViewportProjection(_canvas: HTMLCanvasElement): Chapter1BossViewportProjection {
   return {
-    scale,
-    offsetX: (canvas.width - CHAPTER1_BOSS_CANONICAL_WIDTH * scale) / 2,
-    offsetY: (canvas.height - CHAPTER1_BOSS_CANONICAL_HEIGHT * scale) / 2,
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0,
   };
 }

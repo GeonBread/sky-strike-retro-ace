@@ -35,7 +35,7 @@ export function triggerPlayerSmartBombSystem(engine: PlayerBombRuntime) {
     const angle = (i / 60) * Math.PI * 2;
     p.vx = Math.cos(angle) * 450;
     p.vy = Math.sin(angle) * 450;
-    p.color = "#a855f7";
+    p.color = i % 3 === 0 ? "#fff7c2" : i % 3 === 1 ? "#ffe66f" : "#ffd43b";
     p.life = p.maxLife = 1.2;
     p.size = 8;
     engine.particles.push(p);
@@ -57,7 +57,7 @@ export function updatePlayerSmartBombSystem(engine: PlayerBombRuntime, dt: numbe
       const bx = b.x + b.width / 2;
       const by = b.y + b.height / 2;
       if (Math.hypot(bx - originX, by - originY) <= engine.bombRadius + Math.max(b.width, b.height) / 2) {
-        engine.spawnExplosion(bx, by, "#e879f9", 2);
+        engine.spawnExplosion(bx, by, "#ffe66f", 2);
         return false;
       }
     }
@@ -83,14 +83,14 @@ export function updatePlayerSmartBombSystem(engine: PlayerBombRuntime, dt: numbe
         engine.bossBombHitSet.add(e);
         e.hp -= 50;
         sfx.bossHit();
-        engine.spawnExplosion(ex, ey, "#c084fc", 30);
+        engine.spawnExplosion(ex, ey, "#ffd43b", 30);
       }
       return;
     }
 
     e.hp = 0;
     engine.deactivateEnemy(e);
-    engine.spawnExplosion(ex, ey, "#c084fc", 12);
+    engine.spawnExplosion(ex, ey, "#ffe66f", 12);
     engine.awardScore(100);
   });
 

@@ -38,8 +38,8 @@ export function createChapter1BossOriginalRuntime(adapter: Chapter1BossOriginalA
   const ctx = adapter.ctx;
   const hud = { textContent: "" };
   const progressBar = { style: { width: "0%" } };
-  const W = 800;
-  const H = 960;
+  const W = canvas.width;
+  const H = canvas.height;
   const TAU = Math.PI * 2;
 
 const bossPhase1Image = new Image();
@@ -637,24 +637,42 @@ function updateAwakening(dt) {
 
 function skipToNextPhase() {
   if (state.cinematicMode !== "battle") return false;
-  if (state.bossStageState === "stage1") {
-    beginAwakening();
+
+  // 1페이즈에서는 중간 대기 없이 즉시 2페이즈 각성 연출로 진입합니다.
+  if (state.bossStageState === "stage1" || state.bossStageState === "phase1clear") {
+    state.stage1Hp = 0;
+    state.bossStage = 1;
+    state.bossStageState = "awakening";
+    state.awakeningElapsed = 0;
+    state.awakeningPulse = 0;
+    state.stage2Hp = 0;
+    state.boss.vx = 0;
+    state.boss.moveVx = 0;
+    state.boss.moveVy = 0;
+    state.bullets.length = 0;
+    state.playerBullets.length = 0;
+    state.waves.length = 0;
+    state.cursors.length = 0;
+    state.activeCursor = null;
+    triggerScreenShake(24, .55);
+    spawnParticleBurst(state.boss.x, state.boss.y + 18, "#ff5f6d", 34);
+    refreshButtons();
     return true;
   }
-  if (state.bossStageState === "phase1clear") {
-    state.phaseClearElapsed = state.phaseClearDuration;
-    updatePhase1Clear(0);
-    return true;
-  }
+
+  // 각성 연출 중 다시 누르면 2페이즈 전투를 즉시 시작합니다.
   if (state.bossStageState === "awakening") {
     state.awakeningElapsed = state.awakeningDuration;
     updateAwakening(0);
     return true;
   }
+
+  // 2페이즈에서는 즉시 체력을 0으로 만들어 기존 보스 파괴/클리어 연출을 그대로 실행합니다.
   if (state.bossStageState === "stage2") {
     applyBossDamage(state.stage2Hp + 1);
     return true;
   }
+
   return false;
 }
 
@@ -5200,5 +5218,6 @@ function render() {
     getBossHitArea,
     setPattern: setPatternRuntime,
     isPlayerAttackAllowed: canPlayerAttack,
+    skipToNextPhase,
   };
 }

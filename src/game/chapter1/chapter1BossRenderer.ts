@@ -247,18 +247,55 @@ export function renderChapter1BossFullSceneSystem(engine: any): boolean {
   drawEngineParticles(engine, engine.ctx);
 
   if (engine.bombActive) {
+    const progress = Math.max(0, Math.min(1, engine.bombRadius / Math.max(1, engine.bombMaxRadius)));
+    const alpha = Math.max(0, 1 - progress);
+    const cx = engine.bombOriginX ?? (engine.player.x + engine.player.width / 2);
+    const cy = engine.bombOriginY ?? (engine.player.y + engine.player.height / 2);
+    const radius = Math.max(0, engine.bombRadius);
+    const outerRadius = radius * 1.08;
+    const waveRadius = radius * 0.92;
+
     engine.ctx.save();
-    engine.ctx.strokeStyle = `rgba(168,85,247,${Math.max(0, 1 - engine.bombRadius / engine.bombMaxRadius)})`;
-    engine.ctx.lineWidth = 18;
+    engine.ctx.globalCompositeOperation = "screen";
+
+    // 중심에서 퍼지는 노란 정화광입니다.
+    const glow = engine.ctx.createRadialGradient(cx, cy, 0, cx, cy, outerRadius);
+    glow.addColorStop(0, `rgba(255, 255, 224, ${0.92 * alpha})`);
+    glow.addColorStop(0.18, `rgba(255, 246, 150, ${0.72 * alpha})`);
+    glow.addColorStop(0.48, `rgba(255, 221, 76, ${0.38 * alpha})`);
+    glow.addColorStop(1, "rgba(255, 211, 45, 0)");
+    engine.ctx.fillStyle = glow;
     engine.ctx.beginPath();
-    engine.ctx.arc(
-      engine.bombOriginX ?? (engine.player.x + engine.player.width / 2),
-      engine.bombOriginY ?? (engine.player.y + engine.player.height / 2),
-      engine.bombRadius,
-      0,
-      Math.PI * 2,
-    );
+    engine.ctx.arc(cx, cy, outerRadius, 0, Math.PI * 2);
+    engine.ctx.fill();
+
+    // 두 겹의 밝은 정화 파동 링을 겹쳐 실제 빛이 밀려나가는 느낌을 냅니다.
+    engine.ctx.shadowColor = `rgba(255, 230, 94, ${0.95 * alpha})`;
+    engine.ctx.shadowBlur = 34;
+    engine.ctx.strokeStyle = `rgba(255, 236, 118, ${0.96 * alpha})`;
+    engine.ctx.lineWidth = 10 + (1 - progress) * 8;
+    engine.ctx.beginPath();
+    engine.ctx.arc(cx, cy, waveRadius, 0, Math.PI * 2);
     engine.ctx.stroke();
+
+    engine.ctx.shadowBlur = 24;
+    engine.ctx.strokeStyle = `rgba(255, 255, 220, ${0.78 * alpha})`;
+    engine.ctx.lineWidth = 4 + (1 - progress) * 4;
+    engine.ctx.beginPath();
+    engine.ctx.arc(cx, cy, waveRadius * 0.78, 0, Math.PI * 2);
+    engine.ctx.stroke();
+
+    // 사용 직후에는 호반우 중심이 한 번 강하게 빛납니다.
+    const coreRadius = Math.max(18, Math.min(86, radius * 0.22));
+    const core = engine.ctx.createRadialGradient(cx, cy, 0, cx, cy, coreRadius);
+    core.addColorStop(0, `rgba(255, 255, 248, ${0.98 * alpha})`);
+    core.addColorStop(0.45, `rgba(255, 239, 112, ${0.7 * alpha})`);
+    core.addColorStop(1, "rgba(255, 218, 52, 0)");
+    engine.ctx.fillStyle = core;
+    engine.ctx.beginPath();
+    engine.ctx.arc(cx, cy, coreRadius, 0, Math.PI * 2);
+    engine.ctx.fill();
+
     engine.ctx.restore();
   }
 
