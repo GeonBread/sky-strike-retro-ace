@@ -195,3 +195,94 @@
   from { opacity: 0; transform: translateY(12px) scale(.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+
+/* FIX14 · 게임 HUD와 같은 굵은 선을 사용하는 스토리 알림창 공통 디자인 */
+.storyChapterPanel,
+.chapterContinuePrompt,
+.chapter1-combat-retry-dialog,
+.chapterIntegrationPlaceholder > div {
+  border: 4px solid #050506;
+  border-radius: 0;
+  outline: 2px solid #e60000;
+  outline-offset: -7px;
+  box-shadow:
+    0 0 0 2px #6b0000,
+    0 0 0 5px rgba(204, 204, 204, .28),
+    0 30px 90px rgba(0, 0, 0, .88),
+    inset 0 0 0 2px rgba(255, 255, 255, .055),
+    inset 0 0 48px rgba(120, 0, 10, .14);
+}
+
+.storyChapterPanel,
+.chapterContinuePrompt,
+.chapter1-combat-retry-dialog {
+  background:
+    linear-gradient(135deg, rgba(230, 0, 0, .10), transparent 24%),
+    linear-gradient(180deg, rgba(21, 22, 27, .995), rgba(3, 4, 7, .995));
+}
+
+.storyChapterPanelHeader small,
+.chapterContinuePrompt small,
+.chapter1-combat-retry-dialog small {
+  color: #ff3535;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.storyChapterCard,
+.storyChapterClose,
+.chapterContinueActions button,
+.chapter1-combat-retry-actions button,
+.chapterIntegrationPlaceholder button {
+  border-radius: 0 !important;
+  border: 3px solid #050506 !important;
+  box-shadow:
+    0 0 0 1px rgba(204, 204, 204, .34),
+    inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+
+.storyChapterCard {
+  outline: 1px solid rgba(121, 121, 119, .42);
+  outline-offset: -5px;
+}
+
+.storyChapterCard:not(:disabled):hover {
+  border-color: #050506 !important;
+  outline-color: #e60000;
+  box-shadow:
+    0 0 0 2px #850000,
+    0 16px 32px rgba(0, 0, 0, .48),
+    inset 0 0 0 1px rgba(255, 255, 255, .06);
+}
+
+.storyChapterClose,
+.chapterContinueActions .no,
+.chapter1-combat-retry-actions .no,
+.chapterIntegrationPlaceholder button {
+  background: #111216;
+  color: #fff;
+  outline: 1px solid #797977;
+  outline-offset: -6px;
+}
+
+.chapterContinueActions .yes,
+.chapter1-combat-retry-actions .yes {
+  background: linear-gradient(180deg, #b90012, #720009);
+  color: #fff;
+  outline: 1px solid #ff5353;
+  outline-offset: -6px;
+}
+
+.storyChapterClose:hover,
+.chapterContinueActions button:hover,
+.chapter1-combat-retry-actions button:hover,
+.chapterIntegrationPlaceholder button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+}
+
+.storyChapterPanelHeader h2,
+.chapterContinuePrompt h2,
+.chapter1-combat-retry-dialog h2 {
+  text-shadow: 3px 3px 0 #000;
+}

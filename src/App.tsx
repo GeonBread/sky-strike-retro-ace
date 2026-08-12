@@ -606,11 +606,11 @@ function Chapter1StoryExperience({
     }, 3300);
   };
 
-  const jumpToPreview = (targetPart: 1 | 2, previewId: string) => {
+  const jumpToPreview = (targetPart: 1 | 2, previewId: string, flowContinuation = false) => {
     setPart(targetPart);
     setPhase("story");
     jumpTokenRef.current += 1;
-    setPreviewRequest({ id: previewId, token: jumpTokenRef.current });
+    setPreviewRequest({ id: previewId, token: jumpTokenRef.current, flowContinuation });
     setShowJumpMenu(false);
   };
 
@@ -724,7 +724,7 @@ function Chapter1StoryExperience({
               <button className="is-combat" onClick={jumpToBoss}>실제 보스 시작</button>
               <button onClick={() => jumpToPreview(2, "boss-purification-dialogue")}>보스 격파 후 정화</button>
               <button onClick={() => jumpToPreview(2, "star-recovery-dialogue")}>별 회수</button>
-              <button onClick={() => jumpToPreview(2, "chapter-end-dialogue")}>챕터 엔딩</button>
+              <button onClick={() => jumpToPreview(2, "chapter-end-dialogue", true)}>챕터 엔딩</button>
             </div>
           </aside>
         )}

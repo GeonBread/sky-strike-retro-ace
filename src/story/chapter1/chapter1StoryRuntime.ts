@@ -117,6 +117,9 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   const flowPreviewHook = `    preview: playSelectedPreview,
     resumeFlowPreview: previewId => {
       playSelectedPreview(previewId);
+      if (previewId === 'chapter-end-dialogue') {
+        storyCompletionAction = 'finish';
+      }
       activePreviewId = null;
     }
   };`;
