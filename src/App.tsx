@@ -120,6 +120,7 @@ function GameCanvas({
   const [bossPhase3Active, setBossPhase3Active] = useState(false);
   const [isBossCutscene, setIsBossCutscene] = useState(false);
   const [chapter1BossIntroActive, setChapter1BossIntroActive] = useState(chapter1BossOnly);
+  const [chapter1BossDestroyActive, setChapter1BossDestroyActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const isStoryMode = mode === "story";
@@ -264,6 +265,9 @@ function GameCanvas({
         }
       }
       setChapter1BossIntroActive(chapter1BossOnly && engine.isChapter1BossIntroActive());
+      setChapter1BossDestroyActive(
+        chapter1BossOnly && engine.chapter1Boss?.core?.state?.cinematicMode === "destroy",
+      );
       setStage(engine.stage);
       setBossPhase2Active(engine.bossPhase2Active);
       setBossPhase3Active(engine.bossPhase3Active);
@@ -542,6 +546,14 @@ function GameCanvas({
         </div>
       )}
     </div>
+    {chapter1BossOnly && chapter1BossDestroyActive && (
+      <div className="chapter1-boss-destroy-viewport-fx" aria-hidden="true">
+        <span className="chapter1-boss-destroy-viewport-flash" />
+        <span className="chapter1-boss-destroy-viewport-wave wave-a" />
+        <span className="chapter1-boss-destroy-viewport-wave wave-b" />
+        <span className="chapter1-boss-destroy-viewport-blackout" />
+      </div>
+    )}
     {chapter1WaveOnly && active && inputEnabled && (
       <button
         type="button"
