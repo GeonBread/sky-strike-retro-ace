@@ -1119,10 +1119,7 @@ function Chapter1StoryExperience({
           <section className="chapterGamePauseDialog chapterStoryPauseDialog" role="dialog" aria-modal="true" aria-label="스토리 중단 확인">
             <small>STORY PAUSED</small>
             <h2>스토리를 중단하시겠습니까?</h2>
-            <p>
-              현재 챕터의 진행 위치가 이 브라우저에 저장됩니다.<br />
-              다음에 스토리 모드로 들어오면 저장된 지점부터 이어서 진행할 수 있습니다.
-            </p>
+            <p>진행 기록은 자동 저장됩니다.</p>
             <div className="chapterGamePauseActions isConfirm">
               <button type="button" className="secondary" onClick={restorePausedStoryCheckpoint}>계속하기</button>
               <button

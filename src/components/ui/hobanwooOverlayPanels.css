@@ -218,3 +218,33 @@
   .chapterGamePauseActions { gap: 10px; }
   .chapterGamePauseActions button { min-height: 52px; }
 }
+
+
+/* FIX21 · 스토리 중단 확인창은 설명을 줄이고 핵심 문구를 더 크게 표시한다. */
+.chapterStoryPauseDialog {
+  width: min(610px, 94%);
+  padding: clamp(34px, 5.2vw, 48px) clamp(28px, 5.2vw, 46px) clamp(30px, 4.8vw, 42px);
+}
+
+.chapterStoryPauseDialog small {
+  margin-bottom: 12px;
+  font-size: clamp(12px, 1.35vw, 15px);
+}
+
+.chapterStoryPauseDialog h2 {
+  font-size: clamp(40px, 6.2vw, 54px);
+  line-height: 1.08;
+}
+
+.chapterStoryPauseDialog p {
+  margin: 20px 0 30px;
+  color: #e4e8ef;
+  font-size: clamp(19px, 2.15vw, 23px);
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.chapterStoryPauseDialog .chapterGamePauseActions button {
+  min-height: 64px;
+  font-size: clamp(20px, 2.4vw, 25px);
+}
