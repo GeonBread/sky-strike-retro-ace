@@ -11,6 +11,7 @@ import type {
   Chapter1StoryEventType,
   Chapter1StoryPart,
   Chapter1StoryRuntimeHandle,
+  Chapter1StoryRuntimeState,
 } from "./chapter1StoryTypes";
 
 interface RuntimeOptions {
@@ -85,6 +86,41 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   if (!keyGuardApplied) {
     throw new Error('Chapter 1 story key handler was not found.');
   }
+
+  // ESC 중단/재접속 시 현재 대사 위치를 복원할 수 있도록 디버그 API에
+  // completionAction과 resumeCheckpoint를 추가한다. 일반 플레이에서는 이 API를 UI에 노출하지 않는다.
+  const debugStateHook = `getState: () => ({ mode: flowMode, segment: currentSegmentId, dialogueIndex, kills:`;
+  const debugStateWithCompletion = `getState: () => ({ mode: flowMode, segment: currentSegmentId, dialogueIndex, completionAction: storyCompletionAction, kills:`;
+  if (!normalized.includes(debugStateHook)) {
+    throw new Error('Chapter 1 story progress state hook was not found.');
+  }
+  normalized = normalized.replace(debugStateHook, debugStateWithCompletion);
+
+  const debugSetKillsHook = `    setKills: value => {`;
+  const debugResumeCheckpointHook = `    resumeCheckpoint: checkpoint => {
+      const segmentId = String(checkpoint?.segment || '');
+      if (!segmentId || !storySegments[segmentId]) return false;
+      clearFlowTimers();
+      activePreviewId = null;
+      resetGameState();
+      gameLayer.hidden = true;
+      storyStage.classList.remove('is-game-mode');
+      storyStage.classList.add('is-full-story');
+      const completionAction = String(checkpoint?.completionAction || 'finish');
+      beginStory(segmentId, completionAction, { forceFullScene: true, preserveScene: false });
+      const requestedIndex = Math.max(0, Math.floor(Number(checkpoint?.dialogueIndex) || 0));
+      dialogueIndex = Math.min(Math.max(0, currentDialogues.length - 1), requestedIndex);
+      if (currentDialogues[dialogueIndex]?.effectOnly) {
+        dialogueLayer.hidden = true;
+        dialogueLayer.classList.remove('is-opening');
+      }
+      return true;
+    },
+    setKills: value => {`;
+  if (!normalized.includes(debugSetKillsHook)) {
+    throw new Error('Chapter 1 story checkpoint restore hook was not found.');
+  }
+  normalized = normalized.replace(debugSetKillsHook, debugResumeCheckpointHook);
 
   // 장소명은 sceneTitle 변경 전체를 감시하지 않고 실제 장소 이동 연출에서만 호출한다.
   if (part === 1) {
@@ -752,6 +788,25 @@ export function createChapter1StoryRuntime({
         return;
       }
       commandHandlers[command]?.();
+    },
+    getState() {
+      const debugApi = localWindowValues.get("__CHAPTER1_FLOW_DEBUG__") as
+        | { getState?: () => Record<string, unknown> }
+        | undefined;
+      const state = debugApi?.getState?.();
+      if (!state) return null;
+      return {
+        mode: String(state.mode ?? ""),
+        segment: String(state.segment ?? ""),
+        dialogueIndex: Math.max(0, Math.floor(Number(state.dialogueIndex) || 0)),
+        completionAction: String(state.completionAction ?? "finish"),
+      };
+    },
+    restoreState(state) {
+      const debugApi = localWindowValues.get("__CHAPTER1_FLOW_DEBUG__") as
+        | { resumeCheckpoint?: (checkpoint: Chapter1StoryRuntimeState) => boolean }
+        | undefined;
+      return debugApi?.resumeCheckpoint?.(state) === true;
     },
     dispose,
   };

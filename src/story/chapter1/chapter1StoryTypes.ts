@@ -18,7 +18,16 @@ export type Chapter1StoryCommand =
   | "bossCleared"
   | "preview";
 
+export interface Chapter1StoryRuntimeState {
+  mode: string;
+  segment: string;
+  dialogueIndex: number;
+  completionAction: string;
+}
+
 export interface Chapter1StoryRuntimeHandle {
   invoke(command: Chapter1StoryCommand, detail?: Record<string, unknown>): void;
+  getState(): Chapter1StoryRuntimeState | null;
+  restoreState(state: Chapter1StoryRuntimeState): boolean;
   dispose(): void;
 }

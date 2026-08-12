@@ -178,7 +178,7 @@ import type { DebrisCoverState } from "./obstacles/debrisCoverTypes";
 import type { MeteorObstacleState } from "./obstacles/meteorObstacleTypes";
 import type { GameEngineRuntimeContext } from "./runtime/gameEngineRuntimeContext";
 import { createChapter1WaveRuntime, type Chapter1WaveRuntime } from "./chapter1/chapter1WaveTypes";
-import { skipCurrentChapter1WaveSystem } from "./chapter1/chapter1WaveSystem";
+import { getChapter1WaveProgressSystem, skipCurrentChapter1WaveSystem } from "./chapter1/chapter1WaveSystem";
 import { createChapter1BossRuntime, type Chapter1BossRuntime } from "./chapter1/chapter1BossTypes";
 import {
   handleChapter1BossDigitSystem,
@@ -707,6 +707,11 @@ export class GameEngine implements GameEngineRuntimeContext {
   /** 테스트 UI에서 현재 챕터 1 웨이브를 즉시 넘긴다. */
   public skipCurrentChapter1Wave(): boolean {
     return skipCurrentChapter1WaveSystem(this);
+  }
+
+  /** 현재 챕터 1 웨이브 번호를 저장/복원용으로 반환한다. */
+  public getCurrentChapter1WaveIndex(): number {
+    return Math.max(0, getChapter1WaveProgressSystem(this).waveIndex);
   }
 
   public startChapter1Boss(patternLock = -1, skipIntro = false) {

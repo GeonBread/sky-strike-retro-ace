@@ -9,6 +9,7 @@ import type {
   Chapter1StoryEvent,
   Chapter1StoryPart,
   Chapter1StoryRuntimeHandle,
+  Chapter1StoryRuntimeState,
 } from "../../story/chapter1/chapter1StoryTypes";
 import "./chapter1StoryPlayer.css";
 
@@ -17,6 +18,8 @@ export interface Chapter1StoryPlayerHandle {
   showBossPhase2Dialogue(): void;
   continueAfterBossClear(): void;
   jumpToPreview(previewId: string): void;
+  getRuntimeState(): Chapter1StoryRuntimeState | null;
+  restoreRuntimeState(state: Chapter1StoryRuntimeState): boolean;
 }
 
 export interface Chapter1StoryPreviewRequest {
@@ -79,6 +82,12 @@ export const Chapter1StoryPlayer = forwardRef<
     },
     jumpToPreview(previewId: string) {
       runtimeRef.current?.invoke("preview", { previewId });
+    },
+    getRuntimeState() {
+      return runtimeRef.current?.getState() ?? null;
+    },
+    restoreRuntimeState(state: Chapter1StoryRuntimeState) {
+      return runtimeRef.current?.restoreState(state) ?? false;
     },
   }), []);
 

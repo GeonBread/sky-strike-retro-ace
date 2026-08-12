@@ -20,8 +20,11 @@ import "./components/story/storyChapterFlow.css";
 import {
   isStoryChapterCleared,
   isStoryChapterUnlocked,
+  loadStoryCheckpoint,
   loadStoryProgress,
   markStoryChapterCleared,
+  saveStoryCheckpoint,
+  type StoryCheckpoint,
   type StoryProgress,
 } from "./story/storyProgress";
 import {
@@ -54,6 +57,8 @@ interface GameCanvasProps {
   onChapter1BossPhase2?: () => void;
   onChapter1BossComplete?: () => void;
   onChapter1CombatFailed?: (failure: Chapter1CombatFailure) => void;
+  onChapter1CombatExitToMenu?: (checkpoint: Chapter1CombatFailure) => void;
+  onChapter1WaveIndexChange?: (waveIndex: number) => void;
   chapter1WaveStartIndex?: number;
   chapter1BossSkipIntro?: boolean;
   inputEnabled?: boolean;
@@ -74,6 +79,8 @@ function GameCanvas({
   onChapter1BossPhase2,
   onChapter1BossComplete,
   onChapter1CombatFailed,
+  onChapter1CombatExitToMenu,
+  onChapter1WaveIndexChange,
   chapter1WaveStartIndex = 0,
   chapter1BossSkipIntro = false,
   inputEnabled = true,
@@ -96,6 +103,9 @@ function GameCanvas({
   const bossPhase2CallbackRef = useRef(onChapter1BossPhase2);
   const bossCompleteCallbackRef = useRef(onChapter1BossComplete);
   const combatFailedCallbackRef = useRef(onChapter1CombatFailed);
+  const combatExitToMenuCallbackRef = useRef(onChapter1CombatExitToMenu);
+  const waveIndexChangeCallbackRef = useRef(onChapter1WaveIndexChange);
+  const lastReportedWaveIndexRef = useRef<number | null>(null);
   const inputEnabledRef = useRef(inputEnabled);
   const visualReadyCallbackRef = useRef(onVisualReady);
   const visualReadyNotifiedRef = useRef(false);
@@ -121,6 +131,8 @@ function GameCanvas({
     bossPhase2CallbackRef.current = onChapter1BossPhase2;
     bossCompleteCallbackRef.current = onChapter1BossComplete;
     combatFailedCallbackRef.current = onChapter1CombatFailed;
+    combatExitToMenuCallbackRef.current = onChapter1CombatExitToMenu;
+    waveIndexChangeCallbackRef.current = onChapter1WaveIndexChange;
     inputEnabledRef.current = inputEnabled;
     visualReadyCallbackRef.current = onVisualReady;
     playerPositionCallbackRef.current = onPlayerScreenPositionChange;
@@ -132,7 +144,7 @@ function GameCanvas({
       engineRef.current.paused = isPausedRef.current || !active;
       engineRef.current.simulationEnabled = simulationEnabled;
     }
-  }, [active, inputEnabled, simulationEnabled, onVisualReady, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onPlayerScreenPositionChange]);
+  }, [active, inputEnabled, simulationEnabled, onVisualReady, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onChapter1CombatExitToMenu, onChapter1WaveIndexChange, onPlayerScreenPositionChange]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -244,6 +256,13 @@ function GameCanvas({
         visualReadyNotifiedRef.current = true;
         visualReadyCallbackRef.current?.();
       }
+      if (chapter1WaveOnly) {
+        const currentWaveIndex = engine.getCurrentChapter1WaveIndex();
+        if (lastReportedWaveIndexRef.current !== currentWaveIndex) {
+          lastReportedWaveIndexRef.current = currentWaveIndex;
+          waveIndexChangeCallbackRef.current?.(currentWaveIndex);
+        }
+      }
       setChapter1BossIntroActive(chapter1BossOnly && engine.isChapter1BossIntroActive());
       setStage(engine.stage);
       setBossPhase2Active(engine.bossPhase2Active);
@@ -281,6 +300,7 @@ function GameCanvas({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Escape") {
+        if (isStoryCombatCanvas && (!externallyActiveRef.current || !inputEnabledRef.current)) return;
         event.preventDefault();
         if (showExitConfirmRef.current) {
           setShowExitConfirm(false);
@@ -482,8 +502,17 @@ function GameCanvas({
               <small>RETURN TO MENU</small>
               <h2>메인 화면으로 이동</h2>
               <p>
-                현재 플레이 기록이 종료됩니다.<br />
-                메인 화면으로 돌아가시겠습니까?
+                {isStoryCombatCanvas ? (
+                  <>
+                    현재 웨이브/보스 진행 위치를 이 브라우저에 저장합니다.<br />
+                    메인 화면으로 돌아가시겠습니까?
+                  </>
+                ) : (
+                  <>
+                    현재 플레이 기록이 종료됩니다.<br />
+                    메인 화면으로 돌아가시겠습니까?
+                  </>
+                )}
               </p>
               <div className="chapterGamePauseActions isConfirm">
                 <button type="button" className="secondary" onClick={() => setShowExitConfirm(false)}>취소</button>
@@ -493,6 +522,14 @@ function GameCanvas({
                   onClick={() => {
                     setShowExitConfirm(false);
                     sfx.resumeAll();
+                    if (isStoryCombatCanvas && combatExitToMenuCallbackRef.current) {
+                      const checkpoint: Chapter1CombatFailure = chapter1BossOnly
+                        ? { kind: "boss" }
+                        : { kind: "wave", waveIndex: engineRef.current?.getCurrentChapter1WaveIndex() ?? chapter1WaveStartIndex };
+                      engineRef.current?.stop();
+                      combatExitToMenuCallbackRef.current(checkpoint);
+                      return;
+                    }
                     engineRef.current?.stop();
                     setGameState("MENU");
                   }}
@@ -541,34 +578,46 @@ function Chapter1StoryExperience({
   shipStyle,
   onStoryResult,
   onMenu,
+  resumeCheckpoint,
 }: {
   shipStyle: ShipStyle;
   onStoryResult: (result: StoryResult) => void;
   onMenu: () => void;
+  resumeCheckpoint: StoryCheckpoint | null;
 }) {
   const storyPlayerRef = useRef<Chapter1StoryPlayerHandle>(null);
+  const initialCheckpointRef = useRef<StoryCheckpoint | null>(resumeCheckpoint);
+  const resumeAppliedRef = useRef(false);
+  const lastSavedStorySignatureRef = useRef("");
+  const storyPauseCheckpointRef = useRef<StoryCheckpoint | null>(null);
   const startedAtRef = useRef(Date.now());
   const jumpTokenRef = useRef(0);
   const purificationTimerRef = useRef<number | null>(null);
   const bossClearTransitionTimerRef = useRef<number | null>(null);
   const combatRetryPromptTimerRef = useRef<number | null>(null);
   const storyEndingFadeTimerRef = useRef<number | null>(null);
-  const [part, setPart] = useState<1 | 2>(1);
-  const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
+  const [part, setPart] = useState<1 | 2>(() => initialCheckpointRef.current?.kind === "story" ? initialCheckpointRef.current.part : initialCheckpointRef.current ? 2 : 1);
+  const [phase, setPhase] = useState<Chapter1StoryPhase>(() => {
+    if (initialCheckpointRef.current?.kind === "wave") return "wave";
+    if (initialCheckpointRef.current?.kind === "boss") return "boss";
+    return "story";
+  });
   const [previewRequest, setPreviewRequest] = useState<Chapter1StoryPreviewRequest | null>(null);
   const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [playerPosition, setPlayerPosition] = useState({ xPercent: 50, yPercent: 88 });
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
   const [waveGuideStep, setWaveGuideStep] = useState(0);
   const [waveGuideVisualReady, setWaveGuideVisualReady] = useState(false);
-  const [waveRunKey, setWaveRunKey] = useState(0);
-  const [waveStartIndex, setWaveStartIndex] = useState(0);
-  const [bossRunKey, setBossRunKey] = useState(0);
+  const [waveRunKey, setWaveRunKey] = useState(() => initialCheckpointRef.current?.kind === "wave" ? 1 : 0);
+  const [waveStartIndex, setWaveStartIndex] = useState(() => initialCheckpointRef.current?.kind === "wave" ? initialCheckpointRef.current.waveIndex : 0);
+  const [currentWaveIndex, setCurrentWaveIndex] = useState(() => initialCheckpointRef.current?.kind === "wave" ? initialCheckpointRef.current.waveIndex : 0);
+  const [bossRunKey, setBossRunKey] = useState(() => initialCheckpointRef.current?.kind === "boss" ? 1 : 0);
   const [combatFailure, setCombatFailure] = useState<Chapter1CombatFailure | null>(null);
   const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
   const [bossClearTransitionActive, setBossClearTransitionActive] = useState(false);
   const [bossClearBackdrop, setBossClearBackdrop] = useState<string | null>(null);
   const [storyEndingFadeActive, setStoryEndingFadeActive] = useState(false);
+  const [storyPauseOpen, setStoryPauseOpen] = useState(false);
 
   const waveMounted = part === 2 && (phase === "wave-guide" || phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit");
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
@@ -581,8 +630,132 @@ function Chapter1StoryExperience({
     if (storyEndingFadeTimerRef.current !== null) window.clearTimeout(storyEndingFadeTimerRef.current);
   }, []);
 
+  const captureCurrentStoryCheckpoint = (): StoryCheckpoint | null => {
+    if (phase === "boss" || phase === "phase2-dialogue") {
+      return { version: 1, chapter: 1, kind: "boss", savedAt: Date.now() };
+    }
+    if (phase === "wave-purification-effect" || phase === "wave-purification-exit") {
+      return {
+        version: 1,
+        chapter: 1,
+        kind: "story",
+        part: 2,
+        segment: "energy100Dialogue",
+        dialogueIndex: 0,
+        completionAction: "startBossIntro",
+        savedAt: Date.now(),
+      };
+    }
+    if (phase === "wave" || phase === "wave-guide") {
+      return { version: 1, chapter: 1, kind: "wave", waveIndex: Math.max(0, currentWaveIndex), savedAt: Date.now() };
+    }
+    const runtimeState = storyPlayerRef.current?.getRuntimeState();
+    if (!runtimeState?.segment) return null;
+    return {
+      version: 1,
+      chapter: 1,
+      kind: "story",
+      part,
+      segment: runtimeState.segment,
+      dialogueIndex: runtimeState.dialogueIndex,
+      completionAction: runtimeState.completionAction,
+      savedAt: Date.now(),
+    };
+  };
+
+  const persistCurrentStoryCheckpoint = (): StoryCheckpoint | null => {
+    const checkpoint = captureCurrentStoryCheckpoint();
+    if (!checkpoint) return null;
+    const signature = JSON.stringify({ ...checkpoint, savedAt: 0 });
+    if (signature !== lastSavedStorySignatureRef.current) {
+      saveStoryCheckpoint(checkpoint);
+      lastSavedStorySignatureRef.current = signature;
+    }
+    return checkpoint;
+  };
+
+  const restorePausedStoryCheckpoint = () => {
+    const checkpoint = storyPauseCheckpointRef.current;
+    if (checkpoint?.kind === "story") {
+      storyPlayerRef.current?.restoreRuntimeState({
+        mode: "story",
+        segment: checkpoint.segment,
+        dialogueIndex: checkpoint.dialogueIndex,
+        completionAction: checkpoint.completionAction,
+      });
+    }
+    setStoryPauseOpen(false);
+  };
+
   useEffect(() => {
-    if (phase !== "wave-guide" || !waveGuideVisualReady) return;
+    const checkpoint = initialCheckpointRef.current;
+    if (resumeAppliedRef.current || checkpoint?.kind !== "story" || part !== checkpoint.part || phase !== "story") return;
+    let cancelled = false;
+    let retryTimer: number | null = null;
+    let attempt = 0;
+    const applyResume = () => {
+      if (cancelled || resumeAppliedRef.current) return;
+      const restored = storyPlayerRef.current?.restoreRuntimeState({
+        mode: "story",
+        segment: checkpoint.segment,
+        dialogueIndex: checkpoint.dialogueIndex,
+        completionAction: checkpoint.completionAction,
+      }) ?? false;
+      if (restored) {
+        resumeAppliedRef.current = true;
+        lastSavedStorySignatureRef.current = JSON.stringify({ ...checkpoint, savedAt: 0 });
+        return;
+      }
+      attempt += 1;
+      if (attempt < 8) retryTimer = window.setTimeout(applyResume, 80);
+    };
+    retryTimer = window.setTimeout(applyResume, 30);
+    return () => {
+      cancelled = true;
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+    };
+  }, [part, phase]);
+
+  useEffect(() => {
+    if (phase === "boss") {
+      saveStoryCheckpoint({ version: 1, chapter: 1, kind: "boss", savedAt: Date.now() });
+      return;
+    }
+    if (phase === "wave" || phase === "wave-guide") {
+      saveStoryCheckpoint({ version: 1, chapter: 1, kind: "wave", waveIndex: Math.max(0, currentWaveIndex), savedAt: Date.now() });
+    }
+  }, [phase, currentWaveIndex]);
+
+  useEffect(() => {
+    const parentOwnsEscape = phase !== "wave" && phase !== "boss";
+    if (!parentOwnsEscape) return;
+    const handleStoryEscape = (event: KeyboardEvent) => {
+      if (storyPauseOpen) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (event.code === "Escape") restorePausedStoryCheckpoint();
+        return;
+      }
+      if (event.code !== "Escape") return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      storyPauseCheckpointRef.current = persistCurrentStoryCheckpoint();
+      setStoryPauseOpen(true);
+    };
+    window.addEventListener("keydown", handleStoryEscape, true);
+    return () => window.removeEventListener("keydown", handleStoryEscape, true);
+  }, [phase, part, currentWaveIndex, storyPauseOpen]);
+
+  useEffect(() => {
+    const handlePageHide = () => {
+      persistCurrentStoryCheckpoint();
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, [phase, part, currentWaveIndex]);
+
+  useEffect(() => {
+    if (phase !== "wave-guide" || !waveGuideVisualReady || storyPauseOpen) return;
     const handleGuideKey = (event: KeyboardEvent) => {
       if (event.code !== "Enter" && event.code !== "Space") return;
       event.preventDefault();
@@ -591,7 +764,7 @@ function Chapter1StoryExperience({
     };
     window.addEventListener("keydown", handleGuideKey);
     return () => window.removeEventListener("keydown", handleGuideKey);
-  }, [phase, waveGuideStep, waveGuideVisualReady]);
+  }, [phase, waveGuideStep, waveGuideVisualReady, storyPauseOpen]);
 
   const requestStoryPreview = (previewId: string, flowContinuation = false) => {
     jumpTokenRef.current += 1;
@@ -602,6 +775,16 @@ function Chapter1StoryExperience({
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     setPart(2);
     setPurificationOrigin(playerPosition);
+    saveStoryCheckpoint({
+      version: 1,
+      chapter: 1,
+      kind: "story",
+      part: 2,
+      segment: "energy100Dialogue",
+      dialogueIndex: 0,
+      completionAction: "startBossIntro",
+      savedAt: Date.now(),
+    });
     sfx.purificationComplete();
     setPhase("wave-purification-effect");
     // 정화 파동을 끝까지 보여준 뒤에만 호반우의 상승 이탈을 시작한다.
@@ -629,7 +812,9 @@ function Chapter1StoryExperience({
     setWaveGuideStep(0);
     setWaveGuideVisualReady(false);
     setWaveStartIndex(0);
+    setCurrentWaveIndex(0);
     setWaveRunKey((key) => key + 1);
+    saveStoryCheckpoint({ version: 1, chapter: 1, kind: "wave", waveIndex: 0, savedAt: Date.now() });
     setPhase("wave-guide");
     setShowJumpMenu(false);
   };
@@ -638,7 +823,9 @@ function Chapter1StoryExperience({
     setPreviewRequest(null);
     setPart(2);
     setWaveStartIndex(0);
+    setCurrentWaveIndex(0);
     setWaveRunKey((key) => key + 1);
+    saveStoryCheckpoint({ version: 1, chapter: 1, kind: "wave", waveIndex: 0, savedAt: Date.now() });
     setPhase("wave");
     setShowJumpMenu(false);
   };
@@ -654,6 +841,7 @@ function Chapter1StoryExperience({
     setPart(2);
     // 최초 보스 진입도 재도전과 동일하게 새 런타임으로 시작해 인트로가 건너뛰어지지 않게 한다.
     setBossRunKey((key) => key + 1);
+    saveStoryCheckpoint({ version: 1, chapter: 1, kind: "boss", savedAt: Date.now() });
     setPhase("boss");
     setShowJumpMenu(false);
   };
@@ -683,11 +871,14 @@ function Chapter1StoryExperience({
     setPart(2);
     if (failure.kind === "wave") {
       setWaveStartIndex(failure.waveIndex);
+      setCurrentWaveIndex(failure.waveIndex);
+      saveStoryCheckpoint({ version: 1, chapter: 1, kind: "wave", waveIndex: failure.waveIndex, savedAt: Date.now() });
       setWaveGuideVisualReady(true);
       setWaveRunKey((key) => key + 1);
       setPhase("wave");
       return;
     }
+    saveStoryCheckpoint({ version: 1, chapter: 1, kind: "boss", savedAt: Date.now() });
     setBossRunKey((key) => key + 1);
     setPhase("boss");
   };
@@ -698,7 +889,21 @@ function Chapter1StoryExperience({
       combatRetryPromptTimerRef.current = null;
     }
     setCombatRetryPromptVisible(false);
+    if (combatFailure?.kind === "wave") {
+      saveStoryCheckpoint({ version: 1, chapter: 1, kind: "wave", waveIndex: combatFailure.waveIndex, savedAt: Date.now() });
+    } else if (combatFailure?.kind === "boss") {
+      saveStoryCheckpoint({ version: 1, chapter: 1, kind: "boss", savedAt: Date.now() });
+    }
     setCombatFailure(null);
+    onMenu();
+  };
+
+  const leaveStoryCombatToMenu = (checkpoint: Chapter1CombatFailure) => {
+    if (checkpoint.kind === "wave") {
+      saveStoryCheckpoint({ version: 1, chapter: 1, kind: "wave", waveIndex: checkpoint.waveIndex, savedAt: Date.now() });
+    } else {
+      saveStoryCheckpoint({ version: 1, chapter: 1, kind: "boss", savedAt: Date.now() });
+    }
     onMenu();
   };
 
@@ -756,8 +961,13 @@ function Chapter1StoryExperience({
               chapter1PurificationExit={phase === "wave-purification-exit"}
               onVisualReady={() => setWaveGuideVisualReady(true)}
               onPlayerScreenPositionChange={setPlayerPosition}
+              onChapter1WaveIndexChange={(waveIndex) => {
+                setCurrentWaveIndex(waveIndex);
+                saveStoryCheckpoint({ version: 1, chapter: 1, kind: "wave", waveIndex, savedAt: Date.now() });
+              }}
               onChapter1WaveComplete={startWavePurificationSequence}
               onChapter1CombatFailed={showCombatRetryPrompt}
+              onChapter1CombatExitToMenu={leaveStoryCombatToMenu}
             />
           </div>
         </Fragment>
@@ -869,6 +1079,7 @@ function Chapter1StoryExperience({
               }, 7200);
             }}
             onChapter1CombatFailed={showCombatRetryPrompt}
+            onChapter1CombatExitToMenu={leaveStoryCombatToMenu}
           />
         </div>
       )}
@@ -903,6 +1114,33 @@ function Chapter1StoryExperience({
         </div>
       )}
 
+      {storyPauseOpen && (
+        <div className="chapterGamePauseOverlay chapterStoryPauseOverlay" role="presentation">
+          <section className="chapterGamePauseDialog chapterStoryPauseDialog" role="dialog" aria-modal="true" aria-label="스토리 중단 확인">
+            <small>STORY PAUSED</small>
+            <h2>스토리를 중단하시겠습니까?</h2>
+            <p>
+              현재 챕터의 진행 위치가 이 브라우저에 저장됩니다.<br />
+              다음에 스토리 모드로 들어오면 저장된 지점부터 이어서 진행할 수 있습니다.
+            </p>
+            <div className="chapterGamePauseActions isConfirm">
+              <button type="button" className="secondary" onClick={restorePausedStoryCheckpoint}>계속하기</button>
+              <button
+                type="button"
+                className="danger"
+                onClick={() => {
+                  if (storyPauseCheckpointRef.current) saveStoryCheckpoint(storyPauseCheckpointRef.current);
+                  setStoryPauseOpen(false);
+                  onMenu();
+                }}
+              >
+                메인화면
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {storyEndingFadeActive && (
         <div className="chapter1-story-ending-fade" aria-hidden="true" />
       )}
@@ -926,6 +1164,7 @@ function Chapter1StoryExperience({
           if (event.type === "boss-ready") {
             setPreviewRequest(null);
             // 첫 보스전도 반드시 새 GameCanvas/보스 런타임으로 시작해 등장·HP 충전 연출을 처음부터 재생한다.
+            saveStoryCheckpoint({ version: 1, chapter: 1, kind: "boss", savedAt: Date.now() });
             setBossRunKey((key) => key + 1);
             setPhase("boss");
             return;
@@ -1004,24 +1243,25 @@ function StoryChapterSelector({
         <header className="storyChapterPanelHeader">
           <small>STORY MODE</small>
           <h2>진행할 챕터를 선택하세요</h2>
-          <p>클리어 기록은 이 컴퓨터의 브라우저에 자동 저장됩니다.</p>
+          <p>클리어 및 중간 진행 기록은 현재 브라우저 클라이언트에 자동 저장됩니다.</p>
         </header>
         <div className="storyChapterGrid">
           {chapters.map(({ chapter, title, subtitle }) => {
             const unlocked = isStoryChapterUnlocked(chapter, progress);
             const cleared = isStoryChapterCleared(chapter, progress);
+            const checkpoint = unlocked && !cleared ? loadStoryCheckpoint(chapter) : null;
             return (
               <button
                 key={chapter}
                 type="button"
-                className={["storyChapterCard", cleared ? "isCleared" : "", !unlocked ? "isLocked" : ""].filter(Boolean).join(" ")}
+                className={["storyChapterCard", cleared ? "isCleared" : "", checkpoint ? "hasCheckpoint" : "", !unlocked ? "isLocked" : ""].filter(Boolean).join(" ")}
                 disabled={!unlocked}
                 onClick={() => onSelect(chapter)}
               >
                 <span className="chapterNo">CHAPTER {chapter}</span>
                 <strong>{title}</strong>
                 <p>{subtitle}</p>
-                <span className="chapterState">{cleared ? "✓ CLEAR" : unlocked ? "PLAY" : `CHAPTER ${chapter - 1} CLEAR 필요`}</span>
+                <span className="chapterState">{cleared ? "✓ CLEAR" : checkpoint ? "▶ 이어하기" : unlocked ? "PLAY" : `CHAPTER ${chapter - 1} CLEAR 필요`}</span>
               </button>
             );
           })}
@@ -1168,6 +1408,7 @@ export default function App() {
   const [storyProgress, setStoryProgress] = useState<StoryProgress>(() => loadStoryProgress());
   const [showStoryChapterSelect, setShowStoryChapterSelect] = useState(false);
   const [selectedStoryChapter, setSelectedStoryChapter] = useState<StoryChapter>(1);
+  const [selectedStoryCheckpoint, setSelectedStoryCheckpoint] = useState<StoryCheckpoint | null>(null);
   const [showShipSelect, setShowShipSelect] = useState(false);
   // 시작 버튼을 한 번 누른 뒤에는 다른 화면을 다녀와도 모드 선택 메뉴 상태를 유지한다.
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
@@ -1189,6 +1430,8 @@ export default function App() {
     const latestProgress = loadStoryProgress();
     setStoryProgress(latestProgress);
     if (!isStoryChapterUnlocked(chapter, latestProgress)) return;
+    const checkpoint = loadStoryCheckpoint(chapter);
+    setSelectedStoryCheckpoint(checkpoint);
     setShowStoryChapterSelect(false);
     setSelectedStoryChapter(chapter);
     setStoryResult(null);
@@ -1215,6 +1458,7 @@ export default function App() {
   const finishStory = (result: StoryResult) => {
     if (result.outcome === "cleared") {
       setStoryProgress(markStoryChapterCleared(selectedStoryChapter));
+      setSelectedStoryCheckpoint(null);
     }
     setStoryResult(result);
     setGameState("STORY_RESULT");
@@ -1229,6 +1473,7 @@ export default function App() {
           shipStyle={shipStyle}
           onStoryResult={finishStory}
           onMenu={() => setGameState("MENU")}
+          resumeCheckpoint={selectedStoryCheckpoint}
         />
       );
     }

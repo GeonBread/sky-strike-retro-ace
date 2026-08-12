@@ -507,3 +507,15 @@
   62% { opacity: .58; }
   100% { opacity: 1; }
 }
+
+/* FIX20 · 저장된 중간 진행이 있는 챕터는 CLEAR/PLAY와 구분되게 표시한다. */
+.storyChapterCard.hasCheckpoint:not(.isCleared) {
+  outline-color: #e60000;
+  box-shadow:
+    0 0 0 2px rgba(133, 0, 0, .75),
+    inset 0 0 34px rgba(230, 0, 0, .07);
+}
+.storyChapterCard.hasCheckpoint:not(.isCleared) .chapterState {
+  color: #ff7676;
+  text-shadow: 0 0 10px rgba(230, 0, 0, .38);
+}
