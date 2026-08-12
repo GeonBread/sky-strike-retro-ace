@@ -1,4 +1,4 @@
-@rem Chapter 1 ZIP Patch Runner v4
+@rem Chapter 1 ZIP Patch Runner v6
 @echo off
 setlocal EnableExtensions
 

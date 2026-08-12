@@ -109,19 +109,29 @@ function Get-AutomaticCommitMessage {
     param(
         [Parameter(Mandatory = $true)][string]$PatchRoot,
         [Parameter(Mandatory = $true)][string]$TemporaryRoot,
-        [Parameter(Mandatory = $true)][string]$ArchivePath
+        [Parameter(Mandatory = $true)][string]$ArchivePath,
+        [Parameter(Mandatory = $true)][string]$RepositoryRoot
     )
 
     $patchFolderName = Split-Path -Leaf $PatchRoot
     $temporaryFolderName = Split-Path -Leaf $TemporaryRoot
+    $repositoryFolderName = Split-Path -Leaf $RepositoryRoot
     $zipBaseName = [System.IO.Path]::GetFileNameWithoutExtension($ArchivePath)
 
-    # If the patch root is the runner's temporary extraction folder itself,
-    # that random folder name is not useful in Git history. Fall back to the
-    # original ZIP filename in that case.
-    if ([string]::IsNullOrWhiteSpace($patchFolderName) -or
+    # Browser downloads often append (1), (2), ... to duplicate ZIP files.
+    $zipBaseName = ($zipBaseName -replace '\(\d+\)$', '').Trim()
+
+    # Partial patches frequently keep the repository folder as a generic wrapper.
+    # Prefer the descriptive ZIP filename when the wrapper adds no useful detail.
+    $genericPatchFolder = (
+        [string]::IsNullOrWhiteSpace($patchFolderName) -or
         $patchFolderName -eq $temporaryFolderName -or
-        $patchFolderName -match '^sky-strike-zip-patch-\d{8}-\d{6}$') {
+        $patchFolderName -eq $repositoryFolderName -or
+        $patchFolderName -match '^sky-strike[_-]*retro[_-]*ace$' -or
+        $patchFolderName -match '^sky-strike-zip-patch-\d{8}-\d{6}$'
+    )
+
+    if ($genericPatchFolder) {
         $patchFolderName = $zipBaseName
     }
 
@@ -131,7 +141,6 @@ function Get-AutomaticCommitMessage {
 
     return $patchFolderName.Trim()
 }
-
 
 function Get-RelativePathIfInside([string]$ParentPath, [string]$ChildPath) {
     $parentFull = [System.IO.Path]::GetFullPath($ParentPath).TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
@@ -265,19 +274,31 @@ function Test-PatchRootMarker([string]$CandidatePath) {
         return $false
     }
 
-    return (
-        (Test-Path -LiteralPath (Join-Path $CandidatePath 'PATCH_MANIFEST.json') -PathType Leaf) -or
-        (Test-Path -LiteralPath (Join-Path $CandidatePath 'src') -PathType Container) -or
-        (Test-Path -LiteralPath (Join-Path $CandidatePath 'public') -PathType Container) -or
-        (Test-Path -LiteralPath (Join-Path $CandidatePath 'docs') -PathType Container) -or
-        (Test-Path -LiteralPath (Join-Path $CandidatePath 'supabase') -PathType Container) -or
-        (Test-Path -LiteralPath (Join-Path $CandidatePath 'package.json') -PathType Leaf)
-    )
+    # Manifest/delete-only patches are valid even when no src/public tree exists.
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'PATCH_MANIFEST.json') -PathType Leaf) { return $true }
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'PATCH_DELETE.txt') -PathType Leaf) { return $true }
+
+    # Full project ZIPs and partial ZIPs both qualify when project-relative roots
+    # such as src/, public/, docs/, or supabase/ are preserved.
+    foreach ($directoryName in @('src', 'public', 'docs', 'supabase')) {
+        if (Test-Path -LiteralPath (Join-Path $CandidatePath $directoryName) -PathType Container) {
+            return $true
+        }
+    }
+
+    # Support root-file-only partial patches such as vite.config.ts or README files.
+    $directFiles = @(Get-ChildItem -LiteralPath $CandidatePath -File -ErrorAction SilentlyContinue)
+    foreach ($file in $directFiles) {
+        if (Test-AutoIncludedPath $file.Name) { return $true }
+    }
+
+    return $false
 }
 
 function Get-PatchRootScore([string]$CandidatePath) {
     $score = 0
     if (Test-Path -LiteralPath (Join-Path $CandidatePath 'PATCH_MANIFEST.json') -PathType Leaf) { $score += 100000 }
+    if (Test-Path -LiteralPath (Join-Path $CandidatePath 'PATCH_DELETE.txt') -PathType Leaf) { $score += 90000 }
     if (Test-Path -LiteralPath (Join-Path $CandidatePath 'package.json') -PathType Leaf) { $score += 10000 }
     if (Test-Path -LiteralPath (Join-Path $CandidatePath 'src') -PathType Container) { $score += 5000 }
     if (Test-Path -LiteralPath (Join-Path $CandidatePath 'public') -PathType Container) { $score += 3000 }
@@ -342,7 +363,7 @@ function Find-PatchRoot([string]$ExtractRoot) {
         ForEach-Object { $_.FullName.Substring($ExtractRoot.Length).TrimStart('\', '/') } |
         ForEach-Object { Write-Host "  $_" }
 
-    throw "Could not identify the patch root. The ZIP must contain src/, public/, docs/, supabase/, package.json, or PATCH_MANIFEST.json at some nested level."
+    throw "Could not identify the patch root. Preserve project-relative paths such as src/, public/, docs/, supabase/, supported root files, PATCH_MANIFEST.json, or PATCH_DELETE.txt."
 }
 
 function Restore-AppliedPatch {
@@ -455,7 +476,7 @@ try {
         if ($manifest.PSObject.Properties.Name -contains 'commitMessage') { $manifestCommitMessage = [string]$manifest.commitMessage }
     }
     else {
-        Write-Step "No manifest found; comparing supported project files by SHA-256"
+        Write-Step "No manifest found; comparing full or partial project files by SHA-256"
         $sourceRelativePaths = @(Get-ChildItem -LiteralPath $patchRoot -Recurse -File | ForEach-Object {
             $relative = $_.FullName.Substring($patchRoot.Length).TrimStart('\', '/')
             $relative = Normalize-RelativePath $relative
@@ -640,7 +661,7 @@ try {
             $CommitMessage = $manifestCommitMessage.Trim()
         }
         else {
-            $CommitMessage = Get-AutomaticCommitMessage -PatchRoot $patchRoot -TemporaryRoot $temporaryRoot -ArchivePath $ZipPath
+            $CommitMessage = Get-AutomaticCommitMessage -PatchRoot $patchRoot -TemporaryRoot $temporaryRoot -ArchivePath $ZipPath -RepositoryRoot $repositoryRoot
         }
     }
 

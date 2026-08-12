@@ -244,22 +244,22 @@ function spawnArts(engine: PlayerWeaponRuntime, x: number, y: number, lv: number
   engine.playerWeaponShotIndex = shot + 1;
   const vy = -12.8 - lv * 0.30;
   if (lv === 1) {
-    addSpriteBullet(engine, "palette", x, y, 0, vy, 20, "#ff5fd2", "", 0.1, 1, { homing: false, wave: 0 });
+    addSpriteBullet(engine, "palette", x, y, 0, vy, 20, "#ff5fd2", "", 0.1, 1, { homing: true, wave: 0 });
   } else if (lv === 2) {
-    addSpriteBullet(engine, "palette", x - 14, y, -0.22, vy, 19, "#ff5fd2", "", 0.1, 1, { homing: false, wave: 0 });
-    addSpriteBullet(engine, "ball", x + 14, y, 0.22, vy, 18, "#ffffff", "", 0.1, 1, { homing: false, wave: 0 });
+    addSpriteBullet(engine, "palette", x - 14, y, -0.22, vy, 19, "#ff5fd2", "", 0.1, 1, { homing: true, wave: -0.35 });
+    addSpriteBullet(engine, "ball", x + 14, y, 0.22, vy, 18, "#ffffff", "", 0.1, 1, { homing: true, wave: 0.35 });
   } else if (lv === 3) {
-    addSpriteBullet(engine, "palette", x, y, 0, vy, 21, "#ff5fd2", "", 0.1, 1, { homing: false, wave: 0 });
-    addSpriteBullet(engine, "janggu", x - 30, y + 10, -0.55, vy, 18, "#b76a3b", "", 0.1, 1, { homing: false, wave: 0 });
-    addSpriteBullet(engine, "ball", x + 30, y + 10, 0.55, vy, 18, "#ffffff", "", 0.1, 1, { homing: false, wave: 0 });
+    addSpriteBullet(engine, "palette", x, y, 0, vy, 21, "#ff5fd2", "", 0.1, 1, { homing: true, wave: 0 });
+    addSpriteBullet(engine, "janggu", x - 30, y + 10, -0.55, vy, 18, "#b76a3b", "", 0.1, 1, { homing: true, wave: -0.60 });
+    addSpriteBullet(engine, "ball", x + 30, y + 10, 0.55, vy, 18, "#ffffff", "", 0.1, 1, { homing: true, wave: 0.60 });
   } else if (lv === 4) {
     addMusicBeam(engine, x, y, false, shot * 0.83);
-    addSpriteBullet(engine, "palette", x - 26, y + 8, -0.42, vy, 19, "#ff5fd2", "", 0.1, 1, { homing: false, wave: 0 });
-    addSpriteBullet(engine, "janggu", x + 26, y + 8, 0.42, vy, 18, "#b76a3b", "", 0.1, 1, { homing: false, wave: 0 });
+    addSpriteBullet(engine, "palette", x - 26, y + 8, -0.42, vy, 19, "#ff5fd2", "", 0.1, 1, { homing: true, wave: -0.55 });
+    addSpriteBullet(engine, "janggu", x + 26, y + 8, 0.42, vy, 18, "#b76a3b", "", 0.1, 1, { homing: true, wave: 0.55 });
   } else {
     addMusicBeam(engine, x, y, true, shot * 0.83);
     [[-44, -0.62, "palette", "#ff5fd2", 19, -0.70], [-18, -0.22, "janggu", "#b76a3b", 18, -0.35], [18, 0.22, "ball", "#ffffff", 18, 0.35], [44, 0.62, "whistle", "#ffffff", 18, 0.70]].forEach(([dx, vx, kind, color, size, wave]) => {
-      addSpriteBullet(engine, kind as any, x + Number(dx), y + Math.abs(Number(dx)) * 0.07 + 10, Number(vx), vy, Number(size), String(color), "", 0.1, 1, { homing: false, wave: 0 });
+      addSpriteBullet(engine, kind as any, x + Number(dx), y + Math.abs(Number(dx)) * 0.07 + 10, Number(vx), vy, Number(size), String(color), "", 0.1, 1, { homing: true, wave: Number(wave) });
     });
   }
 }

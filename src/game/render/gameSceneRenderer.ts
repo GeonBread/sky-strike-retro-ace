@@ -618,7 +618,10 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
     const hidePlayerForChapter1Boss = false;
 
     // Player Rendering
-    if (!engine.player.isDead && !engine.storyPlayerHidden && !hidePlayerForChapter1Boss) {
+    // 스토리 전투에서 마지막 목숨을 모두 소진했을 때는 논리적으로 isDead 상태를 유지해
+    // 이동·발사·추가 피격을 막되, 재도전 안내가 뜰 때까지 호반우 자체는 화면에 남겨 깜빡이게 한다.
+    const showStoryDefeatedPlayer = engine.playMode === "story" && engine.player.hp <= 0;
+    if ((!engine.player.isDead || showStoryDefeatedPlayer) && !engine.storyPlayerHidden && !hidePlayerForChapter1Boss) {
       // 정화 완료 후 상승 이탈 중에는 무적 시간 때문에 캐릭터가 깜빡이지 않도록 항상 표시한다.
       const suppressInvulnerabilityBlink = engine.storyPurificationExitActive;
       if (

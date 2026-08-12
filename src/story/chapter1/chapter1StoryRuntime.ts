@@ -88,6 +88,107 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
 
   // 장소명은 sceneTitle 변경 전체를 감시하지 않고 실제 장소 이동 연출에서만 호출한다.
   if (part === 1) {
+    // 계단 추격 장면의 기존 WebAudio 합성음을 더 묵직한 전투 연출용 사운드로 교체한다.
+    // 드론 접근 -> 락온/충전 -> 출석탄 발사/비행 -> 암전 충격이 한 흐름으로 들리도록 구성한다.
+    const attendanceChargeSoundStart = `    if (effectId === 'attendance-drone-charge') {`;
+    const attendanceBlackHoldSoundStart = `    if (effectId === 'attendance-black-hold') {`;
+    const attendanceChargeSoundIndex = normalized.indexOf(attendanceChargeSoundStart);
+    const attendanceBlackHoldSoundIndex = normalized.indexOf(attendanceBlackHoldSoundStart, attendanceChargeSoundIndex);
+    if (attendanceChargeSoundIndex < 0 || attendanceBlackHoldSoundIndex < 0) {
+      throw new Error('Chapter 1 attendance cinematic sound hooks were not found.');
+    }
+    const upgradedAttendanceSoundBlock = `    if (effectId === 'attendance-escape-run-in') {
+      // 계단을 따라 추격해 오는 드론의 엔진음: 저역 추진음과 가까워지는 기계 펄스를 겹친다.
+      synthTone({ frequency: 42, endFrequency: 58, duration: 5.85, gain: .082, type: 'sawtooth', filterFrequency: 360, attack: .18, release: .5 });
+      synthTone({ frequency: 84, endFrequency: 126, duration: 5.85, gain: .028, type: 'triangle', filterFrequency: 720, attack: .15, release: .45, detune: -8 });
+      [520, 1430, 2250, 2980, 3630, 4190, 4670, 5080].forEach((delay, index) => {
+        scheduleCinematicSound(() => {
+          synthNoise({ duration: .18, gain: .035 + index * .003, filterType: 'bandpass', frequency: 280 + index * 42, endFrequency: 980 + index * 75, q: 1.2, attack: .004, release: .11 });
+          synthTone({ frequency: 72 + index * 5, endFrequency: 54 + index * 3, duration: .16, gain: .032, type: 'sine', filterFrequency: 420, attack: .004, release: .12 });
+        }, delay);
+      });
+      [1150, 2780, 4050, 4930].forEach((delay, index) => {
+        scheduleCinematicSound(() => synthNoise({ duration: .42, gain: .05 + index * .006, filterType: 'bandpass', frequency: 520, endFrequency: 2100 + index * 250, q: .72, attack: .01, release: .24 }), delay);
+      });
+      return;
+    }
+
+    if (effectId === 'attendance-drone-charge') {
+      // 값싼 비프음 대신 저역 전원 상승, 락온 펄스, 압축되는 고역 스윕을 단계적으로 쌓는다.
+      synthTone({ frequency: 46, endFrequency: 78, duration: 2.92, gain: .095, type: 'sine', filterFrequency: 420, attack: .08, release: .28 });
+      synthTone({ frequency: 88, endFrequency: 188, duration: 2.92, gain: .052, type: 'sawtooth', filterFrequency: 760, attack: .06, release: .24, detune: -5 });
+      synthNoise({ duration: 2.78, gain: .034, filterType: 'bandpass', frequency: 240, endFrequency: 2500, q: 1.15, attack: .12, release: .26 });
+      [420, 980, 1450, 1830, 2140, 2380, 2560].forEach((delay, index) => {
+        scheduleCinematicSound(() => {
+          const base = 430 + index * 62;
+          synthTone({ frequency: base, endFrequency: base * 1.42, duration: .105, gain: .026 + index * .0025, type: 'triangle', filterFrequency: 2400, attack: .002, release: .075 });
+          synthNoise({ duration: .07, gain: .022, filterType: 'highpass', frequency: 1800 + index * 120, endFrequency: 4200, q: .8, attack: .001, release: .05 });
+        }, delay);
+      });
+      scheduleCinematicSound(() => {
+        synthTone({ frequency: 138, endFrequency: 420, duration: .48, gain: .065, type: 'sawtooth', filterFrequency: 1500, attack: .004, release: .18 });
+        synthNoise({ duration: .34, gain: .07, filterType: 'bandpass', frequency: 620, endFrequency: 3600, q: .75, attack: .002, release: .2 });
+      }, 2470);
+      scheduleCinematicSound(() => {
+        synthTone({ frequency: 64, endFrequency: 48, duration: .32, gain: .11, type: 'sine', filterFrequency: 360, attack: .002, release: .19 });
+        synthNoise({ duration: .10, gain: .06, filterType: 'highpass', frequency: 2600, endFrequency: 5200, q: .7, attack: .001, release: .07 });
+      }, 2780);
+      return;
+    }
+
+    if (effectId === 'attendance-stamp-flight-blackout') {
+      // 발사 순간의 포격감 + 탄이 화면을 가르는 통과음 + 암전 직전의 저역 충격을 분리한다.
+      playLaunchImpact();
+      synthNoise({ duration: .14, gain: .17, filterType: 'highpass', frequency: 2200, endFrequency: 6200, q: .55, attack: .001, release: .08 });
+      synthTone({ frequency: 920, endFrequency: 180, duration: .22, gain: .055, type: 'sawtooth', filterFrequency: 2400, attack: .001, release: .12 });
+      synthNoise({ duration: 1.55, gain: .12, filterType: 'bandpass', frequency: 520, endFrequency: 5200, q: .58, attack: .008, release: .38 });
+      synthTone({ frequency: 172, endFrequency: 62, duration: 1.42, gain: .052, type: 'sawtooth', filterFrequency: 1050, attack: .006, release: .42 });
+      [280, 610, 930, 1210, 1480].forEach((delay, index) => {
+        scheduleCinematicSound(() => {
+          synthNoise({ duration: .20, gain: .072 - index * .005, filterType: 'highpass', frequency: 980 + index * 340, endFrequency: 5200, q: .48, attack: .001, release: .14 });
+        }, delay);
+      });
+      scheduleCinematicSound(() => {
+        synthNoise({ duration: .55, gain: .11, filterType: 'bandpass', frequency: 1600, endFrequency: 340, q: .65, attack: .002, release: .34 });
+        synthTone({ frequency: 410, endFrequency: 92, duration: .46, gain: .05, type: 'triangle', filterFrequency: 1200, attack: .002, release: .26 });
+      }, 1620);
+      scheduleCinematicSound(() => {
+        synthTone({ frequency: 72, endFrequency: 29, duration: 1.05, gain: .18, type: 'sine', filterFrequency: 340, attack: .002, release: .62 });
+        synthTone({ frequency: 144, endFrequency: 48, duration: .72, gain: .08, type: 'triangle', filterFrequency: 620, attack: .002, release: .42 });
+        synthNoise({ duration: .42, gain: .13, filterType: 'lowpass', frequency: 980, endFrequency: 62, q: .4, attack: .001, release: .3 });
+        synthNoise({ duration: .16, gain: .07, filterType: 'highpass', frequency: 2100, endFrequency: 4800, q: .55, attack: .001, release: .11 });
+      }, 2750);
+      scheduleCinematicSound(() => synthTone({ frequency: 760, endFrequency: 220, duration: .72, gain: .018, type: 'sine', filterFrequency: 1200, attack: .02, release: .58 }), 3060);
+      return;
+    }
+
+`;
+    normalized = normalized.slice(0, attendanceChargeSoundIndex)
+      + upgradedAttendanceSoundBlock
+      + normalized.slice(attendanceBlackHoldSoundIndex);
+
+    // 출석탄 연출 뒤 호반우의 '뭐야?!' 수동 대사 정지를 제거한다.
+    // 이제 출석탄 시네마틱이 끝나는 즉시 학생증 정화 연출이 effectOnly -> effectOnly로 자동 연결된다.
+    const attendanceManualPause = `    {
+      left: null,
+      right: 'hobanwoo',
+      speaker: 'hobanwoo',
+      text: '뭐야?!',
+      illustration: {
+        type: 'effect',
+        effect: 'attendance-black-hold',
+        label: ''
+      },
+      scene: forcedAttendanceScene
+    },
+`;
+    if (!normalized.includes(attendanceManualPause)) {
+      throw new Error('Chapter 1 attendance manual pause hook was not found.');
+    }
+    while (normalized.includes(attendanceManualPause)) {
+      normalized = normalized.replace(attendanceManualPause, '');
+    }
+
     const locationIntroHook = `    if (item.effect === 'location-title-intro') {
       const introScene = item.scene || {};`;
     const locationIntroWithTitle = `    if (item.effect === 'location-title-intro') {
@@ -228,12 +329,121 @@ html.is-embedded-story .story-stage.is-game-mode {
 html.is-embedded-story .dialogue-box {
   grid-template-columns: minmax(0, 1fr) !important;
   gap: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: clamp(30px, 3vw, 38px) !important;
+  padding-bottom: clamp(30px, 3vw, 38px) !important;
 }
 html.is-embedded-story .dialogue-copy,
 html.is-embedded-story .dialogue-layer.speaker-right .dialogue-copy {
   grid-column: 1 !important;
   grid-row: 1 !important;
   width: 100% !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: center !important;
+  align-content: center !important;
+  column-gap: clamp(12px, 1.8vw, 20px) !important;
+  margin: auto 0 !important;
+}
+html.is-embedded-story .dialogue-marker {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  justify-self: center !important;
+  line-height: 1 !important;
+  transform: none !important;
+}
+html.is-embedded-story .dialogue-text {
+  align-self: center !important;
+  margin: 0 !important;
+}
+
+/* 학사 서버 관리 영역 진입 시네마틱은 브라우저 전체 화면을 사용한다. */
+html.is-embedded-story .story-stage:is(
+  .is-entry-story13-zoom,
+  .is-entry-open-hold,
+  .is-entry-door-rush,
+  .is-entry-red-hold,
+  .is-entry-interior-tour
+) {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  z-index: 100000 !important;
+}
+html.is-embedded-story .story-stage:is(
+  .is-entry-story13-zoom,
+  .is-entry-open-hold,
+  .is-entry-door-rush,
+  .is-entry-red-hold,
+  .is-entry-interior-tour
+) .background-stack,
+html.is-embedded-story .story-stage:is(
+  .is-entry-story13-zoom,
+  .is-entry-open-hold,
+  .is-entry-door-rush,
+  .is-entry-red-hold,
+  .is-entry-interior-tour
+) .scene-background {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 기존 방사형 직선 광선은 제거하고, 중앙 광원·비네트·줌으로 내부 진입감을 만든다. */
+html.is-embedded-story .story-stage.is-entry-door-rush .scene-background.is-visible {
+  animation: chapter1AcademicEntryBackgroundRush 1.35s cubic-bezier(.12,.82,.18,1) both !important;
+}
+html.is-embedded-story .story-stage.is-entry-door-rush::before {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255,248,242,.9) 0 4%, rgba(255,92,72,.6) 11%, rgba(181,0,22,.32) 28%, rgba(58,0,8,.12) 53%, rgba(0,0,0,0) 72%),
+    linear-gradient(180deg, rgba(92,0,10,.06), rgba(185,0,14,.52)) !important;
+  mix-blend-mode: screen !important;
+  animation: chapter1AcademicEntryGlow 1.35s ease-in both !important;
+}
+html.is-embedded-story .story-stage.is-entry-door-rush::after {
+  inset: 0 !important;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.42) 0 5%, rgba(255,122,102,.18) 15%, rgba(120,0,16,.08) 34%, transparent 58%),
+    radial-gradient(ellipse at 50% 50%, transparent 0 22%, rgba(54,0,8,.18) 48%, rgba(0,0,0,.82) 100%) !important;
+  box-shadow: inset 0 0 150px rgba(0,0,0,.58) !important;
+  filter: blur(0) !important;
+  animation: chapter1AcademicEntryTunnel 1.35s cubic-bezier(.12,.82,.18,1) both !important;
+}
+html.is-embedded-story .story-stage.is-entry-red-hold::before {
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(255,70,60,.24) 0 12%, rgba(139,0,12,.68) 50%, rgba(15,0,3,.98) 100%) !important;
+}
+html.is-embedded-story .story-stage.is-entry-red-hold::after {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255,80,65,.1) 0 14%, rgba(90,0,10,.12) 42%, rgba(0,0,0,.68) 100%) !important;
+}
+@keyframes chapter1AcademicEntryBackgroundRush {
+  0% { transform: scale(1.07); filter: saturate(.98) brightness(.88) contrast(1.04); }
+  38% { transform: scale(1.18); filter: saturate(1.05) brightness(.84) contrast(1.05); }
+  100% { transform: scale(1.55); filter: saturate(.92) brightness(.62) contrast(1.08) blur(2px); }
+}
+@keyframes chapter1AcademicEntryGlow {
+  0% { opacity: 0; transform: scale(.78); }
+  34% { opacity: .72; transform: scale(.94); }
+  100% { opacity: 1; transform: scale(1.38); }
+}
+@keyframes chapter1AcademicEntryTunnel {
+  0% { opacity: .28; transform: scale(1); }
+  42% { opacity: .62; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1.28); }
 }
 /* 시작 로고 · 제작자 · NOTICE 연출은 브라우저 전체 화면을 사용한다. */
 html.is-embedded-story .story-stage.is-opening-cinematic {

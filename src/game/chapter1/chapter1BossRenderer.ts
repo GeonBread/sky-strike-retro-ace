@@ -37,7 +37,10 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   if (!core) return;
   const state = core.state;
   if (state.cinematicMode !== "battle" && state.cinematicMode !== "destroy") return;
-  if (engine.player.isDead) return;
+  // 보스전에서 마지막 목숨을 모두 소진해도 호반우를 지우지 않는다.
+  // isDead는 그대로 유지해 조작·발사·추가 피격은 잠그고, 렌더링만 무적 깜빡임으로 남긴다.
+  const showStoryDefeatedPlayer = engine.playMode === "story" && engine.player.hp <= 0;
+  if (engine.player.isDead && !showStoryDefeatedPlayer) return;
 
   const time = performance.now();
   const bob = Math.sin(time * 0.004) * 3.8;
@@ -47,8 +50,8 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   // 보스 클리어 문구를 약 3초간 보여준 뒤 호반우가 위로 상승해 화면 밖으로 이탈합니다.
   // 이탈 중에는 무적 깜빡임을 적용하지 않습니다.
   if (state.cinematicMode === "destroy") {
-    const exitStart = 6.6;
-    const exitEnd = 8.0;
+    const exitStart = 6.05;
+    const exitEnd = 7.45;
     const exitProgress = Math.max(0, Math.min(1, (state.cinematicTime - exitStart) / (exitEnd - exitStart)));
     if (exitProgress > 0) {
       const eased = exitProgress * exitProgress * exitProgress;
