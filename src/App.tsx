@@ -864,20 +864,63 @@ function savePlayerName(name: string): void {
 
 function StoryResultPanel({ result, onRetry, onMenu }: { result: StoryResult | null; onRetry: () => void; onMenu: () => void }) {
   const cleared = result?.outcome === "cleared";
-  const stageLabel = result ? `CHAPTER ${Math.min(4, result.stage)}` : "STORY";
   const elapsed = result ? `${Math.floor(result.durationMs / 60000)}:${Math.floor((result.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : "0:00";
+
+  if (cleared) {
+    return (
+      <div className="w-full flex flex-col items-center text-center">
+        <div className="mb-4 inline-block rounded-full border border-amber-300/35 bg-amber-300/10 px-4 py-1.5 font-mono text-[10px] font-black tracking-[0.22em] text-amber-200">
+          CHAPTER 1 COMPLETE
+        </div>
+        <h2 className="mb-2 text-4xl font-mono font-black text-amber-200">CHAPTER 1 CLEAR</h2>
+        <p className="mb-6 text-sm font-semibold text-slate-400">학사 시스템 정상화 · {elapsed}</p>
+
+        <div className="mb-4 w-full rounded-xl border border-amber-300/25 bg-slate-950/80 p-5 text-left">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <span className="font-mono text-xs font-black tracking-widest text-slate-400">RECOVERED STARS</span>
+            <strong className="text-sm font-black text-amber-200">출석의 별 · 과제의 별</strong>
+          </div>
+          <div className="mb-2 flex items-center justify-between gap-4">
+            <span className="font-mono text-xs font-black tracking-widest text-slate-400">별 연결 상태</span>
+            <strong className="font-mono text-lg font-black text-amber-200">2 / 6</strong>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+            <div className="h-full w-1/3 rounded-full bg-amber-300" />
+          </div>
+        </div>
+
+        <div className="mb-5 w-full rounded-xl border border-slate-700 bg-black/70 p-4 font-mono text-sm font-bold leading-7 text-slate-300">
+          <div className="text-amber-200">학생증</div>
+          <div>오염…… 추가…… 탐색…….</div>
+          <div>다음 신호…… 확인…….</div>
+        </div>
+
+        <div className="mb-8 w-full border-y border-rose-500/35 bg-rose-950/20 px-4 py-3">
+          <div className="font-mono text-[10px] font-black tracking-[0.28em] text-rose-300">NEXT</div>
+          <div className="mt-1 font-mono text-xl font-black text-white">CHAPTER 2</div>
+        </div>
+
+        <div className="grid w-full grid-cols-2 gap-3">
+          <button onClick={onRetry} className="rounded-xl bg-amber-600 px-5 py-3.5 font-mono text-sm font-black text-black transition-all duration-200 hover:bg-amber-500">
+            챕터 1 다시 하기
+          </button>
+          <button onClick={onMenu} className="rounded-xl border border-slate-800 bg-slate-950 px-5 py-3.5 font-mono text-sm font-black text-white transition-all duration-200 hover:bg-slate-800">
+            메인 메뉴
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col items-center text-center">
-      <div className={`mb-4 inline-block rounded-full border px-4 py-1.5 font-mono text-[10px] font-black tracking-widest ${cleared ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-200" : "border-rose-400/40 bg-rose-400/10 text-rose-200"}`}>
+      <div className="mb-4 inline-block rounded-full border border-rose-400/40 bg-rose-400/10 px-4 py-1.5 font-mono text-[10px] font-black tracking-widest text-rose-200">
         STORY MODE
       </div>
-      <h2 className={`mb-2 text-4xl font-mono font-black ${cleared ? "text-cyan-300" : "text-rose-400"}`}>
-        {cleared ? "STORY CLEAR" : "MISSION FAILED"}
-      </h2>
-      <p className="mb-6 text-sm font-semibold text-slate-400">{stageLabel} · {elapsed}</p>
+      <h2 className="mb-2 text-4xl font-mono font-black text-rose-400">MISSION FAILED</h2>
+      <p className="mb-6 text-sm font-semibold text-slate-400">CHAPTER 1 · {elapsed}</p>
       <div className="mb-8 w-full rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-xs font-semibold leading-relaxed text-slate-300">
-        {cleared ? "챕터 작전을 완료했습니다." : "스토리 진행이 중단되었습니다. 다시 도전할 수 있습니다."}
+        스토리 진행이 중단되었습니다. 다시 도전할 수 있습니다.
       </div>
       <div className="grid w-full grid-cols-2 gap-3">
         <button onClick={onRetry} className="rounded-xl bg-cyan-700 px-5 py-3.5 font-mono text-sm font-black text-white transition-all duration-200 hover:bg-cyan-600">

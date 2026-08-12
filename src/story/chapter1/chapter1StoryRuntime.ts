@@ -109,7 +109,12 @@ html.is-embedded-story #previewMenuButton,
 html.is-embedded-story #endPanel,
 html.is-embedded-story .dialogue-progress,
 html.is-embedded-story .story-status,
-html.is-embedded-story .story-location-intro {
+html.is-embedded-story .story-location-intro,
+html.is-embedded-story .scene-location,
+html.is-embedded-story .portrait-frame,
+html.is-embedded-story .dialogue-jump-button,
+html.is-embedded-story .dialogue-jump-panel,
+html.is-embedded-story .dialogue-nav-panel {
   display: none !important;
 }
 html.is-embedded-story body {
@@ -131,6 +136,78 @@ html.is-embedded-story .story-stage {
 }
 html.is-embedded-story .story-stage.is-game-mode {
   width: min(96dvh, 100vw) !important;
+}
+/* 대사창은 초상화 영역을 제거하고 텍스트가 전체 폭을 사용한다. */
+html.is-embedded-story .dialogue-box {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+}
+html.is-embedded-story .dialogue-copy,
+html.is-embedded-story .dialogue-layer.speaker-right .dialogue-copy {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+}
+/* 시작 로고 · 제작자 · NOTICE 연출은 브라우저 전체 화면을 사용한다. */
+html.is-embedded-story .story-stage.is-opening-cinematic {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  z-index: 100000 !important;
+}
+html.is-embedded-story .story-stage.is-opening-cinematic .opening-credits-sequence,
+html.is-embedded-story .story-stage.is-opening-cinematic .story-effect-layer {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+/* 장소가 실제로 바뀔 때만 중앙에 장소명을 짧게 띄운다. */
+.chapter1-location-title-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160000;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .32s ease, visibility .32s ease;
+}
+.chapter1-location-title-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+.chapter1-location-title-overlay::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(78vw, 850px);
+  height: 150px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.72) 0%, rgba(0,0,0,.42) 48%, rgba(0,0,0,0) 78%);
+  filter: blur(4px);
+}
+.chapter1-location-title-overlay strong {
+  position: relative;
+  padding: 24px 36px;
+  color: #fff;
+  font-family: "Noto Sans KR", system-ui, sans-serif;
+  font-size: clamp(30px, 5vw, 66px);
+  font-weight: 900;
+  letter-spacing: -.035em;
+  text-align: center;
+  text-shadow: 0 4px 22px rgba(0,0,0,.95), 0 0 20px rgba(255,255,255,.12);
 }
 /* 학사 시스템 비상 통제 전환은 스토리 프레임에 갇히지 않고 브라우저 전체를 덮는다. */
 html.is-embedded-story .battle-transition {
@@ -259,6 +336,56 @@ export function createChapter1StoryRuntime({
   document.head.appendChild(styleElement);
   root.innerHTML = normalizeStoryMarkup(storyDocument.markup);
 
+  const locationTitles = new Set([
+    "경북대학교 중앙광장",
+    "경북대학교 도서관 구관 앞",
+    "공대 12호관 앞",
+    "도서관 구관 출입구",
+    "공대 강의실",
+    "중앙광장 안내 구역",
+    "강의실 안내 지점",
+    "학사 통로",
+    "봉쇄된 학사 통로",
+    "오염된 학사 통로",
+    "학사 서버 외곽",
+    "학사 서버 내부 통로",
+    "학사 서버 심층부",
+    "학사 서버 관리 영역 입구",
+    "학사 서버 관리 영역 내부",
+    "학사 서버 관리 영역",
+    "정상화된 학사 서버",
+    "경북대학교 본관",
+  ]);
+  const locationOverlay = document.createElement("div");
+  locationOverlay.className = "chapter1-location-title-overlay";
+  locationOverlay.setAttribute("aria-hidden", "true");
+  const locationOverlayText = document.createElement("strong");
+  locationOverlay.appendChild(locationOverlayText);
+  root.appendChild(locationOverlay);
+  let locationOverlayTimer: number | null = null;
+  let lastLocationTitle = "";
+  const sceneTitleElement = root.querySelector<HTMLElement>("#sceneTitle");
+  const showLocationTitle = (rawTitle: string) => {
+    const title = rawTitle.trim();
+    if (!locationTitles.has(title) || title === lastLocationTitle) return;
+    lastLocationTitle = title;
+    locationOverlayText.textContent = title;
+    locationOverlay.classList.remove("is-active");
+    void locationOverlay.offsetWidth;
+    locationOverlay.classList.add("is-active");
+    if (locationOverlayTimer !== null) trackedClearTimeout(locationOverlayTimer);
+    locationOverlayTimer = trackedSetTimeout(() => {
+      locationOverlayTimer = null;
+      locationOverlay.classList.remove("is-active");
+    }, 1750) as unknown as number;
+  };
+  const locationObserver = sceneTitleElement
+    ? new MutationObserver(() => showLocationTitle(sceneTitleElement.textContent ?? ""))
+    : null;
+  if (sceneTitleElement && locationObserver) {
+    locationObserver.observe(sceneTitleElement, { childList: true, characterData: true, subtree: true });
+  }
+
   const executeScript = (source: string): void => {
     const runner = new Function(
       "window",
@@ -306,6 +433,9 @@ export function createChapter1StoryRuntime({
       window.removeEventListener(type, listener, options);
     }
     eventListeners.length = 0;
+    locationObserver?.disconnect();
+    if (locationOverlayTimer !== null) window.clearTimeout(locationOverlayTimer);
+    locationOverlayTimer = null;
     styleElement.remove();
     root.replaceChildren();
     restoreAttributes(document.documentElement, htmlAttributeSnapshot);
