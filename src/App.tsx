@@ -18,6 +18,14 @@ import {
   type Chapter1StoryPreviewRequest,
 } from "./components/story/Chapter1StoryPlayer";
 import "./components/ui/hobanwooOverlayPanels.css";
+import "./components/story/storyChapterFlow.css";
+import {
+  isStoryChapterCleared,
+  isStoryChapterUnlocked,
+  loadStoryProgress,
+  markStoryChapterCleared,
+  type StoryProgress,
+} from "./story/storyProgress";
 import {
   CHAPTER1_STORY_CANVAS_HEIGHT,
   CHAPTER1_STORY_CANVAS_WIDTH,
@@ -31,6 +39,12 @@ interface StoryResult {
   durationMs: number;
 }
 
+type StoryChapter = 1 | 2 | 3;
+
+type Chapter1CombatFailure =
+  | { kind: "wave"; waveIndex: number }
+  | { kind: "boss" };
+
 interface GameCanvasProps {
   mode: GameMode;
   shipStyle: ShipStyle;
@@ -41,7 +55,9 @@ interface GameCanvasProps {
   onChapter1WaveComplete?: () => void;
   onChapter1BossPhase2?: () => void;
   onChapter1BossComplete?: () => void;
-  onChapter1CombatFailed?: () => void;
+  onChapter1CombatFailed?: (failure: Chapter1CombatFailure) => void;
+  chapter1WaveStartIndex?: number;
+  chapter1BossSkipIntro?: boolean;
   inputEnabled?: boolean;
   chapter1PurificationExit?: boolean;
   simulationEnabled?: boolean;
@@ -60,6 +76,8 @@ function GameCanvas({
   onChapter1BossPhase2,
   onChapter1BossComplete,
   onChapter1CombatFailed,
+  chapter1WaveStartIndex = 0,
+  chapter1BossSkipIntro = true,
   inputEnabled = true,
   chapter1PurificationExit = false,
   simulationEnabled = true,
@@ -168,7 +186,14 @@ function GameCanvas({
         setLastRun(null);
         setScore(0);
         if ((chapter1WaveOnly || chapter1BossOnly) && combatFailedCallbackRef.current) {
-          combatFailedCallbackRef.current();
+          if (chapter1BossOnly) {
+            combatFailedCallbackRef.current({ kind: "boss" });
+          } else {
+            combatFailedCallbackRef.current({
+              kind: "wave",
+              waveIndex: Math.max(0, engine.chapter1Wave?.selectedWave ?? chapter1WaveStartIndex),
+            });
+          }
           return;
         }
         onStoryResult({
@@ -232,12 +257,13 @@ function GameCanvas({
     if (chapter1WaveOnly) {
       engine.chapter1Wave.enabled = true;
       engine.chapter1Wave.running = false;
-      engine.chapter1Wave.nextWave = 0;
+      engine.chapter1Wave.selectedWave = Math.max(0, chapter1WaveStartIndex);
+      engine.chapter1Wave.nextWave = Math.max(0, chapter1WaveStartIndex);
       engine.chapter1Wave.allWavesCleared = false;
     }
     if (chapter1BossOnly) {
       engine.chapter1Wave.enabled = false;
-      engine.startChapter1Boss(-1, true);
+      engine.startChapter1Boss(-1, chapter1BossSkipIntro);
     }
     // 테스트 바로가기처럼 비활성 상태로 처음 마운트되더라도 배경과 플레이어는 한 프레임 그려 둔다.
     engine.render();
@@ -508,15 +534,18 @@ type Chapter1StoryPhase = "story" | "wave-guide" | "wave" | "wave-purification-e
 function Chapter1StoryExperience({
   shipStyle,
   onStoryResult,
+  onMenu,
 }: {
   shipStyle: ShipStyle;
   onStoryResult: (result: StoryResult) => void;
+  onMenu: () => void;
 }) {
   const storyPlayerRef = useRef<Chapter1StoryPlayerHandle>(null);
   const startedAtRef = useRef(Date.now());
   const jumpTokenRef = useRef(0);
   const purificationTimerRef = useRef<number | null>(null);
   const bossClearTransitionTimerRef = useRef<number | null>(null);
+  const combatRetryPromptTimerRef = useRef<number | null>(null);
   const [part, setPart] = useState<1 | 2>(1);
   const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
   const [previewRequest, setPreviewRequest] = useState<Chapter1StoryPreviewRequest | null>(null);
@@ -526,6 +555,10 @@ function Chapter1StoryExperience({
   const [waveGuideStep, setWaveGuideStep] = useState(0);
   const [waveGuideVisualReady, setWaveGuideVisualReady] = useState(false);
   const [waveRunKey, setWaveRunKey] = useState(0);
+  const [waveStartIndex, setWaveStartIndex] = useState(0);
+  const [bossRunKey, setBossRunKey] = useState(0);
+  const [combatFailure, setCombatFailure] = useState<Chapter1CombatFailure | null>(null);
+  const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
   const [bossClearTransitionActive, setBossClearTransitionActive] = useState(false);
   const [bossClearBackdrop, setBossClearBackdrop] = useState<string | null>(null);
 
@@ -536,6 +569,7 @@ function Chapter1StoryExperience({
   useEffect(() => () => {
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     if (bossClearTransitionTimerRef.current !== null) window.clearTimeout(bossClearTransitionTimerRef.current);
+    if (combatRetryPromptTimerRef.current !== null) window.clearTimeout(combatRetryPromptTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -585,6 +619,7 @@ function Chapter1StoryExperience({
     setPart(2);
     setWaveGuideStep(0);
     setWaveGuideVisualReady(false);
+    setWaveStartIndex(0);
     setWaveRunKey((key) => key + 1);
     setPhase("wave-guide");
     setShowJumpMenu(false);
@@ -593,6 +628,7 @@ function Chapter1StoryExperience({
   const jumpToWave = () => {
     setPreviewRequest(null);
     setPart(2);
+    setWaveStartIndex(0);
     setWaveRunKey((key) => key + 1);
     setPhase("wave");
     setShowJumpMenu(false);
@@ -609,6 +645,50 @@ function Chapter1StoryExperience({
     setPart(2);
     setPhase("boss");
     setShowJumpMenu(false);
+  };
+
+  const showCombatRetryPrompt = (failure: Chapter1CombatFailure) => {
+    if (combatRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(combatRetryPromptTimerRef.current);
+    }
+    setCombatFailure(failure);
+    setCombatRetryPromptVisible(false);
+    combatRetryPromptTimerRef.current = window.setTimeout(() => {
+      combatRetryPromptTimerRef.current = null;
+      setCombatRetryPromptVisible(true);
+    }, 1350);
+  };
+
+  const retryFailedCombat = () => {
+    if (!combatFailure) return;
+    if (combatRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(combatRetryPromptTimerRef.current);
+      combatRetryPromptTimerRef.current = null;
+    }
+    const failure = combatFailure;
+    setCombatRetryPromptVisible(false);
+    setCombatFailure(null);
+    setPreviewRequest(null);
+    setPart(2);
+    if (failure.kind === "wave") {
+      setWaveStartIndex(failure.waveIndex);
+      setWaveGuideVisualReady(true);
+      setWaveRunKey((key) => key + 1);
+      setPhase("wave");
+      return;
+    }
+    setBossRunKey((key) => key + 1);
+    setPhase("boss");
+  };
+
+  const leaveAfterCombatFailure = () => {
+    if (combatRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(combatRetryPromptTimerRef.current);
+      combatRetryPromptTimerRef.current = null;
+    }
+    setCombatRetryPromptVisible(false);
+    setCombatFailure(null);
+    onMenu();
   };
 
   return (
@@ -658,16 +738,15 @@ function Chapter1StoryExperience({
               shipStyle={shipStyle}
               onStoryResult={onStoryResult}
               chapter1WaveOnly
-              active
-              simulationEnabled={phase !== "wave-guide"}
-              inputEnabled={phase === "wave"}
+              chapter1WaveStartIndex={waveStartIndex}
+              active={!combatFailure}
+              simulationEnabled={phase !== "wave-guide" && !combatFailure}
+              inputEnabled={phase === "wave" && !combatFailure}
               chapter1PurificationExit={phase === "wave-purification-exit"}
               onVisualReady={() => setWaveGuideVisualReady(true)}
               onPlayerScreenPositionChange={setPlayerPosition}
               onChapter1WaveComplete={startWavePurificationSequence}
-              onChapter1CombatFailed={() => {
-                openWaveGuide();
-              }}
+              onChapter1CombatFailed={showCombatRetryPrompt}
             />
           </div>
         </Fragment>
@@ -738,14 +817,15 @@ function Chapter1StoryExperience({
       )}
 
       {bossMounted && (
-        <div className="chapter1-story-boss-layer">
+        <div key={`chapter1-boss-${bossRunKey}`} className="chapter1-story-boss-layer">
           <GameCanvas
             mode="story"
             shipStyle={shipStyle}
             onStoryResult={onStoryResult}
             chapter1BossOnly
-            active={bossActive}
-            inputEnabled={bossActive && !bossClearTransitionActive}
+            chapter1BossSkipIntro={bossRunKey === 0}
+            active={bossActive && !combatFailure}
+            inputEnabled={bossActive && !bossClearTransitionActive && !combatFailure}
             onChapter1BossPhase2={() => {
               setPhase("phase2-dialogue");
               window.setTimeout(() => storyPlayerRef.current?.showBossPhase2Dialogue(), 0);
@@ -777,10 +857,7 @@ function Chapter1StoryExperience({
                 window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
               }, 7200);
             }}
-            onChapter1CombatFailed={() => {
-              setPhase("story");
-              requestStoryPreview("boss-dialogue");
-            }}
+            onChapter1CombatFailed={showCombatRetryPrompt}
           />
         </div>
       )}
@@ -792,6 +869,26 @@ function Chapter1StoryExperience({
           aria-hidden="true"
         >
           <div className="chapter1-boss-clear-screen-color" />
+        </div>
+      )}
+
+      {combatFailure && (
+        <div className="chapter1-combat-death-overlay" role="presentation">
+          {combatRetryPromptVisible && (
+            <section className="chapter1-combat-retry-dialog" role="dialog" aria-modal="true" aria-label="전투 재도전 확인">
+              <small>{combatFailure.kind === "wave" ? `WAVE ${combatFailure.waveIndex + 1}` : "BOSS BATTLE"}</small>
+              <h2>다시 도전하시겠습니까?</h2>
+              <p>
+                {combatFailure.kind === "wave"
+                  ? "현재 웨이브의 처음부터 다시 시작합니다."
+                  : "보스 1페이즈 진입부터 다시 시작합니다."}
+              </p>
+              <div className="chapter1-combat-retry-actions">
+                <button type="button" className="no" onClick={leaveAfterCombatFailure}>아니오</button>
+                <button type="button" className="yes" onClick={retryFailedCombat}>예</button>
+              </div>
+            </section>
+          )}
         </div>
       )}
 
@@ -863,54 +960,151 @@ function savePlayerName(name: string): void {
   localStorage.setItem("retro_shooter_player_name", sanitizePlayerName(name));
 }
 
-function StoryResultPanel({ result, onRetry, onMenu }: { result: StoryResult | null; onRetry: () => void; onMenu: () => void }) {
+function StoryChapterSelector({
+  progress,
+  onSelect,
+  onClose,
+}: {
+  progress: StoryProgress;
+  onSelect: (chapter: StoryChapter) => void;
+  onClose: () => void;
+}) {
+  const chapters: Array<{ chapter: StoryChapter; title: string; subtitle: string }> = [
+    { chapter: 1, title: "뒤틀린 학사 시스템", subtitle: "출석의 별 · 과제의 별" },
+    { chapter: 2, title: "중간고사와 팀 프로젝트", subtitle: "시험의 별 · 팀플의 별" },
+    { chapter: 3, title: "최종장", subtitle: "남은 별을 향한 마지막 작전" },
+  ];
+
+  return (
+    <div className="storyChapterOverlay" role="presentation" onMouseDown={onClose}>
+      <section className="storyChapterPanel" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
+        <header className="storyChapterPanelHeader">
+          <small>STORY MODE</small>
+          <h2>진행할 챕터를 선택하세요</h2>
+          <p>클리어 기록은 이 컴퓨터의 브라우저에 자동 저장됩니다.</p>
+        </header>
+        <div className="storyChapterGrid">
+          {chapters.map(({ chapter, title, subtitle }) => {
+            const unlocked = isStoryChapterUnlocked(chapter, progress);
+            const cleared = isStoryChapterCleared(chapter, progress);
+            return (
+              <button
+                key={chapter}
+                type="button"
+                className={["storyChapterCard", cleared ? "isCleared" : "", !unlocked ? "isLocked" : ""].filter(Boolean).join(" ")}
+                disabled={!unlocked}
+                onClick={() => onSelect(chapter)}
+              >
+                <span className="chapterNo">CHAPTER {chapter}</span>
+                <strong>{title}</strong>
+                <p>{subtitle}</p>
+                <span className="chapterState">{cleared ? "CLEAR" : unlocked ? "PLAY" : `CHAPTER ${chapter - 1} CLEAR 필요`}</span>
+              </button>
+            );
+          })}
+        </div>
+        <button type="button" className="storyChapterClose" onClick={onClose}>닫기</button>
+      </section>
+    </div>
+  );
+}
+
+function Chapter1ClearSequence({ onContinue, onMenu }: { onContinue: () => void; onMenu: () => void }) {
+  const [phase, setPhase] = useState<"black" | "logo" | "credit" | "stars" | "prompt">("black");
+
+  useEffect(() => {
+    const timers = [
+      window.setTimeout(() => setPhase("logo"), 700),
+      window.setTimeout(() => setPhase("credit"), 2700),
+      window.setTimeout(() => setPhase("stars"), 4700),
+      window.setTimeout(() => setPhase("prompt"), 7600),
+    ];
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
+  return (
+    <div className="chapterClearSequence">
+      {phase === "logo" && (
+        <div className="chapterClearStage">
+          <img className="chapterClearLogo" src="/assets/story/chapter1/ui/game_logo.png" alt="호반우의 졸업 대작전" />
+        </div>
+      )}
+      {phase === "credit" && (
+        <div className="chapterClearStage">
+          <div className="chapterClearCredit">
+            <small>DIRECTED AND CREATED</small>
+            <strong>made by Ma Geon</strong>
+            <span>마 건</span>
+          </div>
+        </div>
+      )}
+      {phase === "stars" && (
+        <div className="chapterClearStage">
+          <div className="chapterClearStars">
+            <h2>회수한 별</h2>
+            <div className="chapterClearStarRow">
+              <div className="chapterClearStarItem">
+                <span className="chapterClearStarShape" />
+                <small>출석의 별</small>
+              </div>
+              <div className="chapterClearStarItem">
+                <span className="chapterClearStarShape" />
+                <small>과제의 별</small>
+              </div>
+            </div>
+            <div className="chapterClearRemaining">남은 별 <strong>4개</strong></div>
+          </div>
+        </div>
+      )}
+      {phase === "prompt" && (
+        <div className="chapterClearStage">
+          <section className="chapterContinuePrompt" role="dialog" aria-modal="true">
+            <small>CHAPTER 1 CLEAR</small>
+            <h2>다음 챕터를 진행하시겠습니까?</h2>
+            <p>챕터 2가 해금되었습니다.</p>
+            <div className="chapterContinueActions">
+              <button type="button" className="no" onClick={onMenu}>아니오</button>
+              <button type="button" className="yes" onClick={onContinue}>예</button>
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChapterIntegrationPlaceholder({ chapter, onMenu }: { chapter: 2 | 3; onMenu: () => void }) {
+  return (
+    <div className="chapterIntegrationPlaceholder">
+      <div>
+        <small>CHAPTER {chapter} · UNLOCKED</small>
+        <h2>챕터 {chapter} 시작 지점</h2>
+        <p>
+          로컬 진행도와 챕터 라우팅은 연결되었습니다. 현재 FIX12 프로젝트에는 챕터 {chapter} 실제 스토리 컴포넌트가 포함되어 있지 않아,
+          해당 스토리 파일을 통합하면 이 화면 위치에서 바로 챕터 {chapter} 스토리를 렌더링하면 됩니다.
+        </p>
+        <button type="button" onClick={onMenu}>메인 화면으로</button>
+      </div>
+    </div>
+  );
+}
+
+function StoryResultPanel({
+  result,
+  onRetry,
+  onMenu,
+  onContinueChapter2,
+}: {
+  result: StoryResult | null;
+  onRetry: () => void;
+  onMenu: () => void;
+  onContinueChapter2: () => void;
+}) {
   const cleared = result?.outcome === "cleared";
   const elapsed = result ? `${Math.floor(result.durationMs / 60000)}:${Math.floor((result.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : "0:00";
 
   if (cleared) {
-    return (
-      <div className="w-full flex flex-col items-center text-center">
-        <div className="mb-4 inline-block rounded-full border border-amber-300/35 bg-amber-300/10 px-4 py-1.5 font-mono text-[10px] font-black tracking-[0.22em] text-amber-200">
-          CHAPTER 1 COMPLETE
-        </div>
-        <h2 className="mb-2 text-4xl font-mono font-black text-amber-200">CHAPTER 1 CLEAR</h2>
-        <p className="mb-6 text-sm font-semibold text-slate-400">학사 시스템 정상화 · {elapsed}</p>
-
-        <div className="mb-4 w-full rounded-xl border border-amber-300/25 bg-slate-950/80 p-5 text-left">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <span className="font-mono text-xs font-black tracking-widest text-slate-400">RECOVERED STARS</span>
-            <strong className="text-sm font-black text-amber-200">출석의 별 · 과제의 별</strong>
-          </div>
-          <div className="mb-2 flex items-center justify-between gap-4">
-            <span className="font-mono text-xs font-black tracking-widest text-slate-400">별 연결 상태</span>
-            <strong className="font-mono text-lg font-black text-amber-200">2 / 6</strong>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-800">
-            <div className="h-full w-1/3 rounded-full bg-amber-300" />
-          </div>
-        </div>
-
-        <div className="mb-5 w-full rounded-xl border border-slate-700 bg-black/70 p-4 font-mono text-sm font-bold leading-7 text-slate-300">
-          <div className="text-amber-200">학생증</div>
-          <div>오염…… 추가…… 탐색…….</div>
-          <div>다음 신호…… 확인…….</div>
-        </div>
-
-        <div className="mb-8 w-full border-y border-rose-500/35 bg-rose-950/20 px-4 py-3">
-          <div className="font-mono text-[10px] font-black tracking-[0.28em] text-rose-300">NEXT</div>
-          <div className="mt-1 font-mono text-xl font-black text-white">CHAPTER 2</div>
-        </div>
-
-        <div className="grid w-full grid-cols-2 gap-3">
-          <button onClick={onRetry} className="rounded-xl bg-amber-600 px-5 py-3.5 font-mono text-sm font-black text-black transition-all duration-200 hover:bg-amber-500">
-            챕터 1 다시 하기
-          </button>
-          <button onClick={onMenu} className="rounded-xl border border-slate-800 bg-slate-950 px-5 py-3.5 font-mono text-sm font-black text-white transition-all duration-200 hover:bg-slate-800">
-            메인 메뉴
-          </button>
-        </div>
-      </div>
-    );
+    return <Chapter1ClearSequence onContinue={onContinueChapter2} onMenu={onMenu} />;
   }
 
   return (
@@ -951,6 +1145,9 @@ export default function App() {
   const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
   const [playerId] = useState(() => getOrCreatePlayerId());
   const [storyResult, setStoryResult] = useState<StoryResult | null>(null);
+  const [storyProgress, setStoryProgress] = useState<StoryProgress>(() => loadStoryProgress());
+  const [showStoryChapterSelect, setShowStoryChapterSelect] = useState(false);
+  const [selectedStoryChapter, setSelectedStoryChapter] = useState<StoryChapter>(1);
   const [showShipSelect, setShowShipSelect] = useState(false);
   // 시작 버튼을 한 번 누른 뒤에는 다른 화면을 다녀와도 모드 선택 메뉴 상태를 유지한다.
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
@@ -968,11 +1165,19 @@ export default function App() {
     useAppStore.setState({ gameMode: "arcade", gameState: "PLAYING" });
   };
 
-  const handleStartStory = () => {
+  const handleStartStoryChapter = (chapter: StoryChapter) => {
+    const latestProgress = loadStoryProgress();
+    setStoryProgress(latestProgress);
+    if (!isStoryChapterUnlocked(chapter, latestProgress)) return;
+    setShowStoryChapterSelect(false);
+    setSelectedStoryChapter(chapter);
     setStoryResult(null);
-    // 모드와 화면 상태를 한 번의 store 갱신으로 바꾼다.
-    // STORY는 일반 게임의 PLAYING과 분리되어 있으므로 arcade 화면으로 갈 수 없다.
     useAppStore.setState({ gameMode: "story", gameState: "STORY" });
+  };
+
+  const handleOpenStoryChapterSelect = () => {
+    setStoryProgress(loadStoryProgress());
+    setShowStoryChapterSelect(true);
   };
 
   const handleShare = async () => {
@@ -988,6 +1193,9 @@ export default function App() {
   };
 
   const finishStory = (result: StoryResult) => {
+    if (result.outcome === "cleared") {
+      setStoryProgress(markStoryChapterCleared(selectedStoryChapter));
+    }
     setStoryResult(result);
     setGameState("STORY_RESULT");
   };
@@ -995,7 +1203,16 @@ export default function App() {
   // 스토리 모드는 일반 게임과 완전히 다른 최상위 화면 상태다.
   // 따라서 스토리 버튼을 눌렀을 때 arcade GameCanvas가 먼저 렌더링될 수 없다.
   if (gameState === "STORY") {
-    return <Chapter1StoryExperience shipStyle={shipStyle} onStoryResult={finishStory} />;
+    if (selectedStoryChapter === 1) {
+      return (
+        <Chapter1StoryExperience
+          shipStyle={shipStyle}
+          onStoryResult={finishStory}
+          onMenu={() => setGameState("MENU")}
+        />
+      );
+    }
+    return <ChapterIntegrationPlaceholder chapter={selectedStoryChapter} onMenu={() => setGameState("MENU")} />;
   }
 
   if (gameState === "PLAYING") {
@@ -1022,7 +1239,7 @@ export default function App() {
           onStoryMode={() => {
             setShowOptions(false);
             setShowShipSelect(false);
-            handleStartStory();
+            handleOpenStoryChapterSelect();
           }}
           onScoreMode={() => {
             setShowOptions(false);
@@ -1078,6 +1295,14 @@ export default function App() {
             <LeaderboardPanel onBack={() => setGameState(leaderboardReturnState)} />
           </div>
         )}
+
+        {menuInteractive && showStoryChapterSelect && (
+          <StoryChapterSelector
+            progress={storyProgress}
+            onSelect={handleStartStoryChapter}
+            onClose={() => setShowStoryChapterSelect(false)}
+          />
+        )}
       </div>
     );
   }
@@ -1106,8 +1331,9 @@ export default function App() {
         {gameState === "STORY_RESULT" && (
           <StoryResultPanel
             result={storyResult}
-            onRetry={handleStartStory}
+            onRetry={() => handleStartStoryChapter(selectedStoryChapter)}
             onMenu={() => setGameState("MENU")}
+            onContinueChapter2={() => handleStartStoryChapter(2)}
           />
         )}
 

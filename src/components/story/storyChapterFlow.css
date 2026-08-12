@@ -1,0 +1,197 @@
+.storyChapterOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #f8fafc;
+  background: rgba(0, 0, 0, .88);
+  backdrop-filter: blur(10px);
+}
+
+.storyChapterPanel {
+  width: min(900px, 94vw);
+  border: 1px solid rgba(239, 68, 68, .45);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(153, 27, 27, .22), transparent 36%),
+    linear-gradient(180deg, rgba(12, 15, 25, .98), rgba(2, 4, 10, .98));
+  box-shadow: 0 0 0 1px rgba(255,255,255,.04), 0 32px 90px rgba(0,0,0,.72), 0 0 50px rgba(239,68,68,.10);
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.storyChapterPanelHeader { text-align: center; margin-bottom: 28px; }
+.storyChapterPanelHeader small { color: #f59e0b; font: 900 11px ui-monospace, monospace; letter-spacing: .28em; }
+.storyChapterPanelHeader h2 { margin: 8px 0 6px; font-size: clamp(27px, 5vw, 44px); font-weight: 1000; }
+.storyChapterPanelHeader p { margin: 0; color: #94a3b8; font-size: 13px; }
+
+.storyChapterGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.storyChapterCard {
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+  border: 1px solid rgba(148,163,184,.24);
+  background: linear-gradient(145deg, rgba(30,41,59,.82), rgba(2,6,23,.92));
+  padding: 22px 18px;
+  text-align: left;
+  color: #f8fafc;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.storyChapterCard:not(:disabled):hover { transform: translateY(-4px); border-color: rgba(248,113,113,.76); box-shadow: 0 18px 32px rgba(0,0,0,.35); }
+.storyChapterCard:disabled { cursor: not-allowed; filter: grayscale(.8) brightness(.48); }
+.storyChapterCard .chapterNo { color: #f59e0b; font: 1000 11px ui-monospace, monospace; letter-spacing: .18em; }
+.storyChapterCard strong { display: block; margin-top: 10px; font-size: 24px; }
+.storyChapterCard .chapterState { position: absolute; left: 18px; bottom: 18px; color: #cbd5e1; font: 900 11px ui-monospace, monospace; }
+.storyChapterCard.isCleared .chapterState { color: #fde68a; }
+.storyChapterCard.isLocked::after { content: "LOCKED"; position: absolute; right: 14px; top: 14px; color: #f87171; font: 1000 10px ui-monospace, monospace; letter-spacing: .14em; }
+.storyChapterClose { display: block; margin: 22px auto 0; min-width: 180px; border: 1px solid #475569; background: #0f172a; color: white; padding: 11px 22px; font-weight: 900; }
+
+.chapterClearSequence {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+  color: white;
+  font-family: "Courier New", "Noto Sans KR", monospace;
+}
+.chapterClearStage { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; animation: chapterClearStageIn .55s ease forwards; }
+.chapterClearLogo { width: min(620px, 76vw); max-height: 64vh; object-fit: contain; filter: drop-shadow(0 0 28px rgba(230,0,0,.28)); }
+.chapterClearCredit { text-align: center; }
+.chapterClearCredit small { display:block; color:#ef4444; font-size:12px; font-weight:1000; letter-spacing:.28em; }
+.chapterClearCredit strong { display:block; margin-top:16px; font-size:clamp(25px,5vw,50px); }
+.chapterClearCredit span { display:block; margin-top:9px; color:#cbd5e1; font-weight:900; letter-spacing:.24em; }
+.chapterClearStars { text-align:center; }
+.chapterClearStars h2 { margin: 0 0 28px; color:#fde68a; font-size:clamp(24px,4vw,42px); }
+.chapterClearStarRow { display:flex; justify-content:center; gap:clamp(30px,8vw,90px); }
+.chapterClearStarItem { display:grid; justify-items:center; gap:12px; }
+.chapterClearStarShape { width:clamp(92px,14vw,150px); aspect-ratio:1; clip-path:polygon(50% 2%,61% 36%,97% 36%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,3% 36%,39% 36%); background:radial-gradient(circle at 42% 34%,#fffbd0 0 8%,#ffe56d 23%,#f7b51c 62%,#d97706 100%); filter:drop-shadow(0 0 14px #fde047) drop-shadow(0 0 34px rgba(250,204,21,.55)); animation: chapterStarPulse 1.25s ease-in-out infinite alternate; }
+.chapterClearStarItem small { color:#fef3c7; font-weight:1000; font-size:14px; }
+.chapterClearRemaining { margin-top:34px; font-size:clamp(22px,4vw,38px); font-weight:1000; }
+.chapterClearRemaining strong { color:#fde047; }
+
+.chapterContinuePrompt {
+  width:min(520px,90vw);
+  border:2px solid rgba(239,68,68,.72);
+  background:linear-gradient(180deg,#111827,#030712);
+  box-shadow:0 26px 80px rgba(0,0,0,.76), inset 0 0 32px rgba(127,29,29,.18);
+  padding:32px 28px;
+  text-align:center;
+}
+.chapterContinuePrompt small { color:#f59e0b; font-weight:1000; letter-spacing:.22em; }
+.chapterContinuePrompt h2 { margin:12px 0 8px; font-size:clamp(23px,4vw,34px); }
+.chapterContinuePrompt p { margin:0 0 26px; color:#94a3b8; }
+.chapterContinueActions { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.chapterContinueActions button { border:1px solid #475569; padding:13px; font-weight:1000; font-size:16px; }
+.chapterContinueActions .yes { border-color:#ef4444; background:#991b1b; color:#fff; }
+.chapterContinueActions .no { background:#0f172a; color:#fff; }
+
+.chapterIntegrationPlaceholder { position:fixed; inset:0; z-index:520; display:grid; place-items:center; padding:24px; background:#020617; color:white; text-align:center; }
+.chapterIntegrationPlaceholder > div { width:min(620px,92vw); border:1px solid #334155; background:#0f172a; padding:34px; }
+.chapterIntegrationPlaceholder small { color:#f59e0b; font-weight:1000; letter-spacing:.2em; }
+.chapterIntegrationPlaceholder h2 { margin:10px 0 12px; font-size:32px; }
+.chapterIntegrationPlaceholder p { color:#94a3b8; line-height:1.8; }
+.chapterIntegrationPlaceholder button { margin-top:22px; padding:12px 20px; border:1px solid #475569; background:#020617; color:#fff; font-weight:900; }
+
+@keyframes chapterClearStageIn { from { opacity:0; transform:scale(.985); } to { opacity:1; transform:scale(1); } }
+@keyframes chapterStarPulse { from { transform:scale(.96) rotate(-1deg); } to { transform:scale(1.05) rotate(1deg); } }
+
+@media (max-width: 720px) {
+  .storyChapterGrid { grid-template-columns:1fr; }
+  .storyChapterCard { min-height:116px; }
+}
+
+/* 챕터 1 전투 사망: 전투 화면을 서서히 완전 암전한 뒤 재도전 확인창을 표시한다. */
+.chapter1-combat-death-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 980;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(0, 0, 0, 0);
+  animation: chapter1CombatDeathFade 1.35s ease-in forwards;
+  color: #fff;
+  font-family: "Courier New", "Noto Sans KR", monospace;
+}
+
+.chapter1-combat-retry-dialog {
+  width: min(520px, 92vw);
+  padding: clamp(28px, 5vw, 40px) clamp(22px, 5vw, 36px);
+  border: 2px solid rgba(230, 0, 18, .76);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(120, 0, 12, .24), transparent 42%),
+    linear-gradient(180deg, rgba(17, 18, 24, .99), rgba(3, 4, 7, .99));
+  box-shadow: 0 26px 90px rgba(0, 0, 0, .86), inset 0 0 42px rgba(110, 0, 10, .16);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px) scale(.985);
+  animation: chapter1CombatRetryPromptIn .28s ease-out forwards;
+}
+
+.chapter1-combat-retry-dialog small {
+  display: block;
+  margin-bottom: 9px;
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: .22em;
+}
+
+.chapter1-combat-retry-dialog h2 {
+  margin: 0;
+  font-size: clamp(25px, 5vw, 36px);
+  font-weight: 1000;
+  line-height: 1.25;
+}
+
+.chapter1-combat-retry-dialog p {
+  margin: 13px 0 27px;
+  color: #aeb6c5;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.chapter1-combat-retry-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.chapter1-combat-retry-actions button {
+  min-height: 48px;
+  border: 1px solid #475569;
+  font-size: 15px;
+  font-weight: 1000;
+  cursor: pointer;
+  transition: transform .16s ease, filter .16s ease, border-color .16s ease;
+}
+
+.chapter1-combat-retry-actions button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.chapter1-combat-retry-actions .yes {
+  border-color: #ef4444;
+  background: #991b1b;
+  color: #fff;
+}
+
+.chapter1-combat-retry-actions .no {
+  background: #0f172a;
+  color: #fff;
+}
+
+@keyframes chapter1CombatDeathFade {
+  0% { background: rgba(0, 0, 0, 0); }
+  100% { background: rgba(0, 0, 0, 1); }
+}
+
+@keyframes chapter1CombatRetryPromptIn {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
