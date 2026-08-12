@@ -546,6 +546,7 @@ function Chapter1StoryExperience({
   const purificationTimerRef = useRef<number | null>(null);
   const bossClearTransitionTimerRef = useRef<number | null>(null);
   const combatRetryPromptTimerRef = useRef<number | null>(null);
+  const storyEndingFadeTimerRef = useRef<number | null>(null);
   const [part, setPart] = useState<1 | 2>(1);
   const [phase, setPhase] = useState<Chapter1StoryPhase>("story");
   const [previewRequest, setPreviewRequest] = useState<Chapter1StoryPreviewRequest | null>(null);
@@ -561,6 +562,7 @@ function Chapter1StoryExperience({
   const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
   const [bossClearTransitionActive, setBossClearTransitionActive] = useState(false);
   const [bossClearBackdrop, setBossClearBackdrop] = useState<string | null>(null);
+  const [storyEndingFadeActive, setStoryEndingFadeActive] = useState(false);
 
   const waveMounted = part === 2 && (phase === "wave-guide" || phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit");
   const bossMounted = part === 2 && (phase === "boss" || phase === "phase2-dialogue");
@@ -570,6 +572,7 @@ function Chapter1StoryExperience({
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     if (bossClearTransitionTimerRef.current !== null) window.clearTimeout(bossClearTransitionTimerRef.current);
     if (combatRetryPromptTimerRef.current !== null) window.clearTimeout(combatRetryPromptTimerRef.current);
+    if (storyEndingFadeTimerRef.current !== null) window.clearTimeout(storyEndingFadeTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -892,6 +895,10 @@ function Chapter1StoryExperience({
         </div>
       )}
 
+      {storyEndingFadeActive && (
+        <div className="chapter1-story-ending-fade" aria-hidden="true" />
+      )}
+
       <Chapter1StoryPlayer
         ref={storyPlayerRef}
         part={part}
@@ -918,11 +925,17 @@ function Chapter1StoryExperience({
             return;
           }
           if (event.type === "story-finished") {
-            onStoryResult({
-              outcome: "cleared",
-              stage: 1,
-              durationMs: Date.now() - startedAtRef.current,
-            });
+            if (storyEndingFadeTimerRef.current !== null || storyEndingFadeActive) return;
+            setShowJumpMenu(false);
+            setStoryEndingFadeActive(true);
+            storyEndingFadeTimerRef.current = window.setTimeout(() => {
+              storyEndingFadeTimerRef.current = null;
+              onStoryResult({
+                outcome: "cleared",
+                stage: 1,
+                durationMs: Date.now() - startedAtRef.current,
+              });
+            }, 2600);
           }
         }}
       />
@@ -998,7 +1011,7 @@ function StoryChapterSelector({
                 <span className="chapterNo">CHAPTER {chapter}</span>
                 <strong>{title}</strong>
                 <p>{subtitle}</p>
-                <span className="chapterState">{cleared ? "CLEAR" : unlocked ? "PLAY" : `CHAPTER ${chapter - 1} CLEAR 필요`}</span>
+                <span className="chapterState">{cleared ? "✓ CLEAR" : unlocked ? "PLAY" : `CHAPTER ${chapter - 1} CLEAR 필요`}</span>
               </button>
             );
           })}
@@ -1010,32 +1023,29 @@ function StoryChapterSelector({
 }
 
 function Chapter1ClearSequence({ onContinue, onMenu }: { onContinue: () => void; onMenu: () => void }) {
-  const [phase, setPhase] = useState<"black" | "logo" | "credit" | "stars" | "prompt">("black");
+  const [phase, setPhase] = useState<"opening" | "stars" | "prompt">("opening");
 
   useEffect(() => {
     const timers = [
-      window.setTimeout(() => setPhase("logo"), 700),
-      window.setTimeout(() => setPhase("credit"), 2700),
-      window.setTimeout(() => setPhase("stars"), 4700),
-      window.setTimeout(() => setPhase("prompt"), 7600),
+      // 프롤로그 직후 오프닝의 로고/제작자 타이밍을 그대로 사용하고 NOTICE 구간만 제외한다.
+      window.setTimeout(() => setPhase("stars"), 10_100),
+      window.setTimeout(() => setPhase("prompt"), 13_500),
     ];
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, []);
 
   return (
     <div className="chapterClearSequence">
-      {phase === "logo" && (
-        <div className="chapterClearStage">
-          <img className="chapterClearLogo" src="/assets/story/chapter1/ui/game_logo.png" alt="호반우의 졸업 대작전" />
-        </div>
-      )}
-      {phase === "credit" && (
-        <div className="chapterClearStage">
-          <div className="chapterClearCredit">
+      {phase === "opening" && (
+        <div className="chapterClearOpeningSequence" aria-label="챕터 1 종료 오프닝 크레딧">
+          <section className="chapterClearOpeningCard chapterClearOpeningLogoCard" aria-label="게임 로고">
+            <img className="chapterClearOpeningLogoImage" src="/assets/story/chapter1/ui/game_logo.png" alt="호반우의 졸업 대작전 게임 로고" />
+          </section>
+          <section className="chapterClearOpeningCard chapterClearOpeningMadeByCard" aria-label="제작자 크레딧">
             <small>DIRECTED AND CREATED</small>
             <strong>made by Ma Geon</strong>
             <span>마 건</span>
-          </div>
+          </section>
         </div>
       )}
       {phase === "stars" && (
@@ -1043,11 +1053,11 @@ function Chapter1ClearSequence({ onContinue, onMenu }: { onContinue: () => void;
           <div className="chapterClearStars">
             <h2>회수한 별</h2>
             <div className="chapterClearStarRow">
-              <div className="chapterClearStarItem">
+              <div className="chapterClearStarItem attendance">
                 <span className="chapterClearStarShape" />
                 <small>출석의 별</small>
               </div>
-              <div className="chapterClearStarItem">
+              <div className="chapterClearStarItem assignment">
                 <span className="chapterClearStarShape" />
                 <small>과제의 별</small>
               </div>

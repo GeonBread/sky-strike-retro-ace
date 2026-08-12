@@ -4,47 +4,92 @@
   z-index: 500;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: clamp(18px, 3vw, 38px);
   color: #f8fafc;
-  background: rgba(0, 0, 0, .88);
+  background: rgba(0, 0, 0, .9);
   backdrop-filter: blur(10px);
 }
 
 .storyChapterPanel {
-  width: min(900px, 94vw);
+  width: min(1120px, 96vw);
+  max-height: 94dvh;
+  overflow: auto;
   border: 1px solid rgba(239, 68, 68, .45);
   background:
     radial-gradient(circle at 50% 0%, rgba(153, 27, 27, .22), transparent 36%),
     linear-gradient(180deg, rgba(12, 15, 25, .98), rgba(2, 4, 10, .98));
   box-shadow: 0 0 0 1px rgba(255,255,255,.04), 0 32px 90px rgba(0,0,0,.72), 0 0 50px rgba(239,68,68,.10);
-  padding: clamp(24px, 4vw, 42px);
+  padding: clamp(34px, 4.4vw, 56px);
 }
 
-.storyChapterPanelHeader { text-align: center; margin-bottom: 28px; }
-.storyChapterPanelHeader small { color: #f59e0b; font: 900 11px ui-monospace, monospace; letter-spacing: .28em; }
-.storyChapterPanelHeader h2 { margin: 8px 0 6px; font-size: clamp(27px, 5vw, 44px); font-weight: 1000; }
-.storyChapterPanelHeader p { margin: 0; color: #94a3b8; font-size: 13px; }
+.storyChapterPanelHeader { text-align: center; margin-bottom: clamp(32px, 4vw, 44px); }
+.storyChapterPanelHeader small { color: #f59e0b; font: 900 clamp(12px, 1.3vw, 15px) ui-monospace, monospace; letter-spacing: .30em; }
+.storyChapterPanelHeader h2 { margin: 13px 0 10px; font-size: clamp(36px, 5vw, 58px); font-weight: 1000; line-height: 1.12; }
+.storyChapterPanelHeader p { margin: 0; color: #a8b2c2; font-size: clamp(14px, 1.45vw, 17px); line-height: 1.65; }
 
-.storyChapterGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.storyChapterGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(18px, 2.2vw, 26px); }
 .storyChapterCard {
   position: relative;
-  min-height: 190px;
+  min-height: clamp(236px, 24vw, 276px);
   overflow: hidden;
   border: 1px solid rgba(148,163,184,.24);
   background: linear-gradient(145deg, rgba(30,41,59,.82), rgba(2,6,23,.92));
-  padding: 22px 18px;
+  padding: clamp(28px, 3vw, 36px) clamp(23px, 2.6vw, 32px) 72px;
   text-align: left;
   color: #f8fafc;
   transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
-.storyChapterCard:not(:disabled):hover { transform: translateY(-4px); border-color: rgba(248,113,113,.76); box-shadow: 0 18px 32px rgba(0,0,0,.35); }
+.storyChapterCard:not(:disabled):hover { transform: translateY(-5px); border-color: rgba(248,113,113,.76); box-shadow: 0 18px 32px rgba(0,0,0,.35); }
 .storyChapterCard:disabled { cursor: not-allowed; filter: grayscale(.8) brightness(.48); }
-.storyChapterCard .chapterNo { color: #f59e0b; font: 1000 11px ui-monospace, monospace; letter-spacing: .18em; }
-.storyChapterCard strong { display: block; margin-top: 10px; font-size: 24px; }
-.storyChapterCard .chapterState { position: absolute; left: 18px; bottom: 18px; color: #cbd5e1; font: 900 11px ui-monospace, monospace; }
-.storyChapterCard.isCleared .chapterState { color: #fde68a; }
-.storyChapterCard.isLocked::after { content: "LOCKED"; position: absolute; right: 14px; top: 14px; color: #f87171; font: 1000 10px ui-monospace, monospace; letter-spacing: .14em; }
-.storyChapterClose { display: block; margin: 22px auto 0; min-width: 180px; border: 1px solid #475569; background: #0f172a; color: white; padding: 11px 22px; font-weight: 900; }
+.storyChapterCard .chapterNo { color: #f59e0b; font: 1000 clamp(12px, 1.25vw, 15px) ui-monospace, monospace; letter-spacing: .2em; }
+.storyChapterCard strong { display: block; margin-top: 15px; font-size: clamp(27px, 2.7vw, 35px); line-height: 1.28; word-break: keep-all; }
+.storyChapterCard p { margin: 12px 0 0; color: #d6dce6; font-size: clamp(14px, 1.5vw, 18px); font-weight: 800; line-height: 1.58; word-break: keep-all; }
+.storyChapterCard .chapterState {
+  position: absolute;
+  left: clamp(23px, 2.6vw, 32px);
+  bottom: 24px;
+  color: #d8dee8;
+  font: 1000 clamp(13px, 1.35vw, 16px) ui-monospace, monospace;
+  letter-spacing: .11em;
+}
+.storyChapterCard.isCleared {
+  outline-color: #ffd73c !important;
+  background:
+    radial-gradient(circle at 22% 24%, rgba(255, 215, 60, .15), transparent 34%),
+    linear-gradient(145deg, rgba(34, 42, 57, .9), rgba(6, 9, 18, .96));
+  box-shadow:
+    0 0 0 2px rgba(255, 215, 60, .68),
+    0 0 28px rgba(255, 215, 60, .14),
+    inset 0 0 34px rgba(255, 215, 60, .07) !important;
+}
+.storyChapterCard.isCleared::before {
+  content: "CLEARED";
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  padding: 7px 11px 6px;
+  border: 2px solid #050506;
+  outline: 1px solid #ffd73c;
+  outline-offset: -4px;
+  background: #4a3500;
+  color: #fff2a8;
+  font: 1000 clamp(11px, 1.15vw, 14px) ui-monospace, monospace;
+  letter-spacing: .12em;
+  text-shadow: 2px 2px 0 #000;
+}
+.storyChapterCard.isCleared .chapterState { color: #ffe56d; text-shadow: 0 0 12px rgba(255,215,60,.46); }
+.storyChapterCard.isLocked::after { content: "LOCKED"; position: absolute; right: 18px; top: 18px; color: #f87171; font: 1000 clamp(11px, 1.1vw, 13px) ui-monospace, monospace; letter-spacing: .14em; }
+.storyChapterClose {
+  display: block;
+  margin: clamp(28px, 3vw, 38px) auto 0;
+  min-width: 230px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: white;
+  padding: 15px 28px;
+  font-size: 18px;
+  font-weight: 1000;
+}
 
 .chapterClearSequence {
   position: fixed;
@@ -58,18 +103,136 @@
   font-family: "Courier New", "Noto Sans KR", monospace;
 }
 .chapterClearStage { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; animation: chapterClearStageIn .55s ease forwards; }
-.chapterClearLogo { width: min(620px, 76vw); max-height: 64vh; object-fit: contain; filter: drop-shadow(0 0 28px rgba(230,0,0,.28)); }
-.chapterClearCredit { text-align: center; }
-.chapterClearCredit small { display:block; color:#ef4444; font-size:12px; font-weight:1000; letter-spacing:.28em; }
-.chapterClearCredit strong { display:block; margin-top:16px; font-size:clamp(25px,5vw,50px); }
-.chapterClearCredit span { display:block; margin-top:9px; color:#cbd5e1; font-weight:900; letter-spacing:.24em; }
+
+/* 프롤로그 종료 직후 사용하던 오프닝 크레딧의 시각 규칙을 그대로 재사용한다. NOTICE 카드만 제외한다. */
+.chapterClearOpeningSequence {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #000;
+}
+.chapterClearOpeningSequence::after {
+  content: "";
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  opacity: .12;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 3px, rgba(255,255,255,.025) 4px, transparent 5px),
+    radial-gradient(circle at center, transparent 34%, rgba(0,0,0,.66) 100%);
+  mix-blend-mode: screen;
+}
+.chapterClearOpeningCard {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: clamp(12px, 2.2vh, 24px);
+  padding: clamp(28px, 6vw, 90px);
+  color: #fff;
+  text-align: center;
+  opacity: 0;
+  transform: scale(.985);
+  text-shadow: 0 2px 18px rgba(255,255,255,.16), 0 8px 34px rgba(0,0,0,.94);
+}
+.chapterClearOpeningLogoCard { animation: chapterClearOpeningLogoCardLife 15s ease-in-out both; }
+.chapterClearOpeningLogoImage {
+  width: min(72vw, 720px);
+  height: min(78vh, 760px);
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 2px rgba(255,255,255,.45))
+    drop-shadow(0 24px 54px rgba(0,0,0,.94))
+    drop-shadow(0 0 38px rgba(255,186,48,.18));
+  transform: scale(.94);
+  animation: chapterClearOpeningLogoBreath 5s ease-in-out both;
+}
+.chapterClearOpeningMadeByCard { animation: chapterClearOpeningMadeByCardLife 15s ease-in-out both; }
+.chapterClearOpeningMadeByCard small {
+  display: block;
+  color: rgba(255,255,255,.52);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(11px, 1.35vw, 16px);
+  font-weight: 400;
+  letter-spacing: .42em;
+  text-transform: uppercase;
+}
+.chapterClearOpeningMadeByCard strong {
+  display: block;
+  color: #fff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(36px, 7vw, 88px);
+  font-weight: 500;
+  letter-spacing: .045em;
+}
+.chapterClearOpeningMadeByCard span {
+  display: block;
+  color: rgba(255,255,255,.78);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(15px, 2.2vw, 27px);
+  letter-spacing: .12em;
+}
+
 .chapterClearStars { text-align:center; }
-.chapterClearStars h2 { margin: 0 0 28px; color:#fde68a; font-size:clamp(24px,4vw,42px); }
-.chapterClearStarRow { display:flex; justify-content:center; gap:clamp(30px,8vw,90px); }
-.chapterClearStarItem { display:grid; justify-items:center; gap:12px; }
-.chapterClearStarShape { width:clamp(92px,14vw,150px); aspect-ratio:1; clip-path:polygon(50% 2%,61% 36%,97% 36%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,3% 36%,39% 36%); background:radial-gradient(circle at 42% 34%,#fffbd0 0 8%,#ffe56d 23%,#f7b51c 62%,#d97706 100%); filter:drop-shadow(0 0 14px #fde047) drop-shadow(0 0 34px rgba(250,204,21,.55)); animation: chapterStarPulse 1.25s ease-in-out infinite alternate; }
-.chapterClearStarItem small { color:#fef3c7; font-weight:1000; font-size:14px; }
-.chapterClearRemaining { margin-top:34px; font-size:clamp(22px,4vw,38px); font-weight:1000; }
+.chapterClearStars h2 { margin: 0 0 34px; color:#fff4bd; font-size:clamp(28px,4vw,46px); text-shadow:0 0 18px rgba(255,225,104,.34); }
+.chapterClearStarRow { display:flex; justify-content:center; gap:clamp(42px,9vw,110px); }
+.chapterClearStarItem { display:grid; justify-items:center; gap:16px; }
+.chapterClearStarShape {
+  position: relative;
+  display: block;
+  width: clamp(108px, 14vw, 158px);
+  aspect-ratio: 1;
+  background: center / contain no-repeat url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%23ffd73c' d='M50 4 L61 35 L94 36 L67 56 L77 90 L50 71 L23 90 L33 56 L6 36 L39 35 Z'/></svg>");
+  filter: drop-shadow(0 0 16px rgba(255,248,188,1)) drop-shadow(0 0 42px rgba(255,212,54,.96)) drop-shadow(0 0 86px rgba(255,220,90,.64));
+  isolation: isolate;
+  animation: chapterStarPulse 1.1s ease-in-out infinite;
+}
+.chapterClearStarShape::before,
+.chapterClearStarShape::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.chapterClearStarShape::before {
+  width: 250%;
+  height: 250%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,247,186,.96) 0%, rgba(255,223,109,.82) 18%, rgba(255,201,46,.5) 40%, rgba(255,187,25,.16) 60%, rgba(255,180,20,0) 78%);
+  filter: blur(14px);
+  opacity: .98;
+  animation: chapterRecoveredStarAuraWarm 1.1s ease-in-out infinite;
+}
+.chapterClearStarShape::after {
+  width: 100%;
+  height: 100%;
+  background: center / contain no-repeat url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%23ffd73c' d='M50 4 L61 35 L94 36 L67 56 L77 90 L50 71 L23 90 L33 56 L6 36 L39 35 Z'/></svg>");
+  filter: brightness(1.35) saturate(1.05) blur(2px);
+  opacity: .72;
+  animation: chapterRecoveredStarCoreFlicker 1.1s ease-in-out infinite;
+}
+.chapterClearStarItem.assignment .chapterClearStarShape {
+  background: center / contain no-repeat url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%2372dfff' d='M50 4 L61 35 L94 36 L67 56 L77 90 L50 71 L23 90 L33 56 L6 36 L39 35 Z'/></svg>");
+  filter: drop-shadow(0 0 16px rgba(228,252,255,1)) drop-shadow(0 0 42px rgba(98,214,255,.94)) drop-shadow(0 0 86px rgba(122,224,255,.62));
+}
+.chapterClearStarItem.assignment .chapterClearStarShape::before {
+  background: radial-gradient(circle, rgba(230,252,255,.96) 0%, rgba(152,234,255,.82) 18%, rgba(84,206,255,.5) 40%, rgba(54,186,255,.16) 60%, rgba(54,186,255,0) 78%);
+  animation: chapterRecoveredStarAuraCool 1.15s ease-in-out infinite;
+}
+.chapterClearStarItem.assignment .chapterClearStarShape::after {
+  background: center / contain no-repeat url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path fill='%2372dfff' d='M50 4 L61 35 L94 36 L67 56 L77 90 L50 71 L23 90 L33 56 L6 36 L39 35 Z'/></svg>");
+  filter: brightness(1.32) saturate(1.04) blur(2px);
+  opacity: .74;
+}
+.chapterClearStarItem small { color:#fff7ca; font-weight:1000; font-size:clamp(14px,1.5vw,18px); text-shadow:0 2px 4px #000,0 0 12px rgba(255,217,58,.7); }
+.chapterClearStarItem.assignment small { color:#d9f8ff; text-shadow:0 2px 4px #000,0 0 12px rgba(83,206,255,.7); }
+.chapterClearRemaining { margin-top:42px; font-size:clamp(27px,4vw,42px); font-weight:1000; }
 .chapterClearRemaining strong { color:#fde047; }
 
 .chapterContinuePrompt {
@@ -96,11 +259,50 @@
 .chapterIntegrationPlaceholder button { margin-top:22px; padding:12px 20px; border:1px solid #475569; background:#020617; color:#fff; font-weight:900; }
 
 @keyframes chapterClearStageIn { from { opacity:0; transform:scale(.985); } to { opacity:1; transform:scale(1); } }
-@keyframes chapterStarPulse { from { transform:scale(.96) rotate(-1deg); } to { transform:scale(1.05) rotate(1deg); } }
+@keyframes chapterClearOpeningLogoCardLife {
+  0%, 5% { opacity: 0; transform: scale(.965); filter: brightness(.35); }
+  12%, 25% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  32%, 100% { opacity: 0; transform: scale(1.025); filter: brightness(.28); }
+}
+@keyframes chapterClearOpeningMadeByCardLife {
+  0%, 34% { opacity: 0; transform: translateY(12px) scale(.985); filter: brightness(.25); }
+  41%, 58% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+  66%, 100% { opacity: 0; transform: translateY(-10px) scale(1.015); filter: brightness(.25); }
+}
+@keyframes chapterClearOpeningLogoBreath {
+  0% { transform: scale(.94); filter: brightness(.72) saturate(.82); }
+  42%, 72% { transform: scale(1); filter: brightness(1.04) saturate(1.04); }
+  100% { transform: scale(1.025); filter: brightness(.72) saturate(.82); }
+}
+@keyframes chapterStarPulse {
+  0%, 100% { transform: scale(.96) rotate(-1deg); }
+  50% { transform: scale(1.05) rotate(1deg); }
+}
+@keyframes chapterRecoveredStarAuraWarm {
+  0%, 100% { opacity: .74; transform: translate(-50%, -50%) scale(.86); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+}
+@keyframes chapterRecoveredStarAuraCool {
+  0%, 100% { opacity: .72; transform: translate(-50%, -50%) scale(.88); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+@keyframes chapterRecoveredStarCoreFlicker {
+  0%, 100% { opacity: .56; transform: translate(-50%, -50%) scale(.96); }
+  45% { opacity: .86; transform: translate(-50%, -50%) scale(1.03); }
+}
 
-@media (max-width: 720px) {
-  .storyChapterGrid { grid-template-columns:1fr; }
-  .storyChapterCard { min-height:116px; }
+
+@media (max-width: 900px) {
+  .storyChapterPanel { width:min(720px,96vw); padding:clamp(28px,5vw,42px); }
+  .storyChapterGrid { grid-template-columns:1fr; gap:16px; }
+  .storyChapterCard { min-height:172px; padding:24px 22px 62px; }
+  .storyChapterCard strong { font-size:clamp(24px,5vw,31px); }
+  .storyChapterCard .chapterState { left:22px; bottom:20px; }
+}
+@media (max-width: 520px) {
+  .storyChapterOverlay { padding:10px; }
+  .storyChapterPanel { max-height:96dvh; }
+  .storyChapterPanelHeader h2 { font-size:clamp(30px,9vw,40px); }
 }
 
 /* 챕터 1 전투 사망: 전투 화면을 서서히 완전 암전한 뒤 재도전 확인창을 표시한다. */
@@ -285,4 +487,23 @@
 .chapterContinuePrompt h2,
 .chapter1-combat-retry-dialog h2 {
   text-shadow: 3px 3px 0 #000;
+}
+
+
+/* FIX15 · 마지막 대사가 끝난 화면을 유지한 채 브라우저 전체를 천천히 암전한다. */
+.chapter1-story-ending-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: #000;
+  opacity: 0;
+  pointer-events: auto;
+  animation: chapter1StoryEndingFadeToBlack 2.6s ease-in-out forwards;
+}
+
+@keyframes chapter1StoryEndingFadeToBlack {
+  0% { opacity: 0; }
+  18% { opacity: .05; }
+  62% { opacity: .58; }
+  100% { opacity: 1; }
 }
