@@ -86,3 +86,135 @@
   max-height: 100%;
   overflow: hidden;
 }
+
+
+/* FIX19 · ESC 일시정지/메인화면 확인창을 챕터 알림창과 동일한 게임 HUD 스타일로 통일한다. */
+.chapterGamePauseOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 28px);
+  background: rgba(0, 0, 0, .78);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.chapterGamePauseDialog {
+  position: relative;
+  width: min(560px, 92%);
+  padding: clamp(30px, 5vw, 44px) clamp(24px, 5vw, 40px) clamp(26px, 4.6vw, 38px);
+  border: 4px solid #050506;
+  border-radius: 0;
+  outline: 2px solid #e60000;
+  outline-offset: -8px;
+  background:
+    linear-gradient(135deg, rgba(230, 0, 0, .12), transparent 28%),
+    linear-gradient(180deg, rgba(22, 23, 29, .995), rgba(3, 4, 7, .995));
+  box-shadow:
+    0 0 0 2px #6b0000,
+    0 0 0 5px rgba(204, 204, 204, .28),
+    0 30px 90px rgba(0, 0, 0, .9),
+    inset 0 0 0 2px rgba(255, 255, 255, .055),
+    inset 0 0 52px rgba(120, 0, 10, .16);
+  color: #fff;
+  text-align: center;
+  font-family: "Noto Sans KR", "Courier New", monospace;
+}
+
+.chapterGamePauseDialog::before,
+.chapterGamePauseDialog::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #e60000;
+  border: 3px solid #050506;
+  box-shadow: 0 0 0 1px #cccccc;
+}
+
+.chapterGamePauseDialog::before { left: -8px; top: -8px; }
+.chapterGamePauseDialog::after { right: -8px; bottom: -8px; }
+
+.chapterGamePauseDialog small {
+  display: block;
+  margin-bottom: 10px;
+  color: #ff3b3b;
+  font: 1000 clamp(10px, 1.2vw, 13px) ui-monospace, monospace;
+  letter-spacing: .28em;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.chapterGamePauseDialog h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(34px, 5.8vw, 48px);
+  font-weight: 1000;
+  line-height: 1.12;
+  letter-spacing: -.04em;
+  text-shadow: 3px 3px 0 #000;
+}
+
+.chapterGamePauseDialog p {
+  margin: 16px 0 30px;
+  color: #b8c0cd;
+  font-size: clamp(14px, 1.6vw, 17px);
+  font-weight: 800;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.chapterGamePauseActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.chapterGamePauseActions button {
+  min-height: 58px;
+  padding: 13px 18px;
+  border: 3px solid #050506;
+  border-radius: 0;
+  box-shadow:
+    0 0 0 1px rgba(204, 204, 204, .34),
+    inset 0 0 0 1px rgba(255, 255, 255, .05);
+  color: #fff;
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 1000;
+  cursor: pointer;
+  transition: transform .15s ease, filter .15s ease, outline-color .15s ease;
+}
+
+.chapterGamePauseActions button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+}
+
+.chapterGamePauseActions .primary,
+.chapterGamePauseActions .danger {
+  outline: 1px solid #ff5353;
+  outline-offset: -7px;
+  background: linear-gradient(180deg, #bd0014, #700009);
+}
+
+.chapterGamePauseActions .secondary {
+  outline: 1px solid #797977;
+  outline-offset: -7px;
+  background: linear-gradient(180deg, #1a1c22, #0b0c10);
+}
+
+.chapterGameExitConfirmDialog {
+  width: min(610px, 94%);
+}
+
+.chapterGameExitConfirmDialog h2 {
+  font-size: clamp(31px, 5.2vw, 45px);
+}
+
+@media (max-width: 520px) {
+  .chapterGamePauseOverlay { padding: 12px; }
+  .chapterGamePauseDialog { width: 96%; padding: 28px 18px 22px; }
+  .chapterGamePauseActions { gap: 10px; }
+  .chapterGamePauseActions button { min-height: 52px; }
+}

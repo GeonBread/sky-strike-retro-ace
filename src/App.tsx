@@ -10,8 +10,6 @@ import { LeaderboardPanel } from "./components/LeaderboardPanel";
 import { createLocalRunSession, sanitizePlayerName } from "./services/leaderboard";
 import { HobanwooMainMenu } from "./components/ui/buttons/HobanwooMainMenu";
 import { HobanwooShipSelectPanel } from "./components/ui/buttons/HobanwooShipSelectPanel";
-import { HobanwooSpriteButton } from "./components/ui/buttons/HobanwooSpriteButton";
-import { NotificationDialog } from "./components/ui/NotificationDialog";
 import {
   Chapter1StoryPlayer,
   type Chapter1StoryPlayerHandle,
@@ -77,7 +75,7 @@ function GameCanvas({
   onChapter1BossComplete,
   onChapter1CombatFailed,
   chapter1WaveStartIndex = 0,
-  chapter1BossSkipIntro = true,
+  chapter1BossSkipIntro = false,
   inputEnabled = true,
   chapter1PurificationExit = false,
   simulationEnabled = true,
@@ -378,27 +376,15 @@ function GameCanvas({
     : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
   const containerClassName = isStoryCombatCanvas
-    ? `relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col${chapter1BossIntroActive ? " chapter1-boss-intro-fullscreen" : ""}`
+    ? "relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col"
     : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
   const containerStyle: React.CSSProperties | undefined = isStoryCombatCanvas
-    ? chapter1BossIntroActive
-      ? {
-          // 보스 최초 등장 동안 24:25 비율을 유지한 채 뷰포트를 완전히 덮도록 확대한다.
-          position: "fixed",
-          left: "50%",
-          top: "50%",
-          width: "max(100vw, 96dvh)",
-          height: "max(100dvh, 104.167vw)",
-          aspectRatio: "24 / 25",
-          transform: "translate(-50%, -50%)",
-          zIndex: 120,
-        }
-      : {
-          // 스토리·웨이브·보스를 모두 동일한 24:25 전투 프레임으로 표시한다.
-          width: "min(96dvh, 100vw)",
-          height: "min(100dvh, 104.167vw)",
-          aspectRatio: "24 / 25",
-        }
+    ? {
+        // 보스 등장·HP 충전 연출까지 포함해 스토리 전투는 항상 동일한 24:25 게임 프레임 안에서 표시한다.
+        width: "min(96dvh, 100vw)",
+        height: "min(100dvh, 104.167vw)",
+        aspectRatio: "24 / 25",
+      }
     : undefined;
 
   return (
@@ -465,39 +451,59 @@ function GameCanvas({
       )}
 
       {isPaused && (
-        <div className="hobanwooPauseDim">
-          <section className="hobanwooPausePanel" aria-label="일시 정지">
-            <div className="hobanwooPauseEyebrow">GAME PAUSED</div>
-            <h2>일시 정지</h2>
-            <div className="hobanwooPauseActions">
-              <HobanwooSpriteButton
-                variant="pauseContinue"
-                onClick={() => {
-                  setShowExitConfirm(false);
-                  setIsPaused(false);
-                }}
-              />
-              <HobanwooSpriteButton
-                variant="mainMenu"
-                onClick={() => setShowExitConfirm(true)}
-              />
-            </div>
-          </section>
+        <div className="chapterGamePauseOverlay">
+          {!showExitConfirm ? (
+            <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="일시 정지">
+              <small>GAME PAUSED</small>
+              <h2>일시 정지</h2>
+              <p>현재 전투가 일시 정지되었습니다.</p>
+              <div className="chapterGamePauseActions">
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => {
+                    setShowExitConfirm(false);
+                    setIsPaused(false);
+                  }}
+                >
+                  계속하기
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setShowExitConfirm(true)}
+                >
+                  메인화면
+                </button>
+              </div>
+            </section>
+          ) : (
+            <section className="chapterGamePauseDialog chapterGameExitConfirmDialog" role="dialog" aria-modal="true" aria-label="메인 화면 이동 확인">
+              <small>RETURN TO MENU</small>
+              <h2>메인 화면으로 이동</h2>
+              <p>
+                현재 플레이 기록이 종료됩니다.<br />
+                메인 화면으로 돌아가시겠습니까?
+              </p>
+              <div className="chapterGamePauseActions isConfirm">
+                <button type="button" className="secondary" onClick={() => setShowExitConfirm(false)}>취소</button>
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => {
+                    setShowExitConfirm(false);
+                    sfx.resumeAll();
+                    engineRef.current?.stop();
+                    setGameState("MENU");
+                  }}
+                >
+                  확인
+                </button>
+              </div>
+            </section>
+          )}
         </div>
       )}
-
-      <NotificationDialog
-        open={showExitConfirm}
-        title="메인 화면으로 이동"
-        message="현재 플레이 기록이 종료됩니다.\n메인 화면으로 돌아가시겠습니까?"
-        onCancel={() => setShowExitConfirm(false)}
-        onConfirm={() => {
-          setShowExitConfirm(false);
-          sfx.resumeAll();
-          engineRef.current?.stop();
-          setGameState("MENU");
-        }}
-      />
     </div>
     {chapter1WaveOnly && active && inputEnabled && (
       <button
@@ -646,6 +652,8 @@ function Chapter1StoryExperience({
   const jumpToBoss = () => {
     setPreviewRequest(null);
     setPart(2);
+    // 최초 보스 진입도 재도전과 동일하게 새 런타임으로 시작해 인트로가 건너뛰어지지 않게 한다.
+    setBossRunKey((key) => key + 1);
     setPhase("boss");
     setShowJumpMenu(false);
   };
@@ -826,7 +834,7 @@ function Chapter1StoryExperience({
             shipStyle={shipStyle}
             onStoryResult={onStoryResult}
             chapter1BossOnly
-            chapter1BossSkipIntro={bossRunKey === 0}
+            chapter1BossSkipIntro={false}
             active={bossActive && !combatFailure}
             inputEnabled={bossActive && !bossClearTransitionActive && !combatFailure}
             onChapter1BossPhase2={() => {
@@ -917,6 +925,8 @@ function Chapter1StoryExperience({
           }
           if (event.type === "boss-ready") {
             setPreviewRequest(null);
+            // 첫 보스전도 반드시 새 GameCanvas/보스 런타임으로 시작해 등장·HP 충전 연출을 처음부터 재생한다.
+            setBossRunKey((key) => key + 1);
             setPhase("boss");
             return;
           }
