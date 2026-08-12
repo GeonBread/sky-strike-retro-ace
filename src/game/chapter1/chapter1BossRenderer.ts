@@ -47,11 +47,11 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   const shake = Math.sin(time * 0.012) * 1.15;
   const cx = engine.player.x + engine.player.width / 2 + shake;
   let cy = engine.player.y + engine.player.height / 2 + bob;
-  // 보스 클리어 문구를 약 3초간 보여준 뒤 호반우가 위로 상승해 화면 밖으로 이탈합니다.
+  // 보스 폭발과 보스 본체의 상승 이탈이 끝난 직후 호반우가 위로 빠르게 상승합니다.
   // 이탈 중에는 무적 깜빡임을 적용하지 않습니다.
   if (state.cinematicMode === "destroy") {
-    const exitStart = 6.05;
-    const exitEnd = 7.45;
+    const exitStart = 4.15;
+    const exitEnd = 5.35;
     const exitProgress = Math.max(0, Math.min(1, (state.cinematicTime - exitStart) / (exitEnd - exitStart)));
     if (exitProgress > 0) {
       const eased = exitProgress * exitProgress * exitProgress;

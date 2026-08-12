@@ -10,6 +10,8 @@ export interface Chapter1BossOriginalAdapter {
   ctx: CanvasRenderingContext2D;
   getPlayer(): { x: number; y: number; radius: number; invulnerable: boolean };
   hitPlayer(): void;
+  fatalHit?(): void;
+  clearSupportEnemies?(): void;
   drawPlayer?(ctx: CanvasRenderingContext2D, player: any): void;
   drawPlayerBullets?(ctx: CanvasRenderingContext2D): void;
   onComplete?(): void;
@@ -183,7 +185,7 @@ const STAGE1_MAX_HP = 1200;
 const STAGE2_MAX_HP = 1800;
 const TOTAL_BOSS_HP = STAGE1_MAX_HP + STAGE2_MAX_HP;
 const INTRO_DURATION = 5.8;
-const BOSS_DESTRUCTION_DURATION = 8.35;
+const BOSS_DESTRUCTION_DURATION = 7.8;
 const BOSS_HP_CHARGE_DURATION = 3.0;
 const BOSS_PATTERN_START_DELAY = 2.0;
 const STAGE2_PATTERN_START_DELAY = 0.65;
@@ -395,6 +397,7 @@ function resetPattern(options = {}) {
     authInterferenceAt: 2.7,
     authCursor: null,
     authFailedBurst: false,
+    authFailureAt: -1,
     queueTokens: [],
     queueCycleStart: .35,
     serviceQueue: null,
@@ -529,6 +532,7 @@ function applyBossDamage(amount) {
   } else if (state.bossStageState === "stage2") {
     state.stage2Hp = Math.max(0, state.stage2Hp - amount);
     if (state.stage2Hp <= 0) {
+      adapter.clearSupportEnemies?.();
       state.bossStageState = "defeated";
       state.battleDefeatedAt = state.t;
       state.playerBullets.length = 0;
@@ -856,9 +860,8 @@ function updateCinematic(dt) {
   state.cinematicTime = Math.min(BOSS_DESTRUCTION_DURATION, state.cinematicTime + dt);
   const t = state.cinematicTime;
   const explosionEnd = 3.0;
-  const bossExitEnd = 3.55;
-  const clearStart = 3.6;
-  const clearEnd = 6.6;
+  const bossExitStart = 3.0;
+  const bossExitEnd = 4.15;
 
   if (t >= .04) seedCinematicDeathEffects();
 
@@ -883,15 +886,15 @@ function updateCinematic(dt) {
     }
     state.destructionBossY = state.purifyStartY + Math.sin(t * 48) * 3;
   } else if (t < bossExitEnd) {
-    // 폭발이 끝난 보스가 짧게 위로 솟구쳐 실제로 화면 밖으로 빠져나간 뒤 CLEAR 문구를 띄운다.
-    const exitProgress = smoothstep(clamp((t - explosionEnd) / (bossExitEnd - explosionEnd), 0, 1));
-    const exitTargetY = -state.boss.drawH - 220;
-    state.destructionBossY = lerp(state.purifyStartY, exitTargetY, exitProgress);
+    // 폭발이 끝나면 보스 본체가 그대로 위쪽으로 빠르게 이탈합니다.
+    const p = smoothstep((t - bossExitStart) / Math.max(.01, bossExitEnd - bossExitStart));
+    state.destructionBossY = lerp(state.purifyStartY, -state.boss.drawH - 220, p);
   } else {
     state.destructionBossY = -state.boss.drawH - 220;
   }
 
-  state.destructionClearShown = t >= clearStart && t < clearEnd;
+  // 별도의 BOSS CLEAR 패널은 표시하지 않고 플레이어 이탈과 암전으로 바로 이어집니다.
+  state.destructionClearShown = false;
   updateCinematicEffects(dt);
 }
 
@@ -1612,11 +1615,10 @@ function spawnBroadcastWave(side, label) {
   let source;
   let baseAngle;
   if (side === "left") {
-    // 좌우 확성기는 기존보다 아래쪽에서 등장해 플레이어가 회피 방향을 읽을 시간을 확보한다.
-    source = { x: 18, y: rand(520, 650) };
+    source = { x: 18, y: rand(390, 520) };
     baseAngle = 0;
   } else if (side === "right") {
-    source = { x: W - 18, y: rand(520, 650) };
+    source = { x: W - 18, y: rand(390, 520) };
     baseAngle = Math.PI;
   } else {
     source = { x: rand(430, 850), y: 190 };
@@ -1633,8 +1635,7 @@ function spawnBroadcastWave(side, label) {
     radius: 30,
     speed: side === "top" ? 205 : 220,
     gapAngle: baseAngle + gapOffset,
-    // 민트색 통과 구간을 넓혀 좌우 방송 파동 사이에서 실제 회피 가능한 영역을 확보한다.
-    gapHalf: side === "top" ? .24 : .27,
+    gapHalf: side === "top" ? .18 : .16,
     thickness: 15,
     bands: [0, 28, 56],
   });
@@ -2888,6 +2889,7 @@ function initializeAuthCode(){
   p.authInterferenceAt=Infinity;
   p.authCursor=null;
   p.authFailedBurst=false;
+  p.authFailureAt=-1;
   const digits=[0,1,2,3,4,5,6,7,8,9];
   p.authPads=digits.map(digit=>({
     digit,
@@ -2924,7 +2926,7 @@ function inputAuthDigit(digit){
     if(pad){
       for(let i=0;i<8;i++){
         const a=i/8*TAU;
-        spawnBullet({x:pad.x,y:pad.y,vx:Math.cos(a)*210,vy:Math.sin(a)*210,visual:ORBS[i%ORBS.length],scale:.42});
+        spawnBullet({x:pad.x,y:pad.y,vx:Math.cos(a)*210,vy:Math.sin(a)*210,visual:ORBS[i%ORBS.length],scale:.72});
       }
     }
     if(p.authMistakes>=3) triggerAuthFailure();
@@ -2937,14 +2939,24 @@ function triggerAuthFailure(){
   if(p.authFailedBurst) return;
   p.authFailedBurst=true;
   p.authStatus="failed";
-  const chosen=[...p.authPads].sort(()=>Math.random()-.5).slice(0,5);
-  for(const pad of chosen){
-    for(let i=0;i<6;i++){
-      const a=i/6*TAU+rand(-.08,.08);
-      spawnBullet({x:pad.x,y:pad.y,vx:Math.cos(a)*235,vy:Math.sin(a)*235,visual:ORBS[(i+pad.digit)%ORBS.length],scale:.5});
-    }
-    spawnParticleBurst(pad.x,pad.y,"#ff5f6d",9);
+  p.authFailureAt=state.patternElapsed;
+
+  // 인증 실패는 작은 탄막 패널티가 아니라 학사 서버 전체 폭발로 처리합니다.
+  // 현재 남아 있는 탄/파동을 지우고 화면 전체 폭발 연출과 동시에 즉사시킵니다.
+  state.bullets.length=0;
+  state.waves.length=0;
+  state.cursors.length=0;
+  state.activeCursor=null;
+  state.mouse.down=false;
+  state.hitFlash=Math.max(state.hitFlash,.48);
+  triggerScreenShake(48,1.05);
+
+  for(let i=0;i<18;i++){
+    const ex=rand(W*.08,W*.92);
+    const ey=rand(H*.08,H*.92);
+    spawnParticleBurst(ex,ey,i%3===0?"#ffffff":i%2===0?"#ffcc45":"#ff4b35",rand(8,15));
   }
+  adapter.fatalHit?.();
 }
 
 function fireAuthIdleVolley(){
@@ -2964,7 +2976,7 @@ function fireAuthIdleVolley(){
         vx:Math.cos(a)*speed,
         vy:Math.sin(a)*speed,
         visual:ORBS[(volley+i+ORBS.length)%ORBS.length],
-        scale:.43,
+        scale:.72,
       });
     }
   }else{
@@ -2978,7 +2990,7 @@ function fireAuthIdleVolley(){
         vx:Math.cos(a)*238,
         vy:Math.sin(a)*238,
         visual:STARS[(volley+(side>0?1:0))%STARS.length],
-        scale:.45,
+        scale:.76,
       });
     }
   }
@@ -3422,9 +3434,7 @@ function drawDestroyingProjectiles() {
 
 function drawCinematicDestructionBoss(t) {
   const explosionEnd = 3.0;
-  const bossExitEnd = 3.55;
-  const clearStart = 3.6;
-  const clearEnd = 6.6;
+  const bossExitEnd = 4.15;
   const preLaunch = clamp(t / explosionEnd, 0, 1);
   const x = state.destructionBossX;
   const y = state.destructionBossY;
@@ -3434,10 +3444,10 @@ function drawCinematicDestructionBoss(t) {
   const sx = Math.sin(t * 70) * shakeStrength;
   const sy = Math.cos(t * 58) * shakeStrength * .62;
 
-  // 약 3초간 폭발한 뒤, 0.55초 동안 보스 본체가 위로 이탈하는 모습까지 보여준다.
+  // 폭발 중에는 흔들리고, 폭발이 끝난 뒤에는 현재 2페이즈 외형 그대로 위로 이탈합니다.
   if (t < bossExitEnd) {
     ctx.save();
-    ctx.translate(sx, sy);
+    if (t < explosionEnd) ctx.translate(sx, sy);
     drawCinematicBossLayer(bossPhase2Image, x, y, w, h, 1);
     ctx.restore();
   }
@@ -3475,33 +3485,7 @@ function drawCinematicDestructionBoss(t) {
 
   // 위로 이탈하는 동안 별도의 불꽃이나 추진광은 표시하지 않습니다.
 
-  if (state.destructionClearShown) {
-    const fadeIn = smoothstep(clamp((t - clearStart) / .32, 0, 1));
-    const fadeOut = 1 - smoothstep(clamp((t - (clearEnd - .32)) / .32, 0, 1));
-    const p = fadeIn * fadeOut;
-    ctx.save();
-    ctx.globalAlpha = p;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    const panelY = H * .47;
-    ctx.fillStyle = "rgba(5, 10, 22, .86)";
-    ctx.strokeStyle = "#ffd84a";
-    ctx.lineWidth = 4;
-    ctx.shadowColor = "#ffb21f";
-    ctx.shadowBlur = 22;
-    ctx.beginPath();
-    ctx.roundRect(W / 2 - 250, panelY - 68, 500, 136, 20);
-    ctx.fill();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = "#fff4b0";
-    ctx.font = "1000 42px sans-serif";
-    ctx.fillText("BOSS CLEAR", W / 2, panelY - 16);
-    ctx.fillStyle = "#ffd84a";
-    ctx.font = "900 17px sans-serif";
-    ctx.fillText("수강신청 게이트키퍼 격파", W / 2, panelY + 30);
-    ctx.restore();
-  }
+
 }
 
 function drawCinematicHpBar(hpRatio, alpha, stateLabel) {
@@ -3583,6 +3567,20 @@ function renderCinematic() {
   else drawCinematicDestructionBoss(t);
   drawCinematicParticles();
   ctx.restore();
+
+  if (type === "destroy") {
+    // 호반우가 화면 밖으로 빠진 뒤 전체 화면을 검게 페이드하고 약 2초간 유지합니다.
+    const blackFadeStart = 5.35;
+    const blackFullAt = 5.80;
+    if (t >= blackFadeStart) {
+      const alpha = smoothstep((t - blackFadeStart) / Math.max(.01, blackFullAt - blackFadeStart));
+      ctx.save();
+      ctx.globalAlpha = clamp(alpha, 0, 1);
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+  }
 }
 
 function drawBackground() {
@@ -4455,8 +4453,7 @@ function drawAuthCode(){
   ctx.font=layout.compact?"1000 42px monospace":"1000 38px monospace";
   ctx.fillText(shown,W/2,codeY);
   if(p.authStatus==="success"){
-    ctx.font="900 18px sans-serif";
-    ctx.fillText("AUTH SUCCESS",W/2,layout.panelY+128);
+    // SUCCESS는 모든 보스/탄막 렌더링이 끝난 뒤 최상단 오버레이로 그립니다.
   }else if(p.authStatus==="failed"){
     ctx.font="900 18px sans-serif";
     ctx.fillText("AUTH FAILED",W/2,layout.panelY+128);
@@ -4480,6 +4477,53 @@ function drawAuthCode(){
     ctx.restore();
   }
   ctx.restore();
+}
+
+function drawAuthResultTopOverlay(){
+  const p=state.pattern;
+  if(currentPattern().id!==59) return;
+
+  if(p.authStatus==="failed" && p.authFailureAt>=0){
+    const age=Math.max(0,state.patternElapsed-p.authFailureAt);
+    const flash=1-smoothstep(clamp(age/.95,0,1));
+    ctx.save();
+    const g=ctx.createRadialGradient(W*.5,H*.52,20,W*.5,H*.52,Math.max(W,H)*.78);
+    g.addColorStop(0,`rgba(255,255,236,${.96*flash})`);
+    g.addColorStop(.18,`rgba(255,205,64,${.92*flash})`);
+    g.addColorStop(.48,`rgba(255,72,42,${.82*flash})`);
+    g.addColorStop(1,`rgba(85,0,0,${.72*flash})`);
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=.7*flash;
+    ctx.fillStyle="#ffffff";
+    for(let i=0;i<10;i++){
+      const a=i/10*TAU+age*.8;
+      const r=Math.max(W,H)*(.12+age*.7);
+      ctx.beginPath();
+      ctx.arc(W*.5+Math.cos(a)*r*.32,H*.52+Math.sin(a)*r*.25,50+age*160,0,TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  if(p.authStatus==="success"){
+    const age=p.authSuccessAt>=0&&Number.isFinite(p.authSuccessAt)?Math.max(0,state.patternElapsed-p.authSuccessAt):0;
+    const pulse=1+Math.sin(age*10)*.025;
+    ctx.save();
+    ctx.translate(W/2,92);
+    ctx.scale(pulse,pulse);
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.shadowColor="#50ff8a";
+    ctx.shadowBlur=30;
+    ctx.fillStyle="#ffffff";
+    ctx.font="1000 58px sans-serif";
+    ctx.strokeStyle="rgba(0,25,12,.92)";
+    ctx.lineWidth=9;
+    ctx.strokeText("SUCCESS",0,0);
+    ctx.fillText("SUCCESS",0,0);
+    ctx.restore();
+  }
 }
 
 function drawServerQueue(){
@@ -5130,6 +5174,7 @@ function render() {
   drawBossHealthBar();
   ctx.restore();
   if(state.hitFlash>0){ctx.save();ctx.globalAlpha=state.hitFlash*1.75;ctx.fillStyle="#ff3345";ctx.fillRect(0,0,W,H);ctx.restore();}
+  drawAuthResultTopOverlay();
 
   const ph=currentPattern();
   hud.textContent="";

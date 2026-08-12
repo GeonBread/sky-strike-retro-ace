@@ -106,6 +106,14 @@ function createBossCore(engine: any, runtime: Chapter1BossRuntime) {
       if (engine.player.isDead || engine.player.invulnTimer > 0) return;
       engine.triggerPlayerHit();
     },
+    fatalHit: () => {
+      if (engine.player.isDead) return;
+      // 인증 실패는 현재 남은 체력과 관계없이 즉시 마지막 목숨까지 소진시킵니다.
+      engine.player.hp = 1;
+      engine.player.invulnTimer = 0;
+      engine.triggerPlayerHit();
+    },
+    clearSupportEnemies: () => clearBossSupportObjects(engine),
     onComplete: () => completeBoss(engine, runtime),
   });
 }

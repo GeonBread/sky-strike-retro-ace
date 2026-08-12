@@ -1052,31 +1052,12 @@ function Chapter1StoryExperience({
               window.setTimeout(() => storyPlayerRef.current?.showBossPhase2Dialogue(), 0);
             }}
             onChapter1BossComplete={() => {
-              if (bossClearTransitionTimerRef.current !== null) {
-                window.clearTimeout(bossClearTransitionTimerRef.current);
-              }
-
-              // 클리어 시점의 실제 전투 캔버스를 한 장 고정해 둡니다.
-              // 이후 엔진 상태가 바뀌더라도 노란 페이드 뒤 배경이 다른 보스/장면으로 바뀌지 않습니다.
-              let frozenBackdrop: string | null = null;
-              const bossCanvas = document.querySelector<HTMLCanvasElement>(".chapter1-story-boss-layer canvas");
-              if (bossCanvas) {
-                try {
-                  frozenBackdrop = bossCanvas.toDataURL("image/png");
-                } catch {
-                  frozenBackdrop = null;
-                }
-              }
-              setBossClearBackdrop(frozenBackdrop);
-              setBossClearTransitionActive(true);
-
-              bossClearTransitionTimerRef.current = window.setTimeout(() => {
-                bossClearTransitionTimerRef.current = null;
-                setBossClearTransitionActive(false);
-                setBossClearBackdrop(null);
-                setPhase("story");
-                window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
-              }, 7200);
+              // 보스 런타임 내부에서 폭발 → 보스 상승 → 호반우 상승 → 암전 2초까지 모두 끝낸 뒤 호출됩니다.
+              // 별도의 캔버스 캡처/후처리 화면을 만들지 않아 다른 보스 이미지가 다시 나타나지 않습니다.
+              setBossClearTransitionActive(false);
+              setBossClearBackdrop(null);
+              setPhase("story");
+              window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
             }}
             onChapter1CombatFailed={showCombatRetryPrompt}
             onChapter1CombatExitToMenu={leaveStoryCombatToMenu}
