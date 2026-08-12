@@ -4,6 +4,7 @@ import {
   createChapter1StoryEmbeddedAssets,
   rewriteChapter1StoryAssetReferences,
 } from "./chapter1StoryAssetCatalog";
+import { sfx } from "../../game/AudioSystem";
 import type {
   Chapter1StoryCommand,
   Chapter1StoryEvent,
@@ -40,7 +41,72 @@ function normalizeStoryMarkup(markup: string): string {
 }
 
 function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): string {
-  if (part !== 2) return source;
+  let normalized = source;
+
+  // 연출 종료 뒤 일반 대사가 이어질 때 대사 레이어가 숨김 상태로 남아
+  // Space를 한 번 눌러야 다음 내용이 보이는 현상을 방지한다.
+  const typeCurrentLineHook = `function typeCurrentLine() {
+    const item = currentDialogues[dialogueIndex];`;
+  const autoRevealDialogueHook = `function typeCurrentLine() {
+    const item = currentDialogues[dialogueIndex];
+    if (item && !item.effectOnly && dialogueLayer.hidden) {
+      dialogueLayer.hidden = false;
+      dialogueLayer.classList.remove('is-opening');
+    }`;
+  if (!normalized.includes(typeCurrentLineHook)) {
+    throw new Error('Chapter 1 dialogue line hook was not found.');
+  }
+  normalized = normalized.replace(typeCurrentLineHook, autoRevealDialogueHook);
+
+  // 대사창이 숨겨진 시네마틱에서는 Space 입력으로 숨은 대사를 넘기거나
+  // 연출을 재시작하지 못하게 한다. 연출은 등록된 타이머만으로 자동 진행된다.
+  const storyKeyPatterns = [
+    `    if (flowMode === 'story') {
+      const target = event.target;`,
+    `    if (flowMode === 'story') {
+      if (event.repeat) return;`,
+  ];
+  let keyGuardApplied = false;
+  for (const pattern of storyKeyPatterns) {
+    if (!normalized.includes(pattern)) continue;
+    const replacement = pattern.replace(
+      `    if (flowMode === 'story') {`,
+      `    if (flowMode === 'story') {
+      if (event.code === 'Space' && dialogueLayer.hidden) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }`,
+    );
+    normalized = normalized.replace(pattern, replacement);
+    keyGuardApplied = true;
+    break;
+  }
+  if (!keyGuardApplied) {
+    throw new Error('Chapter 1 story key handler was not found.');
+  }
+
+  // 장소명은 sceneTitle 변경 전체를 감시하지 않고 실제 장소 이동 연출에서만 호출한다.
+  if (part === 1) {
+    const locationIntroHook = `    if (item.effect === 'location-title-intro') {
+      const introScene = item.scene || {};`;
+    const locationIntroWithTitle = `    if (item.effect === 'location-title-intro') {
+      const introScene = item.scene || {};
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(introScene.title || '');`;
+    if (normalized.includes(locationIntroHook)) {
+      normalized = normalized.replace(locationIntroHook, locationIntroWithTitle);
+    }
+
+    const locationTransitionHook = `    } else if (item.effect === 'location-transition') {
+      const destination = item.transitionScene || item.scene || {};`;
+    const locationTransitionWithTitle = `    } else if (item.effect === 'location-transition') {
+      const destination = item.transitionScene || item.scene || {};
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(destination.title || '');`;
+    if (normalized.includes(locationTransitionHook)) {
+      normalized = normalized.replace(locationTransitionHook, locationTransitionWithTitle);
+    }
+    return normalized;
+  }
 
   const bossTransitionHook = `if (storyCompletionAction === 'startBossBattle') {
       startBossBattleTransition();
@@ -55,16 +121,16 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     }
   };`;
 
-  if (!source.includes(bossTransitionHook)) {
+  if (!normalized.includes(bossTransitionHook)) {
     throw new Error('Chapter 1 boss transition hook was not found in the final story runtime.');
   }
-  if (!source.includes(debugPreviewHook)) {
+  if (!normalized.includes(debugPreviewHook)) {
     throw new Error('Chapter 1 preview debug hook was not found in the final story runtime.');
   }
 
   // 원본의 5.2초 보스전 전환 연출을 유지한 뒤 외부 보스 캔버스로 넘긴다.
   // 웨이브 정화 이후의 스토리 호출만 activePreviewId를 해제해 실제 연속 진행으로 취급한다.
-  let normalized = source.replace(debugPreviewHook, flowPreviewHook);
+  normalized = normalized.replace(debugPreviewHook, flowPreviewHook);
 
   // 학생증은 오염 추적 직후 정상 문장으로 말하지 못하고 끊어진 단어만 출력한다.
   normalized = normalized
@@ -82,20 +148,38 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   }
   normalized = normalized.replace(battleTransitionDeclaration, fullscreenBattleTransitionDeclaration);
 
-  // 배경·전환 시네마틱 중에는 Space가 대사를 다시 호출해 연출을 처음부터 재시작하지 못하게 한다.
-  const storyKeyGuard = `    if (flowMode === 'story') {
-      const target = event.target;`;
-  const guardedStoryKey = `    if (flowMode === 'story') {
-      if (event.code === 'Space' && dialogueLayer.hidden) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      const target = event.target;`;
-  if (!normalized.includes(storyKeyGuard)) {
-    throw new Error('Chapter 1 story key handler was not found.');
+  // 100% 직후의 대사에서는 장소명을 띄우지 않는다. 실제로 입구 배경이 공개되는 순간에만 표시한다.
+  const preEnergyLocationHook = `    showSceneBackgroundOnly(energy100ClosedEntranceScene);
+    storyStage.classList.add('is-pre-energy-flight-in');`;
+  const preEnergyLocationWithTitle = `    showSceneBackgroundOnly(energy100ClosedEntranceScene);
+    window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(energy100ClosedEntranceScene.title || '');
+    storyStage.classList.add('is-pre-energy-flight-in');`;
+  if (normalized.includes(preEnergyLocationHook)) {
+    normalized = normalized.replace(preEnergyLocationHook, preEnergyLocationWithTitle);
   }
-  normalized = normalized.replace(storyKeyGuard, guardedStoryKey);
+
+  const bossInteriorLocationHook = `      currentSceneId = '';
+      updateScene(bossInteriorPreviewScene, { silent: true });
+      setBossEntryStageClass('is-entry-interior-tour');`;
+  const bossInteriorLocationWithTitle = `      currentSceneId = '';
+      updateScene(bossInteriorPreviewScene, { silent: true });
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(bossInteriorPreviewScene.title || '');
+      setBossEntryStageClass('is-entry-interior-tour');`;
+  if (normalized.includes(bossInteriorLocationHook)) {
+    normalized = normalized.replace(bossInteriorLocationHook, bossInteriorLocationWithTitle);
+  }
+
+  // 보스 완전 정화 후 두 별이 나타나는 순간 전용 효과음을 한 번 재생한다.
+  const starRevealHook = `  function startStarRevealCinematic(nextCompletionAction = 'startStarAbsorption') {
+    clearStarRecoveryCinematic();`;
+  const starRevealWithSound = `  function startStarRevealCinematic(nextCompletionAction = 'startStarAbsorption') {
+    clearStarRecoveryCinematic();
+    window.__CHAPTER1_PLAY_STORY_SFX__?.('star-reveal');`;
+  if (!normalized.includes(starRevealHook)) {
+    throw new Error('Chapter 1 star reveal cinematic hook was not found.');
+  }
+  normalized = normalized.replace(starRevealHook, starRevealWithSound);
+
   return normalized;
 }
 
@@ -364,7 +448,6 @@ export function createChapter1StoryRuntime({
   root.appendChild(locationOverlay);
   let locationOverlayTimer: number | null = null;
   let lastLocationTitle = "";
-  const sceneTitleElement = root.querySelector<HTMLElement>("#sceneTitle");
   const showLocationTitle = (rawTitle: string) => {
     const title = rawTitle.trim();
     if (!locationTitles.has(title) || title === lastLocationTitle) return;
@@ -379,12 +462,10 @@ export function createChapter1StoryRuntime({
       locationOverlay.classList.remove("is-active");
     }, 1750) as unknown as number;
   };
-  const locationObserver = sceneTitleElement
-    ? new MutationObserver(() => showLocationTitle(sceneTitleElement.textContent ?? ""))
-    : null;
-  if (sceneTitleElement && locationObserver) {
-    locationObserver.observe(sceneTitleElement, { childList: true, characterData: true, subtree: true });
-  }
+  localWindowValues.set("__CHAPTER1_SHOW_LOCATION_TITLE__", showLocationTitle);
+  localWindowValues.set("__CHAPTER1_PLAY_STORY_SFX__", (kind: string) => {
+    if (kind === "star-reveal") sfx.starReveal();
+  });
 
   const executeScript = (source: string): void => {
     const runner = new Function(
@@ -433,7 +514,6 @@ export function createChapter1StoryRuntime({
       window.removeEventListener(type, listener, options);
     }
     eventListeners.length = 0;
-    locationObserver?.disconnect();
     if (locationOverlayTimer !== null) window.clearTimeout(locationOverlayTimer);
     locationOverlayTimer = null;
     styleElement.remove();

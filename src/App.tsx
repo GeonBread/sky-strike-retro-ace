@@ -559,6 +559,7 @@ function Chapter1StoryExperience({
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     setPart(2);
     setPurificationOrigin(playerPosition);
+    sfx.purificationComplete();
     setPhase("wave-purification-effect");
     // 정화 파동을 끝까지 보여준 뒤에만 호반우의 상승 이탈을 시작한다.
     purificationTimerRef.current = window.setTimeout(() => {

@@ -266,6 +266,67 @@ export class AudioSystem {
     this.playOscillator(400, 'sine', 0.2, 800, this.itemVol);
     setTimeout(() => this.playOscillator(600, 'sine', 0.2, 1200, this.itemVol), 100);
   }
+
+  /** 챕터 1 정화 에너지가 100%에 도달했을 때 사용하는 상승형 정화 완료 효과음. */
+  purificationComplete() {
+    if (!this.ctx || !this.sfxVolumeParams) return;
+    const now = this.ctx.currentTime;
+    const master = this.ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.22 * Math.max(0.15, this.itemVol), now + 0.06);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 1.45);
+    master.connect(this.sfxVolumeParams);
+
+    [330, 495, 660].forEach((frequency, index) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = index === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(frequency, now + index * 0.07);
+      osc.frequency.exponentialRampToValueAtTime(frequency * 2.35, now + 0.92 + index * 0.07);
+      gain.gain.setValueAtTime(0.0001, now + index * 0.07);
+      gain.gain.exponentialRampToValueAtTime(0.24 / (index + 1), now + 0.12 + index * 0.07);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25 + index * 0.06);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(now + index * 0.07);
+      osc.stop(now + 1.35 + index * 0.07);
+    });
+
+    const shimmer = this.ctx.createOscillator();
+    const shimmerGain = this.ctx.createGain();
+    shimmer.type = 'sine';
+    shimmer.frequency.setValueAtTime(1180, now + 0.38);
+    shimmer.frequency.exponentialRampToValueAtTime(2380, now + 1.02);
+    shimmerGain.gain.setValueAtTime(0.0001, now + 0.38);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.10, now + 0.48);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.18);
+    shimmer.connect(shimmerGain);
+    shimmerGain.connect(master);
+    shimmer.start(now + 0.38);
+    shimmer.stop(now + 1.2);
+  }
+
+  /** 보스 완전 정화 뒤 두 별이 나타날 때 사용하는 밝은 별빛 효과음. */
+  starReveal() {
+    if (!this.ctx || !this.sfxVolumeParams) return;
+    const now = this.ctx.currentTime;
+    const notes = [659.25, 783.99, 987.77, 1318.51];
+    notes.forEach((frequency, index) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = 'sine';
+      const start = now + index * 0.13;
+      osc.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.12 * Math.max(0.15, this.itemVol), start + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.72);
+      osc.connect(gain);
+      gain.connect(this.sfxVolumeParams!);
+      osc.start(start);
+      osc.stop(start + 0.74);
+    });
+    setTimeout(() => this.playOscillator(1568, 'triangle', 0.55, 2352, Math.max(0.15, this.itemVol) * 0.55), 480);
+  }
   
   bossHit() {
     if (!this.ctx || !this.sfxVolumeParams) return;
