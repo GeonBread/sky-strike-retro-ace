@@ -108,8 +108,8 @@ function createBossCore(engine: any, runtime: Chapter1BossRuntime) {
     },
     fatalHit: () => {
       if (engine.player.isDead) return;
-      // 인증 실패는 현재 남은 체력과 관계없이 즉시 마지막 목숨까지 소진시킵니다.
-      engine.player.hp = 1;
+      // 4자리 인증 실패 광역기는 게임오버 강제가 아니라 일반 피격 1회로 처리한다.
+      // 광역기이므로 기존 무적 상태와 관계없이 이번 타격 1회는 확실히 적용한다.
       engine.player.invulnTimer = 0;
       engine.triggerPlayerHit();
     },

@@ -36,7 +36,9 @@ function drawCurrentPlayer(engine: any, ctx: CanvasRenderingContext2D): void {
   const core = engine.chapter1Boss?.core;
   if (!core) return;
   const state = core.state;
-  if (state.cinematicMode !== "battle" && state.cinematicMode !== "destroy") return;
+  // 보스 최초 진입/재도전의 1페이즈 인트로 중에도 호반우를 계속 표시한다.
+  // 이전에는 battle/destroy 상태에서만 플레이어를 그려 인트로 동안 잠시 사라졌다.
+  if (state.cinematicMode !== "intro" && state.cinematicMode !== "battle" && state.cinematicMode !== "destroy") return;
   // 보스전에서 마지막 목숨을 모두 소진해도 호반우를 지우지 않는다.
   // isDead는 그대로 유지해 조작·발사·추가 피격은 잠그고, 렌더링만 무적 깜빡임으로 남긴다.
   const showStoryDefeatedPlayer = engine.playMode === "story" && engine.player.hp <= 0;

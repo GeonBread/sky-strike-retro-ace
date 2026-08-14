@@ -2941,20 +2941,24 @@ function triggerAuthFailure(){
   p.authStatus="failed";
   p.authFailureAt=state.patternElapsed;
 
-  // 인증 실패는 작은 탄막 패널티가 아니라 학사 서버 전체 폭발로 처리합니다.
-  // 현재 남아 있는 탄/파동을 지우고 화면 전체 폭발 연출과 동시에 즉사시킵니다.
+  // 인증 실패는 작은 탄막 패널티 대신 학사 서버 전체가 터지는 광역 폭발로 처리한다.
+  // 현재 탄/파동은 모두 지우고, 강한 화면 흔들림과 연속 폭발을 보여준 뒤 플레이어 HP만 1칸 감소시킨다.
   state.bullets.length=0;
   state.waves.length=0;
   state.cursors.length=0;
   state.activeCursor=null;
   state.mouse.down=false;
-  state.hitFlash=Math.max(state.hitFlash,.48);
-  triggerScreenShake(48,1.05);
+  state.hitFlash=Math.max(state.hitFlash,.72);
+  triggerScreenShake(72,1.35);
 
-  for(let i=0;i<18;i++){
-    const ex=rand(W*.08,W*.92);
-    const ey=rand(H*.08,H*.92);
-    spawnParticleBurst(ex,ey,i%3===0?"#ffffff":i%2===0?"#ffcc45":"#ff4b35",rand(8,15));
+  // 중앙 대폭발 + 화면 곳곳의 연쇄 폭발을 겹쳐 광역기 규모를 크게 보이게 한다.
+  spawnParticleBurst(W*.5,H*.52,"#ffffff",38);
+  spawnParticleBurst(W*.5,H*.52,"#ffcc45",34);
+  for(let i=0;i<30;i++){
+    const ex=rand(W*.04,W*.96);
+    const ey=rand(H*.06,H*.94);
+    const color=i%4===0?"#ffffff":i%3===0?"#ffd95c":i%2===0?"#ff7a38":"#ff3428";
+    spawnParticleBurst(ex,ey,color,rand(10,20));
   }
   adapter.fatalHit?.();
 }
@@ -3010,7 +3014,8 @@ function updateAuthCodePattern(dt){
 
   // 입력하지 않거나 입력 도중 멈추면 보스가 계속 플레이어를 향해 탄을 발사합니다.
   // 숫자를 누를 때마다 잠시 유예되고, 성공하면 즉시 발사가 중단됩니다.
-  if((p.authStatus==="input"||p.authStatus==="failed")&&state.patternElapsed>=p.authNextIdleShotAt){
+  // 광역 폭발이 발생한 뒤에는 추가 탄막을 더 생성하지 않는다.
+  if(p.authStatus==="input"&&state.patternElapsed>=p.authNextIdleShotAt){
     fireAuthIdleVolley();
     const baseInterval=state.story?1.02:.84;
     p.authNextIdleShotAt=state.patternElapsed+baseInterval;
@@ -4485,22 +4490,51 @@ function drawAuthResultTopOverlay(){
 
   if(p.authStatus==="failed" && p.authFailureAt>=0){
     const age=Math.max(0,state.patternElapsed-p.authFailureAt);
-    const flash=1-smoothstep(clamp(age/.95,0,1));
+    const flash=1-smoothstep(clamp(age/1.18,0,1));
     ctx.save();
-    const g=ctx.createRadialGradient(W*.5,H*.52,20,W*.5,H*.52,Math.max(W,H)*.78);
-    g.addColorStop(0,`rgba(255,255,236,${.96*flash})`);
-    g.addColorStop(.18,`rgba(255,205,64,${.92*flash})`);
-    g.addColorStop(.48,`rgba(255,72,42,${.82*flash})`);
-    g.addColorStop(1,`rgba(85,0,0,${.72*flash})`);
+
+    // 첫 순간 화면 전체가 흰색으로 터지고, 바로 주황/적색 충격파가 뒤따른다.
+    const whiteFlash=1-smoothstep(clamp(age/.22,0,1));
+    if(whiteFlash>0){
+      ctx.globalAlpha=.92*whiteFlash;
+      ctx.fillStyle="#ffffff";
+      ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha=1;
+    }
+
+    const g=ctx.createRadialGradient(W*.5,H*.52,12,W*.5,H*.52,Math.max(W,H)*.92);
+    g.addColorStop(0,`rgba(255,255,242,${.98*flash})`);
+    g.addColorStop(.14,`rgba(255,221,92,${.96*flash})`);
+    g.addColorStop(.38,`rgba(255,93,38,${.88*flash})`);
+    g.addColorStop(.72,`rgba(166,14,8,${.74*flash})`);
+    g.addColorStop(1,`rgba(40,0,0,${.58*flash})`);
     ctx.fillStyle=g;
     ctx.fillRect(0,0,W,H);
-    ctx.globalAlpha=.7*flash;
-    ctx.fillStyle="#ffffff";
-    for(let i=0;i<10;i++){
-      const a=i/10*TAU+age*.8;
-      const r=Math.max(W,H)*(.12+age*.7);
+
+    // 두 겹의 충격파 링을 빠르게 확장시켜 거대한 폭발의 압력을 표현한다.
+    const ringProgress=clamp(age/.92,0,1);
+    const ringEase=1-Math.pow(1-ringProgress,3);
+    for(let ring=0;ring<2;ring++){
+      const delayed=clamp(ringEase-ring*.16,0,1);
+      if(delayed<=0) continue;
+      const radius=Math.max(W,H)*(0.08+delayed*.82);
+      ctx.globalAlpha=(1-delayed)*(.95-ring*.2);
+      ctx.strokeStyle=ring===0?"#fff6c9":"#ffb02e";
+      ctx.lineWidth=18-ring*7;
+      ctx.shadowColor=ring===0?"#ffffff":"#ff6a1f";
+      ctx.shadowBlur=34;
       ctx.beginPath();
-      ctx.arc(W*.5+Math.cos(a)*r*.32,H*.52+Math.sin(a)*r*.25,50+age*160,0,TAU);
+      ctx.arc(W*.5,H*.52,radius,0,TAU);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha=.78*flash;
+    ctx.fillStyle="#ffffff";
+    for(let i=0;i<16;i++){
+      const a=i/16*TAU+age*1.05;
+      const r=Math.max(W,H)*(.10+age*.78);
+      ctx.beginPath();
+      ctx.arc(W*.5+Math.cos(a)*r*.38,H*.52+Math.sin(a)*r*.3,46+age*190,0,TAU);
       ctx.fill();
     }
     ctx.restore();
