@@ -61,6 +61,7 @@ interface GameCanvasProps {
   onChapter1WaveIndexChange?: (waveIndex: number) => void;
   chapter1WaveStartIndex?: number;
   chapter1BossSkipIntro?: boolean;
+  chapter1StartingPowerLevel?: number;
   inputEnabled?: boolean;
   chapter1PurificationExit?: boolean;
   simulationEnabled?: boolean;
@@ -83,6 +84,7 @@ function GameCanvas({
   onChapter1WaveIndexChange,
   chapter1WaveStartIndex = 0,
   chapter1BossSkipIntro = false,
+  chapter1StartingPowerLevel = 1,
   inputEnabled = true,
   chapter1PurificationExit = false,
   simulationEnabled = true,
@@ -275,6 +277,10 @@ function GameCanvas({
     }, 100);
 
     engine.start(shipColor, mode, shipStyle);
+    if (isStoryCombatCanvas) {
+      // 같은 웨이브/보스에서 완전 사망을 3회 이상 반복한 경우 재도전 시작 화력을 최대 레벨로 보정한다.
+      engine.player.powerLevel = Math.max(1, Math.min(5, Math.floor(chapter1StartingPowerLevel)));
+    }
     if (chapter1WaveOnly) {
       engine.chapter1Wave.enabled = true;
       engine.chapter1Wave.running = false;
@@ -625,6 +631,7 @@ function Chapter1StoryExperience({
   const [currentWaveIndex, setCurrentWaveIndex] = useState(() => initialCheckpointRef.current?.kind === "wave" ? initialCheckpointRef.current.waveIndex : 0);
   const [bossRunKey, setBossRunKey] = useState(() => initialCheckpointRef.current?.kind === "boss" ? 1 : 0);
   const [combatFailure, setCombatFailure] = useState<Chapter1CombatFailure | null>(null);
+  const [combatDeathCounts, setCombatDeathCounts] = useState<Record<string, number>>({});
   const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
   const [bossClearTransitionActive, setBossClearTransitionActive] = useState(false);
   const [bossClearBackdrop, setBossClearBackdrop] = useState<string | null>(null);
@@ -862,6 +869,12 @@ function Chapter1StoryExperience({
     if (combatRetryPromptTimerRef.current !== null) {
       window.clearTimeout(combatRetryPromptTimerRef.current);
     }
+    // 여기서의 1회는 HP 3칸을 전부 소모해 실제 게임오버에 도달한 경우만 의미한다.
+    const failureKey = failure.kind === "wave" ? `wave:${failure.waveIndex}` : "boss";
+    setCombatDeathCounts((counts) => ({
+      ...counts,
+      [failureKey]: (counts[failureKey] ?? 0) + 1,
+    }));
     setCombatFailure(failure);
     setCombatRetryPromptVisible(false);
     combatRetryPromptTimerRef.current = window.setTimeout(() => {
@@ -967,6 +980,7 @@ function Chapter1StoryExperience({
               onStoryResult={onStoryResult}
               chapter1WaveOnly
               chapter1WaveStartIndex={waveStartIndex}
+              chapter1StartingPowerLevel={(combatDeathCounts[`wave:${waveStartIndex}`] ?? 0) >= 3 ? 5 : 1}
               active={!combatFailure}
               simulationEnabled={phase !== "wave-guide" && !combatFailure}
               inputEnabled={phase === "wave" && !combatFailure}
@@ -1057,6 +1071,7 @@ function Chapter1StoryExperience({
             onStoryResult={onStoryResult}
             chapter1BossOnly
             chapter1BossSkipIntro={false}
+            chapter1StartingPowerLevel={(combatDeathCounts.boss ?? 0) >= 3 ? 5 : 1}
             active={bossActive && !combatFailure}
             inputEnabled={bossActive && !bossClearTransitionActive && !combatFailure}
             onChapter1BossPhase2={() => {
