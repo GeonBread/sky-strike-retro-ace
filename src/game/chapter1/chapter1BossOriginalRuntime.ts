@@ -1685,12 +1685,14 @@ function initializeStudentScanGates() {
   p.scanSuccess = false;
   p.scanSuccessAt = 0;
   p.nfcRings = [];
+  // NFC 인증 구간 회전 속도를 낮춰 화면 하단에서도 충분히 따라갈 수 있게 합니다.
+  // 링 확장 속도와 안전 구간 크기는 기존 값을 그대로 유지합니다.
   p.nfcSchedule = [
-    { time:.45, spin:.48, gap:.44, speed:142 },
-    { time:2.45, spin:-.56, gap:.42, speed:150 },
-    { time:4.45, spin:.66, gap:.39, speed:156 },
-    { time:6.45, spin:-.72, gap:.37, speed:162 },
-    { time:8.45, spin:.78, gap:.36, speed:168 },
+    { time:.45, spin:.28, gap:.44, speed:142 },
+    { time:2.45, spin:-.32, gap:.42, speed:150 },
+    { time:4.45, spin:.36, gap:.39, speed:156 },
+    { time:6.45, spin:-.40, gap:.37, speed:162 },
+    { time:8.45, spin:.44, gap:.36, speed:168 },
   ];
   p.nfcSpawnIndex = 0;
   p.nfcSuccessCount = 0;
