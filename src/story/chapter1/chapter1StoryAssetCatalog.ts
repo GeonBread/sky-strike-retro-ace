@@ -11,7 +11,7 @@ export const CHAPTER1_STORY_ASSETS: Readonly<Record<string, string>> = {
   "bg_boss_entrance_open.png": "/assets/story/chapter1/backgrounds/bg_boss_entrance_open.png",
   "bg_knu_admission_post.png": "/assets/story/chapter1/backgrounds/bg_knu_admission_post.png",
   "bg_knu_campus.png": "/assets/story/chapter1/backgrounds/bg_knu_admission_post.png",
-  "bg_knu_main_building_story21.png": "/assets/story/chapter1/backgrounds/bg_knu_admission_post.png",
+  "bg_knu_main_building_story21.png": "/assets/backgrounds/main_menu_campus_bg.png",
   "bg_login_watcher_story.png": "/assets/story/chapter1/backgrounds/bg_login_watcher_story.png",
   "bg_notice_drone_story.png": "/assets/story/chapter1/backgrounds/bg_notice_drone_story.png",
   "bg_prologue_void.svg": "/assets/story/chapter1/effects/bg_prologue_void.svg",
