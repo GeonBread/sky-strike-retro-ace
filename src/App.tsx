@@ -826,6 +826,9 @@ function Chapter1StoryExperience({
   };
 
   const openWaveGuide = () => {
+    // 전투 가이드는 스토리에서 실제 몬스터 웨이브로 넘어가는 순간에만 열 수 있다.
+    // 이어하기/직접 웨이브·보스 진입 후 늦게 도착한 story event가 가이드를 다시 띄우는 것을 막는다.
+    if (phase !== "story") return;
     setPreviewRequest(null);
     setPart(2);
     setWaveGuideStep(0);
@@ -1163,10 +1166,15 @@ function Chapter1StoryExperience({
             return;
           }
           if (event.type === "wave-ready") {
+            // 숨겨진 StoryPlayer에서 늦게 도착한 이벤트는 무시한다.
+            // 가이드는 오직 스토리 -> 첫 몬스터 웨이브 진입 직전에만 표시한다.
+            if (phase !== "story") return;
             openWaveGuide();
             return;
           }
           if (event.type === "boss-ready") {
+            // 웨이브/보스 이어하기나 직접 점프 뒤에는 이전 스토리 이벤트가 전투 상태를 덮어쓰면 안 된다.
+            if (phase !== "story") return;
             setPreviewRequest(null);
             // 첫 보스전도 반드시 새 GameCanvas/보스 런타임으로 시작해 등장·HP 충전 연출을 처음부터 재생한다.
             saveStoryCheckpoint({ version: 1, chapter: 1, kind: "boss", savedAt: Date.now() });
