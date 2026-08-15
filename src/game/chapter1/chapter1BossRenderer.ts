@@ -8,6 +8,7 @@
 
 import type { Bullet, Particle } from "../entities";
 import { renderChapter1BulletSystem, renderChapter1EnemySystem } from "./chapter1WaveRenderer";
+import { renderChapter1WaveImpactEffectsSystem } from "./chapter1WaveImpactSystem";
 import { CHAPTER1_STORY_PLAYER_VISUAL_WIDTH } from "./chapter1WaveVisualTuning";
 import { getChapter1BossViewportProjection } from "./chapter1BossViewportProjection";
 
@@ -258,6 +259,8 @@ export function renderChapter1BossFullSceneSystem(engine: any): boolean {
   engine.ctx.restore();
 
   drawBossSupportObjects(engine, engine.ctx);
+  // 보스전 지원 몬스터도 일반 웨이브와 동일한 피격/파괴 파티클을 표시한다.
+  renderChapter1WaveImpactEffectsSystem(engine);
   for (const bullet of engine.bullets as Bullet[]) drawPlayerBullet(engine.ctx, bullet);
   for (const bullet of engine.bullets as Bullet[]) drawMusicBeam(engine, engine.ctx, bullet);
   drawCurrentPlayer(engine, engine.ctx);
