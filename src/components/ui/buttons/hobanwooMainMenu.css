@@ -287,3 +287,58 @@
     transition: none;
   }
 }
+
+/* =========================================================
+   FIX38: 메인 메뉴 버튼 간격 반응형 압축 + 새 캠퍼스 배경
+   - 새 버튼 PNG의 투명 상/하 여백은 파일을 수정하지 않고 CSS margin으로 상쇄합니다.
+   - 작은 화면일수록 버튼 사이가 더 조밀해지고, 큰 화면에서는 약간의 여유를 둡니다.
+   ========================================================= */
+.hobanwooMainButtonColumn {
+  top: clamp(112px, 14.2vh, 148px) !important;
+  gap: clamp(0px, .22vh, 3px) !important;
+}
+
+/* 스토리 모드: 아래쪽 투명 캔버스 여백을 줄입니다. */
+.hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(1) {
+  margin-bottom: calc(-1 * clamp(32px, 5.4vh, 54px));
+}
+
+/* 도전 모드: 위/아래 투명 여백을 함께 상쇄합니다. */
+.hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(2) {
+  margin-top: calc(-1 * clamp(22px, 3.8vh, 40px));
+  margin-bottom: calc(-1 * clamp(32px, 5.2vh, 52px));
+}
+
+/* 순위 / 설정: 이미지 캔버스의 큰 상하 여백을 압축합니다. */
+.hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(3),
+.hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(4) {
+  margin-top: calc(-1 * clamp(28px, 4.8vh, 48px));
+  margin-bottom: calc(-1 * clamp(28px, 4.8vh, 48px));
+}
+
+/* 기체 선택은 이미지 여백이 없으므로 앞 버튼과의 간격만 자연스럽게 맞춥니다. */
+.hobanwooMainButtonColumn > .hobanwooTempShipButton {
+  margin-top: calc(-1 * clamp(6px, 1vh, 10px));
+}
+
+@media (max-width: 760px) {
+  .hobanwooMainButtonColumn {
+    top: clamp(108px, 13.4vh, 132px) !important;
+    gap: clamp(0px, .12vh, 2px) !important;
+  }
+
+  .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(1) {
+    margin-bottom: calc(-1 * clamp(34px, 5.6vh, 46px));
+  }
+
+  .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(2) {
+    margin-top: calc(-1 * clamp(24px, 4.2vh, 36px));
+    margin-bottom: calc(-1 * clamp(34px, 5.5vh, 46px));
+  }
+
+  .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(3),
+  .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(4) {
+    margin-top: calc(-1 * clamp(30px, 5vh, 42px));
+    margin-bottom: calc(-1 * clamp(30px, 5vh, 42px));
+  }
+}
