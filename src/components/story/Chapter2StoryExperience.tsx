@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   saveStoryCheckpoint,
   type StoryCheckpoint,
@@ -32,10 +32,19 @@ interface Chapter2IntegrationGate {
   subtitle: string;
 }
 
+interface Chapter2WaveRenderProps {
+  startWaveIndex: number;
+  onWaveIndexChange: (waveIndex: number) => void;
+  onComplete: () => void;
+  onFailed: (waveIndex: number) => void;
+  onExitToMenu: (waveIndex: number) => void;
+}
+
 interface Chapter2StoryExperienceProps {
   onStoryResult: (result: { outcome: "cleared" | "failed"; stage: number; durationMs: number }) => void;
   onMenu: () => void;
   resumeCheckpoint: StoryCheckpoint | null;
+  renderWaveCombat?: (props: Chapter2WaveRenderProps) => ReactNode;
 }
 
 const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
@@ -56,16 +65,33 @@ function chapter2CheckpointFromState(state: Chapter2StoryStateMessage | undefine
   };
 }
 
+function chapter2WaveCheckpoint(waveIndex: number): StoryCheckpoint {
+  return {
+    version: 1,
+    chapter: 2,
+    kind: "wave",
+    waveIndex: Math.max(0, Math.floor(waveIndex)),
+    savedAt: Date.now(),
+  };
+}
+
 export function Chapter2StoryExperience({
   onStoryResult,
   onMenu,
   resumeCheckpoint,
+  renderWaveCombat,
 }: Chapter2StoryExperienceProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const startedAtRef = useRef(Date.now());
   const restoredRef = useRef(false);
   const completedRef = useRef(false);
   const lastCheckpointSignatureRef = useRef("");
+  const resumeWavePendingRef = useRef(resumeCheckpoint?.chapter === 2 && resumeCheckpoint.kind === "wave");
+  const currentWaveIndexRef = useRef(
+    resumeCheckpoint?.chapter === 2 && resumeCheckpoint.kind === "wave" ? resumeCheckpoint.waveIndex : 0,
+  );
+  const [phase, setPhase] = useState<"story" | "wave">("story");
+  const [waveStartIndex, setWaveStartIndex] = useState(currentWaveIndexRef.current);
   const [integrationGate, setIntegrationGate] = useState<Chapter2IntegrationGate | null>(null);
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [ready, setReady] = useState(false);
@@ -74,6 +100,11 @@ export function Chapter2StoryExperience({
     if (resumeCheckpoint?.kind !== "story" || resumeCheckpoint.chapter !== 2) return null;
     if (resumeCheckpoint.completionAction !== "chapter2-item-index") return null;
     return Math.max(0, Math.floor(resumeCheckpoint.dialogueIndex));
+  }, [resumeCheckpoint]);
+
+  const resumeWaveIndex = useMemo(() => {
+    if (resumeCheckpoint?.kind !== "wave" || resumeCheckpoint.chapter !== 2) return 0;
+    return Math.max(0, Math.floor(resumeCheckpoint.waveIndex));
   }, [resumeCheckpoint]);
 
   const postCommand = (action: string, payload: Record<string, unknown> = {}) => {
@@ -92,6 +123,12 @@ export function Chapter2StoryExperience({
     lastCheckpointSignatureRef.current = signature;
   };
 
+  const persistWaveCheckpoint = (waveIndex: number) => {
+    const safeIndex = Math.max(0, Math.floor(waveIndex));
+    currentWaveIndexRef.current = safeIndex;
+    saveStoryCheckpoint(chapter2WaveCheckpoint(safeIndex));
+  };
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent<Chapter2BridgeMessage>) => {
       if (event.source !== iframeRef.current?.contentWindow) return;
@@ -100,25 +137,39 @@ export function Chapter2StoryExperience({
 
       if (data.type === "ready") {
         setReady(true);
-        if (!restoredRef.current && resumeIndex !== null) {
-          restoredRef.current = true;
+        if (restoredRef.current) return;
+        restoredRef.current = true;
+        if (resumeWavePendingRef.current) {
+          window.setTimeout(() => postCommand("jumpToIntegrationGate", { gateId: "wave" }), 50);
+        } else if (resumeIndex !== null) {
           window.setTimeout(() => postCommand("jumpTo", { index: resumeIndex }), 40);
         }
         return;
       }
 
       if (data.type === "progress") {
-        persistCheckpoint(data.state);
+        if (phase === "story" && !resumeWavePendingRef.current) persistCheckpoint(data.state);
         return;
       }
 
       if (data.type === "integration-gate") {
-        persistCheckpoint(data.state);
-        setIntegrationGate({
+        const gate: Chapter2IntegrationGate = {
           id: data.gateId || "wave",
           title: data.title || (data.gateId === "boss" ? "보스전 시작" : "일반 오염 전투"),
           subtitle: data.subtitle || "전투 시스템 연결 지점",
-        });
+        };
+        if (gate.id === "wave" && renderWaveCombat) {
+          const startIndex = resumeWavePendingRef.current ? resumeWaveIndex : 0;
+          resumeWavePendingRef.current = false;
+          currentWaveIndexRef.current = startIndex;
+          setWaveStartIndex(startIndex);
+          persistWaveCheckpoint(startIndex);
+          setIntegrationGate(null);
+          setPhase("wave");
+          return;
+        }
+        persistCheckpoint(data.state);
+        setIntegrationGate(gate);
         return;
       }
 
@@ -140,17 +191,53 @@ export function Chapter2StoryExperience({
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onStoryResult, resumeIndex]);
+  }, [onStoryResult, phase, renderWaveCombat, resumeIndex, resumeWaveIndex]);
 
   useEffect(() => {
-    const handlePageHide = () => postCommand("requestState");
+    const handlePageHide = () => {
+      if (phase === "wave") persistWaveCheckpoint(currentWaveIndexRef.current);
+      else postCommand("requestState");
+    };
     window.addEventListener("pagehide", handlePageHide);
     return () => window.removeEventListener("pagehide", handlePageHide);
-  }, []);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "story") return;
+    const handleTestKey = (event: KeyboardEvent) => {
+      if (event.code === "F6") {
+        event.preventDefault();
+        postCommand("skipCurrent");
+      } else if (event.code === "F7") {
+        event.preventDefault();
+        postCommand("jumpBy", { count: 10 });
+      } else if (event.code === "F8") {
+        event.preventDefault();
+        postCommand("jumpToIntegrationGate");
+      }
+    };
+    window.addEventListener("keydown", handleTestKey);
+    return () => window.removeEventListener("keydown", handleTestKey);
+  }, [phase]);
+
+  const finishWaveCombat = () => {
+    setPhase("story");
+    window.setTimeout(() => postCommand("resumeIntegrationGate"), 50);
+  };
+
+  const failWaveCombat = (waveIndex: number) => {
+    persistWaveCheckpoint(waveIndex);
+    onStoryResult({ outcome: "failed", stage: 2, durationMs: Date.now() - startedAtRef.current });
+  };
+
+  const exitWaveCombat = (waveIndex: number) => {
+    persistWaveCheckpoint(waveIndex);
+    onMenu();
+  };
 
   return (
     <div className="chapter2-story-experience">
-      <div className="chapter2-story-frame-shell">
+      <div className={`chapter2-story-frame-shell${phase === "wave" ? " is-combat-hidden" : ""}`}>
         <iframe
           ref={iframeRef}
           className="chapter2-story-frame"
@@ -159,6 +246,22 @@ export function Chapter2StoryExperience({
           allow="autoplay"
         />
       </div>
+
+      {phase === "wave" && renderWaveCombat?.({
+        startWaveIndex: waveStartIndex,
+        onWaveIndexChange: (waveIndex) => persistWaveCheckpoint(waveIndex),
+        onComplete: finishWaveCombat,
+        onFailed: failWaveCombat,
+        onExitToMenu: exitWaveCombat,
+      })}
+
+      {phase === "story" && ready && !integrationGate && !exitConfirmOpen && (
+        <div className="chapter2-story-test-navigation" aria-label="챕터 2 테스트 스킵">
+          <button type="button" onClick={() => postCommand("skipCurrent")}>SKIP 1 · F6</button>
+          <button type="button" onClick={() => postCommand("jumpBy", { count: 10 })}>+10 · F7</button>
+          <button type="button" onClick={() => postCommand("jumpToIntegrationGate")}>다음 전투 · F8</button>
+        </div>
+      )}
 
       {!ready && (
         <div className="chapter2-story-loading" aria-live="polite">
@@ -174,7 +277,9 @@ export function Chapter2StoryExperience({
             <h2>{integrationGate.title}</h2>
             <p>{integrationGate.subtitle}</p>
             <p className="chapter2-integration-note">
-              현재 패치는 챕터 2 스토리를 먼저 통합한 단계입니다. 다음 통합 단계에서 이 지점에 실제 챕터 2 전투를 연결합니다.
+              {integrationGate.id === "boss"
+                ? "챕터 2 일반 몬스터 웨이브는 연결되었습니다. 보스전은 다음 통합 단계에서 이 위치에 연결합니다."
+                : "전투 연결을 준비하고 있습니다."}
             </p>
             <div className="chapter2-integration-actions">
               <button type="button" className="secondary" onClick={onMenu}>메인 화면</button>

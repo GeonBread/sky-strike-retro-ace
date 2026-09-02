@@ -179,6 +179,13 @@ import type { MeteorObstacleState } from "./obstacles/meteorObstacleTypes";
 import type { GameEngineRuntimeContext } from "./runtime/gameEngineRuntimeContext";
 import { createChapter1WaveRuntime, type Chapter1WaveRuntime } from "./chapter1/chapter1WaveTypes";
 import { getChapter1WaveProgressSystem, skipCurrentChapter1WaveSystem } from "./chapter1/chapter1WaveSystem";
+import {
+  createChapter2WaveRuntime,
+  getChapter2WaveProgressSystem,
+  skipCurrentChapter2WaveSystem,
+  startChapter2WaveSystem,
+  type Chapter2WaveRuntime,
+} from "./chapter2/chapter2WaveSystem";
 import { createChapter1BossRuntime, type Chapter1BossRuntime } from "./chapter1/chapter1BossTypes";
 import {
   handleChapter1BossDigitSystem,
@@ -255,6 +262,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   powerups: PowerUp[] = [];
   inkClouds: InkCloud[] = [];
   chapter1Wave: Chapter1WaveRuntime = createChapter1WaveRuntime();
+  chapter2Wave: Chapter2WaveRuntime = createChapter2WaveRuntime();
   chapter1Boss: Chapter1BossRuntime = createChapter1BossRuntime();
 
   state: EngineState = "PLAYING";
@@ -315,6 +323,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   onBombsChanged?: (bombs: number) => void;
   onStageClear?: (choices: string[], onSelect: (choice: string) => void) => void;
   onChapter1WavesComplete?: () => void;
+  onChapter2WavesComplete?: () => void;
   onChapter1BossPhase2Story?: () => void;
   onChapter1BossComplete?: () => void;
 
@@ -712,6 +721,21 @@ export class GameEngine implements GameEngineRuntimeContext {
   /** 현재 챕터 1 웨이브 번호를 저장/복원용으로 반환한다. */
   public getCurrentChapter1WaveIndex(): number {
     return Math.max(0, getChapter1WaveProgressSystem(this).waveIndex);
+  }
+
+  /** 챕터 1 플레이어/HUD를 유지한 채 챕터 2 웨이브 런타임만 시작한다. */
+  public startChapter2Waves(startIndex = 0): void {
+    startChapter2WaveSystem(this, startIndex);
+  }
+
+  /** 테스트 UI에서 현재 챕터 2 웨이브를 즉시 넘긴다. */
+  public skipCurrentChapter2Wave(): boolean {
+    return skipCurrentChapter2WaveSystem(this);
+  }
+
+  /** 현재 챕터 2 웨이브 번호를 저장/복원용으로 반환한다. */
+  public getCurrentChapter2WaveIndex(): number {
+    return Math.max(0, getChapter2WaveProgressSystem(this).waveIndex);
   }
 
   public startChapter1Boss(patternLock = -1, skipIntro = false) {

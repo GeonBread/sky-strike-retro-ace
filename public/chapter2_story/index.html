@@ -14375,6 +14375,36 @@ function runCustomEffect(item) {
       api.jumpTo(Number(data.index));
       return;
     }
+    if (data.action === 'skipCurrent') {
+      api.skipCurrent();
+      return;
+    }
+    if (data.action === 'jumpBy') {
+      const count = Math.trunc(Number(data.count) || 1);
+      api.jumpTo(Math.max(0, Math.min(state.items.length - 1, state.index + count)));
+      return;
+    }
+    if (data.action === 'jumpToIntegrationGate') {
+      const requestedGate = String(data.gateId || '');
+      const from = Math.max(0, state.index);
+      const matchGate = item => {
+        if (!item || item.effect !== 'combat-transition') return false;
+        const title = String(item.title || '');
+        const gateId = title === '보스전 시작' ? 'boss' : title === '일반 오염 전투' ? 'wave' : '';
+        return gateId && (!requestedGate || requestedGate === gateId);
+      };
+      let target = -1;
+      for (let i = from; i < state.items.length; i += 1) {
+        if (matchGate(state.items[i])) { target = i; break; }
+      }
+      if (target < 0) {
+        for (let i = 0; i < from; i += 1) {
+          if (matchGate(state.items[i])) { target = i; break; }
+        }
+      }
+      if (target >= 0) api.jumpTo(target);
+      return;
+    }
     if (data.action === 'resumeIntegrationGate') {
       api.resumeIntegrationGate();
       return;

@@ -47,20 +47,28 @@ type Chapter1CombatFailure =
   | { kind: "wave"; waveIndex: number }
   | { kind: "boss" };
 
+type Chapter2CombatFailure = { kind: "wave"; waveIndex: number };
+
 interface GameCanvasProps {
   mode: GameMode;
   shipStyle: ShipStyle;
   onStoryResult: (result: StoryResult) => void;
   chapter1WaveOnly?: boolean;
   chapter1BossOnly?: boolean;
+  chapter2WaveOnly?: boolean;
   active?: boolean;
   onChapter1WaveComplete?: () => void;
+  onChapter2WaveComplete?: () => void;
   onChapter1BossPhase2?: () => void;
   onChapter1BossComplete?: () => void;
   onChapter1CombatFailed?: (failure: Chapter1CombatFailure) => void;
   onChapter1CombatExitToMenu?: (checkpoint: Chapter1CombatFailure) => void;
   onChapter1WaveIndexChange?: (waveIndex: number) => void;
+  onChapter2CombatFailed?: (failure: Chapter2CombatFailure) => void;
+  onChapter2CombatExitToMenu?: (checkpoint: Chapter2CombatFailure) => void;
+  onChapter2WaveIndexChange?: (waveIndex: number) => void;
   chapter1WaveStartIndex?: number;
+  chapter2WaveStartIndex?: number;
   chapter1BossSkipIntro?: boolean;
   chapter1StartingPowerLevel?: number;
   inputEnabled?: boolean;
@@ -76,14 +84,20 @@ function GameCanvas({
   onStoryResult,
   chapter1WaveOnly = false,
   chapter1BossOnly = false,
+  chapter2WaveOnly = false,
   active = true,
   onChapter1WaveComplete,
+  onChapter2WaveComplete,
   onChapter1BossPhase2,
   onChapter1BossComplete,
   onChapter1CombatFailed,
   onChapter1CombatExitToMenu,
   onChapter1WaveIndexChange,
+  onChapter2CombatFailed,
+  onChapter2CombatExitToMenu,
+  onChapter2WaveIndexChange,
   chapter1WaveStartIndex = 0,
+  chapter2WaveStartIndex = 0,
   chapter1BossSkipIntro = false,
   chapter1StartingPowerLevel = 1,
   inputEnabled = true,
@@ -103,12 +117,17 @@ function GameCanvas({
   const runStartedAtRef = useRef(Date.now());
   const externallyActiveRef = useRef(active);
   const waveCompleteCallbackRef = useRef(onChapter1WaveComplete);
+  const chapter2WaveCompleteCallbackRef = useRef(onChapter2WaveComplete);
   const bossPhase2CallbackRef = useRef(onChapter1BossPhase2);
   const bossCompleteCallbackRef = useRef(onChapter1BossComplete);
   const combatFailedCallbackRef = useRef(onChapter1CombatFailed);
   const combatExitToMenuCallbackRef = useRef(onChapter1CombatExitToMenu);
   const waveIndexChangeCallbackRef = useRef(onChapter1WaveIndexChange);
+  const chapter2CombatFailedCallbackRef = useRef(onChapter2CombatFailed);
+  const chapter2CombatExitToMenuCallbackRef = useRef(onChapter2CombatExitToMenu);
+  const chapter2WaveIndexChangeCallbackRef = useRef(onChapter2WaveIndexChange);
   const lastReportedWaveIndexRef = useRef<number | null>(null);
+  const lastReportedChapter2WaveIndexRef = useRef<number | null>(null);
   const inputEnabledRef = useRef(inputEnabled);
   const visualReadyCallbackRef = useRef(onVisualReady);
   const visualReadyNotifiedRef = useRef(false);
@@ -127,16 +146,20 @@ function GameCanvas({
   const [isPaused, setIsPaused] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const isStoryMode = mode === "story";
-  const isStoryCombatCanvas = isStoryMode && (chapter1WaveOnly || chapter1BossOnly);
+  const isStoryCombatCanvas = isStoryMode && (chapter1WaveOnly || chapter1BossOnly || chapter2WaveOnly);
 
   useEffect(() => {
     externallyActiveRef.current = active;
     waveCompleteCallbackRef.current = onChapter1WaveComplete;
+    chapter2WaveCompleteCallbackRef.current = onChapter2WaveComplete;
     bossPhase2CallbackRef.current = onChapter1BossPhase2;
     bossCompleteCallbackRef.current = onChapter1BossComplete;
     combatFailedCallbackRef.current = onChapter1CombatFailed;
     combatExitToMenuCallbackRef.current = onChapter1CombatExitToMenu;
     waveIndexChangeCallbackRef.current = onChapter1WaveIndexChange;
+    chapter2CombatFailedCallbackRef.current = onChapter2CombatFailed;
+    chapter2CombatExitToMenuCallbackRef.current = onChapter2CombatExitToMenu;
+    chapter2WaveIndexChangeCallbackRef.current = onChapter2WaveIndexChange;
     inputEnabledRef.current = inputEnabled;
     visualReadyCallbackRef.current = onVisualReady;
     playerPositionCallbackRef.current = onPlayerScreenPositionChange;
@@ -148,7 +171,7 @@ function GameCanvas({
       engineRef.current.paused = isPausedRef.current || !active;
       engineRef.current.simulationEnabled = simulationEnabled;
     }
-  }, [active, inputEnabled, simulationEnabled, onVisualReady, onChapter1WaveComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onChapter1CombatExitToMenu, onChapter1WaveIndexChange, onPlayerScreenPositionChange]);
+  }, [active, inputEnabled, simulationEnabled, onVisualReady, onChapter1WaveComplete, onChapter2WaveComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onChapter1CombatExitToMenu, onChapter1WaveIndexChange, onChapter2CombatFailed, onChapter2CombatExitToMenu, onChapter2WaveIndexChange, onPlayerScreenPositionChange]);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -199,6 +222,13 @@ function GameCanvas({
       if (isStoryMode) {
         setLastRun(null);
         setScore(0);
+        if (chapter2WaveOnly && chapter2CombatFailedCallbackRef.current) {
+          chapter2CombatFailedCallbackRef.current({
+            kind: "wave",
+            waveIndex: Math.max(0, engine.getCurrentChapter2WaveIndex?.() ?? chapter2WaveStartIndex),
+          });
+          return;
+        }
         if ((chapter1WaveOnly || chapter1BossOnly) && combatFailedCallbackRef.current) {
           if (chapter1BossOnly) {
             combatFailedCallbackRef.current({ kind: "boss" });
@@ -243,6 +273,9 @@ function GameCanvas({
     engine.onChapter1WavesComplete = chapter1WaveOnly
       ? () => waveCompleteCallbackRef.current?.()
       : undefined;
+    engine.onChapter2WavesComplete = chapter2WaveOnly
+      ? () => chapter2WaveCompleteCallbackRef.current?.()
+      : undefined;
     engine.onChapter1BossPhase2Story = () => bossPhase2CallbackRef.current?.();
     engine.onChapter1BossComplete = () => bossCompleteCallbackRef.current?.();
 
@@ -267,6 +300,13 @@ function GameCanvas({
           waveIndexChangeCallbackRef.current?.(currentWaveIndex);
         }
       }
+      if (chapter2WaveOnly) {
+        const currentWaveIndex = engine.getCurrentChapter2WaveIndex();
+        if (lastReportedChapter2WaveIndexRef.current !== currentWaveIndex) {
+          lastReportedChapter2WaveIndexRef.current = currentWaveIndex;
+          chapter2WaveIndexChangeCallbackRef.current?.(currentWaveIndex);
+        }
+      }
       setChapter1BossIntroActive(chapter1BossOnly && engine.isChapter1BossIntroActive());
       setChapter1BossDestroyActive(
         chapter1BossOnly && engine.chapter1Boss?.core?.state?.cinematicMode === "destroy",
@@ -279,7 +319,7 @@ function GameCanvas({
 
     engine.start(shipColor, mode, shipStyle);
     if (isStoryCombatCanvas) {
-      // 같은 웨이브/보스에서 완전 사망을 3회 이상 반복한 경우 재도전 시작 화력을 최대 레벨로 보정한다.
+      // 스토리 전투 모두 챕터 1에서 사용하던 실제 플레이어 성장/무기 시스템을 그대로 사용한다.
       engine.player.powerLevel = Math.max(1, Math.min(5, Math.floor(chapter1StartingPowerLevel)));
     }
     if (chapter1WaveOnly) {
@@ -292,6 +332,10 @@ function GameCanvas({
     if (chapter1BossOnly) {
       engine.chapter1Wave.enabled = false;
       engine.startChapter1Boss(-1, chapter1BossSkipIntro);
+    }
+    if (chapter2WaveOnly) {
+      engine.chapter1Wave.enabled = false;
+      engine.startChapter2Waves(chapter2WaveStartIndex);
     }
     // 테스트 바로가기처럼 비활성 상태로 처음 마운트되더라도 배경과 플레이어는 한 프레임 그려 둔다.
     engine.render();
@@ -533,6 +577,15 @@ function GameCanvas({
                   onClick={() => {
                     setShowExitConfirm(false);
                     sfx.resumeAll();
+                    if (chapter2WaveOnly && chapter2CombatExitToMenuCallbackRef.current) {
+                      const checkpoint: Chapter2CombatFailure = {
+                        kind: "wave",
+                        waveIndex: engineRef.current?.getCurrentChapter2WaveIndex() ?? chapter2WaveStartIndex,
+                      };
+                      engineRef.current?.stop();
+                      chapter2CombatExitToMenuCallbackRef.current(checkpoint);
+                      return;
+                    }
                     if (isStoryCombatCanvas && combatExitToMenuCallbackRef.current) {
                       const checkpoint: Chapter1CombatFailure = chapter1BossOnly
                         ? { kind: "boss" }
@@ -568,6 +621,18 @@ function GameCanvas({
         onClick={(event) => {
           event.stopPropagation();
           engineRef.current?.skipCurrentChapter1Wave();
+        }}
+      >
+        다음 웨이브
+      </button>
+    )}
+    {chapter2WaveOnly && active && inputEnabled && (
+      <button
+        type="button"
+        className="chapter1-wave-skip-outside"
+        onClick={(event) => {
+          event.stopPropagation();
+          engineRef.current?.skipCurrentChapter2Wave();
         }}
       >
         다음 웨이브
@@ -1519,6 +1584,21 @@ export default function App() {
           onStoryResult={finishStory}
           onMenu={() => setGameState("MENU")}
           resumeCheckpoint={selectedStoryCheckpoint}
+          renderWaveCombat={({ startWaveIndex, onWaveIndexChange, onComplete, onFailed, onExitToMenu }) => (
+            <div className="chapter2-story-combat-host">
+              <GameCanvas
+                mode="story"
+                shipStyle={shipStyle}
+                onStoryResult={finishStory}
+                chapter2WaveOnly
+                chapter2WaveStartIndex={startWaveIndex}
+                onChapter2WaveIndexChange={onWaveIndexChange}
+                onChapter2WaveComplete={onComplete}
+                onChapter2CombatFailed={(failure) => onFailed(failure.waveIndex)}
+                onChapter2CombatExitToMenu={(checkpoint) => onExitToMenu(checkpoint.waveIndex)}
+              />
+            </div>
+          )}
         />
       );
     }

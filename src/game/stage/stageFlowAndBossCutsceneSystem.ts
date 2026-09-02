@@ -8,6 +8,7 @@
 import { Particle } from "../entities";
 import { updateChapter1WaveEnemiesSystem } from "../chapter1/chapter1WaveSystem";
 import { updateChapter1WaveImpactEffectsSystem } from "../chapter1/chapter1WaveImpactSystem";
+import { updateChapter2WaveSystem } from "../chapter2/chapter2WaveSystem";
 
 type StageFlowRuntime = any;
 
@@ -17,6 +18,23 @@ type StageFlowRuntime = any;
  */
 export function updateStageFlowAndBossCutsceneSystem(engine: StageFlowRuntime, dt: number) {
 if (engine.state === "GAMEOVER" || engine.state === "VICTORY") return;
+
+if (engine.chapter2Wave?.enabled) {
+  if (engine.screenShakeIntensity > 0.1) {
+    engine.screenShakeIntensity *= Math.pow(0.08, dt);
+  } else {
+    engine.screenShakeIntensity = 0;
+  }
+  engine.updatePlayer(dt);
+  engine.updatePlayerPositionHistory(dt);
+  engine.updateBullets(dt);
+  engine.updateParticles(dt);
+  engine.updatePowerUps(dt);
+  engine.updateBomb(dt);
+  updateChapter2WaveSystem(engine, dt);
+  engine.checkCollisions();
+  return;
+}
 
 if (engine.stage === 1 && engine.chapter1Boss?.active) {
   if (engine.screenShakeIntensity > 0.1) {

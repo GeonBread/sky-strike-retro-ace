@@ -145,3 +145,61 @@
     padding: 22px 18px;
   }
 }
+
+.chapter2-story-frame-shell.is-combat-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.chapter2-story-test-navigation {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 240;
+  display: flex;
+  gap: 7px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .64);
+  backdrop-filter: blur(6px);
+}
+
+.chapter2-story-test-navigation button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(230, 0, 0, .52);
+  border-radius: 7px;
+  background: rgba(28, 30, 35, .94);
+  color: #fff;
+  cursor: pointer;
+  font: 800 11px/1 "Courier New", monospace;
+}
+
+.chapter2-story-test-navigation button:hover {
+  background: rgba(120, 10, 10, .96);
+}
+
+@media (max-width: 620px) {
+  .chapter2-story-test-navigation {
+    top: 8px;
+    right: 8px;
+    gap: 4px;
+    padding: 5px;
+  }
+
+  .chapter2-story-test-navigation button {
+    padding: 0 7px;
+    font-size: 9px;
+  }
+}
+
+.chapter2-story-combat-host {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+}

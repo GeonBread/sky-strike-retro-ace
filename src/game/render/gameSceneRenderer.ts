@@ -10,6 +10,7 @@ import type { PlayerWeaponStyle } from "../entities";
 import { renderPlayerBulletHitParticleSystem } from "../effects/playerBulletHitEffectSystem";
 import { renderChapter1WaveHudSystem, renderChapter1WaveTelegraphsSystem } from "../chapter1/chapter1WaveRenderer";
 import { renderChapter1BossFullSceneSystem } from "../chapter1/chapter1BossRenderer";
+import { renderChapter2WaveHudSystem, renderChapter2WaveSystem } from "../chapter2/chapter2WaveSystem";
 import { CHAPTER1_STORY_PLAYER_VISUAL_WIDTH } from "../chapter1/chapter1WaveVisualTuning";
 
 type GameSceneRenderEngine = any;
@@ -614,6 +615,7 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
     }
 
     engine.renderBackground();
+    renderChapter2WaveSystem(engine);
     renderChapter1WaveTelegraphsSystem(engine);
     const hidePlayerForChapter1Boss = false;
 
@@ -2109,6 +2111,7 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
       });
     }
 
+    renderChapter2WaveHudSystem(engine);
     renderChapter1WaveHudSystem(engine);
     engine.renderBossClearOverlay();
     engine.ctx.restore();
