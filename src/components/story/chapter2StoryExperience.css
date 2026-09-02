@@ -155,42 +155,175 @@
   position: fixed;
   top: 12px;
   right: 12px;
-  z-index: 240;
+  z-index: 420;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+  font-family: "Courier New", "Noto Sans KR", monospace;
+}
+
+.chapter2-story-test-toolbar {
   display: flex;
   gap: 7px;
-  padding: 7px;
-  border: 1px solid rgba(255, 255, 255, .18);
-  border-radius: 10px;
-  background: rgba(0, 0, 0, .64);
-  backdrop-filter: blur(6px);
+  pointer-events: auto;
 }
 
-.chapter2-story-test-navigation button {
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid rgba(230, 0, 0, .52);
-  border-radius: 7px;
-  background: rgba(28, 30, 35, .94);
-  color: #fff;
+.chapter2-story-test-toggle,
+.chapter2-story-test-skip {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
   cursor: pointer;
-  font: 800 11px/1 "Courier New", monospace;
+  color: #fff;
+  font: 900 11px/1 "Courier New", "Noto Sans KR", monospace;
+  letter-spacing: .04em;
+  backdrop-filter: blur(7px);
 }
 
-.chapter2-story-test-navigation button:hover {
-  background: rgba(120, 10, 10, .96);
+.chapter2-story-test-toggle {
+  border: 1px solid rgba(103, 232, 249, .58);
+  background: rgba(2, 6, 23, .91);
+  box-shadow: 0 0 18px rgba(34, 211, 238, .2);
+}
+
+.chapter2-story-test-skip {
+  border: 1px solid rgba(246, 195, 74, .72);
+  background: rgba(24, 18, 5, .92);
+  color: #fde68a;
+  box-shadow: 0 0 16px rgba(246, 195, 74, .18);
+}
+
+.chapter2-story-test-toggle:hover,
+.chapter2-story-test-skip:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+
+.chapter2-story-test-panel {
+  width: min(92vw, 390px);
+  max-height: calc(100dvh - 66px);
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid rgba(100, 116, 139, .82);
+  border-radius: 12px;
+  pointer-events: auto;
+  background: rgba(4, 8, 18, .96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .58), 0 0 24px rgba(34, 211, 238, .12);
+  color: #e5edf6;
+  scrollbar-width: thin;
+}
+
+.chapter2-story-test-title {
+  color: #67e8f9;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .09em;
+}
+
+.chapter2-story-test-phase {
+  margin: 6px 0 12px;
+  padding: 7px 9px;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, .72);
+  color: #cbd5e1;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.chapter2-story-test-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(100, 116, 139, .3);
+}
+
+.chapter2-story-test-group > strong {
+  margin-bottom: 2px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+.chapter2-story-test-group button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(71, 85, 105, .82);
+  border-radius: 7px;
+  cursor: pointer;
+  background: rgba(15, 23, 42, .9);
+  color: #e2e8f0;
+  text-align: left;
+  font: 800 11px/1.25 "Courier New", "Noto Sans KR", monospace;
+}
+
+.chapter2-story-test-group button:hover {
+  border-color: rgba(103, 232, 249, .7);
+  background: rgba(8, 47, 73, .88);
+}
+
+.chapter2-story-test-group button.is-current {
+  border-color: rgba(250, 204, 21, .86);
+  background: rgba(113, 63, 18, .88);
+  color: #fef3c7;
+  box-shadow: inset 3px 0 0 #facc15;
+}
+
+.chapter2-story-test-group button.is-combat {
+  text-align: center;
+  color: #bae6fd;
+}
+
+.chapter2-story-test-group button.is-boss {
+  border-color: rgba(244, 63, 94, .72);
+  background: rgba(76, 5, 25, .84);
+  color: #fecdd3;
+}
+
+.chapter2-story-wave-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.chapter2-story-wave-grid button {
+  min-width: 0;
+  padding: 7px 4px;
+}
+
+.chapter2-story-test-help {
+  margin: 13px 0 0;
+  padding: 9px 10px;
+  border-radius: 7px;
+  background: rgba(30, 41, 59, .66);
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.55;
 }
 
 @media (max-width: 620px) {
   .chapter2-story-test-navigation {
     top: 8px;
     right: 8px;
-    gap: 4px;
-    padding: 5px;
   }
 
-  .chapter2-story-test-navigation button {
-    padding: 0 7px;
+  .chapter2-story-test-toggle,
+  .chapter2-story-test-skip {
+    min-height: 32px;
+    padding: 0 8px;
     font-size: 9px;
+  }
+
+  .chapter2-story-test-panel {
+    width: min(94vw, 360px);
+    max-height: calc(100dvh - 55px);
+    padding: 11px;
   }
 }
 

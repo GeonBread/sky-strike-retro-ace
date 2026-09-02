@@ -14107,6 +14107,19 @@ function runCustomEffect(item) {
       .filter(Boolean);
   }
 
+  function navigationTargets() {
+    const sections = sectionEntries().map(entry => ({ index: entry.index, title: entry.title }));
+    const gates = state.items
+      .map((item, index) => {
+        if (!item || item.effect !== 'combat-transition') return null;
+        const title = String(item.title || '전투 시작');
+        const id = title === '보스전 시작' ? 'boss' : title === '일반 오염 전투' ? 'wave' : 'combat';
+        return { index, id, title };
+      })
+      .filter(Boolean);
+    return { itemCount: state.items.length, sections, gates };
+  }
+
   function renderSectionPanel() {
     const entries = sectionEntries();
     const fragment = document.createDocumentFragment();
@@ -14360,6 +14373,7 @@ function runCustomEffect(item) {
     setMode,
     updateScene,
     resumeIntegrationGate,
+    getNavigationTargets: navigationTargets,
     registerEffect,
     getState,
     assetPath
@@ -14411,6 +14425,13 @@ function runCustomEffect(item) {
     }
     if (data.action === 'requestState') {
       hooks.onLineChange?.({ api, item: state.items[state.index] || null, scene: state.scene, speaker: null });
+      return;
+    }
+    if (data.action === 'requestNavigationTargets') {
+      chapter2PostBridge('navigation-targets', {
+        state: chapter2BridgeState(api),
+        navigation: api.getNavigationTargets()
+      });
     }
   });
 
@@ -14465,6 +14486,11 @@ function runCustomEffect(item) {
   el.fullButton.addEventListener('click', playFullStory);
 
   window.addEventListener('keydown', event => {
+    if (event.code === 'F6' || event.code === 'F7' || event.code === 'F8') {
+      event.preventDefault();
+      chapter2PostBridge('test-key', { code: event.code, state: chapter2BridgeState(api) });
+      return;
+    }
     if (!el.jumpPanel.hidden) {
       if (event.key === 'Escape') closeJumpPanel();
       return;

@@ -1599,10 +1599,28 @@ export function getChapter2WaveProgressSystem(engine: any) {
 
 export function skipCurrentChapter2WaveSystem(engine: any): boolean {
   if (!engine?.chapter2Wave?.enabled || engine.chapter2Wave.allWavesCleared) return false;
-  const wave = hardWaveDefs[currentWaveIndex];
-  for (const event of wave.events) waveEventState.add(event.key);
-  for (const enemy of currentWaveEnemies()) destroyEnemy(enemy);
-  finishWave(engine);
+
+  const nextWaveIndex = currentWaveIndex + 1;
+  clearChapter2Field();
+  waveRunning = false;
+  waveGap = 0;
+
+  if (nextWaveIndex < hardWaveDefs.length) {
+    // 테스트 스킵은 일반 웨이브 종료의 1.45초 간격을 사용하지 않는다.
+    // 잔여 탄막/이펙트도 함께 지운 뒤 바로 다음 웨이브를 시작한다.
+    beginWave(engine, nextWaveIndex, false);
+    return true;
+  }
+
+  engine.chapter2Wave.running = false;
+  engine.chapter2Wave.progress = 1;
+  engine.chapter2Wave.selectedWave = hardWaveDefs.length - 1;
+  engine.chapter2Wave.nextWave = hardWaveDefs.length - 1;
+  engine.chapter2Wave.allWavesCleared = true;
+  if (!completionNotified) {
+    completionNotified = true;
+    engine.onChapter2WavesComplete?.();
+  }
   return true;
 }
 

@@ -10,7 +10,6 @@ type HobanwooMainMenuProps = {
   onRanking: () => void;
   onSettings: () => void;
   onShipSelect: () => void;
-  onDevMode: () => void;
 };
 
 /**
@@ -26,7 +25,6 @@ export function HobanwooMainMenu({
   onRanking,
   onSettings,
   onShipSelect,
-  onDevMode,
 }: HobanwooMainMenuProps) {
   return (
     <section
@@ -102,14 +100,6 @@ export function HobanwooMainMenu({
         </button>
       </div>
 
-      <button
-        type="button"
-        className="hobanwooDevModeButton"
-        disabled={!menuOpen}
-        onClick={onDevMode}
-      >
-        DEV
-      </button>
     </section>
   );
 }

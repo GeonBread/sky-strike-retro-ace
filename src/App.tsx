@@ -4,7 +4,6 @@ import { useAppStore } from "./store";
 import { GameEngine, GameInput } from "./game/engine";
 import { sfx } from "./game/AudioSystem";
 import { GameMode, GameState, ShipColor, ShipStyle } from "./types";
-import { DevSandbox } from "./components/DevSandbox";
 import { GameOverPanel } from "./components/GameOverPanel";
 import { LeaderboardPanel } from "./components/LeaderboardPanel";
 import { createLocalRunSession, sanitizePlayerName } from "./services/leaderboard";
@@ -49,6 +48,12 @@ type Chapter1CombatFailure =
 
 type Chapter2CombatFailure = { kind: "wave"; waveIndex: number };
 
+type Chapter2WaveControlCommand = {
+  id: number;
+  action: "skip" | "jump";
+  waveIndex?: number;
+};
+
 interface GameCanvasProps {
   mode: GameMode;
   shipStyle: ShipStyle;
@@ -69,6 +74,7 @@ interface GameCanvasProps {
   onChapter2WaveIndexChange?: (waveIndex: number) => void;
   chapter1WaveStartIndex?: number;
   chapter2WaveStartIndex?: number;
+  chapter2WaveControlCommand?: Chapter2WaveControlCommand | null;
   chapter1BossSkipIntro?: boolean;
   chapter1StartingPowerLevel?: number;
   inputEnabled?: boolean;
@@ -98,6 +104,7 @@ function GameCanvas({
   onChapter2WaveIndexChange,
   chapter1WaveStartIndex = 0,
   chapter2WaveStartIndex = 0,
+  chapter2WaveControlCommand = null,
   chapter1BossSkipIntro = false,
   chapter1StartingPowerLevel = 1,
   inputEnabled = true,
@@ -128,6 +135,7 @@ function GameCanvas({
   const chapter2WaveIndexChangeCallbackRef = useRef(onChapter2WaveIndexChange);
   const lastReportedWaveIndexRef = useRef<number | null>(null);
   const lastReportedChapter2WaveIndexRef = useRef<number | null>(null);
+  const lastChapter2WaveControlIdRef = useRef<number | null>(null);
   const inputEnabledRef = useRef(inputEnabled);
   const visualReadyCallbackRef = useRef(onVisualReady);
   const visualReadyNotifiedRef = useRef(false);
@@ -346,6 +354,20 @@ function GameCanvas({
       engine.stop();
     };
   }, []);
+
+  useEffect(() => {
+    if (!chapter2WaveOnly || !chapter2WaveControlCommand || !engineRef.current) return;
+    if (lastChapter2WaveControlIdRef.current === chapter2WaveControlCommand.id) return;
+    lastChapter2WaveControlIdRef.current = chapter2WaveControlCommand.id;
+
+    if (chapter2WaveControlCommand.action === "jump") {
+      const target = Math.max(0, Math.floor(chapter2WaveControlCommand.waveIndex ?? 0));
+      engineRef.current.startChapter2Waves(target);
+      return;
+    }
+
+    engineRef.current.skipCurrentChapter2Wave();
+  }, [chapter2WaveOnly, chapter2WaveControlCommand]);
 
   useEffect(() => {
     if (!chapter1PurificationExit) return;
@@ -621,18 +643,6 @@ function GameCanvas({
         onClick={(event) => {
           event.stopPropagation();
           engineRef.current?.skipCurrentChapter1Wave();
-        }}
-      >
-        다음 웨이브
-      </button>
-    )}
-    {chapter2WaveOnly && active && inputEnabled && (
-      <button
-        type="button"
-        className="chapter1-wave-skip-outside"
-        onClick={(event) => {
-          event.stopPropagation();
-          engineRef.current?.skipCurrentChapter2Wave();
         }}
       >
         다음 웨이브
@@ -1584,7 +1594,7 @@ export default function App() {
           onStoryResult={finishStory}
           onMenu={() => setGameState("MENU")}
           resumeCheckpoint={selectedStoryCheckpoint}
-          renderWaveCombat={({ startWaveIndex, onWaveIndexChange, onComplete, onFailed, onExitToMenu }) => (
+          renderWaveCombat={({ startWaveIndex, controlCommand, onWaveIndexChange, onComplete, onFailed, onExitToMenu }) => (
             <div className="chapter2-story-combat-host">
               <GameCanvas
                 mode="story"
@@ -1592,6 +1602,7 @@ export default function App() {
                 onStoryResult={finishStory}
                 chapter2WaveOnly
                 chapter2WaveStartIndex={startWaveIndex}
+                chapter2WaveControlCommand={controlCommand}
                 onChapter2WaveIndexChange={onWaveIndexChange}
                 onChapter2WaveComplete={onComplete}
                 onChapter2CombatFailed={(failure) => onFailed(failure.waveIndex)}
@@ -1611,10 +1622,6 @@ export default function App() {
         <GameCanvas mode="arcade" shipStyle={shipStyle} onStoryResult={finishStory} />
       </div>
     );
-  }
-
-  if (gameState === "DEV_MODE") {
-    return <DevSandbox onBack={() => setGameState("MENU")} shipColor={shipColor} />;
   }
 
   if (gameState === "MENU" || gameState === "LEADERBOARD") {
@@ -1650,11 +1657,6 @@ export default function App() {
           onShipSelect={() => {
             setShowOptions(false);
             setShowShipSelect(true);
-          }}
-          onDevMode={() => {
-            setShowOptions(false);
-            setShowShipSelect(false);
-            setGameState("DEV_MODE");
           }}
         />
 
