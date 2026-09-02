@@ -11,6 +11,11 @@
 const W = 900;
 const H = 1200;
 const MONSTER_SCALE = 1.28;
+// Keep the simulator's original enemy/effect proportions. The source simulator
+// rendered a 900 x 1200 virtual field into a 720 x 960 canvas (uniform 0.8x).
+// The integrated game is wider (922 x 960), so only X positions are widened to
+// use the project field; sprite/effect sizes still use the original uniform scale.
+const CHAPTER2_ENEMY_HP_SCALE = 0.65;
 const INK = "#070911";
 const DIFFICULTY = 1;
 const MAX_PARTICLES = 220;
@@ -223,6 +228,80 @@ function virtualScaleY(engine: any) {
   return Math.max(0.001, engine.canvas.height / H);
 }
 
+let renderWorldWidth = W;
+
+function angleForHorizontalStretch(angle: number, xStretch: number) {
+  if (!Number.isFinite(angle) || Math.abs(xStretch - 1) < 0.0001) return angle;
+  return Math.atan2(Math.sin(angle), Math.cos(angle) * xStretch);
+}
+
+/**
+ * The simulator used one uniform scale (0.8) because 900:1200 == 720:960.
+ * The game field is 922:960. Scaling the whole Chapter 2 layer by sx/sy
+ * independently made monsters, bullets and circular effects look horizontally
+ * stretched. For rendering only, widen world X coordinates while keeping one
+ * uniform size scale. Gameplay/collision coordinates are left untouched.
+ */
+function withOriginalAspectRenderState(engine: any, draw: () => void) {
+  const uniformScale = virtualScaleY(engine);
+  const xStretch = virtualScaleX(engine) / uniformScale;
+  const restores: Array<() => void> = [];
+
+  const setNumber = (object: any, key: string, value: number) => {
+    if (!object || !Number.isFinite(object[key])) return;
+    const before = object[key];
+    object[key] = value;
+    restores.push(() => { object[key] = before; });
+  };
+  const stretchX = (object: any, key: string) => {
+    if (!object || !Number.isFinite(object[key])) return;
+    setNumber(object, key, object[key] * xStretch);
+  };
+  const stretchAngle = (object: any, key: string) => {
+    if (!object || !Number.isFinite(object[key])) return;
+    setNumber(object, key, angleForHorizontalStretch(object[key], xStretch));
+  };
+  const stretchDataX = (data: any) => {
+    if (!data) return;
+    for (const key of ["gap", "gapCurrent", "gapTarget", "stopX"]) stretchX(data, key);
+    for (const key of ["aim", "bodyAngle"]) stretchAngle(data, key);
+  };
+
+  for (const enemy of enemies) {
+    stretchX(enemy, "x");
+    stretchX(enemy, "vx");
+    stretchX(enemy, "motionX");
+    stretchDataX(enemy.data);
+  }
+  for (const bullet of bullets) {
+    stretchX(bullet, "x");
+    stretchX(bullet, "vx");
+    stretchAngle(bullet, "a");
+    stretchDataX(bullet.data);
+  }
+  for (const trail of trails) {
+    stretchX(trail, "x");
+    stretchX(trail, "x1");
+    stretchX(trail, "x2");
+  }
+  for (const effect of effects) stretchX(effect, "x");
+  for (const particle of particles) {
+    stretchX(particle, "x");
+    stretchX(particle, "vx");
+  }
+  for (const vanish of vanishes) stretchX(vanish, "x");
+
+  const previousRenderWorldWidth = renderWorldWidth;
+  renderWorldWidth = W * xStretch;
+  try {
+    engine.ctx.scale(uniformScale, uniformScale);
+    draw();
+  } finally {
+    renderWorldWidth = previousRenderWorldWidth;
+    for (let i = restores.length - 1; i >= 0; i -= 1) restores[i]();
+  }
+}
+
 function syncPlayerFromEngine(engine: any) {
   const sx = virtualScaleX(engine);
   const sy = virtualScaleY(engine);
@@ -426,7 +505,8 @@ function monsterBox(type: Chapter2WaveEnemyType): [number, number] {
 function addEnemy(type: Chapter2WaveEnemyType, options: AnyRecord = {}) {
   const [mw, mh] = monsterBox(type);
   const defaultR = Math.max(42, Math.min(mw, mh) * 0.36);
-  const maxHp = options.maxHp || enemyHpByType[type] || 20;
+  const rawMaxHp = options.maxHp || enemyHpByType[type] || 20;
+  const maxHp = Math.max(1, Math.ceil(rawMaxHp * CHAPTER2_ENEMY_HP_SCALE));
   const enemy = {
     type,
     x: options.x ?? W / 2,
@@ -1745,7 +1825,7 @@ function drawEliteWall(b){
  const preview=b.dormant===true;
  const front=preview?(side==="left"?b.data.stopX+78:b.data.stopX-78):(side==="left"?b.x+78:b.x-78);
  const bodyStart=side==="left"?0:front;
- const bodyWidth=side==="left"?Math.max(0,front):Math.max(0,W-front);
+ const bodyWidth=side==="left"?Math.max(0,front):Math.max(0,renderWorldWidth-front);
  const bodyTop=b.y-34;
  const bodyH=68;
  const dir=side==="left"?1:-1;
@@ -2000,24 +2080,6 @@ function drawEffects(){
 function drawParticles(){for(const p of particles){const k=clamp(1-p.age/p.life,0,1),speed=Math.hypot(p.vx,p.vy);ctx.save();ctx.globalCompositeOperation="screen";ctx.globalAlpha=k;ctx.strokeStyle=p.color;ctx.fillStyle=p.color;if(p.shape==="streak"||speed>120){const d=speed||1,dx=p.vx/d,dy=p.vy/d,L=clamp(speed*.035,5,18);ctx.lineWidth=Math.max(1,p.size);ctx.lineCap="round";ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-dx*L,p.y-dy*L);ctx.stroke()}else{ctx.translate(p.x,p.y);ctx.rotate(Math.PI*.25+p.age*p.spin+p.phase);ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size)}ctx.restore()}}
 function drawVanishes(){for(const v of vanishes){const p=clamp(v.age/v.life,0,1),k=1-p,size=v.size*(1+p*.75);ctx.save();ctx.translate(v.x,v.y);ctx.rotate(Math.PI*.25+v.phase+p*1.6);ctx.globalCompositeOperation="screen";ctx.strokeStyle=v.color;ctx.fillStyle=rgba(v.color,.12*k);ctx.globalAlpha=k;ctx.lineWidth=3*v.strength;ctx.strokeRect(-size*.28,-size*.28,size*.56,size*.56);ctx.fillRect(-size*.12,-size*.12,size*.24,size*.24);ctx.rotate(-Math.PI*.25-v.phase-p*1.6);for(let i=0;i<4;i++){ctx.save();ctx.rotate(i*Math.PI/2);ctx.beginPath();ctx.moveTo(size*.18,0);ctx.lineTo(size*.68,0);ctx.stroke();ctx.restore()}ctx.restore()}}
 
-function drawEnemyHealth(e: any) {
-  if (!e.clearTarget || e.dead || !ctx) return;
-  const [mw, mh] = monsterBox(e.type);
-  const w = clamp(mw * 0.72, 72, 138);
-  const h = 11;
-  const x = e.x - w / 2;
-  const y = e.y - mh * 0.5 - 22;
-  const p = clamp(e.hp / e.maxHp, 0, 1);
-  ctx.save();
-  ctx.fillStyle = "#070911";
-  ctx.fillRect(x - 3, y - 3, w + 6, h + 6);
-  ctx.fillStyle = "#3b455d";
-  ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = p > 0.45 ? "#59e7a3" : p > 0.2 ? "#ffd34e" : "#ff4f59";
-  ctx.fillRect(x, y, w * p, h);
-  ctx.restore();
-}
-
 export function renderChapter2WaveSystem(engine: any) {
   if (!engine?.chapter2Wave?.enabled) return;
   activeEngine = engine;
@@ -2028,14 +2090,14 @@ export function renderChapter2WaveSystem(engine: any) {
   const scaleShakeY = shake * sy;
   engine.ctx.save();
   if (shake > 0.2) engine.ctx.translate(rnd(-scaleShakeX, scaleShakeX), rnd(-scaleShakeY, scaleShakeY));
-  engine.ctx.scale(sx, sy);
-  drawEffects();
-  drawParticles();
-  drawReferenceLinks();
-  for (const enemy of enemies) drawEnemy(enemy);
-  for (const enemy of enemies) drawEnemyHealth(enemy);
-  for (const bullet of bullets) drawBullet(bullet);
-  drawVanishes();
+  withOriginalAspectRenderState(engine, () => {
+    drawEffects();
+    drawParticles();
+    drawReferenceLinks();
+    for (const enemy of enemies) drawEnemy(enemy);
+    for (const bullet of bullets) drawBullet(bullet);
+    drawVanishes();
+  });
   engine.ctx.restore();
   ctx = null;
 }
