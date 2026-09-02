@@ -336,3 +336,104 @@
   overflow: hidden;
   background: #000;
 }
+
+
+/* CHAPTER 2 story -> wave transition.  Unlike the embedded story stage, this overlay covers the entire browser viewport. */
+.chapter2-fullscreen-wave-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: transparent;
+}
+
+.chapter2-fullscreen-wave-intro-shutter {
+  position: absolute;
+  inset: 0;
+  background: #e60000;
+  transform: scaleY(0);
+  transform-origin: center;
+  animation: chapter2FullscreenWaveShutter 3.2s cubic-bezier(.75, 0, .25, 1) forwards;
+}
+
+.chapter2-fullscreen-wave-intro-slash {
+  position: absolute;
+  width: 170vmax;
+  height: 4px;
+  background: #fff;
+  transform: rotate(-18deg) scaleX(0);
+  box-shadow: 0 0 30px #fff;
+  animation: chapter2FullscreenWaveSlash .72s .34s ease-out forwards;
+}
+
+.chapter2-fullscreen-wave-intro-title {
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  transform: scale(.78);
+  text-align: center;
+  text-shadow: 0 8px 0 rgba(0, 0, 0, .32);
+  animation: chapter2FullscreenWaveTitleReveal 2.5s .48s ease forwards;
+}
+
+.chapter2-fullscreen-wave-intro-title small {
+  display: block;
+  color: #fff;
+  font: 1000 clamp(13px, 1.5vw, 20px)/1.2 "Courier New", "Noto Sans KR", monospace;
+  letter-spacing: .42em;
+}
+
+.chapter2-fullscreen-wave-intro-title strong {
+  display: block;
+  color: #fff;
+  font: italic 1000 clamp(54px, 10vw, 154px)/1.03 "Noto Sans KR", system-ui, sans-serif;
+  letter-spacing: -.05em;
+  word-break: keep-all;
+}
+
+.chapter2-fullscreen-wave-intro-title span {
+  display: block;
+  margin-top: 8px;
+  color: #ffe0a8;
+  font: 900 clamp(11px, 1.15vw, 15px)/1.35 "Noto Sans KR", system-ui, sans-serif;
+  letter-spacing: .16em;
+  word-break: keep-all;
+}
+
+@keyframes chapter2FullscreenWaveShutter {
+  0% { transform: scaleY(0); }
+  18%, 82% { transform: scaleY(1); }
+  100% { transform: scaleY(0); }
+}
+
+@keyframes chapter2FullscreenWaveSlash {
+  to { transform: rotate(-18deg) scaleX(1); }
+}
+
+@keyframes chapter2FullscreenWaveTitleReveal {
+  0% { opacity: 0; transform: scale(.78); }
+  10%, 84% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+
+/* Chapter 1의 100% 정화 효과는 같은 클래스/키프레임을 사용하고, 챕터 2 전투 레이어 위로만 올린다. */
+.chapter2-wave-purification-overlay {
+  z-index: 260;
+}
+
+.chapter2-wave-clear-blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  pointer-events: none;
+  background: #000;
+  animation: chapter2WaveClearBlackout .18s ease-out both;
+}
+
+@keyframes chapter2WaveClearBlackout {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

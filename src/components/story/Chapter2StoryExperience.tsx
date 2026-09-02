@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { sfx } from "../../game/AudioSystem";
 import {
   saveStoryCheckpoint,
   type StoryCheckpoint,
@@ -43,6 +44,7 @@ interface Chapter2WaveControlCommand {
 interface Chapter2BridgeMessage {
   channel?: string;
   type?: string;
+  effectId?: string;
   state?: Chapter2StoryStateMessage;
   gateId?: "wave" | "boss" | string;
   title?: string;
@@ -60,6 +62,9 @@ interface Chapter2IntegrationGate {
 interface Chapter2WaveRenderProps {
   startWaveIndex: number;
   controlCommand: Chapter2WaveControlCommand | null;
+  inputEnabled: boolean;
+  purificationExit: boolean;
+  onPlayerPositionChange: (position: { xPercent: number; yPercent: number }) => void;
   onWaveIndexChange: (waveIndex: number) => void;
   onComplete: () => void;
   onFailed: (waveIndex: number) => void;
@@ -119,7 +124,10 @@ export function Chapter2StoryExperience({
   );
   const requestedWaveIndexRef = useRef<number | null>(null);
   const waveCommandIdRef = useRef(0);
-  const [phase, setPhase] = useState<"story" | "wave">("story");
+  const purificationTimerRef = useRef<number | null>(null);
+  const waveIntroTimerRef = useRef<number | null>(null);
+  const playerPositionRef = useRef({ xPercent: 50, yPercent: 88 });
+  const [phase, setPhase] = useState<"story" | "wave" | "wave-purification-effect" | "wave-purification-exit" | "wave-blackout">("story");
   const [waveStartIndex, setWaveStartIndex] = useState(currentWaveIndexRef.current);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(currentWaveIndexRef.current);
   const [waveControlCommand, setWaveControlCommand] = useState<Chapter2WaveControlCommand | null>(null);
@@ -129,6 +137,8 @@ export function Chapter2StoryExperience({
   const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  const [waveIntroTransitionActive, setWaveIntroTransitionActive] = useState(false);
+  const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
 
   const resumeIndex = useMemo(() => {
     if (resumeCheckpoint?.kind !== "story" || resumeCheckpoint.chapter !== 2) return null;
@@ -201,11 +211,30 @@ export function Chapter2StoryExperience({
 
       if (data.type === "progress") {
         if (Number.isInteger(data.state?.index)) setCurrentStoryIndex(Number(data.state?.index));
+        if (
+          data.effectId === "combat-transition"
+          && data.title === "일반 오염 전투"
+          && phase === "story"
+        ) {
+          if (waveIntroTimerRef.current !== null) window.clearTimeout(waveIntroTimerRef.current);
+          setWaveIntroTransitionActive(true);
+          waveIntroTimerRef.current = window.setTimeout(() => {
+            waveIntroTimerRef.current = null;
+            setWaveIntroTransitionActive(false);
+          }, 3220);
+        }
         if (phase === "story" && !resumeWavePendingRef.current) persistCheckpoint(data.state);
         return;
       }
 
       if (data.type === "integration-gate") {
+        if (data.gateId === "wave") {
+          if (waveIntroTimerRef.current !== null) {
+            window.clearTimeout(waveIntroTimerRef.current);
+            waveIntroTimerRef.current = null;
+          }
+          setWaveIntroTransitionActive(false);
+        }
         const gate: Chapter2IntegrationGate = {
           id: data.gateId || "wave",
           title: data.title || (data.gateId === "boss" ? "보스전 시작" : "일반 오염 전투"),
@@ -255,9 +284,14 @@ export function Chapter2StoryExperience({
     return () => window.removeEventListener("message", handleMessage);
   }, [onStoryResult, phase, renderWaveCombat, resumeIndex, resumeWaveIndex]);
 
+  useEffect(() => () => {
+    if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
+    if (waveIntroTimerRef.current !== null) window.clearTimeout(waveIntroTimerRef.current);
+  }, []);
+
   useEffect(() => {
     const handlePageHide = () => {
-      if (phase === "wave") persistWaveCheckpoint(currentWaveIndexRef.current);
+      if (phase !== "story") persistWaveCheckpoint(currentWaveIndexRef.current);
       else postCommand("requestState");
     };
     window.addEventListener("pagehide", handlePageHide);
@@ -278,6 +312,7 @@ export function Chapter2StoryExperience({
       issueWaveControl("skip");
       return;
     }
+    if (phase !== "story") return;
     if (integrationGate) {
       setIntegrationGate(null);
       postCommand("resumeIntegrationGate");
@@ -287,6 +322,10 @@ export function Chapter2StoryExperience({
   };
 
   const jumpToStoryItem = (index: number) => {
+    if (purificationTimerRef.current !== null) {
+      window.clearTimeout(purificationTimerRef.current);
+      purificationTimerRef.current = null;
+    }
     const safeIndex = Math.max(0, Math.min(Math.max(0, navigation.itemCount - 1), Math.floor(index)));
     requestedWaveIndexRef.current = null;
     resumeWavePendingRef.current = false;
@@ -298,6 +337,10 @@ export function Chapter2StoryExperience({
   };
 
   const jumpToWave = (waveIndex: number) => {
+    if (purificationTimerRef.current !== null) {
+      window.clearTimeout(purificationTimerRef.current);
+      purificationTimerRef.current = null;
+    }
     const safeIndex = Math.max(0, Math.min(CHAPTER2_WAVE_COUNT - 1, Math.floor(waveIndex)));
     if (phase === "wave") {
       currentWaveIndexRef.current = safeIndex;
@@ -308,6 +351,7 @@ export function Chapter2StoryExperience({
       setShowJumpMenu(false);
       return;
     }
+    setPhase("story");
     requestedWaveIndexRef.current = safeIndex;
     resumeWavePendingRef.current = false;
     setIntegrationGate(null);
@@ -316,6 +360,10 @@ export function Chapter2StoryExperience({
   };
 
   const jumpToBossGate = () => {
+    if (purificationTimerRef.current !== null) {
+      window.clearTimeout(purificationTimerRef.current);
+      purificationTimerRef.current = null;
+    }
     requestedWaveIndexRef.current = null;
     resumeWavePendingRef.current = false;
     setWaveControlCommand(null);
@@ -336,7 +384,7 @@ export function Chapter2StoryExperience({
       } else if (event.code === "F8") {
         event.preventDefault();
         if (phase === "wave") jumpToBossGate();
-        else postCommand("jumpToIntegrationGate");
+        else if (phase === "story") postCommand("jumpToIntegrationGate");
       }
     };
     window.addEventListener("keydown", handleTestKey);
@@ -344,9 +392,29 @@ export function Chapter2StoryExperience({
   }, [phase, integrationGate, navigation.itemCount]);
 
   const finishWaveCombat = () => {
+    if (purificationTimerRef.current !== null) return;
     setWaveControlCommand(null);
-    setPhase("story");
-    window.setTimeout(() => postCommand("resumeIntegrationGate"), 50);
+    setShowJumpMenu(false);
+    setPurificationOrigin(playerPositionRef.current);
+    sfx.purificationComplete();
+    setPhase("wave-purification-effect");
+
+    // Chapter 1과 같은 순서: 100% 정화 파동 -> 호반우 상승 퇴장 -> 암전 -> 스토리 재개.
+    purificationTimerRef.current = window.setTimeout(() => {
+      setPhase("wave-purification-exit");
+      purificationTimerRef.current = window.setTimeout(() => {
+        setPhase("wave-blackout");
+        // 검은 화면이 유지되는 동안 iframe 스토리를 먼저 다음 장면으로 진행시킨 뒤 공개한다.
+        // 이렇게 하면 전투 화면/이전 스토리 배경이 한 프레임 비치는 현상을 막을 수 있다.
+        purificationTimerRef.current = window.setTimeout(() => {
+          postCommand("resumeIntegrationGate");
+          purificationTimerRef.current = window.setTimeout(() => {
+            purificationTimerRef.current = null;
+            setPhase("story");
+          }, 250);
+        }, 600);
+      }, 1500);
+    }, 3300);
   };
 
   const failWaveCombat = (waveIndex: number) => {
@@ -361,7 +429,7 @@ export function Chapter2StoryExperience({
 
   return (
     <div className="chapter2-story-experience">
-      <div className={`chapter2-story-frame-shell${phase === "wave" ? " is-combat-hidden" : ""}`}>
+      <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}`}>
         <iframe
           ref={iframeRef}
           className="chapter2-story-frame"
@@ -371,9 +439,14 @@ export function Chapter2StoryExperience({
         />
       </div>
 
-      {phase === "wave" && renderWaveCombat?.({
+      {phase !== "story" && renderWaveCombat?.({
         startWaveIndex: waveStartIndex,
         controlCommand: waveControlCommand,
+        inputEnabled: phase === "wave",
+        purificationExit: phase === "wave-purification-exit",
+        onPlayerPositionChange: (position) => {
+          playerPositionRef.current = position;
+        },
         onWaveIndexChange: (waveIndex) => {
           currentWaveIndexRef.current = waveIndex;
           setCurrentWaveIndex(waveIndex);
@@ -384,7 +457,39 @@ export function Chapter2StoryExperience({
         onExitToMenu: exitWaveCombat,
       })}
 
-      {ready && !exitConfirmOpen && (
+      {phase === "wave-purification-effect" && (
+        <div
+          className="chapter1-wave-purification-overlay chapter2-wave-purification-overlay"
+          aria-label="챕터 2 정화 에너지 100% 연출"
+          style={{
+            "--purification-center-x": `${purificationOrigin.xPercent}%`,
+            "--purification-center-y": `${purificationOrigin.yPercent}%`,
+          } as React.CSSProperties}
+        >
+          <div className="chapter1-wave-purification-flash" />
+          <div className="chapter1-wave-purification-ring ring-a" />
+          <div className="chapter1-wave-purification-ring ring-b" />
+          <div className="chapter1-wave-purification-core" />
+        </div>
+      )}
+
+      {phase === "wave-blackout" && (
+        <div className="chapter2-wave-clear-blackout" aria-hidden="true" />
+      )}
+
+      {waveIntroTransitionActive && (
+        <div className="chapter2-fullscreen-wave-intro" aria-hidden="true">
+          <div className="chapter2-fullscreen-wave-intro-shutter" />
+          <div className="chapter2-fullscreen-wave-intro-slash" />
+          <div className="chapter2-fullscreen-wave-intro-title">
+            <small>CHAPTER 2</small>
+            <strong>정화 전투 개시</strong>
+            <span>시험 · 팀플 오염 파편 정화</span>
+          </div>
+        </div>
+      )}
+
+      {ready && !exitConfirmOpen && phase !== "wave-purification-effect" && phase !== "wave-purification-exit" && phase !== "wave-blackout" && (
         <div className="chapter2-story-test-navigation" aria-label="챕터 2 진행 테스트 이동">
           <div className="chapter2-story-test-toolbar">
             <button type="button" className="chapter2-story-test-skip" onClick={skipCurrentContext}>

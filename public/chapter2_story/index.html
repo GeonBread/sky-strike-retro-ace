@@ -1615,6 +1615,43 @@ kbd {
   }
 }
 
+/* FIX62: Supporting cast should read as naturally lit, not overexposed, when speaking.
+   Hobanwoo keeps the existing chapter lighting; human characters on the opposite side use a gentler speaking filter. */
+.actor.is-speaking[data-character="minjae"],
+.actor.is-speaking[data-character="soyeon"],
+.actor.is-speaking[data-character="junho"],
+.actor.is-speaking[data-character="professor"],
+.actor.is-speaking[data-character="student1"] {
+  filter: grayscale(0) saturate(.88) brightness(.91) contrast(1.01) !important;
+}
+
+/* FIX62: These characters are staged on the left while Hobanwoo is on the right.
+   Mirror only the full-body actor bitmap so their body direction faces Hobanwoo without moving or resizing the actor shell. */
+.actor[data-character="minjae"] .actor-image,
+.actor[data-character="soyeon"] .actor-image,
+.actor[data-character="junho"] .actor-image,
+.actor[data-character="professor"] .actor-image,
+.actor[data-character="student1"] .actor-image {
+  transform: scaleX(-1) scale(var(--character-scale, 1)) !important;
+  transform-origin: center bottom !important;
+}
+
+/* Keep the same facing/lighting when a character is temporarily promoted above a full-screen Office effect. */
+.global-effect-actor-shell[data-character="minjae"].is-speaking,
+.global-effect-actor-shell[data-character="soyeon"].is-speaking,
+.global-effect-actor-shell[data-character="junho"].is-speaking,
+.global-effect-actor-shell[data-character="professor"].is-speaking,
+.global-effect-actor-shell[data-character="student1"].is-speaking {
+  filter: grayscale(0) saturate(.88) brightness(.91) contrast(1.01) !important;
+}
+.global-effect-actor-shell[data-character="minjae"] .global-effect-actor-image,
+.global-effect-actor-shell[data-character="soyeon"] .global-effect-actor-image,
+.global-effect-actor-shell[data-character="junho"] .global-effect-actor-image,
+.global-effect-actor-shell[data-character="professor"] .global-effect-actor-image,
+.global-effect-actor-shell[data-character="student1"] .global-effect-actor-image {
+  transform: scaleX(-1) scale(var(--character-scale, 1)) !important;
+}
+
 /* Embedded mode used by the Vite/React chapter router. */
 html.is-chapter2-embedded .story-controls { display: none !important; }
 html.is-chapter2-embedded body { background: #000; }
@@ -13568,6 +13605,7 @@ document.head.appendChild(c2Style);
     globalEffectActorOverlay.style.width = `${rect.width}px`;
     globalEffectActorOverlay.style.height = `${rect.height}px`;
     shell.className = `global-effect-actor-shell ${sideClass} ${actorEl.classList.contains('is-speaking') ? 'is-speaking' : 'is-inactive'}${actorId === 'hobanwoo' && isNewOverlay ? ' is-entering' : ''}`;
+    shell.dataset.character = actorId;
     shell.style.setProperty('--character-scale', actorEl.style.getPropertyValue('--character-scale') || '1');
     image.src = source;
     image.alt = actorImage.alt || actorId;
@@ -14514,6 +14552,29 @@ function runCustomEffect(item) {
   el.effectButton.addEventListener('click', openEffectPanel);
   el.fullButton.addEventListener('click', playFullStory);
 
+  let chapter2SpaceHoldDelayTimer = null;
+  let chapter2SpaceHoldInterval = null;
+
+  function clearChapter2SpaceHold() {
+    if (chapter2SpaceHoldDelayTimer !== null) {
+      window.clearTimeout(chapter2SpaceHoldDelayTimer);
+      chapter2SpaceHoldDelayTimer = null;
+    }
+    if (chapter2SpaceHoldInterval !== null) {
+      window.clearInterval(chapter2SpaceHoldInterval);
+      chapter2SpaceHoldInterval = null;
+    }
+  }
+
+  function beginChapter2SpaceHold() {
+    clearChapter2SpaceHold();
+    next();
+    chapter2SpaceHoldDelayTimer = window.setTimeout(() => {
+      chapter2SpaceHoldDelayTimer = null;
+      chapter2SpaceHoldInterval = window.setInterval(() => next(), 85);
+    }, 260);
+  }
+
   window.addEventListener('keydown', event => {
     if (event.code === 'F6' || event.code === 'F7' || event.code === 'F8') {
       event.preventDefault();
@@ -14538,11 +14599,19 @@ function runCustomEffect(item) {
       return;
     }
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-    if (event.repeat) return;
-    if (config.enableKeyboardAdvance !== false && (event.key === 'Enter' || event.key === ' ')) {
+    if (config.enableKeyboardAdvance !== false && event.code === 'Space') {
       event.preventDefault();
       unlockDialogueAudio();
-      /* 타이핑 중이면 현재 문장만 완성, 완성된 상태면 다음 대사로 이동합니다. */
+      if (!event.repeat && chapter2SpaceHoldDelayTimer === null && chapter2SpaceHoldInterval === null) {
+        // 짧게 누르면 한 번 진행하고, 260ms 이상 누르면 테스트용으로 대사를 빠르게 연속 진행한다.
+        beginChapter2SpaceHold();
+      }
+      return;
+    }
+    if (event.repeat) return;
+    if (config.enableKeyboardAdvance !== false && event.key === 'Enter') {
+      event.preventDefault();
+      unlockDialogueAudio();
       next();
     } else if (event.key === 'Backspace') {
       event.preventDefault();
@@ -14561,6 +14630,11 @@ function runCustomEffect(item) {
       skipCurrent();
     }
   });
+
+  window.addEventListener('keyup', event => {
+    if (event.code === 'Space') clearChapter2SpaceHold();
+  });
+  window.addEventListener('blur', clearChapter2SpaceHold);
 
   setMode(state.mode);
   hooks.onReady?.(api);

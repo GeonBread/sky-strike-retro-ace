@@ -79,6 +79,7 @@ interface GameCanvasProps {
   chapter1StartingPowerLevel?: number;
   inputEnabled?: boolean;
   chapter1PurificationExit?: boolean;
+  chapter2PurificationExit?: boolean;
   simulationEnabled?: boolean;
   onVisualReady?: () => void;
   onPlayerScreenPositionChange?: (position: { xPercent: number; yPercent: number }) => void;
@@ -109,6 +110,7 @@ function GameCanvas({
   chapter1StartingPowerLevel = 1,
   inputEnabled = true,
   chapter1PurificationExit = false,
+  chapter2PurificationExit = false,
   simulationEnabled = true,
   onVisualReady,
   onPlayerScreenPositionChange,
@@ -370,9 +372,10 @@ function GameCanvas({
   }, [chapter2WaveOnly, chapter2WaveControlCommand]);
 
   useEffect(() => {
-    if (!chapter1PurificationExit) return;
+    if (!chapter1PurificationExit && !chapter2PurificationExit) return;
+    // 챕터 1과 챕터 2가 동일한 호반우 상승 퇴장 런타임을 공유한다.
     engineRef.current?.beginChapter1PurificationExit();
-  }, [chapter1PurificationExit]);
+  }, [chapter1PurificationExit, chapter2PurificationExit]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1594,7 +1597,17 @@ export default function App() {
           onStoryResult={finishStory}
           onMenu={() => setGameState("MENU")}
           resumeCheckpoint={selectedStoryCheckpoint}
-          renderWaveCombat={({ startWaveIndex, controlCommand, onWaveIndexChange, onComplete, onFailed, onExitToMenu }) => (
+          renderWaveCombat={({
+            startWaveIndex,
+            controlCommand,
+            inputEnabled,
+            purificationExit,
+            onPlayerPositionChange,
+            onWaveIndexChange,
+            onComplete,
+            onFailed,
+            onExitToMenu,
+          }) => (
             <div className="chapter2-story-combat-host">
               <GameCanvas
                 mode="story"
@@ -1603,6 +1616,9 @@ export default function App() {
                 chapter2WaveOnly
                 chapter2WaveStartIndex={startWaveIndex}
                 chapter2WaveControlCommand={controlCommand}
+                inputEnabled={inputEnabled}
+                chapter2PurificationExit={purificationExit}
+                onPlayerScreenPositionChange={onPlayerPositionChange}
                 onChapter2WaveIndexChange={onWaveIndexChange}
                 onChapter2WaveComplete={onComplete}
                 onChapter2CombatFailed={(failure) => onFailed(failure.waveIndex)}
