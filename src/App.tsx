@@ -15,6 +15,7 @@ import {
   type Chapter1StoryPlayerHandle,
   type Chapter1StoryPreviewRequest,
 } from "./components/story/Chapter1StoryPlayer";
+import { Chapter2StoryExperience } from "./components/story/Chapter2StoryExperience";
 import "./components/ui/hobanwooOverlayPanels.css";
 import "./components/story/storyChapterFlow.css";
 import {
@@ -1346,15 +1347,32 @@ function Chapter1ClearSequence({ onContinue, onMenu }: { onContinue: () => void;
   );
 }
 
-function ChapterIntegrationPlaceholder({ chapter, onMenu }: { chapter: 2 | 3; onMenu: () => void }) {
+function Chapter2ClearSequence({ onContinue, onMenu }: { onContinue: () => void; onMenu: () => void }) {
+  return (
+    <div className="chapterClearSequence">
+      <div className="chapterClearStage">
+        <section className="chapterContinuePrompt" role="dialog" aria-modal="true">
+          <small>CHAPTER 2 CLEAR</small>
+          <h2>중간고사와 팀 프로젝트 완료</h2>
+          <p>시험의 별과 팀플의 별을 회수했습니다. 챕터 3가 해금되었습니다.</p>
+          <div className="chapterContinueActions">
+            <button type="button" className="no" onClick={onMenu}>메인 화면</button>
+            <button type="button" className="yes" onClick={onContinue}>챕터 3로</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function ChapterIntegrationPlaceholder({ chapter, onMenu }: { chapter: 3; onMenu: () => void }) {
   return (
     <div className="chapterIntegrationPlaceholder">
       <div>
         <small>CHAPTER {chapter} · UNLOCKED</small>
         <h2>챕터 {chapter} 시작 지점</h2>
         <p>
-          로컬 진행도와 챕터 라우팅은 연결되었습니다. 현재 FIX12 프로젝트에는 챕터 {chapter} 실제 스토리 컴포넌트가 포함되어 있지 않아,
-          해당 스토리 파일을 통합하면 이 화면 위치에서 바로 챕터 {chapter} 스토리를 렌더링하면 됩니다.
+          로컬 진행도와 챕터 라우팅은 연결되었습니다. 챕터 3 실제 스토리 컴포넌트를 통합하면 이 화면 위치에서 바로 렌더링하면 됩니다.
         </p>
         <button type="button" onClick={onMenu}>메인 화면으로</button>
       </div>
@@ -1364,20 +1382,25 @@ function ChapterIntegrationPlaceholder({ chapter, onMenu }: { chapter: 2 | 3; on
 
 function StoryResultPanel({
   result,
+  chapter,
   onRetry,
   onMenu,
-  onContinueChapter2,
+  onContinueNext,
 }: {
   result: StoryResult | null;
+  chapter: StoryChapter;
   onRetry: () => void;
   onMenu: () => void;
-  onContinueChapter2: () => void;
+  onContinueNext: () => void;
 }) {
   const cleared = result?.outcome === "cleared";
   const elapsed = result ? `${Math.floor(result.durationMs / 60000)}:${Math.floor((result.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : "0:00";
 
-  if (cleared) {
-    return <Chapter1ClearSequence onContinue={onContinueChapter2} onMenu={onMenu} />;
+  if (cleared && chapter === 1) {
+    return <Chapter1ClearSequence onContinue={onContinueNext} onMenu={onMenu} />;
+  }
+  if (cleared && chapter === 2) {
+    return <Chapter2ClearSequence onContinue={onContinueNext} onMenu={onMenu} />;
   }
 
   return (
@@ -1386,7 +1409,7 @@ function StoryResultPanel({
         STORY MODE
       </div>
       <h2 className="mb-2 text-4xl font-mono font-black text-rose-400">MISSION FAILED</h2>
-      <p className="mb-6 text-sm font-semibold text-slate-400">CHAPTER 1 · {elapsed}</p>
+      <p className="mb-6 text-sm font-semibold text-slate-400">CHAPTER {chapter} · {elapsed}</p>
       <div className="mb-8 w-full rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-xs font-semibold leading-relaxed text-slate-300">
         스토리 진행이 중단되었습니다. 다시 도전할 수 있습니다.
       </div>
@@ -1490,7 +1513,16 @@ export default function App() {
         />
       );
     }
-    return <ChapterIntegrationPlaceholder chapter={selectedStoryChapter} onMenu={() => setGameState("MENU")} />;
+    if (selectedStoryChapter === 2) {
+      return (
+        <Chapter2StoryExperience
+          onStoryResult={finishStory}
+          onMenu={() => setGameState("MENU")}
+          resumeCheckpoint={selectedStoryCheckpoint}
+        />
+      );
+    }
+    return <ChapterIntegrationPlaceholder chapter={3} onMenu={() => setGameState("MENU")} />;
   }
 
   if (gameState === "PLAYING") {
@@ -1609,9 +1641,10 @@ export default function App() {
         {gameState === "STORY_RESULT" && (
           <StoryResultPanel
             result={storyResult}
+            chapter={selectedStoryChapter}
             onRetry={() => handleStartStoryChapter(selectedStoryChapter)}
             onMenu={() => setGameState("MENU")}
-            onContinueChapter2={() => handleStartStoryChapter(2)}
+            onContinueNext={() => handleStartStoryChapter(selectedStoryChapter === 1 ? 2 : 3)}
           />
         )}
 

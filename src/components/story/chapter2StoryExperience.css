@@ -1,0 +1,147 @@
+.chapter2-story-experience {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.chapter2-story-frame-shell {
+  width: min(96dvh, 100vw);
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.chapter2-story-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
+.chapter2-story-loading,
+.chapter2-integration-gate,
+.chapter2-story-exit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, .84);
+  backdrop-filter: blur(8px);
+}
+
+.chapter2-story-loading {
+  gap: 8px;
+  align-content: center;
+  color: #fff;
+  font-family: "Courier New", monospace;
+  text-align: center;
+}
+
+.chapter2-story-loading strong {
+  color: #e60000;
+  font-size: clamp(24px, 4vw, 42px);
+  letter-spacing: .12em;
+}
+
+.chapter2-story-loading span {
+  color: #c8c8c8;
+  font-size: 13px;
+}
+
+.chapter2-integration-gate section,
+.chapter2-story-exit-overlay section {
+  width: min(92vw, 520px);
+  padding: 28px;
+  border: 2px solid rgba(230, 0, 0, .55);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(24, 25, 28, .98), rgba(7, 8, 10, .98));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .58), inset 0 0 0 1px rgba(255, 255, 255, .045);
+  color: #fff;
+  text-align: center;
+}
+
+.chapter2-integration-gate small,
+.chapter2-story-exit-overlay small {
+  display: block;
+  margin-bottom: 8px;
+  color: #bf7c26;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.chapter2-integration-gate h2,
+.chapter2-story-exit-overlay h2 {
+  margin: 0 0 12px;
+  font-size: clamp(24px, 5vw, 38px);
+  line-height: 1.15;
+}
+
+.chapter2-integration-gate p,
+.chapter2-story-exit-overlay p {
+  margin: 0;
+  color: #d3d3d3;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.chapter2-integration-note {
+  margin-top: 14px !important;
+  padding: 12px 14px;
+  border: 1px solid rgba(191, 124, 38, .28);
+  border-radius: 10px;
+  background: rgba(191, 124, 38, .08);
+  color: #e2d3bb !important;
+  font-size: 12px !important;
+}
+
+.chapter2-integration-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.chapter2-integration-actions button {
+  min-height: 48px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 10px;
+  cursor: pointer;
+  font: 900 13px/1 "Courier New", monospace;
+  color: #fff;
+}
+
+.chapter2-integration-actions .primary {
+  border-color: rgba(230, 0, 0, .72);
+  background: #9f0a0a;
+}
+
+.chapter2-integration-actions .secondary {
+  background: #202226;
+}
+
+.chapter2-integration-actions .danger {
+  border-color: rgba(230, 0, 0, .65);
+  background: #5f0909;
+}
+
+@media (max-width: 800px) {
+  .chapter2-story-frame-shell {
+    width: 100vw;
+    height: 100dvh;
+  }
+
+  .chapter2-integration-gate section,
+  .chapter2-story-exit-overlay section {
+    padding: 22px 18px;
+  }
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4a3b2c"/><stop offset="1" stop-color="#17130f"/></linearGradient></defs>
+<rect width="960" height="600" fill="url(#g)"/><rect x="90" y="310" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/><rect x="195" y="286" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/><rect x="300" y="262" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/><rect x="405" y="310" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/><rect x="510" y="286" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/><rect x="615" y="262" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/><rect x="720" y="310" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/><rect x="825" y="286" width="72" height="190" rx="8" fill="rgba(255,255,255,.08)"/>
+<rect x="42" y="42" width="876" height="516" rx="28" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/>
+<text x="72" y="500" fill="rgba(255,255,255,.9)" font-family="sans-serif" font-size="42" font-weight="700">도서관</text>
+<text x="74" y="540" fill="rgba(255,255,255,.55)" font-family="sans-serif" font-size="20">자료조사와 보고서 작성</text>
+</svg>
