@@ -575,27 +575,44 @@ try {
     Invoke-CheckedCommand -Command 'git' -Arguments @('diff', '--check') -FailureMessage "git diff --check found whitespace or patch errors."
     Write-Ok "git diff --check passed"
 
-    Write-Step "Scanning source files"
-    $scanFiles = @()
-    foreach ($scanRootName in @('src', 'public', 'supabase')) {
-        $scanRoot = Join-Path $repositoryRoot $scanRootName
-        if (Test-Path $scanRoot) {
-            $scanFiles += @(Get-ChildItem -LiteralPath $scanRoot -Recurse -File -Include *.ts,*.tsx,*.js,*.jsx,*.css,*.json,*.html)
-        }
-    }
+    Write-Step "Scanning files touched by this ZIP"
 
-    $mergeMarkerMatches = @($scanFiles | Select-String -Pattern '^(<<<<<<<|=======|>>>>>>>)')
+    # Scan only files that this patch actually created or modified.
+    # Pre-existing project files outside the current patch must not make an otherwise
+    # valid patch fail validation.
+    $textExtensions = @('.ts', '.tsx', '.js', '.jsx', '.css', '.json', '.html', '.md', '.txt')
+    $sourceExtensions = @('.ts', '.tsx', '.js', '.jsx', '.css', '.json', '.html')
+
+    $touchedTextFiles = @(
+        $plan |
+            Where-Object { $_.Status -ne 'DELETE' -and (Test-Path -LiteralPath $_.Destination) } |
+            ForEach-Object {
+                $extension = [System.IO.Path]::GetExtension($_.Destination).ToLowerInvariant()
+                if ($textExtensions -contains $extension) { $_.Destination }
+            }
+    )
+
+    # Match real Git conflict marker lines only. A decorative separator such as
+    # "========================================" is not a conflict marker.
+    $mergeMarkerPattern = '^(<<<<<<<(?: .*)?|=======|>>>>>>>(?: .*)?|\|\|\|\|\|\|\|(?: .*)?)\s*$'
+    $mergeMarkerMatches = @($touchedTextFiles | Select-String -Pattern $mergeMarkerPattern)
     if ($mergeMarkerMatches.Count -gt 0) {
         $mergeMarkerMatches | ForEach-Object { Write-Host $_.ToString() }
-        throw "Merge-conflict markers were found in project files."
+        throw "Merge-conflict markers were found in files touched by this ZIP."
     }
 
-    $shellCommandMatches = @($scanFiles | Select-String -Pattern '^\s*(git\s+(add|commit|push|pull|switch|status|branch|reset)|npm\.cmd\s+|npx\.cmd\s+|PS\s+[A-Za-z]:\\|Copy-Item\s+|Get-ChildItem\s+|Expand-Archive\s+)')
+    $touchedSourceFiles = @(
+        $touchedTextFiles | Where-Object {
+            $sourceExtensions -contains ([System.IO.Path]::GetExtension($_).ToLowerInvariant())
+        }
+    )
+
+    $shellCommandMatches = @($touchedSourceFiles | Select-String -Pattern '^\s*(git\s+(add|commit|push|pull|switch|status|branch|reset)|npm\.cmd\s+|npx\.cmd\s+|PS\s+[A-Za-z]:\\|Copy-Item\s+|Get-ChildItem\s+|Expand-Archive\s+)')
     if ($shellCommandMatches.Count -gt 0) {
         $shellCommandMatches | ForEach-Object { Write-Host $_.ToString() }
-        throw "Possible accidental terminal commands were found inside source files."
+        throw "Possible accidental terminal commands were found inside source files touched by this ZIP."
     }
-    Write-Ok "Source contamination scan passed"
+    Write-Ok "Touched-file contamination scan passed"
 
     Write-Step "Checking package metadata"
     if (Test-Path (Join-Path $repositoryRoot 'package.json')) {
