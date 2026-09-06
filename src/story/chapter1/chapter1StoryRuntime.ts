@@ -475,7 +475,7 @@ html.is-embedded-story .chapter1-core-portal-sparks::after { transform: rotate(1
   50% { opacity: 1; filter: blur(1px); }
 }
 
-/* 학사 서버 관리 영역 진입 시네마틱은 브라우저 전체 화면을 사용한다. */
+/* 학사 코어 영역 진입 시네마틱은 브라우저 전체 화면을 사용한다. */
 html.is-embedded-story .story-stage:is(
   .is-entry-story13-zoom,
   .is-entry-open-hold,
@@ -848,10 +848,9 @@ export function createChapter1StoryRuntime({
     "학사 서버 외곽",
     "학사 서버 내부 통로",
     "학사 서버 심층부",
-    "학사 서버 관리 영역 입구",
-    "학사 서버 관리 영역 내부",
-    "학사 서버 관리 영역",
-    "첨성대 코어 · 학사 영역",
+    "학사 코어 영역",
+    "학사 코어 영역 입구",
+    "학사 코어 영역 내부",
     "코어 영역 포탈",
     "정상화된 학사 서버",
     "경북대학교 본관",
