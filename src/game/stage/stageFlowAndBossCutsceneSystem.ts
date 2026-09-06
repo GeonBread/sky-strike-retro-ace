@@ -9,6 +9,7 @@ import { Particle } from "../entities";
 import { updateChapter1WaveEnemiesSystem } from "../chapter1/chapter1WaveSystem";
 import { updateChapter1WaveImpactEffectsSystem } from "../chapter1/chapter1WaveImpactSystem";
 import { updateChapter2WaveSystem } from "../chapter2/chapter2WaveSystem";
+import { updateChapter2BossSystem } from "../chapter2/chapter2BossSystem";
 
 type StageFlowRuntime = any;
 
@@ -18,6 +19,24 @@ type StageFlowRuntime = any;
  */
 export function updateStageFlowAndBossCutsceneSystem(engine: StageFlowRuntime, dt: number) {
 if (engine.state === "GAMEOVER" || engine.state === "VICTORY") return;
+
+if (engine.chapter2Boss?.active) {
+  if (engine.screenShakeIntensity > 0.1) {
+    engine.screenShakeIntensity *= Math.pow(0.08, dt);
+  } else {
+    engine.screenShakeIntensity = 0;
+  }
+  // 플레이어/무기/폭탄은 기존 게임 시스템을 그대로 업데이트하고, 보스 패턴만 v68 런타임이 담당합니다.
+  engine.updatePlayer(dt);
+  engine.updatePlayerPositionHistory(dt);
+  engine.updateBullets(dt);
+  engine.updateParticles(dt);
+  engine.updatePowerUps(dt);
+  engine.updateBomb(dt);
+  updateChapter2BossSystem(engine, dt);
+  engine.checkCollisions();
+  return;
+}
 
 if (engine.chapter2Wave?.enabled) {
   if (engine.screenShakeIntensity > 0.1) {

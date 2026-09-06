@@ -41,6 +41,13 @@ interface Chapter2WaveControlCommand {
   waveIndex?: number;
 }
 
+interface Chapter2BossControlCommand {
+  id: number;
+  action: "skip" | "jumpPattern" | "scene";
+  patternId?: number;
+  scene?: "phase1Intro" | "phaseTransition" | "phase2Intro" | "clear";
+}
+
 interface Chapter2BridgeMessage {
   channel?: string;
   type?: string;
@@ -71,11 +78,21 @@ interface Chapter2WaveRenderProps {
   onExitToMenu: (waveIndex: number) => void;
 }
 
+interface Chapter2BossRenderProps {
+  startPatternId: number | null;
+  controlCommand: Chapter2BossControlCommand | null;
+  inputEnabled: boolean;
+  onComplete: () => void;
+  onFailed: () => void;
+  onExitToMenu: () => void;
+}
+
 interface Chapter2StoryExperienceProps {
   onStoryResult: (result: { outcome: "cleared" | "failed"; stage: number; durationMs: number }) => void;
   onMenu: () => void;
   resumeCheckpoint: StoryCheckpoint | null;
   renderWaveCombat?: (props: Chapter2WaveRenderProps) => ReactNode;
+  renderBossCombat?: (props: Chapter2BossRenderProps) => ReactNode;
 }
 
 const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
@@ -107,11 +124,16 @@ function chapter2WaveCheckpoint(waveIndex: number): StoryCheckpoint {
   };
 }
 
+function chapter2BossCheckpoint(): StoryCheckpoint {
+  return { version: 1, chapter: 2, kind: "boss", savedAt: Date.now() };
+}
+
 export function Chapter2StoryExperience({
   onStoryResult,
   onMenu,
   resumeCheckpoint,
   renderWaveCombat,
+  renderBossCombat,
 }: Chapter2StoryExperienceProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const startedAtRef = useRef(Date.now());
@@ -119,18 +141,24 @@ export function Chapter2StoryExperience({
   const completedRef = useRef(false);
   const lastCheckpointSignatureRef = useRef("");
   const resumeWavePendingRef = useRef(resumeCheckpoint?.chapter === 2 && resumeCheckpoint.kind === "wave");
+  const resumeBossPendingRef = useRef(resumeCheckpoint?.chapter === 2 && resumeCheckpoint.kind === "boss");
   const currentWaveIndexRef = useRef(
     resumeCheckpoint?.chapter === 2 && resumeCheckpoint.kind === "wave" ? resumeCheckpoint.waveIndex : 0,
   );
   const requestedWaveIndexRef = useRef<number | null>(null);
   const waveCommandIdRef = useRef(0);
+  const bossCommandIdRef = useRef(0);
+  const requestedBossPatternRef = useRef<number | null>(null);
+  const bossTimerRef = useRef<number | null>(null);
   const purificationTimerRef = useRef<number | null>(null);
   const waveIntroTimerRef = useRef<number | null>(null);
   const playerPositionRef = useRef({ xPercent: 50, yPercent: 88 });
-  const [phase, setPhase] = useState<"story" | "wave" | "wave-purification-effect" | "wave-purification-exit" | "wave-blackout">("story");
+  const [phase, setPhase] = useState<"story" | "wave" | "wave-purification-effect" | "wave-purification-exit" | "wave-blackout" | "boss" | "boss-blackout">(() => resumeCheckpoint?.chapter === 2 && resumeCheckpoint.kind === "boss" ? "story" : "story");
   const [waveStartIndex, setWaveStartIndex] = useState(currentWaveIndexRef.current);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(currentWaveIndexRef.current);
   const [waveControlCommand, setWaveControlCommand] = useState<Chapter2WaveControlCommand | null>(null);
+  const [bossStartPatternId, setBossStartPatternId] = useState<number | null>(null);
+  const [bossControlCommand, setBossControlCommand] = useState<Chapter2BossControlCommand | null>(null);
   const [integrationGate, setIntegrationGate] = useState<Chapter2IntegrationGate | null>(null);
   const [navigation, setNavigation] = useState<Chapter2StoryNavigation>({ itemCount: 0, sections: [], gates: [] });
   const [currentStoryIndex, setCurrentStoryIndex] = useState(resumeCheckpoint?.kind === "story" && resumeCheckpoint.chapter === 2 ? Math.max(0, resumeCheckpoint.dialogueIndex) : 0);
@@ -185,7 +213,9 @@ export function Chapter2StoryExperience({
         window.setTimeout(() => postCommand("requestNavigationTargets"), 20);
         if (restoredRef.current) return;
         restoredRef.current = true;
-        if (resumeWavePendingRef.current) {
+        if (resumeBossPendingRef.current) {
+          window.setTimeout(() => postCommand("jumpToIntegrationGate", { gateId: "boss" }), 50);
+        } else if (resumeWavePendingRef.current) {
           window.setTimeout(() => postCommand("jumpToIntegrationGate", { gateId: "wave" }), 50);
         } else if (resumeIndex !== null) {
           window.setTimeout(() => postCommand("jumpTo", { index: resumeIndex }), 40);
@@ -204,6 +234,7 @@ export function Chapter2StoryExperience({
         else if (data.code === "F7") setShowJumpMenu((open) => !open);
         else if (data.code === "F8") {
           if (phase === "wave") jumpToBossGate();
+          else if (phase === "boss") issueBossControl("scene", undefined, "clear");
           else postCommand("jumpToIntegrationGate");
         }
         return;
@@ -259,6 +290,16 @@ export function Chapter2StoryExperience({
           setShowJumpMenu(false);
           return;
         }
+        if (gate.id === "boss" && renderBossCombat) {
+          resumeBossPendingRef.current = false;
+          setBossStartPatternId(requestedBossPatternRef.current);
+          requestedBossPatternRef.current = null;
+          saveStoryCheckpoint(chapter2BossCheckpoint());
+          setIntegrationGate(null);
+          setPhase("boss");
+          setShowJumpMenu(false);
+          return;
+        }
         persistCheckpoint(data.state);
         setIntegrationGate(gate);
         return;
@@ -282,16 +323,18 @@ export function Chapter2StoryExperience({
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onStoryResult, phase, renderWaveCombat, resumeIndex, resumeWaveIndex]);
+  }, [onStoryResult, phase, renderWaveCombat, renderBossCombat, resumeIndex, resumeWaveIndex]);
 
   useEffect(() => () => {
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
+    if (bossTimerRef.current !== null) window.clearTimeout(bossTimerRef.current);
     if (waveIntroTimerRef.current !== null) window.clearTimeout(waveIntroTimerRef.current);
   }, []);
 
   useEffect(() => {
     const handlePageHide = () => {
-      if (phase !== "story") persistWaveCheckpoint(currentWaveIndexRef.current);
+      if (phase === "boss" || phase === "boss-blackout") saveStoryCheckpoint(chapter2BossCheckpoint());
+      else if (phase !== "story") persistWaveCheckpoint(currentWaveIndexRef.current);
       else postCommand("requestState");
     };
     window.addEventListener("pagehide", handlePageHide);
@@ -307,9 +350,26 @@ export function Chapter2StoryExperience({
     setWaveControlCommand(command);
   };
 
+  const issueBossControl = (
+    action: Chapter2BossControlCommand["action"],
+    patternId?: number,
+    scene?: Chapter2BossControlCommand["scene"],
+  ) => {
+    setBossControlCommand({
+      id: ++bossCommandIdRef.current,
+      action,
+      ...(Number.isInteger(patternId) ? { patternId: Number(patternId) } : {}),
+      ...(scene ? { scene } : {}),
+    });
+  };
+
   const skipCurrentContext = () => {
     if (phase === "wave") {
       issueWaveControl("skip");
+      return;
+    }
+    if (phase === "boss") {
+      issueBossControl("skip");
       return;
     }
     if (phase !== "story") return;
@@ -330,6 +390,8 @@ export function Chapter2StoryExperience({
     requestedWaveIndexRef.current = null;
     resumeWavePendingRef.current = false;
     setWaveControlCommand(null);
+    setBossControlCommand(null);
+    setBossStartPatternId(null);
     setIntegrationGate(null);
     setPhase("story");
     setShowJumpMenu(false);
@@ -373,6 +435,35 @@ export function Chapter2StoryExperience({
     window.setTimeout(() => postCommand("jumpToIntegrationGate", { gateId: "boss" }), 20);
   };
 
+  const jumpToBossPattern = (patternId: number) => {
+    if (phase === "boss") {
+      issueBossControl("jumpPattern", patternId);
+      setShowJumpMenu(false);
+      return;
+    }
+    requestedBossPatternRef.current = patternId;
+    setBossControlCommand(null);
+    setPhase("story");
+    setIntegrationGate(null);
+    setShowJumpMenu(false);
+    window.setTimeout(() => postCommand("jumpToIntegrationGate", { gateId: "boss" }), 20);
+  };
+
+  const jumpToBossScene = (scene: Chapter2BossControlCommand["scene"]) => {
+    if (!scene) return;
+    if (phase === "boss") {
+      issueBossControl("scene", undefined, scene);
+      setShowJumpMenu(false);
+      return;
+    }
+    requestedBossPatternRef.current = scene === "phase2Intro" || scene === "clear" ? 301 : null;
+    setBossControlCommand({ id: ++bossCommandIdRef.current, action: "scene", scene });
+    setPhase("story");
+    setIntegrationGate(null);
+    setShowJumpMenu(false);
+    window.setTimeout(() => postCommand("jumpToIntegrationGate", { gateId: "boss" }), 20);
+  };
+
   useEffect(() => {
     const handleTestKey = (event: KeyboardEvent) => {
       if (event.code === "F6") {
@@ -384,6 +475,7 @@ export function Chapter2StoryExperience({
       } else if (event.code === "F8") {
         event.preventDefault();
         if (phase === "wave") jumpToBossGate();
+        else if (phase === "boss") issueBossControl("scene", undefined, "clear");
         else if (phase === "story") postCommand("jumpToIntegrationGate");
       }
     };
@@ -427,6 +519,32 @@ export function Chapter2StoryExperience({
     onMenu();
   };
 
+  const finishBossCombat = () => {
+    if (bossTimerRef.current !== null) return;
+    setBossControlCommand(null);
+    setShowJumpMenu(false);
+    setPhase("boss-blackout");
+    bossTimerRef.current = window.setTimeout(() => {
+      postCommand("resumeIntegrationGate");
+      bossTimerRef.current = window.setTimeout(() => {
+        bossTimerRef.current = null;
+        setPhase("story");
+      }, 280);
+    }, 520);
+  };
+
+  const failBossCombat = () => {
+    saveStoryCheckpoint(chapter2BossCheckpoint());
+    onStoryResult({ outcome: "failed", stage: 2, durationMs: Date.now() - startedAtRef.current });
+  };
+
+  const exitBossCombat = () => {
+    saveStoryCheckpoint(chapter2BossCheckpoint());
+    onMenu();
+  };
+
+  const waveMounted = phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit";
+
   return (
     <div className="chapter2-story-experience">
       <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}`}>
@@ -439,7 +557,7 @@ export function Chapter2StoryExperience({
         />
       </div>
 
-      {phase !== "story" && renderWaveCombat?.({
+      {waveMounted && renderWaveCombat?.({
         startWaveIndex: waveStartIndex,
         controlCommand: waveControlCommand,
         inputEnabled: phase === "wave",
@@ -455,6 +573,15 @@ export function Chapter2StoryExperience({
         onComplete: finishWaveCombat,
         onFailed: failWaveCombat,
         onExitToMenu: exitWaveCombat,
+      })}
+
+      {phase === "boss" && renderBossCombat?.({
+        startPatternId: bossStartPatternId,
+        controlCommand: bossControlCommand,
+        inputEnabled: true,
+        onComplete: finishBossCombat,
+        onFailed: failBossCombat,
+        onExitToMenu: exitBossCombat,
       })}
 
       {phase === "wave-purification-effect" && (
@@ -473,7 +600,7 @@ export function Chapter2StoryExperience({
         </div>
       )}
 
-      {phase === "wave-blackout" && (
+      {(phase === "wave-blackout" || phase === "boss-blackout") && (
         <div className="chapter2-wave-clear-blackout" aria-hidden="true" />
       )}
 
@@ -489,7 +616,7 @@ export function Chapter2StoryExperience({
         </div>
       )}
 
-      {ready && !exitConfirmOpen && phase !== "wave-purification-effect" && phase !== "wave-purification-exit" && phase !== "wave-blackout" && (
+      {ready && !exitConfirmOpen && phase !== "wave-purification-effect" && phase !== "wave-purification-exit" && phase !== "wave-blackout" && phase !== "boss-blackout" && (
         <div className="chapter2-story-test-navigation" aria-label="챕터 2 진행 테스트 이동">
           <div className="chapter2-story-test-toolbar">
             <button type="button" className="chapter2-story-test-skip" onClick={skipCurrentContext}>
@@ -508,7 +635,7 @@ export function Chapter2StoryExperience({
             <aside className="chapter2-story-test-panel" aria-label="챕터 2 원하는 위치로 이동">
               <div className="chapter2-story-test-title">CHAPTER 2 TEST NAVIGATION</div>
               <div className="chapter2-story-test-phase">
-                현재: {phase === "wave" ? `WAVE ${currentWaveIndex + 1}` : integrationGate?.id === "boss" ? "BOSS GATE" : `STORY #${currentStoryIndex + 1}`}
+                현재: {phase === "wave" ? `WAVE ${currentWaveIndex + 1}` : phase === "boss" ? "BOSS" : integrationGate?.id === "boss" ? "BOSS GATE" : `STORY #${currentStoryIndex + 1}`}
               </div>
 
               <div className="chapter2-story-test-group">
@@ -549,22 +676,32 @@ export function Chapter2StoryExperience({
               </div>
 
               <div className="chapter2-story-test-group">
-                <strong>보스·후반부</strong>
-                <button type="button" className="is-boss" onClick={jumpToBossGate}>보스전 시작 지점</button>
+                <strong>보스 · 등장/페이즈/패턴</strong>
+                <button type="button" className="is-boss" onClick={jumpToBossGate}>보스전 처음부터</button>
+                <button type="button" className="is-boss" onClick={() => jumpToBossScene("phase1Intro")}>보스 등장신</button>
+                <div className="chapter2-story-wave-grid">
+                  {[201,202,203,204,205,206,207].map((id) => (
+                    <button type="button" className="is-combat" key={`boss-p1-${id}`} onClick={() => jumpToBossPattern(id)}>{id}</button>
+                  ))}
+                </div>
+                <button type="button" className="is-boss" onClick={() => jumpToBossScene("phaseTransition")}>1페이즈 사망 → 2페이즈 각성</button>
+                <button type="button" className="is-boss" onClick={() => jumpToBossScene("phase2Intro")}>2페이즈 각성신</button>
+                <div className="chapter2-story-wave-grid">
+                  {[301,302,303,304,305,306,307,308,309].map((id) => (
+                    <button type="button" className="is-combat" key={`boss-p2-${id}`} onClick={() => jumpToBossPattern(id)}>{id}</button>
+                  ))}
+                </div>
+                <button type="button" className="is-boss" onClick={() => jumpToBossScene("clear")}>보스 사망/CLEAR 연출</button>
                 {navigation.gates.filter((gate) => gate.id === "boss").map((gate) => (
-                  <button type="button" key={`boss-gate-${gate.index}`} onClick={() => jumpToStoryItem(gate.index)}>
-                    보스 진입 연출 · #{gate.index + 1}
-                  </button>
+                  <button type="button" key={`boss-gate-${gate.index}`} onClick={() => jumpToStoryItem(gate.index)}>보스 진입 스토리 · #{gate.index + 1}</button>
                 ))}
                 {navigation.sections.length > 0 && (
-                  <button type="button" onClick={() => jumpToStoryItem(navigation.sections[navigation.sections.length - 1].index)}>
-                    마지막 스토리 구간
-                  </button>
+                  <button type="button" onClick={() => jumpToStoryItem(navigation.sections[navigation.sections.length - 1].index)}>마지막 스토리 구간</button>
                 )}
               </div>
 
               <p className="chapter2-story-test-help">
-                F6은 현재 스토리 연출/웨이브를 즉시 스킵합니다. F8은 다음 전투 지점으로 이동합니다.
+                F6은 현재 스토리/웨이브/보스 패턴을 즉시 스킵합니다. F8은 다음 큰 전투 구간 또는 보스 CLEAR로 이동합니다.
               </p>
             </aside>
           )}
@@ -585,9 +722,7 @@ export function Chapter2StoryExperience({
             <h2>{integrationGate.title}</h2>
             <p>{integrationGate.subtitle}</p>
             <p className="chapter2-integration-note">
-              {integrationGate.id === "boss"
-                ? "챕터 2 일반 몬스터 웨이브는 연결되었습니다. 보스전은 다음 통합 단계에서 이 위치에 연결합니다."
-                : "전투 연결을 준비하고 있습니다."}
+              전투 연결을 준비하고 있습니다.
             </p>
             <div className="chapter2-integration-actions">
               <button type="button" className="secondary" onClick={onMenu}>메인 화면</button>

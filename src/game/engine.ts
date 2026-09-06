@@ -187,6 +187,16 @@ import {
   type Chapter2WaveRuntime,
 } from "./chapter2/chapter2WaveSystem";
 import { createChapter1BossRuntime, type Chapter1BossRuntime } from "./chapter1/chapter1BossTypes";
+import { createChapter2BossRuntime, type Chapter2BossRuntime, type Chapter2BossSceneId } from "./chapter2/chapter2BossTypes";
+import {
+  getChapter2BossHudStateSystem,
+  handleChapter2BossPointerSystem,
+  jumpChapter2BossPatternSystem,
+  playChapter2BossSceneSystem,
+  skipCurrentChapter2BossSystem,
+  startChapter2BossSystem,
+  updateChapter2BossSystem,
+} from "./chapter2/chapter2BossSystem";
 import {
   handleChapter1BossDigitSystem,
   handleChapter1BossPointerSystem,
@@ -264,6 +274,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   chapter1Wave: Chapter1WaveRuntime = createChapter1WaveRuntime();
   chapter2Wave: Chapter2WaveRuntime = createChapter2WaveRuntime();
   chapter1Boss: Chapter1BossRuntime = createChapter1BossRuntime();
+  chapter2Boss: Chapter2BossRuntime = createChapter2BossRuntime();
 
   state: EngineState = "PLAYING";
   score: number = 0;
@@ -326,6 +337,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   onChapter2WavesComplete?: () => void;
   onChapter1BossPhase2Story?: () => void;
   onChapter1BossComplete?: () => void;
+  onChapter2BossComplete?: () => void;
 
   drones: HelperDroneState[] = [];
   debrisCovers: DebrisCoverState[] = [];
@@ -736,6 +748,35 @@ export class GameEngine implements GameEngineRuntimeContext {
   /** 현재 챕터 2 웨이브 번호를 저장/복원용으로 반환한다. */
   public getCurrentChapter2WaveIndex(): number {
     return Math.max(0, getChapter2WaveProgressSystem(this).waveIndex);
+  }
+
+  /** v68 챕터 2 보스 디자인을 기존 호반우 플레이어/HUD 위에서 시작한다. */
+  public startChapter2Boss(options: { skipIntro?: boolean; patternId?: number } = {}): void {
+    startChapter2BossSystem(this, options);
+  }
+
+  public updateChapter2Boss(dt: number): void {
+    updateChapter2BossSystem(this, dt);
+  }
+
+  public handleChapter2BossPointer(canvasX: number, canvasY: number): boolean {
+    return handleChapter2BossPointerSystem(this, canvasX, canvasY);
+  }
+
+  public skipCurrentChapter2Boss(): boolean {
+    return skipCurrentChapter2BossSystem(this);
+  }
+
+  public jumpChapter2BossPattern(patternId: number): boolean {
+    return jumpChapter2BossPatternSystem(this, patternId);
+  }
+
+  public playChapter2BossScene(scene: Chapter2BossSceneId): boolean {
+    return playChapter2BossSceneSystem(this, scene);
+  }
+
+  public getChapter2BossHudState() {
+    return getChapter2BossHudStateSystem(this);
   }
 
   public startChapter1Boss(patternLock = -1, skipIntro = false) {

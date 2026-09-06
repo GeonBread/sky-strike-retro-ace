@@ -11,6 +11,7 @@ import { renderPlayerBulletHitParticleSystem } from "../effects/playerBulletHitE
 import { renderChapter1WaveHudSystem, renderChapter1WaveTelegraphsSystem } from "../chapter1/chapter1WaveRenderer";
 import { renderChapter1BossFullSceneSystem } from "../chapter1/chapter1BossRenderer";
 import { renderChapter2WaveHudSystem, renderChapter2WaveSystem } from "../chapter2/chapter2WaveSystem";
+import { renderChapter2BossSceneSystem } from "../chapter2/chapter2BossRenderer";
 import { CHAPTER1_STORY_PLAYER_VISUAL_WIDTH } from "../chapter1/chapter1WaveVisualTuning";
 
 type GameSceneRenderEngine = any;
@@ -614,9 +615,12 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
       engine.ctx.translate(shakeX, shakeY);
     }
 
-    engine.renderBackground();
-    renderChapter2WaveSystem(engine);
-    renderChapter1WaveTelegraphsSystem(engine);
+    const chapter2BossScene = renderChapter2BossSceneSystem(engine);
+    if (!chapter2BossScene) {
+      engine.renderBackground();
+      renderChapter2WaveSystem(engine);
+      renderChapter1WaveTelegraphsSystem(engine);
+    }
     const hidePlayerForChapter1Boss = false;
 
     // Player Rendering
