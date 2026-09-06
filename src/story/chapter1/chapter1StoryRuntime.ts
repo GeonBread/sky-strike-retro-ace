@@ -273,12 +273,6 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   normalized = normalized.replace(debugPreviewHook, flowPreviewHook);
 
   // 학생증은 오염 추적 직후 정상 문장으로 말하지 못하고 끊어진 단어만 출력한다.
-  normalized = normalized
-    .replace('"정화 에너지 충전 완료."', '"정화 에너지…… 충전……."')
-    .replace('"오염 신호 역추적을 시작합니다."', '"오염…… 탐색……."')
-    .replace('"핵심 오염 신호 확인."', '"핵심 신호…… 확인……."')
-    .replace('"학사 서버 관리 영역."', '"학사 서버…… 관리 영역……."');
-
   // 비상 통제 전환 레이어를 story-stage 밖으로 옮겨 컨테이너의 overflow와 비율 제한을 받지 않게 한다.
   const battleTransitionDeclaration = `  const battleTransition = document.getElementById('battleTransition');`;
   const fullscreenBattleTransitionDeclaration = `${battleTransitionDeclaration}
@@ -396,6 +390,85 @@ html.is-embedded-story .dialogue-marker {
 html.is-embedded-story .dialogue-text {
   align-self: center !important;
   margin: 0 !important;
+}
+
+/* CH1 코어 영역 이동: 현실 캠퍼스 위에 별빛이 모여 원형 포탈을 만든다. */
+html.is-embedded-story .chapter1-core-portal-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 42%, rgba(255,246,180,.06), rgba(0,0,0,0) 46%);
+  transition: opacity .35s ease;
+}
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening,
+html.is-embedded-story .chapter1-core-portal-overlay.is-entering { opacity: 1; }
+html.is-embedded-story .chapter1-core-portal-ring {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  width: min(38cqw, 360px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(.02) rotate(-70deg);
+  border-radius: 50%;
+  padding: clamp(9px, 1.3cqw, 15px);
+  background:
+    conic-gradient(from 0deg, rgba(255,255,255,.96), #ffd84d, #fff7b0, #75d9ff, #ffffff, #ffd84d, rgba(255,255,255,.96));
+  box-shadow: 0 0 26px rgba(255,225,95,.95), 0 0 72px rgba(255,210,60,.68), 0 0 128px rgba(90,180,255,.3);
+  opacity: 0;
+}
+html.is-embedded-story .chapter1-core-portal-window {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background:
+    linear-gradient(rgba(5,9,24,.2), rgba(15,0,32,.3)),
+    url("/assets/story/chapter1/backgrounds/bg_academic_system_corrupted.png") center / cover no-repeat;
+  box-shadow: inset 0 0 55px rgba(0,0,0,.72), inset 0 0 18px rgba(135,225,255,.72);
+}
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-ring {
+  animation: chapter1CorePortalOpen 2.5s cubic-bezier(.16,.86,.22,1) both;
+}
+html.is-embedded-story .chapter1-core-portal-overlay.is-entering .chapter1-core-portal-ring {
+  animation: chapter1CorePortalEnter 2.2s cubic-bezier(.5,.02,.2,1) both;
+}
+html.is-embedded-story .chapter1-core-portal-sparks,
+html.is-embedded-story .chapter1-core-portal-sparks::before,
+html.is-embedded-story .chapter1-core-portal-sparks::after {
+  position: absolute;
+  content: "";
+  left: 50%;
+  top: 43%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fffbd1;
+  box-shadow: -120px -70px 0 #ffd84d, 112px -52px 0 #fff, -94px 86px 0 #7edcff, 128px 72px 0 #ffd84d, 0 -126px 0 #fff;
+  opacity: 0;
+}
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-sparks,
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-sparks::before,
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-sparks::after {
+  animation: chapter1CorePortalSparks 1.45s ease-in-out infinite;
+}
+html.is-embedded-story .chapter1-core-portal-sparks::before { transform: rotate(55deg) scale(.82); }
+html.is-embedded-story .chapter1-core-portal-sparks::after { transform: rotate(112deg) scale(.66); }
+@keyframes chapter1CorePortalOpen {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.02) rotate(-70deg); }
+  34% { opacity: 1; transform: translate(-50%, -50%) scale(.34) rotate(20deg); }
+  72% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(120deg); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(180deg); }
+}
+@keyframes chapter1CorePortalEnter {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(180deg); }
+  45% { opacity: 1; transform: translate(-50%, -50%) scale(1.5) rotate(245deg); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(7.2) rotate(390deg); }
+}
+@keyframes chapter1CorePortalSparks {
+  0%, 100% { opacity: .28; filter: blur(0); }
+  50% { opacity: 1; filter: blur(1px); }
 }
 
 /* 학사 서버 관리 영역 진입 시네마틱은 브라우저 전체 화면을 사용한다. */
@@ -686,6 +759,8 @@ export function createChapter1StoryRuntime({
     "학사 서버 관리 영역 입구",
     "학사 서버 관리 영역 내부",
     "학사 서버 관리 영역",
+    "첨성대 코어 · 학사 영역",
+    "코어 영역 포탈",
     "정상화된 학사 서버",
     "경북대학교 본관",
   ]);

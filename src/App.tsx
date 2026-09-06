@@ -1324,7 +1324,7 @@ function StoryChapterSelector({
   onClose: () => void;
 }) {
   const chapters: Array<{ chapter: StoryChapter; title: string; subtitle: string }> = [
-    { chapter: 1, title: "뒤틀린 학사 시스템", subtitle: "출석의 별 · 과제의 별" },
+    { chapter: 1, title: "뒤틀린 학사 시스템", subtitle: "시작의 별 · 적응의 별" },
     { chapter: 2, title: "중간고사와 팀 프로젝트", subtitle: "시험의 별 · 팀플의 별" },
     { chapter: 3, title: "최종장", subtitle: "남은 별을 향한 마지막 작전" },
   ];
@@ -1397,11 +1397,11 @@ function Chapter1ClearSequence({ onContinue, onMenu }: { onContinue: () => void;
             <div className="chapterClearStarRow">
               <div className="chapterClearStarItem attendance">
                 <span className="chapterClearStarShape" />
-                <small>출석의 별</small>
+                <small>시작의 별</small>
               </div>
               <div className="chapterClearStarItem assignment">
                 <span className="chapterClearStarShape" />
-                <small>과제의 별</small>
+                <small>적응의 별</small>
               </div>
             </div>
             <div className="chapterClearRemaining">남은 별 <strong>4개</strong></div>
