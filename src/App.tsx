@@ -202,6 +202,14 @@ function GameCanvas({
   }, [active, inputEnabled, simulationEnabled, onVisualReady, onChapter1WaveComplete, onChapter2WaveComplete, onChapter2BossComplete, onChapter1BossPhase2, onChapter1BossComplete, onChapter1CombatFailed, onChapter1CombatExitToMenu, onChapter1WaveIndexChange, onChapter2CombatFailed, onChapter2CombatExitToMenu, onChapter2WaveIndexChange, onPlayerScreenPositionChange]);
 
   useEffect(() => {
+    if (!active || !inputEnabled || !isStoryCombatCanvas) return;
+    const focusTimer = window.setTimeout(() => {
+      canvasRef.current?.focus({ preventScroll: true });
+    }, 0);
+    return () => window.clearTimeout(focusTimer);
+  }, [active, inputEnabled, isStoryCombatCanvas]);
+
+  useEffect(() => {
     isPausedRef.current = isPaused;
     if (engineRef.current) engineRef.current.paused = isPaused || !externallyActiveRef.current;
     if (isPaused || !externallyActiveRef.current) sfx.pauseAll();
@@ -548,7 +556,8 @@ function GameCanvas({
     >
       <canvas
         ref={canvasRef}
-        className={isStoryCombatCanvas ? "block touch-none w-full h-full" : "block touch-none flex-grow"}
+        tabIndex={0}
+        className={isStoryCombatCanvas ? "block touch-none w-full h-full outline-none" : "block touch-none flex-grow outline-none"}
         onPointerDown={handlePointerDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -578,7 +587,7 @@ function GameCanvas({
         ))}
       </div>}
 
-      {!chapter1BossOnly && bossHp !== null && (
+      {!chapter1BossOnly && !chapter2BossOnly && bossHp !== null && (
         <div className={`absolute top-16 left-1/2 -translate-x-1/2 w-4/5 max-w-sm pointer-events-none z-20 transition-all duration-300 bg-slate-950/95 border rounded-full px-4 py-1 text-center ${bossPhase3Active ? "border-purple-500 shadow-[0_0_22px_rgba(168,85,247,0.85)]" : bossPhase2Active ? "border-rose-500 shadow-[0_0_18px_rgba(244,63,94,0.65)]" : "border-cyan-700 shadow-[0_0_15px_rgba(34,211,238,0.35)]"}`}>
           <div className="flex justify-between items-center text-[10px] font-mono font-bold px-1 mb-0.5">
             <span className={bossPhase3Active ? "text-purple-300" : bossPhase2Active ? "text-rose-300" : "text-cyan-300"}>{bossLabel}</span>

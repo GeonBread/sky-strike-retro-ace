@@ -138,10 +138,12 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
   const hud = core.getHudState() as Chapter2BossHudState;
   const bossHit = core.getBossHitArea();
 
-  // v68에서 등장/페이즈 전환/사망 연출 및 계산 문제 중에는 플레이어 사격이
-  // 잠겨 있습니다. 기존 호반우 무기 시스템은 그대로 사용하되, 이 구간에서
-  // 새로 생성된 플레이어 탄은 즉시 정리해 원본 보스 연출을 가리지 않게 합니다.
-  if (!core.isPlayerAttackAllowed()) {
+  // 호반우의 기존 무기 입력/탄환 이동은 항상 그대로 유지합니다.
+  // 다만 보스 등장·페이즈 전환·최종 사망처럼 화면 전체 연출이 진행 중일 때만
+  // 남아 있는 플레이어 탄을 정리해 컷신을 가리지 않게 합니다.
+  const attackAllowed = core.isPlayerAttackAllowed();
+  const cinematicLocked = !!hud.cinematic || !!hud.clearStage || hud.victoryComplete;
+  if (cinematicLocked) {
     for (const bullet of engine.bullets as Bullet[]) {
       if (bullet.active && !bullet.isEnemy) bullet.active = false;
     }
@@ -154,7 +156,7 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
 
     // 예체능 빔은 기존 게임 UI/무기 표현을 유지하면서 보스 중앙을 실제 타격점으로 사용합니다.
     if (bullet.playerBulletKind === "musicBeam") {
-      if (!core.isPlayerAttackAllowed()) continue;
+      if (!attackAllowed) continue;
       const now = core.state.t;
       const nextHit = (bullet as any).__chapter2BossBeamNextHit ?? 0;
       if (now < nextHit) continue;
@@ -162,6 +164,8 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
       core.handlePlayerShot({ x: bossHit.x, y: bossHit.y, r: 7, damage: Math.max(0, bullet.damage || 1) });
       continue;
     }
+
+    if (!attackAllowed) continue;
 
     const x = (bullet.x + bullet.width / 2 - projection.offsetX) / projection.scale;
     const y = (bullet.y + bullet.height / 2 - projection.offsetY) / projection.scale;
