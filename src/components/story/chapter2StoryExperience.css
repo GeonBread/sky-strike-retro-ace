@@ -437,3 +437,220 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* v16 · Chapter 1과 같은 강한 경고/셔터 감각을 사용한 Chapter 2 보스전 시작 전용 전체화면 연출 */
+.chapter2-fullscreen-boss-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1120;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(130, 0, 24, .38), transparent 40%),
+    #020204;
+  color: #fff;
+  font-family: "Noto Sans KR", "Courier New", monospace;
+  animation: chapter2BossIntroScreen 3.6s ease both;
+}
+
+.chapter2-boss-intro-grid {
+  position: absolute;
+  inset: -20%;
+  opacity: .28;
+  background-image:
+    linear-gradient(rgba(255, 50, 70, .2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 50, 70, .2) 1px, transparent 1px);
+  background-size: 54px 54px;
+  transform: perspective(600px) rotateX(62deg) translateY(18%);
+  animation: chapter2BossIntroGrid 3.6s linear both;
+}
+
+.chapter2-boss-intro-shutter {
+  position: absolute;
+  left: -5%;
+  width: 110%;
+  height: 52%;
+  background:
+    repeating-linear-gradient(135deg, rgba(0,0,0,.18) 0 16px, transparent 16px 32px),
+    linear-gradient(90deg, #75000c, #e00019 50%, #75000c);
+  box-shadow: 0 0 70px rgba(255, 0, 34, .58);
+}
+
+.chapter2-boss-intro-shutter.top {
+  top: -52%;
+  animation: chapter2BossIntroTopShutter 3.6s cubic-bezier(.76,0,.24,1) both;
+}
+
+.chapter2-boss-intro-shutter.bottom {
+  bottom: -52%;
+  animation: chapter2BossIntroBottomShutter 3.6s cubic-bezier(.76,0,.24,1) both;
+}
+
+.chapter2-boss-intro-slash {
+  position: absolute;
+  width: 170vmax;
+  height: 5px;
+  left: 50%;
+  top: 50%;
+  background: #fff;
+  box-shadow: 0 0 18px #fff, 0 0 54px #ff193b;
+  transform-origin: center;
+}
+
+.chapter2-boss-intro-slash.slash-a {
+  transform: translate(-50%, -50%) rotate(-15deg) scaleX(0);
+  animation: chapter2BossIntroSlashA .62s .58s ease-out forwards;
+}
+
+.chapter2-boss-intro-slash.slash-b {
+  transform: translate(-50%, -50%) rotate(15deg) scaleX(0);
+  animation: chapter2BossIntroSlashB .62s .7s ease-out forwards;
+}
+
+.chapter2-boss-intro-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(62vw, 620px);
+  aspect-ratio: 1;
+  border: 3px solid rgba(255, 61, 87, .82);
+  border-radius: 50%;
+  box-shadow: 0 0 32px rgba(255, 18, 52, .52), inset 0 0 32px rgba(255, 18, 52, .28);
+  opacity: 0;
+}
+
+.chapter2-boss-intro-ring.ring-a {
+  animation: chapter2BossIntroRingA 2.1s .78s ease-out both;
+}
+
+.chapter2-boss-intro-ring.ring-b {
+  width: min(46vw, 450px);
+  border-style: dashed;
+  animation: chapter2BossIntroRingB 2.2s .9s ease-out both;
+}
+
+.chapter2-boss-intro-warning {
+  position: absolute;
+  top: 7%;
+  left: 0;
+  width: 100%;
+  padding: 10px 0;
+  border-block: 2px solid rgba(255, 60, 82, .85);
+  background: rgba(50, 0, 8, .86);
+  color: #ffb0bb;
+  text-align: center;
+  font: 1000 clamp(10px, 1.3vw, 15px)/1 "Courier New", monospace;
+  letter-spacing: .38em;
+  opacity: 0;
+  animation: chapter2BossIntroWarning 2.5s .68s steps(2, end) both;
+}
+
+.chapter2-boss-intro-copy {
+  position: relative;
+  z-index: 5;
+  width: min(94vw, 1040px);
+  padding: clamp(26px, 5vw, 48px) clamp(20px, 4vw, 42px);
+  border-block: 4px solid #fff;
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,.84) 14%, rgba(0,0,0,.92) 50%, rgba(0,0,0,.84) 86%, transparent);
+  text-align: center;
+  opacity: 0;
+  transform: scale(.76) skewX(-4deg);
+  animation: chapter2BossIntroCopy 2.45s .88s cubic-bezier(.2,.82,.2,1) both;
+}
+
+.chapter2-boss-intro-copy small {
+  display: block;
+  color: #ff5570;
+  font: 1000 clamp(11px, 1.25vw, 16px)/1.2 "Courier New", monospace;
+  letter-spacing: .3em;
+}
+
+.chapter2-boss-intro-copy strong {
+  display: block;
+  margin: 10px 0 8px;
+  color: #fff;
+  font: italic 1000 clamp(48px, 9vw, 130px)/.92 "Arial Black", "Noto Sans KR", sans-serif;
+  letter-spacing: -.055em;
+  text-shadow: 5px 5px 0 #7c0010, 0 0 36px rgba(255, 39, 67, .58);
+}
+
+.chapter2-boss-intro-copy h2 {
+  margin: 8px 0 0;
+  color: #ffd9df;
+  font-size: clamp(22px, 3.9vw, 48px);
+  font-weight: 1000;
+  line-height: 1.15;
+  word-break: keep-all;
+  text-shadow: 3px 3px 0 #000;
+}
+
+.chapter2-boss-intro-copy p {
+  margin: 12px 0 0;
+  color: #ff9cab;
+  font-size: clamp(12px, 1.5vw, 18px);
+  font-weight: 900;
+  letter-spacing: .12em;
+  word-break: keep-all;
+}
+
+.chapter2CombatRetryOverlay {
+  position: fixed;
+  z-index: 1180;
+}
+
+@keyframes chapter2BossIntroScreen {
+  0% { opacity: 0; background-color: #fff; }
+  5%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes chapter2BossIntroGrid {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 160px, 160px 0; }
+}
+
+@keyframes chapter2BossIntroTopShutter {
+  0% { top: -52%; }
+  18%, 72% { top: -1%; }
+  100% { top: -58%; }
+}
+
+@keyframes chapter2BossIntroBottomShutter {
+  0% { bottom: -52%; }
+  18%, 72% { bottom: -1%; }
+  100% { bottom: -58%; }
+}
+
+@keyframes chapter2BossIntroSlashA {
+  to { transform: translate(-50%, -50%) rotate(-15deg) scaleX(1); }
+}
+
+@keyframes chapter2BossIntroSlashB {
+  to { transform: translate(-50%, -50%) rotate(15deg) scaleX(1); }
+}
+
+@keyframes chapter2BossIntroRingA {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.32) rotate(0); }
+  20% { opacity: .9; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.55) rotate(90deg); }
+}
+
+@keyframes chapter2BossIntroRingB {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.45) rotate(0); }
+  22% { opacity: .74; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8) rotate(-130deg); }
+}
+
+@keyframes chapter2BossIntroWarning {
+  0%, 100% { opacity: 0; }
+  12%, 82% { opacity: 1; }
+}
+
+@keyframes chapter2BossIntroCopy {
+  0% { opacity: 0; transform: scale(.76) skewX(-4deg); filter: blur(8px); }
+  15% { opacity: 1; transform: scale(1.08) skewX(-2deg); filter: blur(0); }
+  72% { opacity: 1; transform: scale(1) skewX(0); }
+  100% { opacity: 0; transform: scale(1.12) skewX(0); filter: blur(3px); }
+}

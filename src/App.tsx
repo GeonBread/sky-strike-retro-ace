@@ -1253,19 +1253,21 @@ function Chapter1StoryExperience({
       {combatFailure && (
         <div className="chapter1-combat-death-overlay" role="presentation">
           {combatRetryPromptVisible && (
-            <section className="chapter1-combat-retry-dialog" role="dialog" aria-modal="true" aria-label="전투 재도전 확인">
-              <small>{combatFailure.kind === "wave" ? `WAVE ${combatFailure.waveIndex + 1}` : "BOSS BATTLE"}</small>
-              <h2>다시 도전하시겠습니까?</h2>
-              <p>
-                {combatFailure.kind === "wave"
-                  ? "현재 웨이브의 처음부터 다시 시작합니다."
-                  : "보스 1페이즈 진입부터 다시 시작합니다."}
-              </p>
-              <div className="chapter1-combat-retry-actions">
-                <button type="button" className="no" onClick={leaveAfterCombatFailure}>아니오</button>
-                <button type="button" className="yes" onClick={retryFailedCombat}>예</button>
-              </div>
-            </section>
+            <div className="chapterGamePauseOverlay chapterCombatRetryOverlay">
+              <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="전투 재도전 확인">
+                <small>{combatFailure.kind === "wave" ? `WAVE ${combatFailure.waveIndex + 1}` : "BOSS BATTLE"}</small>
+                <h2>다시 도전하시겠습니까?</h2>
+                <p>
+                  {combatFailure.kind === "wave"
+                    ? "현재 웨이브의 처음부터 다시 시작합니다."
+                    : "보스 1페이즈 진입부터 다시 시작합니다."}
+                </p>
+                <div className="chapterGamePauseActions isConfirm">
+                  <button type="button" className="secondary" onClick={leaveAfterCombatFailure}>아니오</button>
+                  <button type="button" className="primary" onClick={retryFailedCombat}>예</button>
+                </div>
+              </section>
+            </div>
           )}
         </div>
       )}

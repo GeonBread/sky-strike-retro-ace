@@ -1,4 +1,4 @@
-export const CHAPTER2_BOSS_SOURCE_WIDTH = 800;
+export const CHAPTER2_BOSS_SOURCE_WIDTH = 922;
 export const CHAPTER2_BOSS_SOURCE_HEIGHT = 960;
 
 export interface Chapter2BossViewportProjection {
@@ -10,9 +10,9 @@ export interface Chapter2BossViewportProjection {
 }
 
 /**
- * v68 보스 랩은 800x960으로 설계되어 있습니다.
- * 922x960 스토리 캔버스에서는 세로 크기를 그대로 유지하고 좌우에 동일한 여백을 두어
- * 보스/탄막/연출의 종횡비와 원본 크기를 절대 늘려서 왜곡하지 않습니다.
+ * 챕터 2 보스는 챕터 1과 동일한 922x960 논리 화면을 사용합니다.
+ * 보스/탄/세부 UI는 1:1 픽셀 크기를 유지하고, 전체화면 패턴의 바깥 레이아웃만
+ * 넓어진 922px 폭을 사용하므로 비균일 확대에 의한 찌그러짐이 발생하지 않습니다.
  */
 export function getChapter2BossViewportProjection(canvas: HTMLCanvasElement): Chapter2BossViewportProjection {
   const scale = Math.min(

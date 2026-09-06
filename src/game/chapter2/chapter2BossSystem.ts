@@ -1,4 +1,4 @@
-import { Enemy, type Bullet } from "../entities";
+import { Enemy, Bullet } from "../entities";
 import { sfx } from "../AudioSystem";
 import { createChapter2BossOriginalRuntime } from "./chapter2BossOriginalRuntime";
 import { getChapter2BossViewportProjection } from "./chapter2BossViewportProjection";
@@ -59,6 +59,17 @@ function setPlayerFromCanonical(engine: any, x: number, y: number): void {
   engine.player.y = projection.offsetY + y * projection.scale - engine.player.height / 2;
 }
 
+function clearChapter2BossSupportObjects(engine: any): void {
+  engine.enemies.forEach((enemy: Enemy) => {
+    if ((enemy as any).chapter2BossSupport) enemy.active = false;
+  });
+  engine.enemies = engine.enemies.filter((enemy: Enemy) => !(enemy as any).chapter2BossSupport);
+  engine.bullets.forEach((bullet: Bullet) => {
+    if ((bullet as any).chapter2BossSupportBullet) bullet.active = false;
+  });
+  engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
+}
+
 function clearCombatObjects(engine: any): void {
   engine.enemies = [];
   engine.bullets.forEach((bullet: Bullet) => {
@@ -111,8 +122,7 @@ function syncBossEntity(engine: any, runtime: Chapter2BossRuntime): void {
   proxy.phase = hud.patternId;
   (proxy as any).chapter2OriginalBossProxy = true;
   engine.bossEntity = proxy;
-  // 프록시는 HUD/유도탄 타깃용입니다. 일반 enemy 배열에는 넣지 않아
-  // 기존 보스 렌더러/충돌 시스템이 v68 보스를 중복 처리하지 않게 합니다.
+  // 프록시는 HUD/유도탄 타깃용입니다. 충돌은 아래의 챕터 1 방식 전용 판정에서 처리합니다.
   engine.bossActive = runtime.active;
   engine.bossPhase2Active = hud.phase === 2;
   engine.bossPhase3Active = false;
@@ -131,18 +141,19 @@ function clampPlayerToBossViewport(engine: any, runtime: Chapter2BossRuntime): v
   );
 }
 
+/**
+ * 챕터 1 보스와 동일한 방식으로 플레이어 탄 중심을 보스 판정원과 직접 비교하고
+ * core.applyDamage()를 호출합니다. v68의 handlePlayerShot은 보스 외 패턴 오브젝트 판정에만 사용합니다.
+ */
 function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter2BossRuntime): void {
   const core = runtime.core;
   if (!core) return;
   const projection = getChapter2BossViewportProjection(engine.canvas);
   const hud = core.getHudState() as Chapter2BossHudState;
-  const bossHit = core.getBossHitArea();
-
-  // 호반우의 기존 무기 입력/탄환 이동은 항상 그대로 유지합니다.
-  // 다만 보스 등장·페이즈 전환·최종 사망처럼 화면 전체 연출이 진행 중일 때만
-  // 남아 있는 플레이어 탄을 정리해 컷신을 가리지 않게 합니다.
+  const hitArea = core.getBossHitArea();
   const attackAllowed = core.isPlayerAttackAllowed();
   const cinematicLocked = !!hud.cinematic || !!hud.clearStage || hud.victoryComplete;
+
   if (cinematicLocked) {
     for (const bullet of engine.bullets as Bullet[]) {
       if (bullet.active && !bullet.isEnemy) bullet.active = false;
@@ -153,30 +164,159 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
 
   for (const bullet of engine.bullets as Bullet[]) {
     if (!bullet.active || bullet.isEnemy) continue;
+    const cx = (bullet.x + bullet.width / 2 - projection.offsetX) / projection.scale;
+    const cy = (bullet.y + bullet.height / 2 - projection.offsetY) / projection.scale;
+    const bulletRadius = Math.max(2.5, Math.max(bullet.width, bullet.height) * 0.2 / projection.scale);
+    // CH1과 같은 타원 충돌식. 탄환 반지름만큼 판정축을 넓혀 스프라이트 가장자리 타격도 자연스럽게 잡습니다.
+    const rx = Math.max(1, hitArea.rx + bulletRadius);
+    const ry = Math.max(1, hitArea.ry + bulletRadius);
+    const nx = (cx - hitArea.x) / rx;
+    const ny = (cy - hitArea.y) / ry;
+    const touchesBoss = nx * nx + ny * ny <= 1;
+    const continuousBeam = bullet.playerBulletKind === "musicBeam";
 
-    // 예체능 빔은 기존 게임 UI/무기 표현을 유지하면서 보스 중앙을 실제 타격점으로 사용합니다.
-    if (bullet.playerBulletKind === "musicBeam") {
-      if (!attackAllowed) continue;
+    if (touchesBoss && attackAllowed) {
       const now = core.state.t;
-      const nextHit = (bullet as any).__chapter2BossBeamNextHit ?? 0;
-      if (now < nextHit) continue;
-      (bullet as any).__chapter2BossBeamNextHit = now + 0.12;
-      core.handlePlayerShot({ x: bossHit.x, y: bossHit.y, r: 7, damage: Math.max(0, bullet.damage || 1) });
+      const nextHit = (bullet as any).__chapter2OriginalBossNextHit ?? 0;
+      if (continuousBeam && now < nextHit) continue;
+      if (continuousBeam) (bullet as any).__chapter2OriginalBossNextHit = now + 0.12;
+      else bullet.active = false;
+
+      // 공유문서 드론 패턴의 보스 보호막만 원본 규칙을 존중합니다.
+      if (core.isBossShielded()) {
+        core.handlePlayerShot({ x: cx, y: cy, r: bulletRadius, damage: Math.max(0, bullet.damage || 1) });
+      } else {
+        // CH1과 동일: 플레이어 탄 데미지를 별도 배율 없이 보스 HP에 직접 적용합니다.
+        core.applyDamage(Math.max(0, bullet.damage || 1));
+      }
+      engine.spawnExplosion?.(
+        bullet.x + bullet.width / 2,
+        bullet.y + bullet.height / 2,
+        hud.phase === 2 ? "#ff93a1" : "#8fd9e5",
+        4,
+      );
+      sfx.bossHit();
       continue;
     }
 
-    if (!attackAllowed) continue;
-
-    const x = (bullet.x + bullet.width / 2 - projection.offsetX) / projection.scale;
-    const y = (bullet.y + bullet.height / 2 - projection.offsetY) / projection.scale;
-    const radius = Math.max(3, Math.max(bullet.width, bullet.height) * 0.24 / projection.scale);
-    const hit = core.handlePlayerShot({ x, y, r: radius, damage: Math.max(0, bullet.damage || 1) });
-    if (!hit) continue;
+    // 보스 본체를 빗나간 탄은 v68의 파괴 가능한 패턴 오브젝트에 그대로 전달합니다.
+    if (!attackAllowed || continuousBeam) continue;
+    const patternHit = core.handlePlayerShot({
+      x: cx,
+      y: cy,
+      r: bulletRadius,
+      damage: Math.max(0, bullet.damage || 1),
+    });
+    if (!patternHit) continue;
     bullet.active = false;
-    engine.spawnExplosion?.(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, hud.phase === 2 ? "#ff93a1" : "#8fd9e5", 4);
-    sfx.bossHit();
+    engine.spawnExplosion?.(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, "#8fd9e5", 3);
+    sfx.enemyHit();
   }
   engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
+}
+
+function spawnChapter2BossSupportPair(engine: any, runtime: Chapter2BossRuntime): void {
+  // Chapter 2 원본 페이지 드론 크기: 112x92에 MONSTER_SCALE(1.28)을 적용한 값.
+  const width = 112 * 1.28;
+  const height = 92 * 1.28;
+  const lanes = [0.20, 0.80];
+  for (let index = 0; index < 2; index += 1) {
+    const enemy = new Enemy();
+    enemy.type = "basic";
+    enemy.visualId = 2;
+    enemy.width = width;
+    enemy.height = height;
+    enemy.hitWidth = width * 0.72;
+    enemy.hitHeight = height * 0.72;
+    enemy.x = engine.canvas.width * lanes[index] - width / 2;
+    enemy.y = -height - index * 36;
+    enemy.hp = 10;
+    enemy.active = true;
+    (enemy as any).chapter2BossSupport = {
+      serial: runtime.supportWaveSerial,
+      index,
+      state: "enter",
+      targetY: 235 + index * 50,
+      anchorX: enemy.x,
+      phase: index * Math.PI,
+      time: 0,
+      shootCooldown: 1.0 + index * 0.2,
+    };
+    engine.enemies.push(enemy);
+  }
+  runtime.supportWaveSerial += 1;
+}
+
+function shootChapter2BossSupportBullet(engine: any, enemy: Enemy): void {
+  const cx = enemy.x + enemy.width / 2;
+  const cy = enemy.y + enemy.height * 0.7;
+  const px = engine.player.x + engine.player.width / 2;
+  const py = engine.player.y + engine.player.height / 2;
+  const angle = Math.atan2(py - cy, px - cx);
+  const bullet = new Bullet();
+  bullet.isEnemy = true;
+  bullet.type = "normal";
+  bullet.width = 12;
+  bullet.height = 12;
+  bullet.x = cx - bullet.width / 2;
+  bullet.y = cy - bullet.height / 2;
+  bullet.vx = Math.cos(angle) * 238;
+  bullet.vy = Math.sin(angle) * 238;
+  bullet.damage = 1;
+  bullet.color = "#ffb24a";
+  bullet.visualType = "corrupt_orb";
+  (bullet as any).chapter2BossSupportBullet = true;
+  engine.bullets.push(bullet);
+}
+
+function updateChapter2BossSupportSystem(engine: any, runtime: Chapter2BossRuntime, dt: number): void {
+  const core = runtime.core;
+  if (!core || engine.player?.isDead) return;
+  const hud = core.getHudState() as Chapter2BossHudState;
+  const cinematic = !!hud.cinematic || !!hud.clearStage || hud.victoryComplete;
+  if (cinematic) {
+    clearChapter2BossSupportObjects(engine);
+    runtime.supportSpawnTimer = 5.5;
+    return;
+  }
+
+  const supports = (engine.enemies as Enemy[]).filter(
+    (enemy) => enemy.active && !!(enemy as any).chapter2BossSupport,
+  );
+  for (const enemy of supports) {
+    const support = (enemy as any).chapter2BossSupport;
+    support.time += dt;
+    if (support.state === "enter") {
+      enemy.y += 185 * dt;
+      if (enemy.y >= support.targetY) {
+        enemy.y = support.targetY;
+        support.state = "hover";
+        support.anchorX = enemy.x;
+        support.shootCooldown = 0.55 + support.index * 0.18;
+      }
+    } else {
+      const desiredX = support.anchorX + Math.sin(support.time * 2.25 + support.phase) * 34;
+      enemy.x += (desiredX - enemy.x) * Math.min(1, dt * 5.2);
+      support.shootCooldown -= dt;
+      if (support.shootCooldown <= 0) {
+        support.shootCooldown = 1.15 + Math.random() * 0.3;
+        shootChapter2BossSupportBullet(engine, enemy);
+      }
+    }
+  }
+
+  runtime.supportSpawnTimer -= dt;
+  if (runtime.supportSpawnTimer > 0) return;
+  const liveCount = (engine.enemies as Enemy[]).filter(
+    (enemy) => enemy.active && !!(enemy as any).chapter2BossSupport,
+  ).length;
+  // 한 번에 정확히 2마리만 등장하며, 살아 있는 지원몹이 있으면 추가 소환하지 않습니다.
+  if (liveCount === 0 && core.isPlayerAttackAllowed()) {
+    spawnChapter2BossSupportPair(engine, runtime);
+    runtime.supportSpawnTimer = 10.5 + Math.random() * 2.5;
+  } else {
+    runtime.supportSpawnTimer = 1.0;
+  }
 }
 
 function updateBombDamage(engine: any, runtime: Chapter2BossRuntime): void {
@@ -189,7 +329,10 @@ function updateBombDamage(engine: any, runtime: Chapter2BossRuntime): void {
   if (runtime.bombHit) return;
   runtime.bombHit = true;
   core.clearEnemyProjectiles();
-  if (core.isPlayerAttackAllowed()) core.applyDamage(85);
+  engine.bullets.forEach((bullet: Bullet) => {
+    if ((bullet as any).chapter2BossSupportBullet) bullet.active = false;
+  });
+  if (core.isPlayerAttackAllowed() && !core.isBossShielded()) core.applyDamage(50);
   sfx.bossHit();
 }
 
@@ -202,6 +345,8 @@ export function startChapter2BossSystem(
   runtime.enabled = true;
   runtime.bombHit = false;
   runtime.completeNotified = false;
+  runtime.supportSpawnTimer = 6.5;
+  runtime.supportWaveSerial = 0;
   runtime.core = createBossCore(engine, runtime);
 
   engine.chapter2Wave.enabled = false;
@@ -223,9 +368,19 @@ export function updateChapter2BossSystem(engine: any, dt: number): void {
   const runtime = runtimeOf(engine);
   if (!runtime.active || !runtime.core) return;
   clampPlayerToBossViewport(engine, runtime);
+  if (engine.player?.isDead) {
+    syncBossEntity(engine, runtime);
+    return;
+  }
+  const previousHud = runtime.core.getHudState() as Chapter2BossHudState;
   runtime.core.update(dt);
   if (!runtime.active) return;
+  const nextHud = runtime.core.getHudState() as Chapter2BossHudState;
+  if ((!previousHud.cinematic && !!nextHud.cinematic) || (!previousHud.clearStage && !!nextHud.clearStage)) {
+    clearChapter2BossSupportObjects(engine);
+  }
   clampPlayerToBossViewport(engine, runtime);
+  updateChapter2BossSupportSystem(engine, runtime, dt);
   hitBossAndPatternObjectsWithPlayerBullets(engine, runtime);
   updateBombDamage(engine, runtime);
   syncBossEntity(engine, runtime);
@@ -237,21 +392,30 @@ export function handleChapter2BossPointerSystem(engine: any, canvasX: number, ca
   const projection = getChapter2BossViewportProjection(engine.canvas);
   const x = (canvasX - projection.offsetX) / projection.scale;
   const y = (canvasY - projection.offsetY) / projection.scale;
-  if (x < 0 || x > 800 || y < 0 || y > 960) return false;
+  if (x < 0 || x > 922 || y < 0 || y > 960) return false;
   return runtime.core.pointerDown(x, y);
 }
 
 export function skipCurrentChapter2BossSystem(engine: any): boolean {
-  return !!runtimeOf(engine).core?.skipCurrent();
+  const runtime = runtimeOf(engine);
+  clearChapter2BossSupportObjects(engine);
+  runtime.supportSpawnTimer = 4.5;
+  return !!runtime.core?.skipCurrent();
 }
 
 export function jumpChapter2BossPatternSystem(engine: any, patternId: number): boolean {
-  return !!runtimeOf(engine).core?.jumpToPattern(patternId);
+  const runtime = runtimeOf(engine);
+  clearChapter2BossSupportObjects(engine);
+  runtime.supportSpawnTimer = 5.0;
+  return !!runtime.core?.jumpToPattern(patternId);
 }
 
 export function playChapter2BossSceneSystem(engine: any, scene: Chapter2BossSceneId): boolean {
-  const core = runtimeOf(engine).core;
+  const runtime = runtimeOf(engine);
+  const core = runtime.core;
   if (!core) return false;
+  clearChapter2BossSupportObjects(engine);
+  runtime.supportSpawnTimer = 5.5;
   if (scene === "phase1Intro") core.playPhase1Intro();
   else if (scene === "phaseTransition") core.playPhaseTransition();
   else if (scene === "phase2Intro") core.playPhase2Intro();

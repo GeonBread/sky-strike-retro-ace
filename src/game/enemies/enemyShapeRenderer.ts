@@ -11,11 +11,104 @@ import { renderChapter1EnemySystem } from "../chapter1/chapter1WaveRenderer";
 
 type EnemyRenderRuntime = any;
 
+function renderChapter2BossSupportDrone(engine: EnemyRenderRuntime, e: Enemy): boolean {
+  if (!(e as any).chapter2BossSupport) return false;
+  const ctx = engine.ctx as CanvasRenderingContext2D;
+  const cx = e.x + e.width / 2;
+  const cy = e.y + e.height / 2;
+  const spin = performance.now() * 0.011;
+  const sx = e.width / (112 * 1.28);
+  const sy = e.height / (92 * 1.28);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(sx, sy);
+  // Chapter 2 웨이브 원본 페이지 드론과 같은 정방향을 유지합니다.
+  ctx.scale(1.28, 1.28);
+
+  // Chapter 2 페이지/보고서 드론의 원본 실루엣을 보스 지원몹에도 그대로 사용합니다.
+  for (const side of [-1, 1]) {
+    ctx.strokeStyle = "#172033";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(-8, side * 19);
+    ctx.lineTo(-8, side * 33);
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(-8, side * 36);
+    ctx.rotate(spin * side);
+    ctx.strokeStyle = "#d8e0ec";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(-12, 0);
+    ctx.lineTo(12, 0);
+    ctx.stroke();
+    ctx.strokeStyle = "#172033";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.fillStyle = "#f6eedc";
+  ctx.strokeStyle = "#172033";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-24, -22);
+  ctx.lineTo(12, -22);
+  ctx.lineTo(24, -10);
+  ctx.lineTo(24, 22);
+  ctx.lineTo(-24, 22);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#fff8e9";
+  ctx.beginPath();
+  ctx.moveTo(12, -22);
+  ctx.lineTo(24, -10);
+  ctx.lineTo(12, -10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#172033";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  ctx.fillStyle = "#ea5055";
+  ctx.fillRect(-18, -17, 22, 5);
+  ctx.fillStyle = "#8ab2ff";
+  ctx.fillRect(-18, -8, 16, 3);
+  ctx.strokeStyle = "#7f8ba2";
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 3; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(-18, i * 7);
+    ctx.lineTo(12, i * 7);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "#ffd84e";
+  ctx.strokeStyle = "#172033";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(-14, 17, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(255,255,255,.88)";
+  ctx.beginPath();
+  ctx.ellipse(-10, -15, 5, 2, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  return true;
+}
+
 /**
  * 몬스터 타입과 visualId를 기준으로 캔버스에 해당 몬스터의 도형 외형을 그린다.
  * 이 함수는 현재 캔버스 렌더링 컨텍스트의 스타일과 변환 상태를 사용한다.
  */
 export function renderEnemyShapeSystem(engine: EnemyRenderRuntime, e: Enemy) {
+  if (renderChapter2BossSupportDrone(engine, e)) return;
   if (renderChapter1EnemySystem(engine, e)) return;
   if (e.type === "ricochet_shooter") {
     engine.ctx.fillStyle = "#fbbf24"; // Golden Neon

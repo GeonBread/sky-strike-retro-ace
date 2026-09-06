@@ -26,6 +26,8 @@ export interface Chapter2BossRuntime {
   core: Chapter2BossOriginalRuntime | null;
   bombHit: boolean;
   completeNotified: boolean;
+  supportSpawnTimer: number;
+  supportWaveSerial: number;
 }
 
 export function createChapter2BossRuntime(): Chapter2BossRuntime {
@@ -35,5 +37,7 @@ export function createChapter2BossRuntime(): Chapter2BossRuntime {
     core: null,
     bombHit: false,
     completeNotified: false,
+    supportSpawnTimer: 6.5,
+    supportWaveSerial: 0,
   };
 }

@@ -150,10 +150,11 @@ export function Chapter2StoryExperience({
   const bossCommandIdRef = useRef(0);
   const requestedBossPatternRef = useRef<number | null>(null);
   const bossTimerRef = useRef<number | null>(null);
+  const bossIntroTimerRef = useRef<number | null>(null);
   const purificationTimerRef = useRef<number | null>(null);
   const waveIntroTimerRef = useRef<number | null>(null);
   const playerPositionRef = useRef({ xPercent: 50, yPercent: 88 });
-  const [phase, setPhase] = useState<"story" | "wave" | "wave-purification-effect" | "wave-purification-exit" | "wave-blackout" | "boss" | "boss-blackout">(() => resumeCheckpoint?.chapter === 2 && resumeCheckpoint.kind === "boss" ? "story" : "story");
+  const [phase, setPhase] = useState<"story" | "wave" | "wave-purification-effect" | "wave-purification-exit" | "wave-blackout" | "boss-intro" | "boss" | "boss-blackout">("story");
   const [waveStartIndex, setWaveStartIndex] = useState(currentWaveIndexRef.current);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(currentWaveIndexRef.current);
   const [waveControlCommand, setWaveControlCommand] = useState<Chapter2WaveControlCommand | null>(null);
@@ -167,6 +168,9 @@ export function Chapter2StoryExperience({
   const [ready, setReady] = useState(false);
   const [waveIntroTransitionActive, setWaveIntroTransitionActive] = useState(false);
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
+  const [combatFailure, setCombatFailure] = useState<{ kind: "wave"; waveIndex: number } | { kind: "boss" } | null>(null);
+  const [waveRunKey, setWaveRunKey] = useState(0);
+  const [bossRunKey, setBossRunKey] = useState(0);
 
   const resumeIndex = useMemo(() => {
     if (resumeCheckpoint?.kind !== "story" || resumeCheckpoint.chapter !== 2) return null;
@@ -291,13 +295,25 @@ export function Chapter2StoryExperience({
           return;
         }
         if (gate.id === "boss" && renderBossCombat) {
+          const requestedPattern = requestedBossPatternRef.current;
           resumeBossPendingRef.current = false;
-          setBossStartPatternId(requestedBossPatternRef.current);
+          setBossStartPatternId(requestedPattern);
           requestedBossPatternRef.current = null;
           saveStoryCheckpoint(chapter2BossCheckpoint());
           setIntegrationGate(null);
-          setPhase("boss");
+          setCombatFailure(null);
           setShowJumpMenu(false);
+          if (requestedPattern !== null) {
+            setPhase("boss");
+          } else {
+            if (bossIntroTimerRef.current !== null) window.clearTimeout(bossIntroTimerRef.current);
+            setPhase("boss-intro");
+            bossIntroTimerRef.current = window.setTimeout(() => {
+              bossIntroTimerRef.current = null;
+              setPhase("boss");
+              setBossRunKey((key) => key + 1);
+            }, 3600);
+          }
           return;
         }
         persistCheckpoint(data.state);
@@ -328,12 +344,13 @@ export function Chapter2StoryExperience({
   useEffect(() => () => {
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     if (bossTimerRef.current !== null) window.clearTimeout(bossTimerRef.current);
+    if (bossIntroTimerRef.current !== null) window.clearTimeout(bossIntroTimerRef.current);
     if (waveIntroTimerRef.current !== null) window.clearTimeout(waveIntroTimerRef.current);
   }, []);
 
   useEffect(() => {
     const handlePageHide = () => {
-      if (phase === "boss" || phase === "boss-blackout") saveStoryCheckpoint(chapter2BossCheckpoint());
+      if (phase === "boss" || phase === "boss-intro" || phase === "boss-blackout") saveStoryCheckpoint(chapter2BossCheckpoint());
       else if (phase !== "story") persistWaveCheckpoint(currentWaveIndexRef.current);
       else postCommand("requestState");
     };
@@ -368,6 +385,13 @@ export function Chapter2StoryExperience({
       issueWaveControl("skip");
       return;
     }
+    if (phase === "boss-intro") {
+      if (bossIntroTimerRef.current !== null) window.clearTimeout(bossIntroTimerRef.current);
+      bossIntroTimerRef.current = null;
+      setPhase("boss");
+      setBossRunKey((key) => key + 1);
+      return;
+    }
     if (phase === "boss") {
       issueBossControl("skip");
       return;
@@ -393,6 +417,7 @@ export function Chapter2StoryExperience({
     setBossControlCommand(null);
     setBossStartPatternId(null);
     setIntegrationGate(null);
+    setCombatFailure(null);
     setPhase("story");
     setShowJumpMenu(false);
     window.setTimeout(() => postCommand("jumpTo", { index: safeIndex }), 20);
@@ -511,7 +536,7 @@ export function Chapter2StoryExperience({
 
   const failWaveCombat = (waveIndex: number) => {
     persistWaveCheckpoint(waveIndex);
-    onStoryResult({ outcome: "failed", stage: 2, durationMs: Date.now() - startedAtRef.current });
+    setCombatFailure({ kind: "wave", waveIndex: Math.max(0, Math.floor(waveIndex)) });
   };
 
   const exitWaveCombat = (waveIndex: number) => {
@@ -535,7 +560,36 @@ export function Chapter2StoryExperience({
 
   const failBossCombat = () => {
     saveStoryCheckpoint(chapter2BossCheckpoint());
-    onStoryResult({ outcome: "failed", stage: 2, durationMs: Date.now() - startedAtRef.current });
+    setCombatFailure({ kind: "boss" });
+  };
+
+  const retryFailedCombat = () => {
+    if (!combatFailure) return;
+    if (combatFailure.kind === "wave") {
+      const waveIndex = combatFailure.waveIndex;
+      currentWaveIndexRef.current = waveIndex;
+      setCurrentWaveIndex(waveIndex);
+      setWaveStartIndex(waveIndex);
+      setWaveControlCommand(null);
+      persistWaveCheckpoint(waveIndex);
+      setWaveRunKey((key) => key + 1);
+      setCombatFailure(null);
+      setPhase("wave");
+      return;
+    }
+    setBossStartPatternId(null);
+    setBossControlCommand(null);
+    saveStoryCheckpoint(chapter2BossCheckpoint());
+    setBossRunKey((key) => key + 1);
+    setCombatFailure(null);
+    setPhase("boss");
+  };
+
+  const leaveAfterCombatFailure = () => {
+    if (combatFailure?.kind === "wave") persistWaveCheckpoint(combatFailure.waveIndex);
+    else if (combatFailure?.kind === "boss") saveStoryCheckpoint(chapter2BossCheckpoint());
+    setCombatFailure(null);
+    onMenu();
   };
 
   const exitBossCombat = () => {
@@ -557,32 +611,77 @@ export function Chapter2StoryExperience({
         />
       </div>
 
-      {waveMounted && renderWaveCombat?.({
-        startWaveIndex: waveStartIndex,
-        controlCommand: waveControlCommand,
-        inputEnabled: phase === "wave",
-        purificationExit: phase === "wave-purification-exit",
-        onPlayerPositionChange: (position) => {
-          playerPositionRef.current = position;
-        },
-        onWaveIndexChange: (waveIndex) => {
-          currentWaveIndexRef.current = waveIndex;
-          setCurrentWaveIndex(waveIndex);
-          persistWaveCheckpoint(waveIndex);
-        },
-        onComplete: finishWaveCombat,
-        onFailed: failWaveCombat,
-        onExitToMenu: exitWaveCombat,
-      })}
+      {waveMounted && (
+        <React.Fragment key={`chapter2-wave-run-${waveRunKey}`}>
+          {renderWaveCombat?.({
+            startWaveIndex: waveStartIndex,
+            controlCommand: waveControlCommand,
+            inputEnabled: phase === "wave" && !combatFailure,
+            purificationExit: phase === "wave-purification-exit",
+            onPlayerPositionChange: (position) => {
+              playerPositionRef.current = position;
+            },
+            onWaveIndexChange: (waveIndex) => {
+              currentWaveIndexRef.current = waveIndex;
+              setCurrentWaveIndex(waveIndex);
+              persistWaveCheckpoint(waveIndex);
+            },
+            onComplete: finishWaveCombat,
+            onFailed: failWaveCombat,
+            onExitToMenu: exitWaveCombat,
+          })}
+        </React.Fragment>
+      )}
 
-      {phase === "boss" && renderBossCombat?.({
-        startPatternId: bossStartPatternId,
-        controlCommand: bossControlCommand,
-        inputEnabled: true,
-        onComplete: finishBossCombat,
-        onFailed: failBossCombat,
-        onExitToMenu: exitBossCombat,
-      })}
+      {phase === "boss" && (
+        <React.Fragment key={`chapter2-boss-run-${bossRunKey}`}>
+          {renderBossCombat?.({
+            startPatternId: bossStartPatternId,
+            controlCommand: bossControlCommand,
+            inputEnabled: !combatFailure,
+            onComplete: finishBossCombat,
+            onFailed: failBossCombat,
+            onExitToMenu: exitBossCombat,
+          })}
+        </React.Fragment>
+      )}
+
+      {phase === "boss-intro" && (
+        <div className="chapter2-fullscreen-boss-intro" aria-label="챕터 2 보스전 시작 연출">
+          <div className="chapter2-boss-intro-grid" />
+          <div className="chapter2-boss-intro-shutter top" />
+          <div className="chapter2-boss-intro-shutter bottom" />
+          <div className="chapter2-boss-intro-slash slash-a" />
+          <div className="chapter2-boss-intro-slash slash-b" />
+          <div className="chapter2-boss-intro-ring ring-a" />
+          <div className="chapter2-boss-intro-ring ring-b" />
+          <div className="chapter2-boss-intro-warning">WARNING · CORE CONTAMINATION</div>
+          <div className="chapter2-boss-intro-copy">
+            <small>CHAPTER 2 · BOSS BATTLE</small>
+            <strong>BOSS APPROACH</strong>
+            <h2>시험·팀플 블랙홀 무임승차자</h2>
+            <p>핵심 오염원 확인 · 정화 전투 개시</p>
+          </div>
+        </div>
+      )}
+
+      {combatFailure && (
+        <div className="chapterGamePauseOverlay chapter2CombatRetryOverlay" role="presentation">
+          <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="전투 재도전 확인">
+            <small>{combatFailure.kind === "wave" ? `WAVE ${combatFailure.waveIndex + 1}` : "BOSS BATTLE"}</small>
+            <h2>다시 도전하시겠습니까?</h2>
+            <p>
+              {combatFailure.kind === "wave"
+                ? "현재 웨이브의 처음부터 다시 시작합니다."
+                : "보스 1페이즈 진입부터 다시 시작합니다."}
+            </p>
+            <div className="chapterGamePauseActions isConfirm">
+              <button type="button" className="secondary" onClick={leaveAfterCombatFailure}>아니오</button>
+              <button type="button" className="primary" onClick={retryFailedCombat}>예</button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {phase === "wave-purification-effect" && (
         <div
@@ -616,7 +715,7 @@ export function Chapter2StoryExperience({
         </div>
       )}
 
-      {ready && !exitConfirmOpen && phase !== "wave-purification-effect" && phase !== "wave-purification-exit" && phase !== "wave-blackout" && phase !== "boss-blackout" && (
+      {ready && !exitConfirmOpen && !combatFailure && phase !== "boss-intro" && phase !== "wave-purification-effect" && phase !== "wave-purification-exit" && phase !== "wave-blackout" && phase !== "boss-blackout" && (
         <div className="chapter2-story-test-navigation" aria-label="챕터 2 진행 테스트 이동">
           <div className="chapter2-story-test-toolbar">
             <button type="button" className="chapter2-story-test-skip" onClick={skipCurrentContext}>
@@ -635,7 +734,7 @@ export function Chapter2StoryExperience({
             <aside className="chapter2-story-test-panel" aria-label="챕터 2 원하는 위치로 이동">
               <div className="chapter2-story-test-title">CHAPTER 2 TEST NAVIGATION</div>
               <div className="chapter2-story-test-phase">
-                현재: {phase === "wave" ? `WAVE ${currentWaveIndex + 1}` : phase === "boss" ? "BOSS" : integrationGate?.id === "boss" ? "BOSS GATE" : `STORY #${currentStoryIndex + 1}`}
+                현재: {phase === "wave" ? `WAVE ${currentWaveIndex + 1}` : phase === "boss-intro" ? "BOSS INTRO" : phase === "boss" ? "BOSS" : integrationGate?.id === "boss" ? "BOSS GATE" : `STORY #${currentStoryIndex + 1}`}
               </div>
 
               <div className="chapter2-story-test-group">

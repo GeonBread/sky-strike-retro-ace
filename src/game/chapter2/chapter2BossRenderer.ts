@@ -1,7 +1,7 @@
 import { getChapter2BossViewportProjection } from "./chapter2BossViewportProjection";
 
 /**
- * v68 보스 랩의 장면만 800x960 원본 비율 그대로 렌더합니다.
+ * v68 보스 장면을 챕터 1과 같은 922x960 논리 화면으로 렌더합니다.
  * 플레이어/플레이어 탄환/HP/폭탄 HUD는 이 함수가 그리지 않으며,
  * 이후 공통 gameSceneRenderer가 기존 호반우 렌더러로 그대로 그립니다.
  */

@@ -201,20 +201,22 @@ export class Chapter2BossPhasePack {
     get H() {
         return this.adapter.height;
     }
+    // 922x960 통합 화면에서는 UI/미사일 자체 크기는 v68 원본 픽셀 크기를 유지합니다.
+    // 남는 가로 폭은 W 기반 배치/패널에만 배분해 카톡·Word 화면만 넓어지도록 합니다.
     get sx() {
-        return this.W / 800;
+        return 1;
     }
     get sy() {
-        return this.H / 960;
+        return 1;
     }
     get scale() {
-        return Math.min(this.sx, this.sy);
+        return 1;
     }
     X(value) {
-        return value * this.sx;
+        return value;
     }
     Y(value) {
-        return value * this.sy;
+        return value;
     }
     ease(value) {
         const t = clamp(value, 0, 1);
@@ -443,9 +445,9 @@ export class Chapter2BossPhasePack {
     // ---------------------------------------------------------------------------
     initKakao() {
         const panel = {
-            x: this.X(92),
+            x: 92,
             y: this.Y(180),
-            w: this.X(616),
+            w: this.W - 184,
             h: this.Y(670),
             titleH: this.Y(25),
             sidebarW: this.X(64),

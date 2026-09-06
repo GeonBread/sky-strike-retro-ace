@@ -330,7 +330,8 @@ engine.bullets.forEach((b) => {
           sfx.enemyExplode();
 
           const chapter1BossSupport = !!(e as any).chapter1BossSupport;
-          const dropChance = chapter1BossSupport
+          const chapter2BossSupport = !!(e as any).chapter2BossSupport;
+          const dropChance = chapter1BossSupport || chapter2BossSupport
             ? 0.28
             : e.type === "assault_commander"
               ? 0.82
