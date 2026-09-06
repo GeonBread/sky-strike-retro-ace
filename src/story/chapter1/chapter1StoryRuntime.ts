@@ -607,7 +607,6 @@ html.is-embedded-story .story-stage.is-opening-cinematic .story-effect-layer {
   background-position: center center;
   filter: brightness(1) saturate(1.02) contrast(1.02);
   transform: scale(1.045);
-  animation: chapter1GlobalLocationCamera var(--chapter1-location-title-duration, 2.5s) cubic-bezier(.2,.78,.2,1) both;
 }
 .chapter1-location-title-vignette {
   position: absolute;
@@ -626,7 +625,6 @@ html.is-embedded-story .story-stage.is-opening-cinematic .story-effect-layer {
     linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
   background-size: 54px 54px;
-  animation: chapter1GlobalLocationGrid var(--chapter1-location-title-duration, 2.5s) linear both;
 }
 .chapter1-location-title-copy {
   position: absolute;
@@ -642,7 +640,6 @@ html.is-embedded-story .story-stage.is-opening-cinematic .story-effect-layer {
   text-align: center;
   background: radial-gradient(ellipse at center, rgba(0,0,0,.72), rgba(0,0,0,.26) 52%, transparent 76%);
   opacity: 0;
-  animation: chapter1GlobalLocationCopy var(--chapter1-location-title-duration, 2.5s) cubic-bezier(.2,.86,.2,1) both;
 }
 .chapter1-location-title-copy::before,
 .chapter1-location-title-copy::after {
@@ -671,6 +668,16 @@ html.is-embedded-story .story-stage.is-opening-cinematic .story-effect-layer {
   letter-spacing: -.05em;
   text-align: center;
   text-shadow: 0 4px 0 rgba(0,0,0,.9), 0 0 16px rgba(255,255,255,.18), 0 0 42px rgba(191,124,38,.42);
+}
+/* 오버레이는 런타임 시작 때 미리 생성되므로, 자식 애니메이션은 실제 장소 타이틀이 활성화될 때만 시작해야 한다. */
+.chapter1-location-title-overlay.is-active .chapter1-location-title-background {
+  animation: chapter1GlobalLocationCamera var(--chapter1-location-title-duration, 2.5s) cubic-bezier(.2,.78,.2,1) both;
+}
+.chapter1-location-title-overlay.is-active .chapter1-location-title-grid {
+  animation: chapter1GlobalLocationGrid var(--chapter1-location-title-duration, 2.5s) linear both;
+}
+.chapter1-location-title-overlay.is-active .chapter1-location-title-copy {
+  animation: chapter1GlobalLocationCopy var(--chapter1-location-title-duration, 2.5s) cubic-bezier(.2,.86,.2,1) both;
 }
 /* Chapter 2 템플릿으로 대체되므로 기존 Chapter 1 장소 타이틀 카드 자체는 화면에 노출하지 않는다. */
 html.is-embedded-story #storyLocationIntro,
