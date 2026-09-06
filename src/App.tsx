@@ -252,34 +252,43 @@ function GameCanvas({
     runStartedAtRef.current = localRunSession.startedAt;
     setLastRun(null);
 
+    let storyCombatFailureReported = false;
+    const reportStoryCombatFailure = (): boolean => {
+      if (!isStoryMode || storyCombatFailureReported) return storyCombatFailureReported;
+      if (chapter2BossOnly && chapter2CombatFailedCallbackRef.current) {
+        storyCombatFailureReported = true;
+        chapter2CombatFailedCallbackRef.current({ kind: "boss" });
+        return true;
+      }
+      if (chapter2WaveOnly && chapter2CombatFailedCallbackRef.current) {
+        storyCombatFailureReported = true;
+        chapter2CombatFailedCallbackRef.current({
+          kind: "wave",
+          waveIndex: Math.max(0, engine.getCurrentChapter2WaveIndex?.() ?? chapter2WaveStartIndex),
+        });
+        return true;
+      }
+      if ((chapter1WaveOnly || chapter1BossOnly) && combatFailedCallbackRef.current) {
+        storyCombatFailureReported = true;
+        if (chapter1BossOnly) combatFailedCallbackRef.current({ kind: "boss" });
+        else {
+          combatFailedCallbackRef.current({
+            kind: "wave",
+            waveIndex: Math.max(0, engine.chapter1Wave?.selectedWave ?? chapter1WaveStartIndex),
+          });
+        }
+        return true;
+      }
+      return false;
+    };
+
     engine.onScoreUpdate = isStoryMode ? undefined : setScore;
     engine.onGameOver = (finalScore) => {
       const finishedAt = Date.now();
       if (isStoryMode) {
         setLastRun(null);
         setScore(0);
-        if (chapter2BossOnly && chapter2CombatFailedCallbackRef.current) {
-          chapter2CombatFailedCallbackRef.current({ kind: "boss" });
-          return;
-        }
-        if (chapter2WaveOnly && chapter2CombatFailedCallbackRef.current) {
-          chapter2CombatFailedCallbackRef.current({
-            kind: "wave",
-            waveIndex: Math.max(0, engine.getCurrentChapter2WaveIndex?.() ?? chapter2WaveStartIndex),
-          });
-          return;
-        }
-        if ((chapter1WaveOnly || chapter1BossOnly) && combatFailedCallbackRef.current) {
-          if (chapter1BossOnly) {
-            combatFailedCallbackRef.current({ kind: "boss" });
-          } else {
-            combatFailedCallbackRef.current({
-              kind: "wave",
-              waveIndex: Math.max(0, engine.chapter1Wave?.selectedWave ?? chapter1WaveStartIndex),
-            });
-          }
-          return;
-        }
+        if (reportStoryCombatFailure()) return;
         onStoryResult({
           outcome: engine.state === "VICTORY" ? "cleared" : "failed",
           stage: engine.stage,
@@ -323,6 +332,9 @@ function GameCanvas({
     engine.onChapter1BossComplete = () => bossCompleteCallbackRef.current?.();
 
     const hudInterval = setInterval(() => {
+      // Safety net for story combat: Chapter 1 uses the GAMEOVER transition as the retry trigger.
+      // Report it once even if a boss-specific render/update path suppresses the normal onGameOver callback.
+      if (isStoryMode && engine.state === "GAMEOVER") reportStoryCombatFailure();
       if (engine.player) {
         setHp(Math.max(0, Math.min(MAX_HP, engine.player.hp)));
         if (engine.canvas.width > 0 && engine.canvas.height > 0) {
@@ -446,6 +458,7 @@ function GameCanvas({
         setIsPaused((prev) => !prev);
         return;
       }
+      if (event.code === "Space") event.preventDefault();
       if (isPausedRef.current || !externallyActiveRef.current || !inputEnabledRef.current) return;
 
       if (/^[0-9]$/.test(event.key) && engineRef.current?.handleChapter1BossDigit(Number(event.key))) {
@@ -463,6 +476,7 @@ function GameCanvas({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.code === "Space") event.preventDefault();
       if (isPausedRef.current || !externallyActiveRef.current || !inputEnabledRef.current) return;
       if (event.code === "ArrowUp" || event.code === "KeyW") inputRef.current.up = false;
       if (event.code === "ArrowDown" || event.code === "KeyS") inputRef.current.down = false;

@@ -556,7 +556,11 @@
   background: linear-gradient(90deg, transparent, rgba(0,0,0,.84) 14%, rgba(0,0,0,.92) 50%, rgba(0,0,0,.84) 86%, transparent);
   text-align: center;
   opacity: 0;
-  transform: scale(.76) skewX(-4deg);
+  transform: none;
+  filter: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  backface-visibility: hidden;
   animation: chapter2BossIntroCopy 2.45s .88s cubic-bezier(.2,.82,.2,1) both;
 }
 
@@ -573,7 +577,7 @@
   color: #fff;
   font: italic 1000 clamp(48px, 9vw, 130px)/.92 "Arial Black", "Noto Sans KR", sans-serif;
   letter-spacing: -.055em;
-  text-shadow: 5px 5px 0 #7c0010, 0 0 36px rgba(255, 39, 67, .58);
+  text-shadow: 5px 5px 0 #7c0010, 0 0 10px rgba(255, 39, 67, .42);
 }
 
 .chapter2-boss-intro-copy h2 {
@@ -649,8 +653,7 @@
 }
 
 @keyframes chapter2BossIntroCopy {
-  0% { opacity: 0; transform: scale(.76) skewX(-4deg); filter: blur(8px); }
-  15% { opacity: 1; transform: scale(1.08) skewX(-2deg); filter: blur(0); }
-  72% { opacity: 1; transform: scale(1) skewX(0); }
-  100% { opacity: 0; transform: scale(1.12) skewX(0); filter: blur(3px); }
+  0% { opacity: 0; filter: none; }
+  10%, 84% { opacity: 1; filter: none; }
+  100% { opacity: 0; filter: none; }
 }

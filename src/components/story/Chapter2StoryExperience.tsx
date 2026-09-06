@@ -151,6 +151,7 @@ export function Chapter2StoryExperience({
   const requestedBossPatternRef = useRef<number | null>(null);
   const bossTimerRef = useRef<number | null>(null);
   const bossIntroTimerRef = useRef<number | null>(null);
+  const combatRetryPromptTimerRef = useRef<number | null>(null);
   const purificationTimerRef = useRef<number | null>(null);
   const waveIntroTimerRef = useRef<number | null>(null);
   const playerPositionRef = useRef({ xPercent: 50, yPercent: 88 });
@@ -169,6 +170,7 @@ export function Chapter2StoryExperience({
   const [waveIntroTransitionActive, setWaveIntroTransitionActive] = useState(false);
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
   const [combatFailure, setCombatFailure] = useState<{ kind: "wave"; waveIndex: number } | { kind: "boss" } | null>(null);
+  const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
   const [waveRunKey, setWaveRunKey] = useState(0);
   const [bossRunKey, setBossRunKey] = useState(0);
 
@@ -345,6 +347,7 @@ export function Chapter2StoryExperience({
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     if (bossTimerRef.current !== null) window.clearTimeout(bossTimerRef.current);
     if (bossIntroTimerRef.current !== null) window.clearTimeout(bossIntroTimerRef.current);
+    if (combatRetryPromptTimerRef.current !== null) window.clearTimeout(combatRetryPromptTimerRef.current);
     if (waveIntroTimerRef.current !== null) window.clearTimeout(waveIntroTimerRef.current);
   }, []);
 
@@ -534,9 +537,23 @@ export function Chapter2StoryExperience({
     }, 3300);
   };
 
+  const showCombatRetryPrompt = (failure: { kind: "wave"; waveIndex: number } | { kind: "boss" }) => {
+    if (combatRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(combatRetryPromptTimerRef.current);
+    }
+    // Same death flow as Chapter 1: fade the whole combat screen first, then show the pause-style retry dialog.
+    setCombatFailure(failure);
+    setCombatRetryPromptVisible(false);
+    combatRetryPromptTimerRef.current = window.setTimeout(() => {
+      combatRetryPromptTimerRef.current = null;
+      setCombatRetryPromptVisible(true);
+    }, 1350);
+  };
+
   const failWaveCombat = (waveIndex: number) => {
-    persistWaveCheckpoint(waveIndex);
-    setCombatFailure({ kind: "wave", waveIndex: Math.max(0, Math.floor(waveIndex)) });
+    const safeIndex = Math.max(0, Math.floor(waveIndex));
+    persistWaveCheckpoint(safeIndex);
+    showCombatRetryPrompt({ kind: "wave", waveIndex: safeIndex });
   };
 
   const exitWaveCombat = (waveIndex: number) => {
@@ -560,11 +577,16 @@ export function Chapter2StoryExperience({
 
   const failBossCombat = () => {
     saveStoryCheckpoint(chapter2BossCheckpoint());
-    setCombatFailure({ kind: "boss" });
+    showCombatRetryPrompt({ kind: "boss" });
   };
 
   const retryFailedCombat = () => {
     if (!combatFailure) return;
+    if (combatRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(combatRetryPromptTimerRef.current);
+      combatRetryPromptTimerRef.current = null;
+    }
+    setCombatRetryPromptVisible(false);
     if (combatFailure.kind === "wave") {
       const waveIndex = combatFailure.waveIndex;
       currentWaveIndexRef.current = waveIndex;
@@ -586,6 +608,11 @@ export function Chapter2StoryExperience({
   };
 
   const leaveAfterCombatFailure = () => {
+    if (combatRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(combatRetryPromptTimerRef.current);
+      combatRetryPromptTimerRef.current = null;
+    }
+    setCombatRetryPromptVisible(false);
     if (combatFailure?.kind === "wave") persistWaveCheckpoint(combatFailure.waveIndex);
     else if (combatFailure?.kind === "boss") saveStoryCheckpoint(chapter2BossCheckpoint());
     setCombatFailure(null);
@@ -666,20 +693,24 @@ export function Chapter2StoryExperience({
       )}
 
       {combatFailure && (
-        <div className="chapterGamePauseOverlay chapter2CombatRetryOverlay" role="presentation">
-          <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="전투 재도전 확인">
-            <small>{combatFailure.kind === "wave" ? `WAVE ${combatFailure.waveIndex + 1}` : "BOSS BATTLE"}</small>
-            <h2>다시 도전하시겠습니까?</h2>
-            <p>
-              {combatFailure.kind === "wave"
-                ? "현재 웨이브의 처음부터 다시 시작합니다."
-                : "보스 1페이즈 진입부터 다시 시작합니다."}
-            </p>
-            <div className="chapterGamePauseActions isConfirm">
-              <button type="button" className="secondary" onClick={leaveAfterCombatFailure}>아니오</button>
-              <button type="button" className="primary" onClick={retryFailedCombat}>예</button>
+        <div className="chapter1-combat-death-overlay" role="presentation">
+          {combatRetryPromptVisible && (
+            <div className="chapterGamePauseOverlay chapterCombatRetryOverlay">
+              <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="전투 재도전 확인">
+                <small>{combatFailure.kind === "wave" ? `WAVE ${combatFailure.waveIndex + 1}` : "BOSS BATTLE"}</small>
+                <h2>다시 도전하시겠습니까?</h2>
+                <p>
+                  {combatFailure.kind === "wave"
+                    ? "현재 웨이브의 처음부터 다시 시작합니다."
+                    : "보스 1페이즈 진입부터 다시 시작합니다."}
+                </p>
+                <div className="chapterGamePauseActions isConfirm">
+                  <button type="button" className="secondary" onClick={leaveAfterCombatFailure}>아니오</button>
+                  <button type="button" className="primary" onClick={retryFailedCombat}>예</button>
+                </div>
+              </section>
             </div>
-          </section>
+          )}
         </div>
       )}
 

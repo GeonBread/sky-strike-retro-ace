@@ -14680,8 +14680,16 @@ function runCustomEffect(item) {
     closeDialoguePanel();
     if (item.hideActors !== false) hideActors();
     if (item.hideIllustration !== false) hideIllustration();
-    el.stage.classList.add('is-cinematic-effect');
     const effectId = item.effect || 'custom-effect';
+
+    // Chapter 2 boss battle uses the React full-screen BOSS APPROACH intro.
+    // Skip the old purple standalone story card and open only the integration gate.
+    if (effectId === 'combat-transition' && String(item?.title || '') === '보스전 시작') {
+      finishEffect(item, effectId);
+      return;
+    }
+
+    el.stage.classList.add('is-cinematic-effect');
     // 오염 파편 출현은 장소 타이틀 없이 배경만 조용히 전환합니다.
     if (effectId === 'battle-summary' && item.scene) updateScene(item.scene);
     // 카톡은 현재 표시 중인 스토리 배경을 그대로 유지하고 스마트폰만 겹쳐 표시합니다.

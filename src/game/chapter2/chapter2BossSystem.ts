@@ -142,16 +142,19 @@ function clampPlayerToBossViewport(engine: any, runtime: Chapter2BossRuntime): v
 }
 
 /**
- * 챕터 1 보스와 동일한 방식으로 플레이어 탄 중심을 보스 판정원과 직접 비교하고
- * core.applyDamage()를 호출합니다. v68의 handlePlayerShot은 보스 외 패턴 오브젝트 판정에만 사용합니다.
+ * Chapter 1 boss hit logic is intentionally mirrored here:
+ * - compare the player bullet center against the boss ellipse in canonical coordinates
+ * - consume a normal bullet on hit
+ * - rate-limit musicBeam continuous hits
+ * - apply the player's native bullet damage directly with core.applyDamage()
+ *
+ * The v68 runtime is used only for destructible pattern objects. Keeping that path separate
+ * prevents its own boss-hit routine from running for every flying player bullet.
  */
 function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter2BossRuntime): void {
   const core = runtime.core;
   if (!core) return;
-  const projection = getChapter2BossViewportProjection(engine.canvas);
   const hud = core.getHudState() as Chapter2BossHudState;
-  const hitArea = core.getBossHitArea();
-  const attackAllowed = core.isPlayerAttackAllowed();
   const cinematicLocked = !!hud.cinematic || !!hud.clearStage || hud.victoryComplete;
 
   if (cinematicLocked) {
@@ -162,16 +165,17 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
     return;
   }
 
+  const projection = getChapter2BossViewportProjection(engine.canvas);
+  const attackAllowed = core.isPlayerAttackAllowed();
+  const hitArea = core.getBossHitArea();
+
   for (const bullet of engine.bullets as Bullet[]) {
     if (!bullet.active || bullet.isEnemy) continue;
+
     const cx = (bullet.x + bullet.width / 2 - projection.offsetX) / projection.scale;
     const cy = (bullet.y + bullet.height / 2 - projection.offsetY) / projection.scale;
-    const bulletRadius = Math.max(2.5, Math.max(bullet.width, bullet.height) * 0.2 / projection.scale);
-    // CH1과 같은 타원 충돌식. 탄환 반지름만큼 판정축을 넓혀 스프라이트 가장자리 타격도 자연스럽게 잡습니다.
-    const rx = Math.max(1, hitArea.rx + bulletRadius);
-    const ry = Math.max(1, hitArea.ry + bulletRadius);
-    const nx = (cx - hitArea.x) / rx;
-    const ny = (cy - hitArea.y) / ry;
+    const nx = (cx - hitArea.x) / Math.max(1, hitArea.rx);
+    const ny = (cy - hitArea.y) / Math.max(1, hitArea.ry);
     const touchesBoss = nx * nx + ny * ny <= 1;
     const continuousBeam = bullet.playerBulletKind === "musicBeam";
 
@@ -182,13 +186,18 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
       if (continuousBeam) (bullet as any).__chapter2OriginalBossNextHit = now + 0.12;
       else bullet.active = false;
 
-      // 공유문서 드론 패턴의 보스 보호막만 원본 규칙을 존중합니다.
       if (core.isBossShielded()) {
-        core.handlePlayerShot({ x: cx, y: cy, r: bulletRadius, damage: Math.max(0, bullet.damage || 1) });
+        // Keep only the original shield feedback. Damage remains blocked while document drones live.
+        core.handlePlayerShot({
+          x: cx,
+          y: cy,
+          r: Math.max(2.5, Math.max(bullet.width, bullet.height) * 0.2 / projection.scale),
+          damage: Math.max(0, bullet.damage || 1),
+        });
       } else {
-        // CH1과 동일: 플레이어 탄 데미지를 별도 배율 없이 보스 HP에 직접 적용합니다.
         core.applyDamage(Math.max(0, bullet.damage || 1));
       }
+
       engine.spawnExplosion?.(
         bullet.x + bullet.width / 2,
         bullet.y + bullet.height / 2,
@@ -199,19 +208,26 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
       continue;
     }
 
-    // 보스 본체를 빗나간 탄은 v68의 파괴 가능한 패턴 오브젝트에 그대로 전달합니다.
+    // v68 destructible pattern objects still receive shots, but its boss hit test is bypassed.
     if (!attackAllowed || continuousBeam) continue;
-    const patternHit = core.handlePlayerShot({
+    const patternHit = core.handlePatternShot({
       x: cx,
       y: cy,
-      r: bulletRadius,
+      r: Math.max(2.5, Math.max(bullet.width, bullet.height) * 0.2 / projection.scale),
       damage: Math.max(0, bullet.damage || 1),
     });
     if (!patternHit) continue;
+
     bullet.active = false;
-    engine.spawnExplosion?.(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, "#8fd9e5", 3);
+    engine.spawnExplosion?.(
+      bullet.x + bullet.width / 2,
+      bullet.y + bullet.height / 2,
+      "#8fd9e5",
+      3,
+    );
     sfx.enemyHit();
   }
+
   engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
 }
 
