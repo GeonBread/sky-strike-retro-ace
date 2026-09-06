@@ -226,10 +226,14 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     }
 
     const locationIntroHook = `    if (item.effect === 'location-title-intro') {
-      const introScene = item.scene || {};`;
+      const introScene = item.scene || {};
+      storyStage.classList.remove('is-prologue-black-transition', 'is-prologue-black-hold');
+      updateScene(introScene, { force: true, suppressFlash: true });`;
     const locationIntroWithTitle = `    if (item.effect === 'location-title-intro') {
       const introScene = item.scene || {};
-      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(introScene.title || '');`;
+      storyStage.classList.remove('is-prologue-black-transition', 'is-prologue-black-hold');
+      updateScene(introScene, { force: true, suppressFlash: true });
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(introScene.title || '', introScene);`;
     if (normalized.includes(locationIntroHook)) {
       normalized = normalized.replace(locationIntroHook, locationIntroWithTitle);
     }
@@ -238,7 +242,7 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       const destination = item.transitionScene || item.scene || {};`;
     const locationTransitionWithTitle = `    } else if (item.effect === 'location-transition') {
       const destination = item.transitionScene || item.scene || {};
-      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(destination.title || '');`;
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(destination.title || '', destination);`;
     if (normalized.includes(locationTransitionHook)) {
       normalized = normalized.replace(locationTransitionHook, locationTransitionWithTitle);
     }
@@ -286,7 +290,7 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   const preEnergyLocationHook = `    showSceneBackgroundOnly(energy100ClosedEntranceScene);
     storyStage.classList.add('is-pre-energy-flight-in');`;
   const preEnergyLocationWithTitle = `    showSceneBackgroundOnly(energy100ClosedEntranceScene);
-    window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(energy100ClosedEntranceScene.title || '');
+    window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(energy100ClosedEntranceScene.title || '', energy100ClosedEntranceScene);
     storyStage.classList.add('is-pre-energy-flight-in');`;
   if (normalized.includes(preEnergyLocationHook)) {
     normalized = normalized.replace(preEnergyLocationHook, preEnergyLocationWithTitle);
@@ -297,7 +301,7 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       setBossEntryStageClass('is-entry-interior-tour');`;
   const bossInteriorLocationWithTitle = `      currentSceneId = '';
       updateScene(bossInteriorPreviewScene, { silent: true });
-      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(bossInteriorPreviewScene.title || '');
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.(bossInteriorPreviewScene.title || '', bossInteriorPreviewScene);
       setBossEntryStageClass('is-entry-interior-tour');`;
   if (normalized.includes(bossInteriorLocationHook)) {
     normalized = normalized.replace(bossInteriorLocationHook, bossInteriorLocationWithTitle);
@@ -577,44 +581,124 @@ html.is-embedded-story .story-stage.is-opening-cinematic .story-effect-layer {
   max-width: none !important;
   max-height: none !important;
 }
-/* 장소가 실제로 바뀔 때만 중앙에 장소명을 짧게 띄운다. */
+/* Chapter 1의 [장면] 장소 타이틀은 Chapter 2의 LOCATION 템플릿을 그대로 사용한다. */
 .chapter1-location-title-overlay {
   position: fixed;
   inset: 0;
   z-index: 160000;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+  background: #050506;
   opacity: 0;
   visibility: hidden;
-  transition: opacity .32s ease, visibility .32s ease;
+  pointer-events: none;
 }
 .chapter1-location-title-overlay.is-active {
-  opacity: 1;
   visibility: visible;
+  animation: chapter1GlobalLocationEnvelope var(--chapter1-location-title-duration, 2.5s) linear both;
 }
-.chapter1-location-title-overlay::before {
+.chapter1-location-title-background {
+  position: absolute;
+  z-index: 0;
+  inset: -3%;
+  background-color: #050506;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  filter: brightness(1) saturate(1.02) contrast(1.02);
+  transform: scale(1.045);
+  animation: chapter1GlobalLocationCamera var(--chapter1-location-title-duration, 2.5s) cubic-bezier(.2,.78,.2,1) both;
+}
+.chapter1-location-title-vignette {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.04) 38%, rgba(0,0,0,.38) 100%),
+    radial-gradient(circle at 50% 48%, rgba(0,0,0,0) 22%, rgba(0,0,0,.58) 100%);
+}
+.chapter1-location-title-grid {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  opacity: .12;
+  background-image:
+    linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  animation: chapter1GlobalLocationGrid var(--chapter1-location-title-duration, 2.5s) linear both;
+}
+.chapter1-location-title-copy {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: min(900px, 84vw);
+  min-height: 190px;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.72), rgba(0,0,0,.26) 52%, transparent 76%);
+  opacity: 0;
+  animation: chapter1GlobalLocationCopy var(--chapter1-location-title-duration, 2.5s) cubic-bezier(.2,.86,.2,1) both;
+}
+.chapter1-location-title-copy::before,
+.chapter1-location-title-copy::after {
   content: "";
   position: absolute;
   left: 50%;
-  top: 50%;
-  width: min(78vw, 850px);
-  height: 150px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(ellipse at center, rgba(0,0,0,.72) 0%, rgba(0,0,0,.42) 48%, rgba(0,0,0,0) 78%);
-  filter: blur(4px);
+  width: min(720px, 76vw);
+  height: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(191,124,38,.82), #fff1c2, rgba(191,124,38,.82), transparent);
+  box-shadow: 0 0 16px rgba(191,124,38,.72);
 }
-.chapter1-location-title-overlay strong {
-  position: relative;
-  padding: 24px 36px;
+.chapter1-location-title-copy::before { top: 16px; }
+.chapter1-location-title-copy::after { bottom: 16px; }
+.chapter1-location-title-copy small {
+  color: #d6ad62;
+  font-size: clamp(10px, 1vw, 14px);
+  font-weight: 1000;
+  letter-spacing: .34em;
+}
+.chapter1-location-title-copy strong {
   color: #fff;
   font-family: "Noto Sans KR", system-ui, sans-serif;
-  font-size: clamp(30px, 5vw, 66px);
-  font-weight: 900;
-  letter-spacing: -.035em;
+  font-size: clamp(40px, 6.4vw, 86px);
+  font-weight: 1000;
+  letter-spacing: -.05em;
   text-align: center;
-  text-shadow: 0 4px 22px rgba(0,0,0,.95), 0 0 20px rgba(255,255,255,.12);
+  text-shadow: 0 4px 0 rgba(0,0,0,.9), 0 0 16px rgba(255,255,255,.18), 0 0 42px rgba(191,124,38,.42);
 }
+/* Chapter 2 템플릿으로 대체되므로 기존 Chapter 1 장소 타이틀 카드 자체는 화면에 노출하지 않는다. */
+html.is-embedded-story #storyLocationIntro,
+html.is-embedded-story #locationTransition {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+@keyframes chapter1GlobalLocationEnvelope {
+  0% { opacity: 0; }
+  6%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes chapter1GlobalLocationCamera {
+  0% { transform: scale(1.085); filter: brightness(.74) saturate(.9); }
+  20% { filter: brightness(1) saturate(1.02); }
+  100% { transform: scale(1.025); filter: brightness(1) saturate(1.02); }
+}
+@keyframes chapter1GlobalLocationGrid {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 96px, 96px 0; }
+}
+@keyframes chapter1GlobalLocationCopy {
+  0%, 13% { opacity: 0; transform: translate(-50%, -50%) scale(.9); }
+  23%, 82% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -53%) scale(1.035); }
+}
+
 /* 학사 시스템 비상 통제 전환은 스토리 프레임에 갇히지 않고 브라우저 전체를 덮는다. */
 html.is-embedded-story .battle-transition {
   position: fixed !important;
@@ -689,7 +773,8 @@ export function createChapter1StoryRuntime({
   };
 
   const localWindowValues = new Map<PropertyKey, unknown>();
-  localWindowValues.set("EMBEDDED_ASSETS", createChapter1StoryEmbeddedAssets());
+  const embeddedAssets = createChapter1StoryEmbeddedAssets();
+  localWindowValues.set("EMBEDDED_ASSETS", embeddedAssets);
 
   let scopedWindow: Window & typeof globalThis;
   scopedWindow = new Proxy(window, {
@@ -767,16 +852,56 @@ export function createChapter1StoryRuntime({
   const locationOverlay = document.createElement("div");
   locationOverlay.className = "chapter1-location-title-overlay";
   locationOverlay.setAttribute("aria-hidden", "true");
+  locationOverlay.style.setProperty("--chapter1-location-title-duration", "2500ms");
+
+  const locationOverlayBackground = document.createElement("div");
+  locationOverlayBackground.className = "chapter1-location-title-background";
+  const locationOverlayVignette = document.createElement("div");
+  locationOverlayVignette.className = "chapter1-location-title-vignette";
+  const locationOverlayGrid = document.createElement("div");
+  locationOverlayGrid.className = "chapter1-location-title-grid";
+  const locationOverlayCopy = document.createElement("div");
+  locationOverlayCopy.className = "chapter1-location-title-copy";
+  const locationOverlayLabel = document.createElement("small");
+  locationOverlayLabel.textContent = "LOCATION";
   const locationOverlayText = document.createElement("strong");
-  locationOverlay.appendChild(locationOverlayText);
-  root.appendChild(locationOverlay);
+  locationOverlayCopy.append(locationOverlayLabel, locationOverlayText);
+  locationOverlay.append(locationOverlayBackground, locationOverlayVignette, locationOverlayGrid, locationOverlayCopy);
+  document.body.appendChild(locationOverlay);
+
   let locationOverlayTimer: number | null = null;
   let lastLocationTitle = "";
-  const showLocationTitle = (rawTitle: string) => {
+  const showLocationTitle = (rawTitle: string, rawScene?: unknown) => {
     const title = rawTitle.trim();
     if (!locationTitles.has(title) || title === lastLocationTitle) return;
     lastLocationTitle = title;
+
+    const scene = rawScene && typeof rawScene === "object"
+      ? rawScene as Record<string, unknown>
+      : null;
+    const backgroundRef = typeof scene?.background === "string" ? scene.background : "";
+    const resolvedBackground = backgroundRef && backgroundRef !== "none"
+      ? (embeddedAssets[backgroundRef] ?? embeddedAssets[`assets/${backgroundRef}`] ?? backgroundRef)
+      : "";
+    const backgroundColor = typeof scene?.backgroundColor === "string" ? scene.backgroundColor : "#050506";
+    const backgroundPosition = typeof scene?.position === "string" ? scene.position : "center center";
+
     locationOverlayText.textContent = title;
+    locationOverlayBackground.style.backgroundColor = backgroundColor;
+    locationOverlayBackground.style.backgroundPosition = backgroundPosition;
+    if (resolvedBackground) {
+      locationOverlayBackground.style.backgroundImage = `url(${JSON.stringify(resolvedBackground)})`;
+    } else {
+      const activeScene = root.querySelector<HTMLElement>(".scene-background.is-visible");
+      const activeStyle = activeScene ? window.getComputedStyle(activeScene) : null;
+      locationOverlayBackground.style.backgroundImage = activeStyle?.backgroundImage && activeStyle.backgroundImage !== "none"
+        ? activeStyle.backgroundImage
+        : "none";
+      if (!scene?.position && activeStyle?.backgroundPosition) {
+        locationOverlayBackground.style.backgroundPosition = activeStyle.backgroundPosition;
+      }
+    }
+
     locationOverlay.classList.remove("is-active");
     void locationOverlay.offsetWidth;
     locationOverlay.classList.add("is-active");
@@ -784,7 +909,7 @@ export function createChapter1StoryRuntime({
     locationOverlayTimer = trackedSetTimeout(() => {
       locationOverlayTimer = null;
       locationOverlay.classList.remove("is-active");
-    }, 1750) as unknown as number;
+    }, 2500) as unknown as number;
   };
   localWindowValues.set("__CHAPTER1_SHOW_LOCATION_TITLE__", showLocationTitle);
   localWindowValues.set("__CHAPTER1_PLAY_STORY_SFX__", (kind: string) => {
@@ -840,6 +965,7 @@ export function createChapter1StoryRuntime({
     eventListeners.length = 0;
     if (locationOverlayTimer !== null) window.clearTimeout(locationOverlayTimer);
     locationOverlayTimer = null;
+    locationOverlay.remove();
     styleElement.remove();
     root.replaceChildren();
     restoreAttributes(document.documentElement, htmlAttributeSnapshot);
