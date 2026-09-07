@@ -202,15 +202,18 @@ engine.bullets.forEach((b) => {
 
         e.hp -= b.damage;
         e.type === "boss" ? sfx.bossHit() : sfx.enemyHit();
-        if (e.chapter1) {
+        const chapter2BossSupport = !!(e as any).chapter2BossSupport;
+        if (e.chapter1 || chapter2BossSupport) {
           const impactX = b.x + b.width / 2;
           const impactY = b.y + b.height / 2;
           const enemyCenterX = e.x + e.width / 2;
           const enemyCenterY = e.y + e.height / 2;
-          e.chapter1.hitFlash = 0.12;
-          e.chapter1.hitX = impactX;
-          e.chapter1.hitY = impactY;
-          e.chapter1.hitAngle = Math.atan2(impactY - enemyCenterY, impactX - enemyCenterX);
+          if (e.chapter1) {
+            e.chapter1.hitFlash = 0.12;
+            e.chapter1.hitX = impactX;
+            e.chapter1.hitY = impactY;
+            e.chapter1.hitAngle = Math.atan2(impactY - enemyCenterY, impactX - enemyCenterX);
+          }
           spawnChapter1EnemyHitEffectSystem(engine, impactX, impactY);
         } else {
           spawnPlayerBulletHitEffectSystem(engine, b, e);
@@ -310,7 +313,7 @@ engine.bullets.forEach((b) => {
           }
           engine.awardScore(e.type === "assault_commander" ? 2500 : e.type === "tank" ? 300 : 100);
 
-          if (e.chapter1) {
+          if (e.chapter1 || !!(e as any).chapter2BossSupport) {
             spawnChapter1WaveBurstParticlesSystem(
               engine,
               e.x + e.width / 2,

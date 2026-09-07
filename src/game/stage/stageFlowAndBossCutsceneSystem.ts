@@ -33,8 +33,13 @@ if (engine.chapter2Boss?.active) {
   engine.updateParticles(dt);
   engine.updatePowerUps(dt);
   engine.updateBomb(dt);
+  updateChapter1WaveImpactEffectsSystem(engine, dt);
   updateChapter2BossSystem(engine, dt);
   engine.checkCollisions();
+  // Chapter 2 support mobs are driven by the boss runtime rather than the
+  // ordinary enemy updater, so remove deactivated support entities immediately
+  // after the shared Chapter 1-style collision/death logic runs.
+  engine.enemies = engine.enemies.filter((enemy: any) => enemy.active || !(enemy as any).chapter2BossSupport);
   return;
 }
 
@@ -50,6 +55,7 @@ if (engine.chapter2Wave?.enabled) {
   engine.updateParticles(dt);
   engine.updatePowerUps(dt);
   engine.updateBomb(dt);
+  updateChapter1WaveImpactEffectsSystem(engine, dt);
   updateChapter2WaveSystem(engine, dt);
   engine.checkCollisions();
   return;

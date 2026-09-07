@@ -198,12 +198,9 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
         core.applyDamage(Math.max(0, bullet.damage || 1));
       }
 
-      engine.spawnExplosion?.(
-        bullet.x + bullet.width / 2,
-        bullet.y + bullet.height / 2,
-        hud.phase === 2 ? "#ff93a1" : "#8fd9e5",
-        4,
-      );
+      // Do not spawn the generic explosion here. The v68 boss body already
+      // provides its own hit feedback, and the extra particle burst read as a
+      // white circle over the boss in the integrated renderer.
       sfx.bossHit();
       continue;
     }
@@ -412,6 +409,28 @@ export function handleChapter2BossPointerSystem(engine: any, canvasX: number, ca
   return runtime.core.pointerDown(x, y);
 }
 
+
+export function skipCurrentChapter2BossPhaseSystem(engine: any): boolean {
+  const runtime = runtimeOf(engine);
+  if (!runtime.active || !runtime.core) return false;
+  clearChapter2BossSupportObjects(engine);
+  runtime.supportSpawnTimer = 4.5;
+
+  const hud = runtime.core.getHudState() as Chapter2BossHudState;
+  if (hud.victoryComplete) return false;
+
+  // Match the Chapter 1 side-button semantics: phase 1 jumps directly into
+  // the existing phase-change cinematic, while phase 2 jumps to the existing
+  // defeat / clear sequence. The test-navigation F6 command still skips only
+  // the current v68 pattern through skipCurrentChapter2BossSystem().
+  if (hud.phase === 1) {
+    runtime.core.playPhaseTransition();
+    return true;
+  }
+
+  runtime.core.playClearSequence();
+  return true;
+}
 export function skipCurrentChapter2BossSystem(engine: any): boolean {
   const runtime = runtimeOf(engine);
   clearChapter2BossSupportObjects(engine);

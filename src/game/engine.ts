@@ -193,6 +193,7 @@ import {
   handleChapter2BossPointerSystem,
   jumpChapter2BossPatternSystem,
   playChapter2BossSceneSystem,
+  skipCurrentChapter2BossPhaseSystem,
   skipCurrentChapter2BossSystem,
   startChapter2BossSystem,
   updateChapter2BossSystem,
@@ -765,6 +766,11 @@ export class GameEngine implements GameEngineRuntimeContext {
 
   public skipCurrentChapter2Boss(): boolean {
     return skipCurrentChapter2BossSystem(this);
+  }
+
+  /** 챕터 1 보스 옆 버튼과 동일하게 현재 보스 페이즈 자체를 즉시 넘긴다. */
+  public skipCurrentChapter2BossPhase(): boolean {
+    return skipCurrentChapter2BossPhaseSystem(this);
   }
 
   public jumpChapter2BossPattern(patternId: number): boolean {

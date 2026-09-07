@@ -1,3 +1,6 @@
+import { sfx } from "../AudioSystem";
+import { spawnChapter1EnemyHitEffectSystem } from "../chapter1/chapter1WaveImpactSystem";
+
 /**
  * Chapter 2 story wave runtime.
  *
@@ -1525,7 +1528,10 @@ function processRealPlayerBullets(engine: any) {
       shot.active = false;
       enemy.hp -= Math.max(1, Number(shot.damage) || 1);
       enemy.hitFlash = 0.1;
-      addEffect("spark", shotX, shotY, { life: 0.16, vx: rnd(-80, 80), vy: rnd(-80, 80), r: 2.5, color: "#9feaff" });
+      const impactCanvasX = shot.x + Math.max(2, shot.width || 0) / 2;
+      const impactCanvasY = shot.y + Math.max(2, shot.height || 0) / 2;
+      spawnChapter1EnemyHitEffectSystem(engine, impactCanvasX, impactCanvasY);
+      sfx.enemyHit();
       if (enemy.hp <= 0) destroyEnemy(enemy);
       break;
     }
@@ -1556,10 +1562,12 @@ function processRealBomb(engine: any) {
     if (enemy.dead || !enemyCanBeHit(enemy)) continue;
     const d = Math.hypot(enemy.x - originX, enemy.y - originY);
     if (d > radius + enemy.r + band) continue;
-    const damage = lastBombActive ? 0.8 : Math.max(8, enemy.maxHp * 0.18);
-    enemy.hp -= damage;
-    enemy.hitFlash = 0.12;
-    if (enemy.hp <= 0) destroyEnemy(enemy);
+    // Chapter 1 smart-bomb semantics: the instant the purification wave reaches
+    // an ordinary monster, remove it in that same frame instead of chipping HP
+    // for several frames after the ring has already passed.
+    enemy.bombConsumed = true;
+    enemy.hp = 0;
+    destroyEnemy(enemy);
   }
   lastBombActive = true;
 }

@@ -9,6 +9,7 @@ import { SHIP_COLORS } from "./palette";
 import type { PlayerWeaponStyle } from "../entities";
 import { renderPlayerBulletHitParticleSystem } from "../effects/playerBulletHitEffectSystem";
 import { renderChapter1WaveHudSystem, renderChapter1WaveTelegraphsSystem } from "../chapter1/chapter1WaveRenderer";
+import { renderChapter1WaveImpactEffectsSystem } from "../chapter1/chapter1WaveImpactSystem";
 import { renderChapter1BossFullSceneSystem } from "../chapter1/chapter1BossRenderer";
 import { renderChapter2WaveHudSystem, renderChapter2WaveSystem } from "../chapter2/chapter2WaveSystem";
 import { renderChapter2BossSceneSystem } from "../chapter2/chapter2BossRenderer";
@@ -1248,6 +1249,10 @@ export function renderGameSceneSystem(engine: GameSceneRenderEngine): void {
     });
 
     engine.renderBossPatternHazards();
+
+    if (engine.chapter2Boss?.active || engine.chapter2Wave?.enabled) {
+      renderChapter1WaveImpactEffectsSystem(engine);
+    }
 
     // Bullets
     engine.bullets.forEach((b) => {
