@@ -308,14 +308,17 @@ function updateChapter2BossSupportSystem(engine: any, runtime: Chapter2BossRunti
         enemy.y = support.targetY;
         support.state = "hover";
         support.anchorX = enemy.x;
-        support.shootCooldown = 0.24 + support.index * 0.08;
+        // 보스전 지원 잡몹은 진입 직후 빠르게 첫 탄을 발사합니다.
+        support.shootCooldown = 0.12 + support.index * 0.04;
       }
     } else {
       const desiredX = support.anchorX + Math.sin(support.time * 2.25 + support.phase) * 34;
       enemy.x += (desiredX - enemy.x) * Math.min(1, dt * 5.2);
       support.shootCooldown -= dt;
       if (support.shootCooldown <= 0) {
-        support.shootCooldown = 0.52 + Math.random() * 0.16;
+        // 기존 0.52~0.68 s 단발 간격은 보스전에서 지나치게 느리게 느껴졌습니다.
+        // 탄 속도/조준 방식은 유지하고 연사 간격만 0.30~0.40 s로 단축합니다.
+        support.shootCooldown = 0.30 + Math.random() * 0.10;
         shootChapter2BossSupportBullet(engine, enemy);
       }
     }

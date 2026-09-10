@@ -12475,17 +12475,21 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
     const waveStartAt = globalWaveWindow.performance.now();
     const waveDelay = 1.8;
     const easeOutCubic = p => 1 - Math.pow(1 - p, 3);
-    const drawGatekeeperRing = (age, life, maxR, color, width, scale, cx, cy) => {
+    const drawGatekeeperRing = (age, life, maxR, color, width, radiusScale, cx, cy) => {
       if (!waveCtx || age < 0 || age >= life) return;
       const p = Math.max(0, Math.min(1, age / life));
       waveCtx.save();
       waveCtx.globalAlpha = (1 - p) * .8;
       waveCtx.strokeStyle = color;
-      waveCtx.lineWidth = Math.max(2, width * (1 - p)) * scale;
+      const strokeScale = Math.min(
+        Math.max(1, globalWave.clientWidth || globalWaveWindow.innerWidth) / 922,
+        Math.max(1, globalWave.clientHeight || globalWaveWindow.innerHeight) / 960,
+      );
+      waveCtx.lineWidth = Math.max(2, width * (1 - p)) * strokeScale;
       waveCtx.shadowColor = color;
-      waveCtx.shadowBlur = 18 * scale;
+      waveCtx.shadowBlur = 18 * strokeScale;
       waveCtx.beginPath();
-      waveCtx.arc(cx, cy, maxR * easeOutCubic(p) * scale, 0, Math.PI * 2);
+      waveCtx.arc(cx, cy, maxR * easeOutCubic(p) * radiusScale, 0, Math.PI * 2);
       waveCtx.stroke();
       waveCtx.restore();
     };
@@ -12502,12 +12506,22 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
       }
       waveCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       waveCtx.clearRect(0, 0, cssW, cssH);
-      const scale = Math.min(cssW / 922, cssH / 960);
+      const strokeScale = Math.min(cssW / 922, cssH / 960);
       const cx = cssW * .5;
       const cy = cssH * .54;
+      // The canvas already spans the browser, but the old 320px game-space radius still stopped
+      // near the game viewport. Scale the ring radius independently so the outer ring reaches
+      // the farthest browser corner while keeping Chapter 1-like stroke thickness.
+      const farthestCorner = Math.max(
+        Math.hypot(cx, cy),
+        Math.hypot(cssW - cx, cy),
+        Math.hypot(cx, cssH - cy),
+        Math.hypot(cssW - cx, cssH - cy),
+      );
+      const radiusScale = Math.max(strokeScale, farthestCorner / 320 * 1.08);
       const elapsed = (now - waveStartAt) / 1000 - waveDelay;
-      drawGatekeeperRing(elapsed, .7, 250, '#ffd84a', 18, scale, cx, cy);
-      drawGatekeeperRing(elapsed - .08, .9, 320, '#fff4b0', 8, scale, cx, cy);
+      drawGatekeeperRing(elapsed, .7, 250, '#ffd84a', 18, radiusScale, cx, cy);
+      drawGatekeeperRing(elapsed - .08, .9, 320, '#fff4b0', 8, radiusScale, cx, cy);
       if (elapsed < 1.2) globalWaveRaf = globalWaveWindow.requestAnimationFrame(drawGatekeeperPurifyWave);
       else {
         waveCtx.clearRect(0, 0, cssW, cssH);
@@ -13186,7 +13200,11 @@ window.STORY_CUSTOM_EFFECTS['presentation-background-hold'] = ({ layer, item }) 
     </style>`);
 };
 
-window.STORY_CUSTOM_EFFECTS['exam-answer'] = ({ layer }) => c2MakeLayer(layer, `
+window.STORY_CUSTOM_EFFECTS['exam-answer'] = ({ layer }) => {
+  // In embedded React mode the normal storyEffectLayer is clipped to the 922x960 story stage.
+  // Route the exam paper to the viewport-global layer so the midterm presentation uses the whole browser.
+  const fullscreenLayer = document.getElementById('storyGlobalEffectLayer') || layer;
+  return c2MakeLayer(fullscreenLayer, `
   <div class="c2-exam-preview-wrap">
     <section class="c2-exam-paper-detailed c2-pop" aria-label="중간고사 시험지 1페이지">
       <div class="c2-exam-university">경북대학교 · 기계공학부</div>
@@ -13221,11 +13239,14 @@ window.STORY_CUSTOM_EFFECTS['exam-answer'] = ({ layer }) => c2MakeLayer(layer, `
     .c2-exam-answer-grid{height:112px;border:1px solid #d0d3d6;background:repeating-linear-gradient(180deg,transparent 0 26px,#d9dcdf 27px 28px)}
     .c2-exam-paper-detailed footer{margin-top:auto;display:flex;justify-content:space-between;border-top:1px solid #a8adb3;padding-top:8px;font-size:10px;color:#555b62}
   </style>`, 'linear-gradient(180deg,#dad6cb,#b9b5aa)');
+};
 
 window.STORY_CUSTOM_EFFECTS['exam-writing-sequence'] = ({ layer, item }) => {
   const bg = c2GetSceneBackground(item.scene || 'exam_room');
   item.duration = Math.max(21500, Number(item.duration || 21500));
-  const cleanup = c2MakeLayer(layer, `
+  // Keep the entire writing cinematic outside the fixed 922x960 story stage.
+  const fullscreenLayer = document.getElementById('storyGlobalEffectLayer') || layer;
+  const cleanup = c2MakeLayer(fullscreenLayer, `
     <div class="c2-exam-writing-cinematic">
       <div class="c2-exam-writing-bg"${bg ? ` style="background-image:url('${c2Escape(bg)}')"` : ''}></div>
       <div class="c2-exam-desk"></div>
@@ -13317,7 +13338,7 @@ window.STORY_CUSTOM_EFFECTS['exam-writing-sequence'] = ({ layer, item }) => {
       @keyframes c2ExamBlackoutReal{0%,94%{opacity:0}100%{opacity:1}}
     </style>`);
 
-  const root = layer.querySelector('.c2-exam-writing-cinematic');
+  const root = fullscreenLayer.querySelector('.c2-exam-writing-cinematic');
   const pen = root?.querySelector('.c2-exam-pen');
   const timeouts = [];
   const animations = [];

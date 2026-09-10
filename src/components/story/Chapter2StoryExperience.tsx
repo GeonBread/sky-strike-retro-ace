@@ -98,6 +98,10 @@ interface Chapter2StoryExperienceProps {
 const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
 const STORY_SEGMENT = "chapter2_full";
 const CHAPTER2_WAVE_COUNT = 20;
+const CHAPTER2_FULLSCREEN_STORY_EFFECTS = new Set([
+  "exam-answer",
+  "exam-writing-sequence",
+]);
 
 function chapter2CheckpointFromState(state: Chapter2StoryStateMessage | undefined): StoryCheckpoint | null {
   const index = Number(state?.index);
@@ -250,7 +254,9 @@ export function Chapter2StoryExperience({
       }
 
       if (data.type === "effect-end") {
-        if (data.effectId === "exam-writing-sequence") setStoryFullscreenEffectActive(false);
+        if (data.effectId && CHAPTER2_FULLSCREEN_STORY_EFFECTS.has(data.effectId)) {
+          setStoryFullscreenEffectActive(false);
+        }
         if (data.effectId === "boss-emergence") {
           if (storyBossEmergenceTimerRef.current !== null) {
             window.clearTimeout(storyBossEmergenceTimerRef.current);
@@ -264,7 +270,11 @@ export function Chapter2StoryExperience({
 
       if (data.type === "progress") {
         if (Number.isInteger(data.state?.index)) setCurrentStoryIndex(Number(data.state?.index));
-        if (data.effectId === "exam-writing-sequence" && phase === "story") {
+        if (
+          data.effectId
+          && CHAPTER2_FULLSCREEN_STORY_EFFECTS.has(data.effectId)
+          && phase === "story"
+        ) {
           setStoryFullscreenEffectActive(true);
         }
         if (data.effectId === "boss-emergence" && phase === "story") {
