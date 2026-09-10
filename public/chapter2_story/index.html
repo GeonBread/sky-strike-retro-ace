@@ -12451,17 +12451,28 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
   const mode = item.mode === 'absorb' ? 'absorb' : 'reveal';
   let globalWave = null;
   let globalWaveRaf = 0;
+  let globalWaveWindow = window;
+  let globalWaveDocument = document;
   if (mode === 'reveal') {
     // Chapter 1 수강신청 게이트키퍼 사망 시네마틱의 정화 파동을 같은 수식으로 그립니다.
     // ring A: life=.7, maxR=250, color=#ffd84a, width=18
     // ring B: age=-.08, life=.9, maxR=320, color=#fff4b0, width=8
-    globalWave = document.createElement('canvas');
+    // The story runs inside a 922x960 iframe.  Append only the purification
+    // wave canvas to the parent document so the Chapter 1-style rings are not
+    // clipped to the game viewport and can expand across the whole browser.
+    try {
+      if (window.parent && window.parent !== window && window.parent.document) {
+        globalWaveWindow = window.parent;
+        globalWaveDocument = window.parent.document;
+      }
+    } catch {}
+    globalWave = globalWaveDocument.createElement('canvas');
     globalWave.className = 'c2-gatekeeper-purify-wave';
     globalWave.setAttribute('aria-hidden', 'true');
     globalWave.style.cssText = 'position:fixed;z-index:1180;inset:0;width:100vw;height:100dvh;pointer-events:none;';
-    document.body.appendChild(globalWave);
+    globalWaveDocument.body.appendChild(globalWave);
     const waveCtx = globalWave.getContext('2d');
-    const waveStartAt = performance.now();
+    const waveStartAt = globalWaveWindow.performance.now();
     const waveDelay = 1.8;
     const easeOutCubic = p => 1 - Math.pow(1 - p, 3);
     const drawGatekeeperRing = (age, life, maxR, color, width, scale, cx, cy) => {
@@ -12480,9 +12491,9 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
     };
     const drawGatekeeperPurifyWave = now => {
       if (!globalWave || !waveCtx) return;
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      const cssW = Math.max(1, globalWave.clientWidth || window.innerWidth);
-      const cssH = Math.max(1, globalWave.clientHeight || window.innerHeight);
+      const dpr = Math.max(1, Math.min(2, globalWaveWindow.devicePixelRatio || 1));
+      const cssW = Math.max(1, globalWave.clientWidth || globalWaveWindow.innerWidth);
+      const cssH = Math.max(1, globalWave.clientHeight || globalWaveWindow.innerHeight);
       const pixelW = Math.round(cssW * dpr);
       const pixelH = Math.round(cssH * dpr);
       if (globalWave.width !== pixelW || globalWave.height !== pixelH) {
@@ -12497,13 +12508,13 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
       const elapsed = (now - waveStartAt) / 1000 - waveDelay;
       drawGatekeeperRing(elapsed, .7, 250, '#ffd84a', 18, scale, cx, cy);
       drawGatekeeperRing(elapsed - .08, .9, 320, '#fff4b0', 8, scale, cx, cy);
-      if (elapsed < 1.2) globalWaveRaf = requestAnimationFrame(drawGatekeeperPurifyWave);
+      if (elapsed < 1.2) globalWaveRaf = globalWaveWindow.requestAnimationFrame(drawGatekeeperPurifyWave);
       else {
         waveCtx.clearRect(0, 0, cssW, cssH);
         globalWaveRaf = 0;
       }
     };
-    globalWaveRaf = requestAnimationFrame(drawGatekeeperPurifyWave);
+    globalWaveRaf = globalWaveWindow.requestAnimationFrame(drawGatekeeperPurifyWave);
   }
   const cleanupLayer = c2MakeLayer(layer, `
     <div class="c2-ch1-star-recovery is-active" data-mode="${mode}">
@@ -12630,7 +12641,7 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
     </div>`);
   return () => {
     cleanupLayer();
-    if (globalWaveRaf) cancelAnimationFrame(globalWaveRaf);
+    if (globalWaveRaf) globalWaveWindow.cancelAnimationFrame(globalWaveRaf);
     globalWave?.remove();
   };
 };

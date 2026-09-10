@@ -170,6 +170,7 @@ export function Chapter2StoryExperience({
   const [ready, setReady] = useState(false);
   const [waveIntroTransitionActive, setWaveIntroTransitionActive] = useState(false);
   const [storyBossEmergenceActive, setStoryBossEmergenceActive] = useState(false);
+  const [storyFullscreenEffectActive, setStoryFullscreenEffectActive] = useState(false);
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
   const [combatFailure, setCombatFailure] = useState<{ kind: "wave"; waveIndex: number } | { kind: "boss" } | null>(null);
   const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
@@ -249,6 +250,7 @@ export function Chapter2StoryExperience({
       }
 
       if (data.type === "effect-end") {
+        if (data.effectId === "exam-writing-sequence") setStoryFullscreenEffectActive(false);
         if (data.effectId === "boss-emergence") {
           if (storyBossEmergenceTimerRef.current !== null) {
             window.clearTimeout(storyBossEmergenceTimerRef.current);
@@ -262,6 +264,9 @@ export function Chapter2StoryExperience({
 
       if (data.type === "progress") {
         if (Number.isInteger(data.state?.index)) setCurrentStoryIndex(Number(data.state?.index));
+        if (data.effectId === "exam-writing-sequence" && phase === "story") {
+          setStoryFullscreenEffectActive(true);
+        }
         if (data.effectId === "boss-emergence" && phase === "story") {
           if (storyBossEmergenceTimerRef.current !== null) window.clearTimeout(storyBossEmergenceTimerRef.current);
           setStoryBossEmergenceActive(true);
@@ -287,6 +292,7 @@ export function Chapter2StoryExperience({
       }
 
       if (data.type === "integration-gate") {
+        setStoryFullscreenEffectActive(false);
         if (data.gateId === "wave") {
           if (waveIntroTimerRef.current !== null) {
             window.clearTimeout(waveIntroTimerRef.current);
@@ -444,6 +450,7 @@ export function Chapter2StoryExperience({
     setBossStartPatternId(null);
     setIntegrationGate(null);
     setCombatFailure(null);
+    setStoryFullscreenEffectActive(false);
     setPhase("story");
     setShowJumpMenu(false);
     window.setTimeout(() => postCommand("jumpTo", { index: safeIndex }), 20);
@@ -464,6 +471,7 @@ export function Chapter2StoryExperience({
       setShowJumpMenu(false);
       return;
     }
+    setStoryFullscreenEffectActive(false);
     setPhase("story");
     requestedWaveIndexRef.current = safeIndex;
     resumeWavePendingRef.current = false;
@@ -481,6 +489,7 @@ export function Chapter2StoryExperience({
     resumeWavePendingRef.current = false;
     setWaveControlCommand(null);
     setIntegrationGate(null);
+    setStoryFullscreenEffectActive(false);
     setPhase("story");
     setShowJumpMenu(false);
     window.setTimeout(() => postCommand("jumpToIntegrationGate", { gateId: "boss" }), 20);
@@ -494,6 +503,7 @@ export function Chapter2StoryExperience({
     }
     requestedBossPatternRef.current = patternId;
     setBossControlCommand(null);
+    setStoryFullscreenEffectActive(false);
     setPhase("story");
     setIntegrationGate(null);
     setShowJumpMenu(false);
@@ -651,7 +661,7 @@ export function Chapter2StoryExperience({
 
   return (
     <div className="chapter2-story-experience">
-      <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}`}>
+      <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive && phase === "story" ? " is-story-effect-fullscreen" : ""}`}>
         <iframe
           ref={iframeRef}
           className="chapter2-story-frame"

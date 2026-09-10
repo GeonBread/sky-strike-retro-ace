@@ -308,14 +308,14 @@ function updateChapter2BossSupportSystem(engine: any, runtime: Chapter2BossRunti
         enemy.y = support.targetY;
         support.state = "hover";
         support.anchorX = enemy.x;
-        support.shootCooldown = 0.55 + support.index * 0.18;
+        support.shootCooldown = 0.24 + support.index * 0.08;
       }
     } else {
       const desiredX = support.anchorX + Math.sin(support.time * 2.25 + support.phase) * 34;
       enemy.x += (desiredX - enemy.x) * Math.min(1, dt * 5.2);
       support.shootCooldown -= dt;
       if (support.shootCooldown <= 0) {
-        support.shootCooldown = 1.15 + Math.random() * 0.3;
+        support.shootCooldown = 0.52 + Math.random() * 0.16;
         shootChapter2BossSupportBullet(engine, enemy);
       }
     }

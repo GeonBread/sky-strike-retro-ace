@@ -16,6 +16,13 @@
   background: #000;
 }
 
+
+.chapter2-story-frame-shell.is-story-effect-fullscreen {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+}
+
 .chapter2-story-frame {
   display: block;
   width: 100%;
