@@ -1894,7 +1894,8 @@ window.STORY_HOOKS = {
       subtitle: item?.subtitle || ''
     });
   },
-  onEffectEnd({ api }) {
+  onEffectEnd({ effectId, api }) {
+    chapter2PostBridge('effect-end', { effectId, state: chapter2BridgeState(api) });
     chapter2PostBridge('progress', { state: chapter2BridgeState(api) });
   },
   onIntegrationGate({ gateId, item, api }) {
@@ -12449,12 +12450,60 @@ window.STORY_CUSTOM_EFFECTS['cafe-project-montage'] = ({ layer }) => c2MakeLayer
 window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
   const mode = item.mode === 'absorb' ? 'absorb' : 'reveal';
   let globalWave = null;
+  let globalWaveRaf = 0;
   if (mode === 'reveal') {
-    globalWave = document.createElement('div');
-    globalWave.className = 'c2-boss-clear-global-wave';
+    // Chapter 1 수강신청 게이트키퍼 사망 시네마틱의 정화 파동을 같은 수식으로 그립니다.
+    // ring A: life=.7, maxR=250, color=#ffd84a, width=18
+    // ring B: age=-.08, life=.9, maxR=320, color=#fff4b0, width=8
+    globalWave = document.createElement('canvas');
+    globalWave.className = 'c2-gatekeeper-purify-wave';
     globalWave.setAttribute('aria-hidden', 'true');
-    globalWave.innerHTML = '<div class="c2-boss-clear-global-flash"></div><span class="c2-boss-clear-global-ring r1"></span><span class="c2-boss-clear-global-ring r2"></span><span class="c2-boss-clear-global-ring r3"></span><style>.c2-boss-clear-global-wave{position:fixed;z-index:1180;inset:0;width:100vw;height:100dvh;overflow:hidden;pointer-events:none;isolation:isolate}.c2-boss-clear-global-flash{position:absolute;left:50%;top:54%;width:42vmax;height:42vmax;border-radius:50%;transform:translate(-50%,-50%) scale(.08);opacity:0;background:radial-gradient(circle,rgba(255,255,244,.92) 0 4%,rgba(255,239,144,.72) 12%,rgba(255,209,63,.34) 28%,rgba(255,183,0,.12) 46%,transparent 70%);mix-blend-mode:screen;animation:c2BossGlobalFlash 8.2s ease both}.c2-boss-clear-global-ring{position:absolute;left:50%;top:54%;width:24vmax;height:24vmax;border-radius:50%;transform:translate(-50%,-50%) scale(.08);opacity:0;border:6px solid rgba(255,226,112,.98);box-shadow:0 0 34px rgba(255,226,112,.96),0 0 92px rgba(255,191,0,.42),inset 0 0 38px rgba(255,239,176,.22);animation:c2BossGlobalWave 8.2s ease both}.c2-boss-clear-global-ring.r2{border-width:3px;border-color:rgba(255,247,173,.7);animation-delay:.08s}.c2-boss-clear-global-ring.r3{border-width:2px;border-color:rgba(255,215,89,.48);animation-delay:.16s}@keyframes c2BossGlobalFlash{0%,22%{opacity:0;transform:translate(-50%,-50%) scale(.08)}25%{opacity:.8;transform:translate(-50%,-50%) scale(.34)}32%{opacity:.42;transform:translate(-50%,-50%) scale(1.18)}48%,100%{opacity:0;transform:translate(-50%,-50%) scale(2.6)}}@keyframes c2BossGlobalWave{0%,23%{opacity:0;transform:translate(-50%,-50%) scale(.08)}25%{opacity:1;transform:translate(-50%,-50%) scale(.22)}34%{opacity:.98;transform:translate(-50%,-50%) scale(1.1)}50%{opacity:.82;transform:translate(-50%,-50%) scale(2.65)}72%{opacity:.4;transform:translate(-50%,-50%) scale(4.9)}90%{opacity:.12;transform:translate(-50%,-50%) scale(6.4)}100%{opacity:0;transform:translate(-50%,-50%) scale(7.2)}}</style>';
+    globalWave.style.cssText = 'position:fixed;z-index:1180;inset:0;width:100vw;height:100dvh;pointer-events:none;';
     document.body.appendChild(globalWave);
+    const waveCtx = globalWave.getContext('2d');
+    const waveStartAt = performance.now();
+    const waveDelay = 1.8;
+    const easeOutCubic = p => 1 - Math.pow(1 - p, 3);
+    const drawGatekeeperRing = (age, life, maxR, color, width, scale, cx, cy) => {
+      if (!waveCtx || age < 0 || age >= life) return;
+      const p = Math.max(0, Math.min(1, age / life));
+      waveCtx.save();
+      waveCtx.globalAlpha = (1 - p) * .8;
+      waveCtx.strokeStyle = color;
+      waveCtx.lineWidth = Math.max(2, width * (1 - p)) * scale;
+      waveCtx.shadowColor = color;
+      waveCtx.shadowBlur = 18 * scale;
+      waveCtx.beginPath();
+      waveCtx.arc(cx, cy, maxR * easeOutCubic(p) * scale, 0, Math.PI * 2);
+      waveCtx.stroke();
+      waveCtx.restore();
+    };
+    const drawGatekeeperPurifyWave = now => {
+      if (!globalWave || !waveCtx) return;
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const cssW = Math.max(1, globalWave.clientWidth || window.innerWidth);
+      const cssH = Math.max(1, globalWave.clientHeight || window.innerHeight);
+      const pixelW = Math.round(cssW * dpr);
+      const pixelH = Math.round(cssH * dpr);
+      if (globalWave.width !== pixelW || globalWave.height !== pixelH) {
+        globalWave.width = pixelW;
+        globalWave.height = pixelH;
+      }
+      waveCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      waveCtx.clearRect(0, 0, cssW, cssH);
+      const scale = Math.min(cssW / 922, cssH / 960);
+      const cx = cssW * .5;
+      const cy = cssH * .54;
+      const elapsed = (now - waveStartAt) / 1000 - waveDelay;
+      drawGatekeeperRing(elapsed, .7, 250, '#ffd84a', 18, scale, cx, cy);
+      drawGatekeeperRing(elapsed - .08, .9, 320, '#fff4b0', 8, scale, cx, cy);
+      if (elapsed < 1.2) globalWaveRaf = requestAnimationFrame(drawGatekeeperPurifyWave);
+      else {
+        waveCtx.clearRect(0, 0, cssW, cssH);
+        globalWaveRaf = 0;
+      }
+    };
+    globalWaveRaf = requestAnimationFrame(drawGatekeeperPurifyWave);
   }
   const cleanupLayer = c2MakeLayer(layer, `
     <div class="c2-ch1-star-recovery is-active" data-mode="${mode}">
@@ -12520,6 +12569,7 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
         .c2-ch1-star-ripple.exam{border-color:rgba(190,255,172,.95);box-shadow:0 0 18px rgba(90,221,103,.88)}
         .c2-ch1-star-ripple.teamwork{border-color:rgba(255,218,174,.95);box-shadow:0 0 18px rgba(255,143,61,.88)}
         .c2-ch1-star-recovery[data-mode="reveal"] .c2-ch1-star-card-wrap,.c2-ch1-star-recovery[data-mode="reveal"] .c2-ch1-star-ripple{display:none}
+        .c2-ch1-star-recovery[data-mode="reveal"] .c2-ch1-star-wave{display:none}
         .c2-ch1-star-recovery[data-mode="absorb"] .c2-ch1-star-boss-wrap,.c2-ch1-star-recovery[data-mode="absorb"] .c2-ch1-star-core,.c2-ch1-star-recovery[data-mode="absorb"] .c2-ch1-star-wave,.c2-ch1-star-recovery[data-mode="absorb"] .c2-ch1-star-orbit{display:none}
         .c2-ch1-star-recovery[data-mode="reveal"] .c2-ch1-star-boss-wrap{animation:c2Ch1BossTremble 8.2s cubic-bezier(.18,.78,.2,1) both}
         .c2-ch1-star-recovery[data-mode="reveal"] .c2-ch1-star-boss-wrap:before{animation:c2Ch1BossAura 8.2s ease both}
@@ -12580,6 +12630,7 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
     </div>`);
   return () => {
     cleanupLayer();
+    if (globalWaveRaf) cancelAnimationFrame(globalWaveRaf);
     globalWave?.remove();
   };
 };

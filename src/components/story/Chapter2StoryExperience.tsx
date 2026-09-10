@@ -151,6 +151,7 @@ export function Chapter2StoryExperience({
   const requestedBossPatternRef = useRef<number | null>(null);
   const bossTimerRef = useRef<number | null>(null);
   const bossIntroTimerRef = useRef<number | null>(null);
+  const storyBossEmergenceTimerRef = useRef<number | null>(null);
   const combatRetryPromptTimerRef = useRef<number | null>(null);
   const purificationTimerRef = useRef<number | null>(null);
   const waveIntroTimerRef = useRef<number | null>(null);
@@ -168,6 +169,7 @@ export function Chapter2StoryExperience({
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [waveIntroTransitionActive, setWaveIntroTransitionActive] = useState(false);
+  const [storyBossEmergenceActive, setStoryBossEmergenceActive] = useState(false);
   const [purificationOrigin, setPurificationOrigin] = useState({ xPercent: 50, yPercent: 88 });
   const [combatFailure, setCombatFailure] = useState<{ kind: "wave"; waveIndex: number } | { kind: "boss" } | null>(null);
   const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
@@ -246,8 +248,28 @@ export function Chapter2StoryExperience({
         return;
       }
 
+      if (data.type === "effect-end") {
+        if (data.effectId === "boss-emergence") {
+          if (storyBossEmergenceTimerRef.current !== null) {
+            window.clearTimeout(storyBossEmergenceTimerRef.current);
+            storyBossEmergenceTimerRef.current = null;
+          }
+          setStoryBossEmergenceActive(false);
+        }
+        if (phase === "story" && !resumeWavePendingRef.current) persistCheckpoint(data.state);
+        return;
+      }
+
       if (data.type === "progress") {
         if (Number.isInteger(data.state?.index)) setCurrentStoryIndex(Number(data.state?.index));
+        if (data.effectId === "boss-emergence" && phase === "story") {
+          if (storyBossEmergenceTimerRef.current !== null) window.clearTimeout(storyBossEmergenceTimerRef.current);
+          setStoryBossEmergenceActive(true);
+          storyBossEmergenceTimerRef.current = window.setTimeout(() => {
+            storyBossEmergenceTimerRef.current = null;
+            setStoryBossEmergenceActive(false);
+          }, 4200);
+        }
         if (
           data.effectId === "combat-transition"
           && data.title === "일반 오염 전투"
@@ -347,6 +369,7 @@ export function Chapter2StoryExperience({
     if (purificationTimerRef.current !== null) window.clearTimeout(purificationTimerRef.current);
     if (bossTimerRef.current !== null) window.clearTimeout(bossTimerRef.current);
     if (bossIntroTimerRef.current !== null) window.clearTimeout(bossIntroTimerRef.current);
+    if (storyBossEmergenceTimerRef.current !== null) window.clearTimeout(storyBossEmergenceTimerRef.current);
     if (combatRetryPromptTimerRef.current !== null) window.clearTimeout(combatRetryPromptTimerRef.current);
     if (waveIntroTimerRef.current !== null) window.clearTimeout(waveIntroTimerRef.current);
   }, []);
@@ -671,6 +694,27 @@ export function Chapter2StoryExperience({
             onExitToMenu: exitBossCombat,
           })}
         </React.Fragment>
+      )}
+
+      {storyBossEmergenceActive && phase === "story" && (
+        <div className="chapter2-fullscreen-story-boss-emergence" aria-label="챕터 2 스토리 보스 등장 연출">
+          <div className="chapter2-story-boss-emergence-bg" />
+          <div className="chapter2-story-boss-emergence-void" />
+          <div className="chapter2-story-boss-emergence-vortex" />
+          <div className="chapter2-story-boss-emergence-ring ring-a" />
+          <div className="chapter2-story-boss-emergence-ring ring-b" />
+          <div className="chapter2-story-boss-emergence-ring ring-c" />
+          <div className="chapter2-story-boss-emergence-shock" />
+          <div className="chapter2-story-boss-emergence-beams" aria-hidden="true">
+            {Array.from({ length: 10 }, (_, index) => <span key={index} style={{ "--i": index } as React.CSSProperties} />)}
+          </div>
+          <div className="chapter2-story-boss-emergence-dust" aria-hidden="true">
+            {Array.from({ length: 28 }, (_, index) => <span key={index} style={{ "--i": index } as React.CSSProperties} />)}
+          </div>
+          <div className="chapter2-story-boss-emergence-boss-wrap">
+            <img src="/chapter2_story/assets/chapter2/illustrations/ill_boss_phase1.png" alt="팀플 블랙홀 무임승차자" />
+          </div>
+        </div>
       )}
 
       {phase === "boss-intro" && (

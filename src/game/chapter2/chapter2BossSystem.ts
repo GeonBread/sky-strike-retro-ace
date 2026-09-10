@@ -269,15 +269,18 @@ function shootChapter2BossSupportBullet(engine: any, enemy: Enemy): void {
   const bullet = new Bullet();
   bullet.isEnemy = true;
   bullet.type = "normal";
+  // 이 지원몹은 Chapter 2 일반 웨이브의 report drone입니다.
+  // 원본이 기본 연사에 사용하는 miniShard 탄의 속도/크기/외형을 그대로 사용하고,
+  // 보스전 지원몹은 단순 탄만 쏘도록 boomerangPage 추가 발사는 넣지 않습니다.
   bullet.width = 12;
   bullet.height = 12;
   bullet.x = cx - bullet.width / 2;
   bullet.y = cy - bullet.height / 2;
-  bullet.vx = Math.cos(angle) * 238;
-  bullet.vy = Math.sin(angle) * 238;
+  bullet.vx = Math.cos(angle) * 245;
+  bullet.vy = Math.sin(angle) * 245;
   bullet.damage = 1;
-  bullet.color = "#ffb24a";
-  bullet.visualType = "corrupt_orb";
+  bullet.color = "#72de82";
+  bullet.visualType = "chapter2_mini_shard";
   (bullet as any).chapter2BossSupportBullet = true;
   engine.bullets.push(bullet);
 }

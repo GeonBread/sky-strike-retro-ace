@@ -334,11 +334,16 @@ engine.bullets.forEach((b) => {
 
           const chapter1BossSupport = !!(e as any).chapter1BossSupport;
           const chapter2BossSupport = !!(e as any).chapter2BossSupport;
-          const dropChance = chapter1BossSupport || chapter2BossSupport
-            ? 0.28
-            : e.type === "assault_commander"
-              ? 0.82
-              : 0.16;
+          // Chapter 2 보스 지원몹은 전투 중 반복해서 2마리씩 재소환되므로
+          // 일반 몹 수준의 드롭률을 쓰면 아이템이 지나치게 많이 쌓입니다.
+          // Chapter 1 지원몹 확률은 건드리지 않고 Chapter 2만 낮춥니다.
+          const dropChance = chapter2BossSupport
+            ? 0.07
+            : chapter1BossSupport
+              ? 0.28
+              : e.type === "assault_commander"
+                ? 0.82
+                : 0.16;
           if (Math.random() < dropChance) {
             const pu = new PowerUp();
             pu.x = e.x + e.width / 2;

@@ -657,3 +657,209 @@
   10%, 84% { opacity: 1; filter: none; }
   100% { opacity: 0; filter: none; }
 }
+
+/* v19 · 스토리에서 처음 보스를 마주치는 장면을 게임 프레임이 아닌 브라우저 전체 화면으로 확장 */
+.chapter2-fullscreen-story-boss-emergence {
+  position: fixed;
+  inset: 0;
+  z-index: 1115;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  background: #020208;
+  animation: chapter2StoryBossEmergenceScreen 4.2s ease both;
+}
+
+.chapter2-story-boss-emergence-bg {
+  position: absolute;
+  inset: -6%;
+  background: url('/chapter2_story/assets/chapter2/backgrounds/bg_ch2_blackhole_corrupt.png') center / cover no-repeat;
+  filter: brightness(.18) saturate(.78) blur(14px);
+  transform: scale(1.18);
+  animation: chapter2StoryBossEmergenceBg 4.2s ease both;
+}
+
+.chapter2-fullscreen-story-boss-emergence::before {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(170,99,255,.30), transparent 18%),
+    radial-gradient(circle at 50% 50%, rgba(88,32,170,.28), transparent 34%),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,.96), transparent 62%);
+  opacity: .96;
+}
+
+.chapter2-story-boss-emergence-void {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(circle at 50% 50%, rgba(0,0,0,.05) 0 12%, rgba(0,0,0,.88) 28%, rgba(0,0,0,0) 64%);
+  mix-blend-mode: multiply;
+  animation: chapter2StoryBossEmergenceVoid 4.2s ease both;
+}
+
+.chapter2-story-boss-emergence-vortex {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: min(74vw, 74vh);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(.05);
+  background: radial-gradient(circle at 50% 50%, #06060c 0 18%, rgba(70,24,128,.94) 21%, rgba(28,12,62,.88) 33%, rgba(8,5,14,.72) 44%, transparent 65%);
+  box-shadow: 0 0 0 1px rgba(234,214,255,.18), 0 0 42px rgba(128,72,255,.32), 0 0 130px rgba(65,19,130,.52);
+  animation: chapter2StoryBossEmergenceVortex 4.2s cubic-bezier(.2,.72,.2,1) both;
+}
+
+.chapter2-story-boss-emergence-ring {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: min(82vw, 82vh);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(.25);
+  border: 2px solid rgba(230,214,255,.42);
+  box-shadow: 0 0 18px rgba(182,126,255,.24);
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+.chapter2-story-boss-emergence-ring.ring-a { animation: chapter2StoryBossEmergenceRingA 4.2s ease-out both; }
+.chapter2-story-boss-emergence-ring.ring-b { animation: chapter2StoryBossEmergenceRingB 4.2s ease-out both; }
+.chapter2-story-boss-emergence-ring.ring-c { animation: chapter2StoryBossEmergenceRingC 4.2s ease-out both; }
+
+.chapter2-story-boss-emergence-shock {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 50%;
+  width: 10vmin;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid rgba(255,230,166,.92);
+  opacity: 0;
+  animation: chapter2StoryBossEmergenceShock 4.2s ease-out both;
+}
+
+.chapter2-story-boss-emergence-beams,
+.chapter2-story-boss-emergence-dust {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+}
+
+.chapter2-story-boss-emergence-beams span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: min(28vh, 240px);
+  transform-origin: 50% 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,242,210,.95), rgba(182,120,255,.82) 40%, transparent);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(calc(var(--i) * 36deg)) translateY(-6%) scaleY(.2);
+  animation: chapter2StoryBossEmergenceBeam 4.2s ease-out both;
+}
+
+.chapter2-story-boss-emergence-dust span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,233,184,.98), rgba(201,128,255,.24) 60%, transparent 72%);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(0) scale(.18);
+  animation: chapter2StoryBossEmergenceDust 4s ease-out calc(var(--i) * .04s) both;
+}
+
+.chapter2-story-boss-emergence-boss-wrap {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  top: 52%;
+  width: min(58vw, 540px);
+  transform: translate(-50%, -50%) scale(.12);
+  opacity: 0;
+  filter: drop-shadow(0 0 30px rgba(76,24,150,.78)) drop-shadow(0 12px 34px rgba(0,0,0,.62));
+  animation: chapter2StoryBossEmergenceBoss 4.2s cubic-bezier(.2,.82,.2,1) both;
+}
+
+.chapter2-story-boss-emergence-boss-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+@keyframes chapter2StoryBossEmergenceScreen {
+  0%, 92% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes chapter2StoryBossEmergenceBg {
+  0% { transform: scale(1.26); filter: brightness(.06) saturate(.6) blur(22px); }
+  28% { transform: scale(1.16); filter: brightness(.12) saturate(.7) blur(18px); }
+  62%, 100% { transform: scale(1.08); filter: brightness(.34) saturate(.95) blur(2px); }
+}
+@keyframes chapter2StoryBossEmergenceVoid {
+  0%, 18% { opacity: .3; }
+  48% { opacity: 1; }
+  100% { opacity: .7; }
+}
+@keyframes chapter2StoryBossEmergenceVortex {
+  0%, 10% { opacity: 0; transform: translate(-50%, -50%) scale(.05) rotate(-30deg); }
+  34% { opacity: 1; transform: translate(-50%, -50%) scale(.7) rotate(12deg); }
+  58% { transform: translate(-50%, -50%) scale(1.1) rotate(48deg); }
+  100% { opacity: .92; transform: translate(-50%, -50%) scale(1) rotate(88deg); }
+}
+@keyframes chapter2StoryBossEmergenceRingA {
+  0%, 18% { opacity: 0; transform: translate(-50%, -50%) scale(.18); }
+  26% { opacity: .9; }
+  56% { opacity: .55; transform: translate(-50%, -50%) scale(1.06); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+}
+@keyframes chapter2StoryBossEmergenceRingB {
+  0%, 28% { opacity: 0; transform: translate(-50%, -50%) scale(.12); }
+  38% { opacity: .72; }
+  70% { opacity: .36; transform: translate(-50%, -50%) scale(.92); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+}
+@keyframes chapter2StoryBossEmergenceRingC {
+  0%, 42% { opacity: 0; transform: translate(-50%, -50%) scale(.08); }
+  52% { opacity: .62; }
+  78% { opacity: .32; transform: translate(-50%, -50%) scale(.74); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
+}
+@keyframes chapter2StoryBossEmergenceShock {
+  0%, 38% { opacity: 0; transform: translate(-50%, -50%) scale(.15); }
+  44% { opacity: 1; }
+  62% { opacity: .55; transform: translate(-50%, -50%) scale(7); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(12); }
+}
+@keyframes chapter2StoryBossEmergenceBeam {
+  0%, 28% { opacity: 0; }
+  36% { opacity: .8; transform: translate(-50%, -50%) rotate(calc(var(--i) * 36deg)) translateY(-6%) scaleY(.8); }
+  58% { opacity: .42; transform: translate(-50%, -50%) rotate(calc(var(--i) * 36deg)) translateY(-28%) scaleY(1.35); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--i) * 36deg)) translateY(-44%) scaleY(1.8); }
+}
+@keyframes chapter2StoryBossEmergenceDust {
+  0%, 30% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(0) scale(.18); }
+  44% { opacity: .9; }
+  78% { opacity: .55; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(-32vh) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(-46vh) scale(.4); }
+}
+@keyframes chapter2StoryBossEmergenceBoss {
+  0%, 38% { opacity: 0; transform: translate(-50%, -50%) scale(.12) rotate(-5deg); }
+  48% { opacity: 1; transform: translate(-50%, -50%) scale(.74) rotate(2deg); }
+  62% { transform: translate(-50%, -50%) scale(1.08) rotate(-1deg); }
+  72%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+}

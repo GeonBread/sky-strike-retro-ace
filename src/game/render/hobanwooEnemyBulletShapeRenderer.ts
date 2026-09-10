@@ -361,6 +361,37 @@ function drawFlask(ctx: CanvasRenderingContext2D, r: number, time: number, phase
   ctx.fill();
 }
 
+function drawChapter2MiniShard(ctx: CanvasRenderingContext2D, r: number): void {
+  // Chapter 2 일반 웨이브의 report drone이 발사하는 miniShard 원본 도형을
+  // 공통 전투 렌더러 좌표계에 그대로 옮긴 것입니다.
+  const k = r / 9;
+  ctx.save();
+  ctx.rotate(Math.PI / 2 + Math.PI / 8);
+  ctx.scale(k, k);
+  ctx.shadowColor = "#8fe6ff";
+  ctx.shadowBlur = 7;
+  ctx.fillStyle = "#74cfff";
+  ctx.strokeStyle = "#172033";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, -14);
+  ctx.lineTo(11, -4);
+  ctx.lineTo(5, 13);
+  ctx.lineTo(-12, 7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = "#dff7ff";
+  ctx.beginPath();
+  ctx.moveTo(-2, -6);
+  ctx.lineTo(5, -2);
+  ctx.lineTo(1, 7);
+  ctx.lineTo(-7, 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
 function drawDecorativeTrail(
   ctx: CanvasRenderingContext2D,
   bullet: Bullet,
@@ -429,6 +460,9 @@ export function renderHobanwooEnemyBulletShapeSystem(
   ctx.rotate(movementAngle);
 
   switch (visualType) {
+    case "chapter2_mini_shard":
+      drawChapter2MiniShard(ctx, r);
+      break;
     case "corrupt_orb":
       drawCorruptOrb(ctx, r);
       break;

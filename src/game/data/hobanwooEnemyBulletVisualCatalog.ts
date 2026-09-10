@@ -9,6 +9,7 @@ import { Bullet, type BulletVisualType } from "../entities";
 
 export type HobanwooEnemyBulletVisualType = Extract<
   BulletVisualType,
+  | "chapter2_mini_shard"
   | "corrupt_orb"
   | "attendance_stamp"
   | "notice_popup"
@@ -41,6 +42,7 @@ export const HOBANWOO_ENEMY_BULLET_VISUAL_METRICS: Record<
   HobanwooEnemyBulletVisualType,
   HobanwooEnemyBulletVisualMetric
 > = {
+  chapter2_mini_shard: metric(10),
   corrupt_orb: metric(10),
   attendance_stamp: metric(18),
   notice_popup: metric(17),

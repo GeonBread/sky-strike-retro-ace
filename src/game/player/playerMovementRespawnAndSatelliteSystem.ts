@@ -50,6 +50,14 @@ function getHobanuPlayerFireInterval(engine: PlayerRuntime): number {
 }
 
 function canHobanuPlayerShootNow(engine: PlayerRuntime): boolean {
+  // Chapter 2 보스의 등장신/페이즈 전환/클리어 시네마틱에서는
+  // Chapter 1 보스와 동일하게 플레이어 사격 입력 자체를 잠급니다.
+  // 탄을 만든 뒤 지우는 방식이 아니라 firePlayerBullet() 호출을 막기 때문에
+  // 발사음도 함께 발생하지 않습니다.
+  if (engine.chapter2Boss?.active && engine.chapter2Boss?.core) {
+    if (!engine.chapter2Boss.core.isPlayerAttackAllowed()) return false;
+  }
+
   const style = engine.player?.weaponStyle ?? "science";
 
   if (engine.player?.color === "vanguard") {
@@ -188,7 +196,7 @@ export function updatePlayerMovementRespawnAndSatelliteSystem(engine: PlayerRunt
     }
   }
 
-  if (!engine.player.isDead && engine.player.satelliteCount > 0) {
+  if (!engine.player.isDead && engine.player.satelliteCount > 0 && canShoot) {
     engine.playerSatelliteAngle += 3.2 * dt; // rotation rate
 
     engine.playerSatelliteShotTimer += dt;

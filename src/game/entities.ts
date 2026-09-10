@@ -148,6 +148,7 @@ export type BulletVisualType =
   | "rift_shard"
   | "phase_core"
   | "star_beacon"
+  | "chapter2_mini_shard"
   | "corrupt_orb"
   | "attendance_stamp"
   | "notice_popup"
