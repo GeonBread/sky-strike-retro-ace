@@ -218,7 +218,7 @@ function initPattern(k){
  if(k==="pptText")return{slide:{x:CX,y:500,w:1,h:1},active:[],next:.7,flying:[],batchTarget:0};
  if(k==="pptShape")return{slide:{x:CX,y:500,w:1,h:1},obstacles:[],falling:[],drawJobs:[],next:.8,stage:0,obstacleSlots:null,textActive:[],textFlying:[],textNext:1.1,textBatch:0};
  if(k==="format")return{pages:[],next:.35,collisions:0};
- if(k==="docs")return{drones:buildDocDrones(),refills:[],nextRefill:.42,nextDroneFire:1.05,phase:"summon",phaseT:0,clearT:0,shieldFlash:0,timeoutWarned:false};
+ if(k==="docs")return{drones:buildDocDrones(),refills:[],nextRefill:.58,nextDroneFire:1.05,chargeIndex:0,phase:"summon",phaseT:0,clearT:0,shieldFlash:0,timeoutWarned:false};
  if(k==="source")return{cards:[],next:.3,stack:[],spawned:0};
  if(k==="chat")return makeChatPatternState();
  if(k==="zoom")return{speakersActive:[],next:1.2,utterances:[],turn:0,windowState:"opening",windowT:0,windowProgress:0,openDuration:.82,closeDuration:.78,closing:false,closePrep:0,closePrepared:false,canEnd:false};
@@ -230,12 +230,12 @@ function initPattern(k){
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function buildDocDrones(){
  const profiles=[
-  {x:112,y:205,mode:"chaseSlow",fireMin:1.38,fireMax:1.72,hp:96},
-  {x:W-112,y:205,mode:"weaveFast",fireMin:1.30,fireMax:1.62,hp:92},
-  {x:112,y:365,mode:"patrol",fireMin:1.42,fireMax:1.80,hp:98},
-  {x:W-112,y:365,mode:"dashStrike",fireMin:1.45,fireMax:1.82,hp:100}
+  {x:112,y:150,mode:"chaseSlow",fireMin:1.38,fireMax:1.72,hp:96},
+  {x:W-112,y:150,mode:"weaveFast",fireMin:1.30,fireMax:1.62,hp:92},
+  {x:112,y:H-165,mode:"patrol",fireMin:1.42,fireMax:1.80,hp:98},
+  {x:W-112,y:H-165,mode:"dashStrike",fireMin:1.45,fireMax:1.82,hp:100}
  ];
- return profiles.map((p,slot)=>({...p,slot,baseX:p.x,baseY:p.y,x:p.x,y:p.y,r:34,vx:0,vy:0,hp:p.hp,max:p.hp,dead:false,active:true,hover:rand(0,TAU),fire:rand(p.fireMin,p.fireMax),phaseT:rand(0,2.4),reloadFX:0}))
+ return profiles.map((p,slot)=>({...p,slot,baseX:p.x,baseY:p.y,x:p.x,y:p.y,r:34,vx:0,vy:0,hp:p.hp,max:p.hp,dead:false,active:true,charged:false,hover:rand(0,TAU),fire:rand(p.fireMin,p.fireMax),phaseT:0,reloadFX:0}))
 }
 function aliveDocDroneCount(q){return(q&&q.drones?q.drones.filter(d=>!d.dead).length:0)}
 function bossShieldedForPattern(){const q=state.q||{},k=cur().kind;return k==="docs"&&aliveDocDroneCount(q)>0}
@@ -249,7 +249,7 @@ function gameCorruptionSpec(forceStar=null,slot=null){
  const list=star?GAME_CORRUPTION_STARS:GAME_CORRUPTION_ORBS,index=slot===null?randi(0,list.length-1):Math.abs(slot)%list.length,visual=list[index],style=COMMON[visual]||{};
  return{star,visual,type:star?"star":"orb",color:style.outer||style.fill||(star?"#ffd45a":"#b246ff")}
 }
-function spawnBullet(x,y,vx,vy,r=9,color="#b246ff",type="orb",extra={}){const visual=extra.visual||resolveBulletVisual(color,type);state.bullets.push({x,y,vx,vy,r,color,type,visual,hitR:extra.hitR??r*.6,age:0,life:10,...extra})}
+function spawnBullet(x,y,vx,vy,r=9,color="#b246ff",type="orb",extra={}){const visual=extra.visual||resolveBulletVisual(color,type),speedScale=1.22;state.bullets.push({x,y,vx:vx*speedScale,vy:vy*speedScale,r,color,type,visual,hitR:extra.hitR??r*.6,age:0,life:10,...extra})}
 function aimBullet(x,y,speed=180,r=9,color="#c15cff",type="orb",tx=state.player.x,ty=state.player.y){const a=Math.atan2(ty-y,tx-x);spawnBullet(x,y,Math.cos(a)*speed,Math.sin(a)*speed,r,color,type)}
 function radial(x,y,n,speed,color="#cf55ff",r=8,offset=0,type="orb"){for(let i=0;i<n;i++){const a=offset+i*TAU/n;spawnBullet(x,y,Math.cos(a)*speed,Math.sin(a)*speed,r,color,type)}}
 function spawnCorruptionScatter(x,y,count=10,minSpeed=120,maxSpeed=170,opts={}){const arc=opts.arc??TAU,baseAngle=opts.baseAngle??rand(0,TAU),jitter=opts.jitter??.16,life=opts.life??5.6,startIndex=state.bullets.length,seed=opts.seed??randi(0,5);for(let i=0;i<count;i++){const t=count===1?.5:i/Math.max(1,count-1),a=arc>=TAU?baseAngle+i*TAU/count+rand(-jitter,jitter):baseAngle-arc/2+arc*t+rand(-jitter,jitter),forceStar=(i%3===2)||(opts.extraStars&&i%4===1),spec=gameCorruptionSpec(forceStar,seed+i),speed=rand(minSpeed,maxSpeed),radius=spec.star?rand(8.6,10.4):rand(7.2,9.2);spawnBullet(x+rand(-8,8),y+rand(-8,8),Math.cos(a)*speed,Math.sin(a)*speed,radius,spec.color,spec.type,{life,hitR:radius*.6,visual:spec.visual,spin:spec.star?rand(-1.15,1.15):rand(-.7,.7)});}return state.bullets.slice(startIndex).map(b=>({...b}));}
@@ -339,8 +339,29 @@ function updateBlackhole(q,dt){const h=q.hole;h.pulse+=dt*(q.closing?5.4:3.4);q.
 function updateDocs(q,dt){
  q.phaseT=(q.phaseT||0)+dt;q.shieldFlash=Math.max(0,(q.shieldFlash||0)-dt);q.clearT=Math.max(0,(q.clearT||0)-dt);
  const live=q.drones.filter(d=>!d.dead);
+ // 원본 도입부 복구: 네 모서리 드론을 먼저 띄운 뒤 보스가 탄을 한 발씩 보내 충전합니다.
+ if(q.phase==="summon"&&q.phaseT>=.62){q.phase="charge";q.phaseT=0;q.nextRefill=.12;label("공유 문서함 드론 연결",CX,334,"#8fd7ff",24,1.0)}
+ if(q.phase==="charge"){
+  q.nextRefill-=dt;
+  if(q.chargeIndex<q.drones.length&&q.nextRefill<=0){
+   const target=q.drones[q.chargeIndex];
+   const sx=state.boss.x,sy=state.boss.y+42,angle=Math.atan2(target.y-sy,target.x-sx),speed=520;
+   q.refills.push({x:sx,y:sy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:12,color:"#ffd45a",type:"star",age:0,targetSlot:target.slot});
+   q.chargeIndex++;q.nextRefill=.34;burst(sx,sy,"#ffd45a",7);
+  }
+  for(const r of q.refills){
+   r.age=(r.age||0)+dt;const target=q.drones.find(d=>d.slot===r.targetSlot);
+   if(!target||target.dead){r.dead=true;continue}
+   const angle=Math.atan2(target.y-r.y,target.x-r.x),speed=560;r.vx=lerp(r.vx,Math.cos(angle)*speed,dt*5);r.vy=lerp(r.vy,Math.sin(angle)*speed,dt*5);r.x+=r.vx*dt;r.y+=r.vy*dt;
+   if(dist(r.x,r.y,target.x,target.y)<target.r+12){r.dead=true;target.charged=true;target.reloadFX=.72;burst(target.x,target.y,"#ffd45a",18);spawnWave(target.x,target.y,"#ffd45a",7,.38,120);triggerScreenShake(3.5,.09)}
+  }
+  q.refills=q.refills.filter(r=>!r.dead&&r.age<3);
+  if(q.chargeIndex>=q.drones.length&&q.refills.length===0&&q.drones.every(d=>d.charged||d.dead)){q.phase="active";q.phaseT=0;label("드론 충전 완료",CX,334,"#ffd45a",22,.9)}
+ }
  for(const d of live){
-  d.hover+=dt*2.2;d.reloadFX=Math.max(0,d.reloadFX-dt);d.phaseT+=dt;d.fire-=dt;
+  d.hover+=dt*2.2;d.reloadFX=Math.max(0,d.reloadFX-dt);
+  if(q.phase!=="active")continue;
+  d.phaseT+=dt;d.fire-=dt;
   let tx=d.x,ty=d.y,follow=2.0;
   if(d.mode==="chaseSlow"){
    tx=clamp(state.player.x+Math.sin(state.t*1.25+d.slot)*48,78,W-78);ty=clamp(state.player.y-155+Math.cos(state.t*1.45+d.slot)*24,145,520);follow=1.25;
@@ -630,7 +651,7 @@ function updateShortcut(q,dt){state.shake=0;state.shakeTime=0;q.next-=dt;q.typeT
  q.typingPhase=Math.max(0,q.typingPhase-dt);q.rewindFlash=Math.max(0,q.rewindFlash-dt)}
 function clickMath(x,y){const q=state.q;if(!q.problem)return;for(const a of q.answers){if(x>a.x-a.w/2&&x<a.x+a.w/2&&y>a.y-a.h/2&&y<a.y+a.h/2){const correct=a.v===q.problem.ans,finalAnswer=q.round>=q.maxRounds;if(correct){label("정답!",CX,365,"#63ff9d",28,1);if(finalAnswer){q.awaitFinalImpact=true;q.finalImpactDone=false;q.finalImpactDelay=0;state.stars.push({x:a.x,y:a.y,vx:(state.boss.x-a.x)*1.2,vy:(state.boss.y-a.y)*1.2,r:10,mathFinal:true,impactDamage:99})}else{damageBoss(85,a.x,a.y);state.stars.push({x:a.x,y:a.y,vx:(state.boss.x-a.x)*1.2,vy:(state.boss.y-a.y)*1.2,r:10})}}else{healBoss(65);radial(a.x,a.y,12,175,"#ff4f6c",8)}q.problem=null;q.answers=[];if(finalAnswer){if(!correct&&!state.patternDone)finishCurrentPattern()}else q.next=.7;break}}}
 function applyLandscapeTransform(){ctx.translate(W/2,H/2);ctx.rotate(Math.PI/2);ctx.scale(W/H,H/W);ctx.translate(-W/2,-H/2)}
-function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.clearRect(0,0,W,H);if(state.clearSeq.active||state.victoryComplete){drawBossClearSequence();return}if(state.cinematic.active){drawCinematicFrame();return}ctx.save();const allowFieldShake=cur().kind!=="shortcut",sx=allowFieldShake&&state.shake?rand(-state.shake,state.shake):0,sy=allowFieldShake&&state.shake?rand(-state.shake,state.shake):0;ctx.translate(sx,sy);const meeting=isMeetingPattern(),wordMeeting=meeting&&cur().kind==="meetingWord",zoomPattern=cur().kind==="zoom";drawBackground();if(meeting&&meetingPhasePack)meetingPhasePack.drawBackdrop(ctx);if(meeting){drawBoss()}else if(zoomPattern){if(state.patternDone&&cur().kind!=="books"){ctx.save();ctx.globalAlpha=state.q?.cleanupAlpha??1;drawPattern();ctx.restore()}else drawPattern();drawBoss()}else{drawBoss();if(state.patternDone&&cur().kind!=="books"){ctx.save();ctx.globalAlpha=state.q?.cleanupAlpha??1;drawPattern();ctx.restore()}else drawPattern()}for(const w of state.waves)drawWave(w);drawParticles();drawShots();drawBullets();drawStars();if(wordMeeting&&meetingPhasePack){meetingPhasePack.drawForeground(ctx);drawPlayer()}else{drawPlayer();if(meeting&&meetingPhasePack)meetingPhasePack.drawForeground(ctx)}ctx.restore();drawHUD();if(state.hitFlash>0)drawHitFlash();if(state.intro.active)drawIntro()}
+function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.clearRect(0,0,W,H);if(state.clearSeq.active||state.victoryComplete){drawBossClearSequence();return}if(state.cinematic.active){drawCinematicFrame();return}ctx.save();const allowFieldShake=cur().kind!=="shortcut",sx=allowFieldShake&&state.shake?rand(-state.shake,state.shake):0,sy=allowFieldShake&&state.shake?rand(-state.shake,state.shake):0;ctx.translate(sx,sy);const meeting=isMeetingPattern(),wordMeeting=meeting&&cur().kind==="meetingWord",zoomPattern=cur().kind==="zoom",chatPattern=cur().kind==="chat";drawBackground();if(meeting&&meetingPhasePack)meetingPhasePack.drawBackdrop(ctx);if(meeting){drawBoss()}else if(zoomPattern||chatPattern){if(state.patternDone&&cur().kind!=="books"){ctx.save();ctx.globalAlpha=state.q?.cleanupAlpha??1;drawPattern();ctx.restore()}else drawPattern();drawBoss()}else{drawBoss();if(state.patternDone&&cur().kind!=="books"){ctx.save();ctx.globalAlpha=state.q?.cleanupAlpha??1;drawPattern();ctx.restore()}else drawPattern()}for(const w of state.waves)drawWave(w);drawParticles();drawShots();drawBullets();drawStars();if(wordMeeting&&meetingPhasePack){meetingPhasePack.drawForeground(ctx);drawPlayer()}else{drawPlayer();if(meeting&&meetingPhasePack)meetingPhasePack.drawForeground(ctx)}ctx.restore();drawHUD();if(state.hitFlash>0)drawHitFlash();if(state.intro.active)drawIntro()}
 function drawPptWorkspace(slide,alpha=1){ctx.save();ctx.globalAlpha=clamp(alpha,0,1);ctx.fillStyle="#f4f1f1";ctx.fillRect(0,0,W,H);ctx.fillStyle="#ffffff";ctx.fillRect(0,0,W,44);ctx.fillStyle="#cc4b2d";ctx.beginPath();ctx.roundRect(10,8,26,26,5);ctx.fill();ctx.fillStyle="#fff";ctx.font="900 13px Arial";ctx.fillText("P",18,26);ctx.fillStyle="#2c2e33";ctx.font="15px Arial";ctx.fillText("자동 저장",52,27);ctx.strokeStyle="#888";ctx.strokeRect(113,11,34,18);ctx.fillStyle="#555";ctx.fillText("끔",123,26);ctx.fillStyle="#5b197d";ctx.font="20px Arial";ctx.fillText("💾",157,26);ctx.fillStyle="#6a6e77";ctx.fillText("↶",192,26);ctx.fillText("↷",228,26);ctx.fillStyle="#2c2e33";ctx.font="16px Arial";ctx.fillText("프레젠테이션1 - PowerPoint",300,27);ctx.fillStyle="#f4f1f1";ctx.fillRect(0,44,W,44);ctx.fillStyle="#222";ctx.font="18px Arial";ctx.fillText("파일",12,71);ctx.fillText("홈",51,71);ctx.fillText("삽입",87,71);ctx.fillText("그리기",132,71);ctx.fillText("디자인",188,71);ctx.fillText("전환",243,71);ctx.fillText("애니메이션",287,71);ctx.fillText("슬라이드 쇼",372,71);ctx.fillText("녹음/녹화",466,71);ctx.fillText("검토",550,71);ctx.fillText("보기",596,71);ctx.fillText("도움말",640,71);ctx.fillStyle="#ddd9d9";ctx.fillRect(0,88,118,H-88);ctx.fillStyle="#fff";ctx.beginPath();ctx.roundRect(12,103,95,120,8);ctx.fill();ctx.lineWidth=3;ctx.strokeStyle="#c64c37";ctx.stroke();ctx.fillStyle="#c64c37";ctx.font="18px Arial";ctx.fillText("1",4,116);ctx.fillStyle="#fff";ctx.fillRect(slide.x,slide.y,slide.w,slide.h);ctx.strokeStyle="#c0c0c0";ctx.lineWidth=2;ctx.strokeRect(slide.x,slide.y,slide.w,slide.h);ctx.strokeStyle="#bdbdbd";ctx.setLineDash([6,4]);ctx.strokeRect(slide.x+90,slide.y+140,slide.w-180,180);ctx.strokeRect(slide.x+90,slide.y+330,slide.w-180,115);ctx.setLineDash([]);ctx.fillStyle="#111";ctx.font="900 36px Arial";ctx.textAlign="center";ctx.fillText("제목을 추가하려면 클릭하",slide.x+slide.w/2,slide.y+230);ctx.fillText("십시오.",slide.x+slide.w/2,slide.y+276);ctx.font="900 20px Arial";ctx.fillText("부제목을 입력하십시오",slide.x+slide.w/2,slide.y+390);ctx.textAlign="left";ctx.fillStyle="#ece7e7";ctx.fillRect(0,H-28,W,28);ctx.fillStyle="#686868";ctx.font="14px Arial";ctx.fillText("여기에 슬라이드 노트의 내용을 입력하십시오",15,H-10);ctx.restore()}
 function drawGameFieldBackground(){const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,cur().g==="exam"?"#0b1830":"#1a102a");grad.addColorStop(1,"#050713");ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);for(const s of state.bgStars){ctx.globalAlpha=s.a;ctx.fillStyle=cur().g==="exam"?"#80cfff":"#ff8dad";ctx.fillRect(s.x,s.y,s.s,s.s)}ctx.globalAlpha=1;ctx.strokeStyle="rgba(105,135,195,.12)";ctx.lineWidth=1;for(let y=100;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}}
 function drawBackground(){drawGameFieldBackground();if(isPptPattern()){const a=state.q&&typeof state.q.windowT==="number"?state.q.windowT:1;if(a>.02)drawPptWorkspace(state.q.slide,a)}}

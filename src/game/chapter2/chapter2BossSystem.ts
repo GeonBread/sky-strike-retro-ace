@@ -158,10 +158,7 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
   const cinematicLocked = !!hud.cinematic || !!hud.clearStage || hud.victoryComplete;
 
   if (cinematicLocked) {
-    for (const bullet of engine.bullets as Bullet[]) {
-      if (bullet.active && !bullet.isEnemy) bullet.active = false;
-    }
-    engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
+    // 페이즈 전환 중에도 플레이어 탄은 계속 발사/이동하게 두고, 보스 데미지만 잠급니다.
     return;
   }
 
@@ -228,12 +225,12 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
   engine.bullets = engine.bullets.filter((bullet: Bullet) => bullet.active);
 }
 
-function spawnChapter2BossSupportPair(engine: any, runtime: Chapter2BossRuntime): void {
+function spawnChapter2BossSupportGroup(engine: any, runtime: Chapter2BossRuntime): void {
   // Chapter 2 원본 페이지 드론 크기: 112x92에 MONSTER_SCALE(1.28)을 적용한 값.
   const width = 112 * 1.28;
   const height = 92 * 1.28;
-  const lanes = [0.20, 0.80];
-  for (let index = 0; index < 2; index += 1) {
+  const lanes = [0.18, 0.50, 0.82];
+  for (let index = 0; index < lanes.length; index += 1) {
     const enemy = new Enemy();
     enemy.type = "basic";
     enemy.visualId = 2;
@@ -249,7 +246,7 @@ function spawnChapter2BossSupportPair(engine: any, runtime: Chapter2BossRuntime)
       serial: runtime.supportWaveSerial,
       index,
       state: "enter",
-      targetY: 235 + index * 50,
+      targetY: index === 1 ? 285 : 225,
       anchorX: enemy.x,
       phase: index * Math.PI,
       time: 0,
@@ -276,8 +273,8 @@ function shootChapter2BossSupportBullet(engine: any, enemy: Enemy): void {
   bullet.height = 12;
   bullet.x = cx - bullet.width / 2;
   bullet.y = cy - bullet.height / 2;
-  bullet.vx = Math.cos(angle) * 245;
-  bullet.vy = Math.sin(angle) * 245;
+  bullet.vx = Math.cos(angle) * 390;
+  bullet.vy = Math.sin(angle) * 390;
   bullet.damage = 1;
   bullet.color = "#72de82";
   bullet.visualType = "chapter2_mini_shard";
@@ -308,17 +305,16 @@ function updateChapter2BossSupportSystem(engine: any, runtime: Chapter2BossRunti
         enemy.y = support.targetY;
         support.state = "hover";
         support.anchorX = enemy.x;
-        // 보스전 지원 잡몹은 진입 직후 빠르게 첫 탄을 발사합니다.
-        support.shootCooldown = 0.12 + support.index * 0.04;
+        // 3마리가 동시에 들어오므로 첫 사격은 약간 분산시킵니다.
+        support.shootCooldown = 0.45 + support.index * 0.10;
       }
     } else {
       const desiredX = support.anchorX + Math.sin(support.time * 2.25 + support.phase) * 34;
       enemy.x += (desiredX - enemy.x) * Math.min(1, dt * 5.2);
       support.shootCooldown -= dt;
       if (support.shootCooldown <= 0) {
-        // 기존 0.52~0.68 s 단발 간격은 보스전에서 지나치게 느리게 느껴졌습니다.
-        // 탄 속도/조준 방식은 유지하고 연사 간격만 0.30~0.40 s로 단축합니다.
-        support.shootCooldown = 0.30 + Math.random() * 0.10;
+        // 지원몹 수가 늘어난 대신 각 개체의 사격 간격은 길게 두고, 탄 자체는 훨씬 빠르게 이동합니다.
+        support.shootCooldown = 0.78 + Math.random() * 0.22;
         shootChapter2BossSupportBullet(engine, enemy);
       }
     }
@@ -329,9 +325,9 @@ function updateChapter2BossSupportSystem(engine: any, runtime: Chapter2BossRunti
   const liveCount = (engine.enemies as Enemy[]).filter(
     (enemy) => enemy.active && !!(enemy as any).chapter2BossSupport,
   ).length;
-  // 한 번에 정확히 2마리만 등장하며, 살아 있는 지원몹이 있으면 추가 소환하지 않습니다.
+  // 한 번에 3마리가 등장하며, 살아 있는 지원몹이 있으면 추가 소환하지 않습니다.
   if (liveCount === 0 && core.isPlayerAttackAllowed()) {
-    spawnChapter2BossSupportPair(engine, runtime);
+    spawnChapter2BossSupportGroup(engine, runtime);
     runtime.supportSpawnTimer = 10.5 + Math.random() * 2.5;
   } else {
     runtime.supportSpawnTimer = 1.0;

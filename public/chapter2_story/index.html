@@ -612,6 +612,7 @@ button { color: inherit; }
   color: #ff3030;
   text-shadow: 0 0 8px rgba(230,0,0,.58), 0 0 17px rgba(230,0,0,.34), 3px 3px 0 #000;
 }
+.dialogue-highlight-star { font-weight: 950; }
 .dialogue-highlight-yellow {
   color: #ffd84a;
   text-shadow: 0 0 8px rgba(255,216,74,.72), 0 0 18px rgba(255,177,38,.45), 3px 3px 0 #000;
@@ -1071,7 +1072,7 @@ kbd {
 
 
 /* FIX7: 각 스토리 장면 경계에서 배경을 먼저 숨기는 전체 화면 암전 커튼 */
-.story-section-curtain{position:absolute;inset:0;z-index:10050;background:#000;opacity:0;pointer-events:none;transition:opacity var(--section-curtain-in,180ms) ease}.story-section-curtain.is-opaque{opacity:1}.story-section-curtain.is-revealing{opacity:0;transition-duration:360ms}
+.story-section-curtain{position:fixed;inset:0;width:100vw;height:100dvh;z-index:10050;background:#000;opacity:0;pointer-events:none;transition:opacity var(--section-curtain-in,180ms) ease}.story-section-curtain.is-opaque{opacity:1}.story-section-curtain.is-revealing{opacity:0;transition-duration:360ms}
 
 
 /* FIX18: 카톡 오버레이는 현재 배경과 대사창 사이에 표시 */
@@ -1844,7 +1845,7 @@ window.STORY_SCENES = {
   library_transition_hall: { chapter:'CHAPTER 2', title:'도서관 바깥 통로', subtitle:'학생증과 급한 대화', background:'chapter2/backgrounds/bg_ch2_library_transition_hall.png', position:'center center', tint:'rgba(6,10,18,.12)' },
   library_exit: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'늦은 저녁 공부', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(2,4,12,.24)' },
   corrupted_library: { chapter:'CHAPTER 2', title:'오염된 신관 지하 열람실', subtitle:'시험·팀플 오염 발생', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(22,4,34,.30)' },
-  combat_zone: { chapter:'CHAPTER 2', title:'시험·팀플 오염 구역', subtitle:'일반 오염 파편 정화', background:'chapter2/backgrounds/bg_ch2_blackhole_corrupt.png', position:'center center', tint:'rgba(12,5,35,.22)' },
+  combat_zone: { chapter:'CHAPTER 2', title:'시험·팀플 오염 구역', subtitle:'일반 오염 파편 정화', background:'chapter2/backgrounds/bg_ch2_library_exterior_after_3am.png', position:'center center', tint:'rgba(4,10,24,.18)' },
   meeting_room: { chapter:'CHAPTER 2', title:'중간 점검 강의실', subtitle:'예정된 중간 점검', background:'chapter2/backgrounds/bg_ch2_lecture_room.png', position:'center center', tint:'rgba(10,18,12,.12)' },
   project_room: { chapter:'CHAPTER 2', title:'팀 회의실', subtitle:'최종 파일 통합', background:'chapter2/backgrounds/bg_ch2_lecture_room.png', position:'center center', tint:'rgba(4,18,12,.12)' },
   cafe_project: { chapter:'CHAPTER 2', title:'카페', subtitle:'팀 프로젝트 최종 준비', background:'chapter2/illustrations/ill_cafe_teamwork.png', position:'center center', tint:'linear-gradient(180deg, rgba(14,8,5,.18), rgba(18,10,6,.42))' },
@@ -6988,8 +6989,8 @@ window.STORY_DATA = {
         "duration": 2400,
         "scene": "library_reading_day",
         "time": "시험 공부",
-        "task": "신관 지하 열람실에서 휴대전화를 뒤집어 놓고 공부",
-        "phone": "뒤집어 둠"
+        "task": "신관 지하 열람실에서 공부",
+        "phone": ""
       },
       {
         "type": "custom-effect",
@@ -9345,7 +9346,7 @@ window.STORY_DATA = {
         "scene": "library_reading_night",
         "time": "오후 10시 40분",
         "task": "핵심 개념과 틀린 문제 중심으로 공부 재개",
-        "phone": "다시 뒤집어 둠"
+        "phone": ""
       },
       {
         "type": "section-marker",
@@ -10098,7 +10099,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "핵심 오염원 소멸 확인함.",
-        "scene": "boss_arena_purified",
+        "scene": "boss_arena",
         "pose": "default",
         "statusLabel": "보스 처치",
         "left": "student_card",
@@ -10107,7 +10108,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "별 신호 차폐 해제됨.",
-        "scene": "boss_arena_purified",
+        "scene": "boss_arena",
         "pose": "default",
         "statusLabel": "보스 처치",
         "left": "student_card",
@@ -10376,6 +10377,86 @@ window.STORY_DATA = {
         "right": "hobanwoo"
       },
       {
+        "type": "location-title",
+        "scene": "campus_hall",
+        "duration": 1400
+      },
+      {
+        "speaker": "hobanwoo",
+        "text": "그래도 이번에는 처음처럼 나 혼자 다 한 건 아니네.",
+        "scene": "campus_hall",
+        "pose": "thinking",
+        "statusLabel": "팀플 마무리",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "student_card",
+        "text": "팀원들과 협력하여 완료함.",
+        "scene": "campus_hall",
+        "pose": "default",
+        "statusLabel": "팀플 마무리",
+        "left": "student_card",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "hobanwoo",
+        "text": "응.",
+        "scene": "campus_hall",
+        "pose": "happy",
+        "statusLabel": "팀플 마무리",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "hobanwoo",
+        "text": "솔직히 중간에는 그냥 내가 다 하는 게 빠르다고 생각했는데……",
+        "scene": "campus_hall",
+        "pose": "thinking",
+        "statusLabel": "팀플 마무리",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "hobanwoo",
+        "text": "제대로 같이 하면 혼자 하는 것보다 훨씬 낫긴 하다.",
+        "scene": "campus_hall",
+        "pose": "happy",
+        "statusLabel": "팀플 마무리",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "student_card",
+        "text": "학습 완료로 판단함.",
+        "scene": "campus_hall",
+        "pose": "default",
+        "statusLabel": "팀플 마무리",
+        "left": "student_card",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "hobanwoo",
+        "text": "그건 또 뭘 학습했다는 거야.",
+        "scene": "campus_hall",
+        "pose": "uneasy",
+        "statusLabel": "팀플 마무리",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "student_card",
+        "text": "…….",
+        "scene": "campus_hall",
+        "pose": "default",
+        "statusLabel": "팀플 마무리",
+        "left": "student_card",
+        "right": "hobanwoo"
+      },
+      {
+        "speaker": "hobanwoo",
+        "text": "됐다. 넘어가자.",
+        "scene": "campus_hall",
+        "pose": "uneasy",
+        "statusLabel": "팀플 마무리",
+        "right": "hobanwoo"
+      },
+      {
         "type": "section-marker",
         "title": "시험",
         "duration": 0,
@@ -10422,81 +10503,6 @@ window.STORY_DATA = {
         "duration": 21500,
         "scene": "exam_room",
         "title": "답안 작성"
-      },
-      {
-        "speaker": "hobanwoo",
-        "text": "그래도 이번에는 처음처럼 나 혼자 다 한 건 아니네.",
-        "scene": "exam_room",
-        "pose": "thinking",
-        "statusLabel": "시험",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "student_card",
-        "text": "팀원들과 협력하여 완료함.",
-        "scene": "exam_room",
-        "pose": "default",
-        "statusLabel": "시험",
-        "left": "student_card",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "hobanwoo",
-        "text": "응.",
-        "scene": "exam_room",
-        "pose": "happy",
-        "statusLabel": "시험",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "hobanwoo",
-        "text": "솔직히 중간에는 그냥 내가 다 하는 게 빠르다고 생각했는데……",
-        "scene": "exam_room",
-        "pose": "thinking",
-        "statusLabel": "시험",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "hobanwoo",
-        "text": "제대로 같이 하면 혼자 하는 것보다 훨씬 낫긴 하다.",
-        "scene": "exam_room",
-        "pose": "happy",
-        "statusLabel": "시험",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "student_card",
-        "text": "학습 완료로 판단함.",
-        "scene": "exam_room",
-        "pose": "default",
-        "statusLabel": "시험",
-        "left": "student_card",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "hobanwoo",
-        "text": "그건 또 뭘 학습했다는 거야.",
-        "scene": "exam_room",
-        "pose": "uneasy",
-        "statusLabel": "시험",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "student_card",
-        "text": "…….",
-        "scene": "exam_room",
-        "pose": "default",
-        "statusLabel": "시험",
-        "left": "student_card",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "hobanwoo",
-        "text": "됐다. 넘어가자.",
-        "scene": "exam_room",
-        "pose": "uneasy",
-        "statusLabel": "시험",
-        "right": "hobanwoo"
       },
       {
         "type": "section-marker",
@@ -11120,6 +11126,48 @@ window.STORY_CUSTOM_EFFECTS['chat-snapshot'] = ({ layer, item }) => {
       entry.unread = Math.max(0, maxReaders - readers.size);
       laterReaders = readers;
     }
+
+    // Incoming messages also show unread counts. Incoming JSON used 0 as a
+    // placeholder, so infer a sensible count from the surrounding timeline.
+    // The final pass guarantees olderUnread <= newerUnread for every bubble.
+    let previousUnread = 0;
+    for (let index = 0; index < entries.length; index += 1) {
+      const entry = entries[index];
+      if (entry.type !== 'message') continue;
+      if (entry.side === 'out') {
+        previousUnread = Math.max(previousUnread, Math.max(0, Math.min(maxReaders, Number(entry.unread || 0))));
+        entry.unread = previousUnread;
+        continue;
+      }
+
+      const explicit = Math.max(0, Math.min(maxReaders, Number(entry.unread || 0)));
+      if (explicit > 0) {
+        entry.unread = Math.max(previousUnread, explicit);
+      } else {
+        let nextOutgoingUnread = null;
+        for (let next = index + 1; next < entries.length; next += 1) {
+          const future = entries[next];
+          if (future.type === 'message' && future.side === 'out') {
+            nextOutgoingUnread = Math.max(0, Math.min(maxReaders, Number(future.unread || 0)));
+            break;
+          }
+        }
+        const maxIncomingUnread = Math.max(0, maxReaders - 1);
+        const upper = nextOutgoingUnread === null ? maxIncomingUnread : Math.max(previousUnread, nextOutgoingUnread);
+        entry.unread = Math.min(maxIncomingUnread, Math.max(previousUnread, upper > 0 ? 1 : 0));
+      }
+      previousUnread = entry.unread;
+    }
+
+    // Clamp only older bubbles downward if an explicit newer bubble has fewer
+    // unread members. This preserves the logical KakaoTalk ordering.
+    let newerUnread = maxReaders;
+    for (let index = entries.length - 1; index >= 0; index -= 1) {
+      const entry = entries[index];
+      if (entry.type !== 'message') continue;
+      entry.unread = Math.min(Math.max(0, Number(entry.unread || 0)), newerUnread);
+      newerUnread = entry.unread;
+    }
   };
 
   const normalizeDateDividers = entries => {
@@ -11472,7 +11520,7 @@ window.STORY_CUSTOM_EFFECTS['study-session'] = ({ layer, item }) => {
   const task = String(item.task || '핵심 내용 정리');
   const reportMode = /보고서/.test(task);
   const finalReportMode = reportMode && /결론|최종/.test(task);
-  const phoneLabel = String(item.phone || '뒤집어 둠');
+  const phoneLabel = item.phone == null ? '' : String(item.phone);
 
   if (reportMode) {
     const pages = finalReportMode ? [12, 13, 14, 15, 16] : [4, 5, 6, 7, 8];
@@ -11633,7 +11681,7 @@ window.STORY_CUSTOM_EFFECTS['study-session'] = ({ layer, item }) => {
             </div>
             <div class="c2-calculator-finger"></div>
           </div>
-          <div class="c2-study-phone"><span></span><b>${c2Escape(phoneLabel)}</b></div>
+          <div class="c2-study-phone"><span></span>${phoneLabel ? `<b>${c2Escape(phoneLabel)}</b>` : ''}</div>
           <div class="c2-study-eraser"></div>
         </div>
       </div>
@@ -12074,7 +12122,7 @@ window.STORY_CUSTOM_EFFECTS['purification-shard-absorption'] = ({ layer, item })
         }
 
         .c2-purify-shard-wrap{
-          --shard-size:clamp(20px,2.35vw,34px);position:absolute;z-index:26;left:var(--x);top:var(--y);
+          --shard-size:clamp(20px,2.35vw,34px);position:absolute;z-index:46;left:var(--x);top:var(--y);
           width:var(--shard-size);height:calc(var(--shard-size) * 1.7);opacity:0;
           transform:translate(-50%,-50%) scale(.04);transform-origin:center center;pointer-events:none;overflow:visible;
         }
@@ -14096,7 +14144,7 @@ document.head.appendChild(c2Style);
     const curtain = document.createElement('div');
     curtain.className = 'story-section-curtain';
     curtain.setAttribute('aria-hidden', 'true');
-    el.stage.appendChild(curtain);
+    document.body.appendChild(curtain);
     state.sectionCurtain = curtain;
     requestAnimationFrame(() => curtain.classList.add('is-opaque'));
     return curtain;
@@ -14291,6 +14339,13 @@ document.head.appendChild(c2Style);
     el.illustration.setAttribute('aria-hidden', 'false');
   }
 
+  const STORY_STAR_TEXT_COLORS = new Map([
+    ['시작의 별', '#ffd73c'],
+    ['적응의 별', '#7dd3fc'],
+    ['시험의 별', '#9bef78'],
+    ['팀플의 별', '#ffb65f']
+  ]);
+
   function highlightRanges(text, highlights = []) {
     const ranges = [];
     for (const highlight of highlights) {
@@ -14301,6 +14356,15 @@ document.head.appendChild(c2Style);
         if (index < 0) break;
         ranges.push({ start: index, end: index + highlight.text.length, color: highlight.color || 'yellow' });
         from = index + highlight.text.length;
+      }
+    }
+    for (const [starName, color] of STORY_STAR_TEXT_COLORS) {
+      let from = 0;
+      while (from < text.length) {
+        const index = text.indexOf(starName, from);
+        if (index < 0) break;
+        ranges.push({ start: index, end: index + starName.length, color });
+        from = index + starName.length;
       }
     }
     return ranges;
@@ -14319,7 +14383,13 @@ document.head.appendChild(c2Style);
       if (!currentColor) fragment.appendChild(document.createTextNode(buffer));
       else {
         const span = document.createElement('span');
-        span.className = currentColor === 'red' ? 'dialogue-highlight-red' : 'dialogue-highlight-yellow';
+        if (String(currentColor).startsWith('#')) {
+          span.className = 'dialogue-highlight-star';
+          span.style.color = currentColor;
+          span.style.textShadow = `0 0 8px ${currentColor}cc, 0 0 18px ${currentColor}77, 3px 3px 0 #000`;
+        } else {
+          span.className = currentColor === 'red' ? 'dialogue-highlight-red' : 'dialogue-highlight-yellow';
+        }
         span.textContent = buffer;
         fragment.appendChild(span);
       }
@@ -14637,16 +14707,10 @@ document.head.appendChild(c2Style);
     if (effectId === 'boss-star-recovery' && String(item?.mode || '') === 'reveal') {
       updateScene('boss_arena_purified', { force: true, suppressFlash: true });
     }
-    // FIX44: 시험 필기 연출은 마지막 암전 상태를 3초 더 유지한 뒤 종료됩니다.
-    // 전역 레이어가 사라지는 바로 그 순간에는 이미 야간 캠퍼스 장면이 준비되어 있도록 합니다.
-    if (effectId === 'exam-writing-sequence') {
-      updateScene('campus_after', { force: true, suppressFlash: true });
-    }
-
-    // FIX44: Google Drive '켜기' 자체는 브라우저 전체 화면에서 보여주고,
-    // 뒤이어 대사와 함께 유지해야 하는 장면만 동일 화면을 story-stage persistent overlay로 넘깁니다.
-    const persistDriveAfterOpening = effectId === 'folder-snapshot' && Number(item?.persistDialogueCount || 0) > 0;
-    if (persistDriveAfterOpening) {
+    // 모든 지속형 연출은 먼저 브라우저 전체 화면에서 재생하고,
+    // 뒤이어 대사와 함께 유지할 필요가 있을 때만 story-stage persistent overlay로 넘깁니다.
+    const persistOverlayAfterOpening = Number(item?.persistDialogueCount || 0) > 0;
+    if (persistOverlayAfterOpening) {
       cleanupActiveEffect();
       clearPersistentOverlay();
       el.persistentOverlay.setAttribute('aria-hidden', 'false');
@@ -14742,21 +14806,18 @@ document.head.appendChild(c2Style);
       'opacity:0',
       `transition:opacity ${duration}ms ease`
     ].join(';');
-    el.effectLayer.replaceChildren(black);
+    el.globalEffectLayer.replaceChildren(black);
+    el.globalEffectLayer.setAttribute('aria-hidden', 'false');
     requestAnimationFrame(() => { black.style.opacity = '1'; });
-    state.activeEffectCleanup = () => el.effectLayer.replaceChildren();
+    state.activeEffectCleanup = () => {
+      el.globalEffectLayer.replaceChildren();
+      el.globalEffectLayer.setAttribute('aria-hidden', 'true');
+    };
     state.effectTimer = window.setTimeout(() => finishEffect(item, 'fade-black'), duration + hold);
   }
 
-    const globalEffectIds = new Set(['desktop-workflow', 'report-save-close', 'word-crash', 'team-drive-uploads', 'folder-snapshot', 'boss-emergence', 'exam-writing-sequence', 'purification-shard-absorption']);
-  const itemUsesGlobalOfficeLayer = (item, effectId) => {
-    if (globalEffectIds.has(effectId)) return true;
-    if (effectId === 'study-session' && /보고서|문서|Word|워드/i.test(String(item?.task || ''))) return true;
-    return false;
-  };
-
   function itemKeepsPersistentOverlay(item, effectId) {
-    return effectId === 'chat-snapshot' || Number(item?.persistDialogueCount || 0) > 0;
+    return Number(item?.persistDialogueCount || 0) > 0;
   }
 
 function runCustomEffect(item) {
@@ -14779,10 +14840,10 @@ function runCustomEffect(item) {
     // item.scene 값이 있어도 이 시점에는 배경을 다시 교체하지 않습니다.
     const handler = customEffects[effectId];
     const wantsPersistent = itemKeepsPersistentOverlay(item, effectId);
-    const isPersistentDriveOpening = effectId === 'folder-snapshot' && Number(item?.persistDialogueCount || 0) > 0;
-    const isPersistent = wantsPersistent && !isPersistentDriveOpening;
-    const useGlobalLayer = isPersistentDriveOpening || (!isPersistent && itemUsesGlobalOfficeLayer(item, effectId));
-    const targetLayer = isPersistent ? el.persistentOverlay : (useGlobalLayer ? el.globalEffectLayer : el.effectLayer);
+    const isPersistentOpening = wantsPersistent;
+    const isPersistent = wantsPersistent && !isPersistentOpening;
+    const useGlobalLayer = isPersistentOpening || !isPersistent;
+    const targetLayer = isPersistent ? el.persistentOverlay : el.globalEffectLayer;
 
     if (useGlobalLayer) {
       el.globalEffectLayer.setAttribute('aria-hidden', 'false');

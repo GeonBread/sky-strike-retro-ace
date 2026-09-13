@@ -50,13 +50,9 @@ function getHobanuPlayerFireInterval(engine: PlayerRuntime): number {
 }
 
 function canHobanuPlayerShootNow(engine: PlayerRuntime): boolean {
-  // Chapter 2 보스의 등장신/페이즈 전환/클리어 시네마틱에서는
-  // Chapter 1 보스와 동일하게 플레이어 사격 입력 자체를 잠급니다.
-  // 탄을 만든 뒤 지우는 방식이 아니라 firePlayerBullet() 호출을 막기 때문에
-  // 발사음도 함께 발생하지 않습니다.
-  if (engine.chapter2Boss?.active && engine.chapter2Boss?.core) {
-    if (!engine.chapter2Boss.core.isPlayerAttackAllowed()) return false;
-  }
+  // Chapter 2 보스전에서는 패턴 전환/딜레이 구간을 포함해 플레이어 사격 입력을 항상 허용합니다.
+  // 보스가 무적이어야 하는 시네마틱에서는 충돌 쪽에서 데미지만 무시합니다.
+  if (engine.chapter2Boss?.active) return true;
 
   const style = engine.player?.weaponStyle ?? "science";
 

@@ -249,8 +249,9 @@ function updateBossSupportSpawnSystem(engine: any, runtime: Chapter1BossRuntime,
   const liveSupportCount = (engine.enemies as Enemy[]).filter(
     (enemy) => enemy.active && (enemy as any).chapter1BossSupport,
   ).length;
-  if (liveSupportCount <= 2) {
-    const count = 4 + Math.floor(Math.random() * 5);
+  if (liveSupportCount <= 1) {
+    // 기존 주기는 유지하되 한 번에 등장하는 지원몹 수만 줄여 보스전 혼잡도를 낮춥니다.
+    const count = 2 + Math.floor(Math.random() * 3);
     spawnChapter1BossSupportGroupSystem(engine, count);
     runtime.supportWaveSerial += 1;
   }

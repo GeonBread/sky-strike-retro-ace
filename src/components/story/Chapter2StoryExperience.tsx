@@ -98,10 +98,10 @@ interface Chapter2StoryExperienceProps {
 const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
 const STORY_SEGMENT = "chapter2_full";
 const CHAPTER2_WAVE_COUNT = 20;
-const CHAPTER2_FULLSCREEN_STORY_EFFECTS = new Set([
-  "exam-answer",
-  "exam-writing-sequence",
-]);
+function isChapter2FullscreenStoryEffect(effectId: string | undefined): boolean {
+  // 모든 컷씬/전환 연출은 브라우저 전체 화면에서 실행하고, 종료되면 922×960 스토리 프레임으로 복귀합니다.
+  return Boolean(effectId);
+}
 
 function chapter2CheckpointFromState(state: Chapter2StoryStateMessage | undefined): StoryCheckpoint | null {
   const index = Number(state?.index);
@@ -254,7 +254,7 @@ export function Chapter2StoryExperience({
       }
 
       if (data.type === "effect-end") {
-        if (data.effectId && CHAPTER2_FULLSCREEN_STORY_EFFECTS.has(data.effectId)) {
+        if (data.effectId && isChapter2FullscreenStoryEffect(data.effectId)) {
           setStoryFullscreenEffectActive(false);
         }
         if (data.effectId === "boss-emergence") {
@@ -272,7 +272,7 @@ export function Chapter2StoryExperience({
         if (Number.isInteger(data.state?.index)) setCurrentStoryIndex(Number(data.state?.index));
         if (
           data.effectId
-          && CHAPTER2_FULLSCREEN_STORY_EFFECTS.has(data.effectId)
+          && isChapter2FullscreenStoryEffect(data.effectId)
           && phase === "story"
         ) {
           setStoryFullscreenEffectActive(true);

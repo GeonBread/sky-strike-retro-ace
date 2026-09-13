@@ -222,7 +222,7 @@ export function spawnChapter1SandboxEnemySystem(engine: Chapter1WaveEngine, type
  */
 export function spawnChapter1BossSupportGroupSystem(engine: Chapter1WaveEngine, requestedCount: number): Enemy[] {
   const runtime = ensureRuntime(engine);
-  const count = clamp(Math.floor(requestedCount), 4, 8);
+  const count = clamp(Math.floor(requestedCount), 2, 4);
   runtime.waveInstanceId += 1;
   const group: Enemy[] = [];
 
@@ -729,7 +729,7 @@ function attackEnemy(engine: Chapter1WaveEngine, enemy: Enemy): void {
       [-0.27, -0.09, 0.09, 0.27].forEach((offset) => {
         addEnemyBullet(engine, { x: state.cx, y: state.cy + 18, vx: Math.cos(base + offset) * speed, vy: Math.sin(base + offset) * speed, sprite: 1, r: 11, spin: offset * 2, ownerType: 1 });
       });
-      state.attack = 2 * rate;
+      state.attack = 4 * rate;
       break;
     }
     case 2:

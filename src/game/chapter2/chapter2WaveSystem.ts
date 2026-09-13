@@ -18,11 +18,35 @@ const MONSTER_SCALE = 1.28;
 // rendered a 900 x 1200 virtual field into a 720 x 960 canvas (uniform 0.8x).
 // The integrated game is wider (922 x 960), so only X positions are widened to
 // use the project field; sprite/effect sizes still use the original uniform scale.
-const CHAPTER2_ENEMY_HP_SCALE = 0.65;
+const CHAPTER2_ENEMY_HP_SCALE = 0.455; // 기존 0.65에서 30% 감소
 const INK = "#070911";
 const DIFFICULTY = 1;
 const MAX_PARTICLES = 220;
 const MAX_VANISHES = 72;
+const chapter2WaveBackground = typeof Image !== "undefined" ? new Image() : null;
+if (chapter2WaveBackground) {
+  chapter2WaveBackground.src = "/chapter2_story/assets/chapter2/backgrounds/bg_ch2_library_exterior_after_3am.png";
+}
+
+function drawChapter2WaveBackground(engine: any): void {
+  const image = chapter2WaveBackground;
+  const canvas = engine?.canvas as HTMLCanvasElement | undefined;
+  const context = engine?.ctx as CanvasRenderingContext2D | undefined;
+  if (!canvas || !context) return;
+  if (image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
+    const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
+    const dw = image.naturalWidth * scale;
+    const dh = image.naturalHeight * scale;
+    context.drawImage(image, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+  } else {
+    context.fillStyle = "#050914";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  // 탄/적 가독성을 위해 야간 도서관을 살짝 어둡게 유지합니다.
+  context.fillStyle = "rgba(2, 6, 18, 0.30)";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 
 export type Chapter2WaveEnemyType =
   | "ghost"
@@ -2115,6 +2139,7 @@ export function renderChapter2WaveSystem(engine: any) {
   const scaleShakeX = shake * sx;
   const scaleShakeY = shake * sy;
   engine.ctx.save();
+  drawChapter2WaveBackground(engine);
   if (shake > 0.2) engine.ctx.translate(rnd(-scaleShakeX, scaleShakeX), rnd(-scaleShakeY, scaleShakeY));
   withOriginalAspectRenderState(engine, () => {
     drawEffects();

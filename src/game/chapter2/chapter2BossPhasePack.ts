@@ -244,11 +244,12 @@ export class Chapter2BossPhasePack {
         return (lx - nx) ** 2 + (ly - ny) ** 2 <= r ** 2;
     }
     spawnBullet(x, y, vx, vy, r, color, shape = 'orb', life = 8, visual = null) {
+        const speedScale = 1.22;
         this.enemyBullets.push({
             x,
             y,
-            vx,
-            vy,
+            vx: vx * speedScale,
+            vy: vy * speedScale,
             r,
             color,
             shape,

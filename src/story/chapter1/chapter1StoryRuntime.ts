@@ -396,7 +396,7 @@ html.is-embedded-story .dialogue-text {
   margin: 0 !important;
 }
 
-/* CH1 코어 영역 이동: 현실 캠퍼스 위에 별빛이 모여 원형 포탈을 만든다. */
+/* CH1 코어 영역 이동: 일러스트 없이, 세워진 타원형 포탈 자체가 영롱하게 발광한다. */
 html.is-embedded-story .chapter1-core-portal-overlay {
   position: absolute;
   inset: 0;
@@ -404,33 +404,120 @@ html.is-embedded-story .chapter1-core-portal-overlay {
   pointer-events: none;
   overflow: hidden;
   opacity: 0;
-  background: radial-gradient(circle at 50% 42%, rgba(255,246,180,.06), rgba(0,0,0,0) 46%);
+  background:
+    radial-gradient(ellipse at 50% 43%, rgba(255,252,218,.16) 0 9%, rgba(255,222,91,.11) 18%, rgba(100,216,255,.08) 31%, transparent 57%),
+    radial-gradient(ellipse at 50% 43%, rgba(72,170,255,.07), transparent 64%);
   transition: opacity .35s ease;
+}
+html.is-embedded-story .chapter1-core-portal-overlay::before,
+html.is-embedded-story .chapter1-core-portal-overlay::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  width: min(52cqw, 500px);
+  height: min(72cqh, 650px);
+  border-radius: 50% / 44%;
+  transform: translate(-50%, -50%) scale(.72);
+  opacity: 0;
+  pointer-events: none;
+}
+html.is-embedded-story .chapter1-core-portal-overlay::before {
+  border: 2px solid rgba(174,238,255,.38);
+  box-shadow:
+    0 0 36px rgba(255,248,194,.56),
+    0 0 86px rgba(255,210,67,.32),
+    0 0 150px rgba(88,211,255,.28),
+    inset 0 0 58px rgba(152,236,255,.2);
+  filter: blur(7px);
+}
+html.is-embedded-story .chapter1-core-portal-overlay::after {
+  width: min(62cqw, 590px);
+  height: min(82cqh, 740px);
+  background:
+    repeating-conic-gradient(from 12deg at 50% 50%, rgba(255,255,255,.09) 0 3deg, transparent 3deg 15deg),
+    radial-gradient(ellipse at center, transparent 35%, rgba(129,225,255,.10) 48%, rgba(255,219,86,.08) 56%, transparent 69%);
+  filter: blur(11px);
 }
 html.is-embedded-story .chapter1-core-portal-overlay.is-opening,
 html.is-embedded-story .chapter1-core-portal-overlay.is-entering { opacity: 1; }
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening::before,
+html.is-embedded-story .chapter1-core-portal-overlay.is-entering::before {
+  animation: chapter1CorePortalWarpA 1.7s ease-in-out infinite;
+}
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening::after,
+html.is-embedded-story .chapter1-core-portal-overlay.is-entering::after {
+  animation: chapter1CorePortalWarpB 2.2s ease-in-out infinite reverse;
+}
 html.is-embedded-story .chapter1-core-portal-ring {
   position: absolute;
   left: 50%;
   top: 43%;
-  width: min(38cqw, 360px);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%) scale(.02) rotate(-70deg);
-  border-radius: 50%;
-  padding: clamp(9px, 1.3cqw, 15px);
+  width: min(25cqw, 238px);
+  height: min(55cqh, 520px);
+  transform: translate(-50%, -50%) scale(.025);
+  border-radius: 50% / 44%;
+  padding: clamp(10px, 1.35cqw, 16px);
   background:
-    conic-gradient(from 0deg, rgba(255,255,255,.96), #ffd84d, #fff7b0, #75d9ff, #ffffff, #ffd84d, rgba(255,255,255,.96));
-  box-shadow: 0 0 26px rgba(255,225,95,.95), 0 0 72px rgba(255,210,60,.68), 0 0 128px rgba(90,180,255,.3);
+    conic-gradient(from 0deg, #fff 0deg, #fffbd1 36deg, #ffd84d 92deg, #85e6ff 155deg, #fff 214deg, #ffe26b 278deg, #8ce7ff 326deg, #fff 360deg);
+  box-shadow:
+    0 0 18px 5px rgba(255,255,245,1),
+    0 0 45px 12px rgba(255,228,112,.96),
+    0 0 92px 28px rgba(255,195,42,.67),
+    0 0 156px 46px rgba(92,211,255,.48),
+    0 0 220px 68px rgba(255,223,92,.22),
+    inset 0 0 26px rgba(255,255,255,.94);
+  filter: saturate(1.34) brightness(1.22);
   opacity: 0;
+  isolation: isolate;
+}
+html.is-embedded-story .chapter1-core-portal-ring::before,
+html.is-embedded-story .chapter1-core-portal-ring::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: inherit;
+}
+html.is-embedded-story .chapter1-core-portal-ring::before {
+  inset: -11%;
+  border: 3px solid rgba(231,249,255,.68);
+  box-shadow: 0 0 32px rgba(123,225,255,.78), 0 0 62px rgba(255,216,84,.38);
+  filter: blur(3px);
+  animation: chapter1CorePortalRimPulse 1.2s ease-in-out infinite;
+}
+html.is-embedded-story .chapter1-core-portal-ring::after {
+  inset: -24%;
+  border: 2px solid rgba(255,236,157,.25);
+  filter: blur(8px);
+  animation: chapter1CorePortalRimPulse 1.65s ease-in-out infinite reverse;
 }
 html.is-embedded-story .chapter1-core-portal-window {
+  position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  overflow: hidden;
+  border-radius: 50% / 44%;
   background:
-    linear-gradient(rgba(5,9,24,.2), rgba(15,0,32,.3)),
-    url("/assets/story/chapter1/backgrounds/bg_academic_system_corrupted.png") center / cover no-repeat;
-  box-shadow: inset 0 0 55px rgba(0,0,0,.72), inset 0 0 18px rgba(135,225,255,.72);
+    radial-gradient(ellipse at 50% 42%, rgba(188,242,255,.22), transparent 34%),
+    linear-gradient(rgba(5,9,24,.13), rgba(15,0,32,.26)),
+    url("/assets/story/chapter1/backgrounds/bg_academic_system_corrupted.png") center / 112% 112% no-repeat;
+  box-shadow:
+    inset 0 0 82px rgba(0,0,0,.7),
+    inset 0 0 34px rgba(157,235,255,.86),
+    inset 0 0 10px rgba(255,249,199,.92);
+  animation: chapter1CorePortalSurface 2.15s ease-in-out infinite;
+}
+html.is-embedded-story .chapter1-core-portal-window::before {
+  content: "";
+  position: absolute;
+  inset: -14%;
+  border-radius: inherit;
+  background:
+    repeating-linear-gradient(102deg, transparent 0 18px, rgba(255,255,255,.075) 19px 21px, transparent 22px 44px),
+    radial-gradient(ellipse at 38% 43%, rgba(255,250,210,.18), transparent 34%);
+  mix-blend-mode: screen;
+  filter: blur(4px);
+  animation: chapter1CorePortalSurfaceShimmer 1.35s ease-in-out infinite alternate;
 }
 html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-ring {
   animation: chapter1CorePortalOpen 2.5s cubic-bezier(.16,.86,.22,1) both;
@@ -445,34 +532,66 @@ html.is-embedded-story .chapter1-core-portal-sparks::after {
   content: "";
   left: 50%;
   top: 43%;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #fffbd1;
-  box-shadow: -120px -70px 0 #ffd84d, 112px -52px 0 #fff, -94px 86px 0 #7edcff, 128px 72px 0 #ffd84d, 0 -126px 0 #fff;
+  background: #fffef0;
+  box-shadow:
+    -132px -118px 0 #ffd84d,
+    118px -132px 0 #fff,
+    -146px 82px 0 #7edcff,
+    144px 105px 0 #ffd84d,
+    0 -206px 0 #fff,
+    -74px 198px 0 #95e9ff,
+    82px 206px 0 #fff0a6;
   opacity: 0;
+  filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #ffd84d);
 }
 html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-sparks,
 html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-sparks::before,
-html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-sparks::after {
-  animation: chapter1CorePortalSparks 1.45s ease-in-out infinite;
+html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-portal-sparks::after,
+html.is-embedded-story .chapter1-core-portal-overlay.is-entering .chapter1-core-portal-sparks,
+html.is-embedded-story .chapter1-core-portal-overlay.is-entering .chapter1-core-portal-sparks::before,
+html.is-embedded-story .chapter1-core-portal-overlay.is-entering .chapter1-core-portal-sparks::after {
+  animation: chapter1CorePortalSparks 1.3s ease-in-out infinite;
 }
 html.is-embedded-story .chapter1-core-portal-sparks::before { transform: rotate(55deg) scale(.82); }
 html.is-embedded-story .chapter1-core-portal-sparks::after { transform: rotate(112deg) scale(.66); }
 @keyframes chapter1CorePortalOpen {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(.02) rotate(-70deg); }
-  34% { opacity: 1; transform: translate(-50%, -50%) scale(.34) rotate(20deg); }
-  72% { opacity: 1; transform: translate(-50%, -50%) scale(1.05) rotate(120deg); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(180deg); }
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.025); filter: saturate(1.2) brightness(1.4) blur(4px); }
+  26% { opacity: 1; transform: translate(-50%, -50%) scale(.30); filter: saturate(1.5) brightness(1.65) blur(1px); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); filter: saturate(1.42) brightness(1.33); }
+  86% { opacity: 1; transform: translate(-50%, -50%) scale(.97); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: saturate(1.34) brightness(1.22); }
 }
 @keyframes chapter1CorePortalEnter {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(180deg); }
-  45% { opacity: 1; transform: translate(-50%, -50%) scale(1.5) rotate(245deg); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(7.2) rotate(390deg); }
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  42% { opacity: 1; transform: translate(-50%, -50%) scale(1.42); filter: saturate(1.55) brightness(1.55); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(7.4); filter: saturate(1.7) brightness(1.8) blur(1px); }
 }
 @keyframes chapter1CorePortalSparks {
-  0%, 100% { opacity: .28; filter: blur(0); }
-  50% { opacity: 1; filter: blur(1px); }
+  0%, 100% { opacity: .28; filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 12px #ffd84d); }
+  50% { opacity: 1; filter: drop-shadow(0 0 14px #fff) drop-shadow(0 0 28px #7edcff); }
+}
+@keyframes chapter1CorePortalWarpA {
+  0%,100% { opacity: .34; transform: translate(-50%,-50%) scale(.88, .94); }
+  50% { opacity: .86; transform: translate(-50%,-50%) scale(1.08, 1.02); }
+}
+@keyframes chapter1CorePortalWarpB {
+  0%,100% { opacity: .18; transform: translate(-50%,-50%) scale(.88, 1.03) skewX(-1.3deg); }
+  50% { opacity: .62; transform: translate(-50%,-50%) scale(1.06, .96) skewX(1.6deg); }
+}
+@keyframes chapter1CorePortalRimPulse {
+  0%,100% { opacity: .45; transform: scale(.94); }
+  50% { opacity: 1; transform: scale(1.07); }
+}
+@keyframes chapter1CorePortalSurface {
+  0%,100% { background-position: center, center, 50% 50%; filter: brightness(.93) saturate(1.08); }
+  50% { background-position: center, center, 52% 47%; filter: brightness(1.16) saturate(1.3); }
+}
+@keyframes chapter1CorePortalSurfaceShimmer {
+  0% { opacity: .34; transform: translateX(-3%) skewY(-.8deg) scale(1.02); }
+  100% { opacity: .8; transform: translateX(3%) skewY(.8deg) scale(1.06); }
 }
 
 /* 학사 코어 영역 진입 시네마틱은 브라우저 전체 화면을 사용한다. */
