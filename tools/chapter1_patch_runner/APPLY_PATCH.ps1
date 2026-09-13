@@ -684,29 +684,18 @@ try {
 
     Write-Host "Default commit message: $CommitMessage" -ForegroundColor DarkCyan
 
-    $shouldCommit = $Commit -or $Push
-    $shouldPush = $Push
-    if (-not $NonInteractive -and -not $shouldCommit) {
-        Write-Host ""
-        Write-Host "Validation completed successfully." -ForegroundColor Green
-        Write-Host "Commit message: $CommitMessage" -ForegroundColor Cyan
-        Write-Host "Press Enter to leave changes uncommitted."
-        Write-Host "Enter C to commit, P to commit and push, or M to enter a custom commit message."
-        $choice = (Read-Host "Choice").Trim().ToUpperInvariant()
-        if ($choice -eq 'C') { $shouldCommit = $true }
-        elseif ($choice -eq 'P') { $shouldCommit = $true; $shouldPush = $true }
-        elseif ($choice -eq 'M') {
-            $customCommitMessage = (Read-Host "Commit message").Trim()
-            if ([string]::IsNullOrWhiteSpace($customCommitMessage)) {
-                Write-WarnMessage "No custom message was entered. Using the automatic message: $CommitMessage"
-            }
-            else {
-                $CommitMessage = $customCommitMessage
-            }
-            $shouldCommit = $true
-        }
-    }
+    # v8 default behavior: every validated patch is committed and pushed automatically.
+    # -CommitMessage still overrides the automatic message when supplied.
+    # We intentionally do not auto-rebase or force-push when the remote is ahead.
+    $shouldCommit = $true
+    $shouldPush = $true
 
+    Write-Host ""
+    Write-Host "Validation completed successfully." -ForegroundColor Green
+    Write-Host "Auto commit message: $CommitMessage" -ForegroundColor Cyan
+    Write-Host "Default action: commit and push" -ForegroundColor Cyan
+
+    $commitCreated = $false
     if ($shouldCommit) {
         Write-Step "Creating Git commit"
         foreach ($item in $plan) {
@@ -718,20 +707,38 @@ try {
         }
         else {
             Invoke-CheckedCommand -Command 'git' -Arguments @('commit', '-m', $CommitMessage) -FailureMessage "git commit failed."
-            Write-Ok "Created commit: $CommitMessage"
+            $commitCreated = $true
+            $createdCommitHash = Get-CommandOutput -Command 'git' -Arguments @('rev-parse', '--short', 'HEAD')
+            Write-Ok "Created commit: $createdCommitHash $CommitMessage"
         }
     }
 
     if ($shouldPush) {
         Write-Step "Pushing current branch"
-        $upstream = Get-CommandOutput -Command 'git' -Arguments @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
-        if ([string]::IsNullOrWhiteSpace($upstream)) {
-            Invoke-CheckedCommand -Command 'git' -Arguments @('push', '-u', 'origin', $branchName) -FailureMessage "git push failed."
+        try {
+            $upstream = Get-CommandOutput -Command 'git' -Arguments @('rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}')
+            if ([string]::IsNullOrWhiteSpace($upstream)) {
+                Invoke-CheckedCommand -Command 'git' -Arguments @('push', '-u', 'origin', $branchName) -FailureMessage "git push failed."
+            }
+            else {
+                Invoke-CheckedCommand -Command 'git' -Arguments @('push') -FailureMessage "git push failed."
+            }
+            Write-Ok "Push completed"
         }
-        else {
-            Invoke-CheckedCommand -Command 'git' -Arguments @('push') -FailureMessage "git push failed."
+        catch {
+            Write-Host ""
+            Write-Host "PATCH APPLIED AND COMMITTED, BUT PUSH FAILED" -ForegroundColor Yellow
+            Write-Host $_.Exception.Message -ForegroundColor Yellow
+            if ($commitCreated) {
+                $currentCommit = Get-CommandOutput -Command 'git' -Arguments @('rev-parse', '--short', 'HEAD')
+                Write-Ok "Local commit was preserved: $currentCommit $CommitMessage"
+            }
+            Write-WarnMessage "No patch rollback was performed because the commit already succeeded."
+            Write-WarnMessage "Fetch/rebase the remote branch, then run git push again."
+            if (-not [string]::IsNullOrWhiteSpace($backupBranch)) { Write-Host "Safety branch retained: $backupBranch" }
+            if (-not [string]::IsNullOrWhiteSpace($reportPath)) { Write-Host "Report: $reportPath" }
+            exit 2
         }
-        Write-Ok "Push completed"
     }
 
     Write-Host ""

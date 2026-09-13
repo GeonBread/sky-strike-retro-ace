@@ -1,4 +1,4 @@
-@rem Chapter 1 ZIP Patch Runner v6
+@rem ZIP Patch Runner v8
 @echo off
 setlocal EnableExtensions
 
@@ -34,10 +34,13 @@ if "%ZIP_PATH%"=="" (
 
 set "EXIT_CODE=%ERRORLEVEL%"
 echo.
-if not "%EXIT_CODE%"=="0" (
-  echo Patch processing failed. No automatic hard reset or git clean was used.
+if "%EXIT_CODE%"=="0" (
+  echo Patch processing finished. The validated patch was committed and pushed.
+) else if "%EXIT_CODE%"=="2" (
+  echo Patch was applied and committed, but Git push failed.
+  echo The local commit was preserved. No automatic rollback was performed.
 ) else (
-  echo Patch processing finished.
+  echo Patch processing failed. No automatic hard reset or git clean was used.
 )
 echo.
 pause
