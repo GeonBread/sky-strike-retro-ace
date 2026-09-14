@@ -429,7 +429,6 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       portal.remove();
       corePortalOverlay = null;
       corePortalSequenceTimer = null;
-      storyStage.classList.remove('is-core-portal-fullscreen');
       beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
     }, 2200);
   }`;
@@ -475,35 +474,31 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   }
   normalized = normalized.replace(corePortalEntryHook, corePortalEntryV26);
 
-  // v27: Chapter 1 boss appearance cinematic must cover the whole browser, not only the 922x960 story/game viewport.
-  const bossAppearanceFullscreenStartHook = `  function startBossAppearance() {
+  // Fullscreen boss appearance is optional: if a source variant does not contain the exact hook,
+  // never abort Chapter 1 startup. This prevents the entire story from rendering blank.
+  const bossAppearanceStartHook = `  function startBossAppearance() {
     flowMode = 'boss-cinematic';
     document.body.dataset.flowMode = 'game';
     storyStage.classList.add('is-game-mode');`;
-  const bossAppearanceFullscreenStart = `  function startBossAppearance() {
+  const bossAppearanceStartFullscreen = `  function startBossAppearance() {
     flowMode = 'boss-cinematic';
     document.body.dataset.flowMode = 'game';
     storyStage.classList.add('is-game-mode', 'is-boss-appearance-fullscreen');`;
-  if (!normalized.includes(bossAppearanceFullscreenStartHook)) {
-    throw new Error('Chapter 1 boss appearance start hook was not found.');
+  if (normalized.includes(bossAppearanceStartHook)) {
+    normalized = normalized.replace(bossAppearanceStartHook, bossAppearanceStartFullscreen);
   }
-  normalized = normalized.replace(bossAppearanceFullscreenStartHook, bossAppearanceFullscreenStart);
-
-  const bossAppearanceFullscreenEndHook = `      game.bossAppearanceActive = false;
+  const bossAppearanceEndHook = `      game.bossAppearanceActive = false;
       gameLayer.classList.remove('is-boss-arriving');`;
-  const bossAppearanceFullscreenEnd = `      game.bossAppearanceActive = false;
+  const bossAppearanceEndFullscreen = `      game.bossAppearanceActive = false;
       gameLayer.classList.remove('is-boss-arriving');
       storyStage.classList.remove('is-boss-appearance-fullscreen');`;
-  if (!normalized.includes(bossAppearanceFullscreenEndHook)) {
-    throw new Error('Chapter 1 boss appearance end hook was not found.');
+  if (normalized.includes(bossAppearanceEndHook)) {
+    normalized = normalized.replace(bossAppearanceEndHook, bossAppearanceEndFullscreen);
   }
-  normalized = normalized.replace(bossAppearanceFullscreenEndHook, bossAppearanceFullscreenEnd);
-
   const clearFlowFullscreenHook = `    gameLayer.classList.remove('is-energy-complete', 'is-boss-arriving');`;
-  const clearFlowFullscreen = `    gameLayer.classList.remove('is-energy-complete', 'is-boss-arriving');
-    storyStage.classList.remove('is-core-portal-fullscreen', 'is-boss-appearance-fullscreen');`;
   if (normalized.includes(clearFlowFullscreenHook)) {
-    normalized = normalized.replace(clearFlowFullscreenHook, clearFlowFullscreen);
+    normalized = normalized.replace(clearFlowFullscreenHook, `${clearFlowFullscreenHook}
+    storyStage.classList.remove('is-core-portal-fullscreen', 'is-boss-appearance-fullscreen');`);
   }
 
   return normalized;
@@ -584,8 +579,7 @@ html.is-embedded-story .dialogue-text {
   margin: 0 !important;
 }
 
-
-/* v27: 포탈 진입과 보스 등장 시네마틱은 922x960 게임 화면에 갇히지 않고 브라우저 전체를 사용한다. */
+/* 포탈 진입/보스 등장 동안만 브라우저 전체 화면을 사용한다. */
 html.is-embedded-story .story-stage.is-core-portal-fullscreen,
 html.is-embedded-story .story-stage.is-boss-appearance-fullscreen {
   position: fixed !important;
@@ -596,7 +590,6 @@ html.is-embedded-story .story-stage.is-boss-appearance-fullscreen {
   max-height: none !important;
   aspect-ratio: auto !important;
   border: 0 !important;
-  border-radius: 0 !important;
   box-shadow: none !important;
   z-index: 100000 !important;
 }
@@ -605,10 +598,6 @@ html.is-embedded-story .story-stage.is-boss-appearance-fullscreen .game-layer,
 html.is-embedded-story .story-stage.is-boss-appearance-fullscreen #gameCanvas {
   width: 100% !important;
   height: 100% !important;
-}
-html.is-embedded-story .story-stage.is-core-portal-fullscreen .chapter1-core-portal-overlay {
-  position: absolute !important;
-  inset: 0 !important;
 }
 
 /* CH1 코어 영역 이동: 일러스트 없이, 세워진 타원형 포탈 자체가 영롱하게 발광한다. */

@@ -99,8 +99,14 @@ const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
 const STORY_SEGMENT = "chapter2_full";
 const CHAPTER2_WAVE_COUNT = 20;
 function isChapter2FullscreenStoryEffect(effectId: string | undefined): boolean {
-  // 모든 컷씬/전환 연출은 브라우저 전체 화면에서 실행하고, 종료되면 922×960 스토리 프레임으로 복귀합니다.
-  return Boolean(effectId);
+  if (!effectId) return false;
+  // 보스 영역 도착 직후의 배경/LOCATION 표시는 스토리 게임 프레임 안에서만 보여준다.
+  if (
+    effectId === "boss-arrival-background-hold"
+    || effectId === "boss-arrival-location-title"
+    || effectId === "boss-arrival-background-title"
+  ) return false;
+  return true;
 }
 
 function chapter2CheckpointFromState(state: Chapter2StoryStateMessage | undefined): StoryCheckpoint | null {

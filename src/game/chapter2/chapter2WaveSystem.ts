@@ -14,7 +14,7 @@ import { spawnChapter1EnemyHitEffectSystem } from "../chapter1/chapter1WaveImpac
 const W = 900;
 const H = 1200;
 const MONSTER_SCALE = 1.28 * 1.3;
-const ENEMY_BULLET_SCALE = 1.3;
+const ENEMY_BULLET_VISUAL_SCALE = 1.3;
 // Keep the simulator's original enemy/effect proportions. The source simulator
 // rendered a 900 x 1200 virtual field into a 720 x 960 canvas (uniform 0.8x).
 // The integrated game is wider (922 x 960), so only X positions are widened to
@@ -477,8 +477,8 @@ function spawnBullet(kind: string, x: number, y: number, angle: number, speed: n
     t: 0,
     stateT: 0,
     state: options.state || "main",
-    r: (options.r || 14) * ENEMY_BULLET_SCALE,
-    scale: (options.scale || 1) * ENEMY_BULLET_SCALE,
+    r: options.r || 14,
+    scale: options.scale || 1,
     alpha: options.alpha ?? 1,
     active: options.active ?? true,
     dormant: options.dormant || false,
@@ -486,8 +486,8 @@ function spawnBullet(kind: string, x: number, y: number, angle: number, speed: n
     turnAt: options.turnAt || 0,
     turned: false,
     wall: options.wall || false,
-    w: (options.w || 0) * ENEMY_BULLET_SCALE,
-    h: (options.h || 0) * ENEMY_BULLET_SCALE,
+    w: options.w || 0,
+    h: options.h || 0,
     cool: options.cool || 0,
     spin: options.spin || 0,
     seed: Math.random() * Math.PI * 2,
@@ -1697,7 +1697,7 @@ function drawMonsterDataSparks(e,x,y,w,h,color){ctx.save();ctx.globalCompositeOp
 function drawSpawnScan(e,x,y,w,h,color){if(e.t>=.55)return;const t=e.t/.55;ctx.save();ctx.globalCompositeOperation="screen";ctx.globalAlpha=(1-t)*.72;ctx.fillStyle=color;ctx.fillRect(x-w*.62,y-h*.58+t*h*1.1,w*1.24,5);ctx.restore()}
 function attackCueValue(e){const q=diff();let rem=99;if(e.type==="anxiety"&&e.state==="stop")rem=.22/q-e.stateT;else if(e.type==="noreply"&&e.state==="attack"&&!e.data.fired)rem=.34/q-e.stateT;else if(e.type==="format"&&e.state==="warn")rem=.62/q-e.stateT;else if(e.type==="energy"&&e.state==="overcharge")rem=.48/q-e.stateT;else if(e.type==="reference"&&e.state==="build"&&!e.data.anchorMade)rem=.22/q+(e.data.index||0)*.13-e.stateT;else if(e.type==="countdown"&&e.state==="count")rem=.82/q-e.stateT;else if(e.type==="countdown"&&e.state==="zero")rem=.72/q-e.stateT;else if(e.type==="compressor"&&e.state==="charge"){const p=e.data.phase||1;rem=(p===1?.88:p===2?.72:.62)/q-e.stateT}else if(e.type==="drone"&&e.state==="hover")rem=e.cool;return rem>0&&rem<.28?1-rem/.28:0}
 function drawAttackCue(e,x,y,w,h,color){const k=attackCueValue(e);if(k<=0)return;const off=w*.56+k*16,yy=y,alpha=.25+.7*k;ctx.save();ctx.globalCompositeOperation="screen";ctx.strokeStyle=color;ctx.lineWidth=4;ctx.globalAlpha=alpha;ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(x-off-13,yy-12);ctx.lineTo(x-off,yy);ctx.lineTo(x-off-13,yy+12);ctx.moveTo(x+off+13,yy-12);ctx.lineTo(x+off,yy);ctx.lineTo(x+off+13,yy+12);ctx.stroke();ctx.restore()}
-function drawBulletTrail(b,color){if(b.dormant||b.wall||b.kind==="eliteWall")return;const speed=Math.hypot(b.vx,b.vy);if(speed<8)return;const dx=b.vx/speed,dy=b.vy/speed,L=clamp(speed*.055,8,24),x2=b.x-dx*L,y2=b.y-dy*L;ctx.save();ctx.globalCompositeOperation="screen";const g=ctx.createLinearGradient(b.x,b.y,x2,y2);g.addColorStop(0,rgba(color,.67));g.addColorStop(.55,rgba(color,.26));g.addColorStop(1,rgba(color,0));ctx.strokeStyle=g;ctx.lineWidth=Math.max(3,b.r*.42);ctx.lineCap="round";ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()}
+function drawBulletTrail(b,color){if(b.dormant||b.wall||b.kind==="eliteWall")return;const speed=Math.hypot(b.vx,b.vy);if(speed<8)return;const dx=b.vx/speed,dy=b.vy/speed,L=clamp(speed*.055,8,24),x2=b.x-dx*L,y2=b.y-dy*L;ctx.save();ctx.globalCompositeOperation="screen";const g=ctx.createLinearGradient(b.x,b.y,x2,y2);g.addColorStop(0,rgba(color,.67));g.addColorStop(.55,rgba(color,.26));g.addColorStop(1,rgba(color,0));ctx.strokeStyle=g;ctx.lineWidth=Math.max(3,b.r*.42)*ENEMY_BULLET_VISUAL_SCALE;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore()}
 function drawBulletDataSparks(b,color){if(b.dormant||b.wall||b.kind==="eliteWall")return;const speed=Math.hypot(b.vx,b.vy);if(speed<8)return;const dx=b.vx/speed,dy=b.vy/speed,nx=-dy,ny=dx,phase=Math.floor((b.t*24+b.seed)%3);ctx.save();ctx.globalCompositeOperation="screen";for(let i=0;i<2;i++){const back=9+i*8,side=(i?1:-1)*(2+phase*.55),x=b.x-dx*back+nx*side,y=b.y-dy*back+ny*side;ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI*.25+b.t*5+i);ctx.globalAlpha=.3+.18*((phase+i)%3);ctx.fillStyle=color;ctx.fillRect(-1.4,-1.4,2.8,2.8);ctx.restore()}ctx.restore()}
 
 function glowColorEnemy(type){return({ghost:"#c7f5ff",pointer:"#5fd2ff",submarine:"#5bd7ff",anxiety:"#b97cff",noreply:"#8fe6ff",format:"#ff8a78",energy:"#ae8dff",reference:"#7fd8ff",highlighter:"#d6ff31",countdown:"#ffb95a",compressor:"#ffd65b",drone:"#fff0a5"}[type]||"#9fd8ff")}
@@ -2058,11 +2058,11 @@ function drawBullet(b){
  ctx.save();
  if(b.kind==="eliteWall"){ctx.shadowBlur=0;ctx.shadowColor="transparent"}
  else{ctx.shadowColor=color;ctx.shadowBlur=(b.kind==="energyBomb"||b.kind==="block")?11:7}
- if(b.kind==="noReplyCore"){ctx.globalAlpha=b.alpha;ctx.translate(b.x,b.y);ctx.rotate(b.a+Math.PI/2);ctx.scale(b.scale,b.scale);drawNoReplyCore(b)}
- else if(b.kind==="miniShard"||b.kind==="noReplyShard"){ctx.globalAlpha=b.dormant?.55:1;ctx.translate(b.x,b.y);ctx.rotate(b.a+Math.PI/2);ctx.scale(b.scale,b.scale);drawNoReplyShard()}
- else if(b.kind==="boomerangPage"){ctx.translate(b.x,b.y);ctx.rotate(b.a+Math.PI/2);ctx.scale(b.scale,b.scale);drawBoomerangPage()}
+ if(b.kind==="noReplyCore"){ctx.globalAlpha=b.alpha;ctx.translate(b.x,b.y);ctx.rotate(b.a+Math.PI/2);ctx.scale(b.scale*ENEMY_BULLET_VISUAL_SCALE,b.scale*ENEMY_BULLET_VISUAL_SCALE);drawNoReplyCore(b)}
+ else if(b.kind==="miniShard"||b.kind==="noReplyShard"){ctx.globalAlpha=b.dormant?.55:1;ctx.translate(b.x,b.y);ctx.rotate(b.a+Math.PI/2);ctx.scale(b.scale*ENEMY_BULLET_VISUAL_SCALE,b.scale*ENEMY_BULLET_VISUAL_SCALE);drawNoReplyShard()}
+ else if(b.kind==="boomerangPage"){ctx.translate(b.x,b.y);ctx.rotate(b.a+Math.PI/2);ctx.scale(b.scale*ENEMY_BULLET_VISUAL_SCALE,b.scale*ENEMY_BULLET_VISUAL_SCALE);drawBoomerangPage()}
  else if(b.kind==="eliteWall")drawEliteWall(b);
- else{const map={paper:"paper",drop:"drop",x:"x",energy:"energyOrb",energyWisp:"energyOrb",energyBomb:"energyOrb",citation:"citation",citationAnchor:"citation",ink:"ink",timer:"timer",block:"block"},im=images[map[b.kind]];if(b.wall){const dir=b.vx>0?1:-1;drawImageFit(im,b.x,b.y,Math.min(160,Math.max(75,b.w*.32)),66,dir>0?0:Math.PI,b.dormant?.5:1)}else drawImageFit(im,b.x,b.y,90*b.scale,90*b.scale,b.a+Math.PI/2,b.dormant?.55:1)}
+ else{const map={paper:"paper",drop:"drop",x:"x",energy:"energyOrb",energyWisp:"energyOrb",energyBomb:"energyOrb",citation:"citation",citationAnchor:"citation",ink:"ink",timer:"timer",block:"block"},im=images[map[b.kind]];if(b.wall){const dir=b.vx>0?1:-1;drawImageFit(im,b.x,b.y,Math.min(160,Math.max(75,b.w*.32))*ENEMY_BULLET_VISUAL_SCALE,66*ENEMY_BULLET_VISUAL_SCALE,dir>0?0:Math.PI,b.dormant?.5:1)}else drawImageFit(im,b.x,b.y,90*b.scale*ENEMY_BULLET_VISUAL_SCALE,90*b.scale*ENEMY_BULLET_VISUAL_SCALE,b.a+Math.PI/2,b.dormant?.55:1)}
  ctx.restore();
 
 }

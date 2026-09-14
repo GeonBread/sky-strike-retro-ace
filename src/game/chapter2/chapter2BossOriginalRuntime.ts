@@ -204,7 +204,7 @@ const CHAT_SCENARIOS=[
  ]}
 ];
 function pickSharedKakaoRoom(){const pool=Array.isArray(window.KAKAO_ROOM_POOL)&&window.KAKAO_ROOM_POOL.length?window.KAKAO_ROOM_POOL:[{title:"팀플 채팅방",count:"4",avatar:0,preview:"자료 확인 부탁드립니다.",time:"오후 4:20",unread:12}];return{...pool[randi(0,pool.length-1)]}}
-function makeChatPatternState(){return{messages:[],activeBatch:null,pendingBatch:null,next:.25,index:0,batchNo:0,lasers:[],attachments:[],notifications:[],noticeNext:2.6,noticeQueue:4,noticeRequested:false,noticeActive:null,noticePause:0,safeZone:null,closing:false,fullAttackActive:false,lastSafeGapRatio:.5,scenario:CHAT_SCENARIOS[randi(0,CHAT_SCENARIOS.length-1)],room:pickSharedKakaoRoom(),windowState:"opening",windowT:0,windowProgress:0,openDuration:.82,closeDuration:.78}}
+function makeChatPatternState(){return{messages:[],activeBatch:null,pendingBatch:null,next:.25,index:0,batchNo:0,lasers:[],attachments:[],notifications:[],noticeNext:2.6,noticeQueue:4,noticeRequested:false,noticeActive:null,noticePause:0,safeZone:null,closing:false,closingT:0,fullAttackActive:false,lastSafeGapRatio:.5,scenario:CHAT_SCENARIOS[randi(0,CHAT_SCENARIOS.length-1)],room:pickSharedKakaoRoom(),windowState:"opening",windowT:0,windowProgress:0,openDuration:.82,closeDuration:.78}}
 function initPattern(k){
  if(k==="math")return{round:0,maxRounds:5,problem:null,answers:[],timer:0,next:.5,flash:0,shieldFlash:0,shieldMiss:0,shieldHitAngle:0,awaitFinalImpact:false,finalImpactDone:false,finalImpactDelay:0,timeoutBurstWait:0,timeoutBurstFx:0};
  if(k==="fbomb")return{phase:"opening",phaseT:0,queryDelay:.95,loading:1.0,finishDelay:0,revealClock:0,rows:buildFbombRows(),bombs:[],studentNo:"2027xxxxxx",studentName:"호반우",mouse:{x:0,y:0,press:0,jitter:0},warnText:"조회된 데이터가 없습니다.",browserT:0};
@@ -240,7 +240,7 @@ function buildDocDrones(){
 function aliveDocDroneCount(q){return(q&&q.drones?q.drones.filter(d=>!d.dead).length:0)}
 function bossShieldedForPattern(){const q=state.q||{},k=cur().kind;return (k==="docs"&&aliveDocDroneCount(q)>0)||(k==="math"&&!!q.problem)}
 function triggerBossShieldBlock(x=state.boss.x,y=state.boss.y){const q=state.q||{};q.shieldFlash=.42;q.shieldMiss=.58;q.shieldHitAngle=Math.atan2(y-state.boss.y,x-state.boss.x);burst(x,y,cur().kind==="math"?"#ffe48a":"#8fd7ff",8);spawnWave(state.boss.x,state.boss.y,cur().kind==="math"?"#ffe48a":"#82d8ff",6,.28,165);triggerScreenShake(2.5,.08)}
-function patternCanTimeout(){const q=state.q||{},k=cur().kind;if(k==="math"&&(q.round<(q.maxRounds||5)||q.problem||q.awaitFinalImpact||q.timeoutBurstWait>0))return false;if(k==="laserWave")return !!q.canEnd;if(k==="zoom")return !!q.canEnd;return !(k==="docs"&&aliveDocDroneCount(q)>0) && k!=="blackhole" && k!=="chat" && k!=="books" && !isMeetingPattern(k)}
+function patternCanTimeout(){const q=state.q||{},k=cur().kind;if(k==="math"&&(q.round<(q.maxRounds||5)||q.problem||q.awaitFinalImpact||q.timeoutBurstWait>0))return false;if(k==="laserWave")return !!q.canEnd;if(k==="zoom")return !!q.canEnd;if(k==="chat")return !!q.closing&&(q.closingT||0)>3.2;return !(k==="docs"&&aliveDocDroneCount(q)>0) && k!=="blackhole" && k!=="books" && !isMeetingPattern(k)}
 function spawnCircleMark(q){q.circles.push({x:rand(130,W-130),y:rand(330,800),r:rand(72,118),p:0,life:0,exploded:false,seed:Math.random()*100,speed:rand(.82,1.42)});q.count++}
 function resolveBulletVisual(color,type){if(type==="star")return color.includes("74")?"starGreen":color.includes("4f")||color.includes("7c")?"starCyan":color.includes("ff5")||color.includes("e4")?"starRed":color.includes("4b")||color.includes("30")?"starBlue":color.includes("bf")||color.includes("a6")?"starPurple":"starGold";if(color.includes("ff")&&(color.includes("39")||color.includes("4d")||color.includes("55")||color.includes("60")))return"corruptionOrbRed";if(color.includes("36")||color.includes("7c")||color.includes("72")||color.includes("1d"))return"corruptionOrbCyan";if(color.includes("74")||color.includes("9a")||color.includes("65"))return"corruptionOrbLime";if(color.includes("f2")||color.includes("ffab")||color.includes("d8b"))return"corruptionOrbOrange";if(color.includes("30")||color.includes("4b")||color.includes("79"))return"corruptionOrbBlue";return"corruptionOrbPurple"}
 const GAME_CORRUPTION_ORBS=["corruptionOrbPurple","corruptionOrbRed","corruptionOrbCyan","corruptionOrbLime","corruptionOrbOrange","corruptionOrbBlue"];
@@ -600,7 +600,15 @@ function updateChat(q,dt){
   return
  }
  q.next-=dt;q.noticeNext-=dt;if(q.noticePause>0)q.noticePause-=dt;
- if(!q.closing&&state.elapsed>=cur().duration-.01){q.closing=true;q.noticeRequested=false;q.pendingBatch=null;q.noticeQueue=0}
+ if(!q.closing&&state.elapsed>=cur().duration-.01){q.closing=true;q.closingT=0;q.noticeRequested=false;q.pendingBatch=null;q.noticeQueue=0}
+ if(q.closing){
+  q.closingT=(q.closingT||0)+dt;
+  if(q.closingT>2.1&&q.windowState!=="closing"&&!state.patternDone){
+   q.activeBatch=null;q.pendingBatch=null;q.noticeRequested=false;q.noticeActive=null;q.noticeQueue=0;
+   q.lasers.length=0;q.attachments.length=0;q.fullAttackActive=false;q.safeZone=null;
+   q.windowState="closing";q.windowT=0;q.windowProgress=1;
+  }
+ }
  if(!q.closing&&!q.fullAttackActive&&q.noticeQueue>0&&q.noticeNext<=0&&Math.random()<.16)q.noticeRequested=true;
  const activeSafeLaser=q.lasers.find(l=>l.fullAttack&&l.safeGap&&(l.charge>0||l.life>0));
  if(activeSafeLaser){
