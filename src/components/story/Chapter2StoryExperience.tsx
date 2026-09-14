@@ -570,15 +570,14 @@ export function Chapter2StoryExperience({
         // 검은 화면이 유지되는 동안 iframe 스토리를 먼저 다음 장면으로 진행시킨 뒤 공개한다.
         // 이렇게 하면 전투 화면/이전 스토리 배경이 한 프레임 비치는 현상을 막을 수 있다.
         purificationTimerRef.current = window.setTimeout(() => {
-          // 일반 전투 직후 이어지는 정화조각 → 학생증 흡수 시네마틱은
-          // effect progress 이벤트가 story phase보다 먼저 도착할 수 있습니다.
-          // 다음 custom effect가 시작되는 순간부터 iframe shell을 전체 화면으로 확장해 둡니다.
+          // 정화조각 → 학생증 흡수 시네마틱의 첫 프레임부터 iframe 자체를 브라우저 전체화면으로 전환합니다.
+          // phase를 먼저 story로 돌린 다음 command를 보내야 배경까지 100vw × 100dvh로 렌더링됩니다.
           setStoryFullscreenEffectActive(true);
-          postCommand("resumeIntegrationGate");
+          setPhase("story");
           purificationTimerRef.current = window.setTimeout(() => {
             purificationTimerRef.current = null;
-            setPhase("story");
-          }, 250);
+            postCommand("resumeIntegrationGate");
+          }, 40);
         }, 600);
       }, 1500);
     }, 3300);
@@ -675,7 +674,7 @@ export function Chapter2StoryExperience({
 
   return (
     <div className="chapter2-story-experience">
-      <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive && phase === "story" ? " is-story-effect-fullscreen" : ""}`}>
+      <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive ? " is-story-effect-fullscreen" : ""}`}>
         <iframe
           ref={iframeRef}
           className="chapter2-story-frame"

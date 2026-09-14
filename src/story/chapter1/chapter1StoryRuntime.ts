@@ -318,6 +318,161 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   }
   normalized = normalized.replace(starRevealHook, starRevealWithSound);
 
+  // v26: v24에서 일반 웨이브 직후에 잘못 붙었던 3초 백색 → 2초 암전은 제거한다.
+  // 일반 웨이브 종료 뒤에는 기존의 2초 암전 흐름을 유지하고,
+  // 실제 코어 영역 포탈 진입(startBossEntryCinematic)에서만 긴 전이를 사용한다.
+  const energyBlackoutV24 = `  function startEnergy100BlackDialogueSequence() {
+    clearPreEnergySequence();
+    stopTyping();
+    flowMode = 'story-transition';
+    document.body.dataset.flowMode = 'story';
+    game.running = false;
+    game.keys.clear();
+    dialogueLayer.hidden = true;
+    gameLayer.hidden = true;
+    storyStage.classList.remove('is-game-mode');
+    storyStage.classList.add('is-full-story');
+    setActor('left', null, null, {});
+    setActor('right', null, null, {});
+    hideActorCluster('left');
+    hideStoryEffects();
+    finishIllustrationHide();
+
+    showSceneBackgroundOnly(energy100BlackScene);
+    storyStage.classList.add('is-pre-energy-whiteout');
+
+    preEnergySequenceTimers.push(window.setTimeout(() => {
+      storyStage.classList.remove('is-pre-energy-whiteout');
+      storyStage.classList.add('is-pre-energy-blackout');
+    }, 3000));
+
+    preEnergySequenceTimers.push(window.setTimeout(() => {
+      storyStage.classList.remove('is-pre-energy-blackout');
+      beginStory('energy100Dialogue', 'startBossIntro', { forceFullScene: true, preserveScene: true });
+    }, 5000));
+  }`;
+  const energyBlackoutRestored = `  function startEnergy100BlackDialogueSequence() {
+    clearPreEnergySequence();
+    stopTyping();
+    flowMode = 'story-transition';
+    document.body.dataset.flowMode = 'story';
+    game.running = false;
+    game.keys.clear();
+    dialogueLayer.hidden = true;
+    gameLayer.hidden = true;
+    storyStage.classList.remove('is-game-mode');
+    storyStage.classList.add('is-full-story');
+    setActor('left', null, null, {});
+    setActor('right', null, null, {});
+    hideActorCluster('left');
+    hideStoryEffects();
+    finishIllustrationHide();
+
+    showSceneBackgroundOnly(energy100BlackScene);
+    storyStage.classList.add('is-pre-energy-blackout');
+
+    preEnergySequenceTimers.push(window.setTimeout(() => {
+      storyStage.classList.remove('is-pre-energy-blackout');
+      beginStory('energy100Dialogue', 'startBossIntro', { forceFullScene: true, preserveScene: true });
+    }, 2000));
+  }`;
+  if (normalized.includes(energyBlackoutV24)) normalized = normalized.replace(energyBlackoutV24, energyBlackoutRestored);
+
+  const playerExitV24 = `      /* 포탈 진입 후 3초간 백색 전이, 이어서 2초간 암전 상태를 유지합니다. */
+      startEnergy100BlackDialogueSequence();
+    }, 1700);`;
+  const playerExitRestored = `      /* 일반 오염 웨이브 종료 직후에는 기존 흐름대로 2초 암전만 유지합니다. */
+      startEnergy100BlackDialogueSequence();
+    }, 2000);`;
+  if (normalized.includes(playerExitV24)) normalized = normalized.replace(playerExitV24, playerExitRestored);
+
+  // 실제 코어 영역 포탈 입장 장면: 포탈이 회전·흔들리며 화면을 삼키고,
+  // 서서히 백색으로 전환 → 백색 약 3초 유지 → 서서히 암전 → 검정 약 2초 유지 후 맵 공개.
+  const corePortalMarkupHook = `      <div class="chapter1-core-portal-ring">
+        <div class="chapter1-core-portal-window"></div>
+      </div>`;
+  const corePortalMarkupV26 = `      <div class="chapter1-core-portal-ring">
+        <div class="chapter1-core-portal-window"></div>
+      </div>
+      <div class="chapter1-core-portal-entry-fade"></div>`;
+  if (normalized.includes(corePortalMarkupHook)) normalized = normalized.replace(corePortalMarkupHook, corePortalMarkupV26);
+
+  const corePortalEntryHook = `  function startBossEntryCinematic(bossIntroCompletionAction = 'startBossBattle') {
+    stopTyping();
+    if (dialogueOpenTimer !== null) window.clearTimeout(dialogueOpenTimer);
+    dialogueOpenTimer = null;
+    dialogueLayer.classList.remove('is-opening');
+    dialogueLayer.hidden = true;
+    gameLayer.hidden = true;
+    game.running = false;
+    game.keys.clear();
+    flowMode = 'story-transition';
+    document.body.dataset.flowMode = 'story';
+    storyStage.classList.remove('is-game-mode');
+    storyStage.classList.add('is-full-story');
+    setActor('left', null, null, {});
+    setActor('right', null, null, {});
+    hideActorCluster('left');
+    hideStoryEffects();
+    finishIllustrationHide();
+
+    const portal = ensureCorePortalOverlay();
+    portal.classList.add('is-opening');
+    void portal.offsetWidth;
+    portal.classList.add('is-entering');
+
+    corePortalSequenceTimer = window.setTimeout(() => {
+      currentSceneId = '';
+      updateScene(bossInteriorPreviewScene, { silent: true });
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.('학사 코어 영역');
+      portal.classList.remove('is-opening', 'is-entering');
+      portal.remove();
+      corePortalOverlay = null;
+      corePortalSequenceTimer = null;
+      beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
+    }, 2200);
+  }`;
+  const corePortalEntryV26 = `  function startBossEntryCinematic(bossIntroCompletionAction = 'startBossBattle') {
+    stopTyping();
+    if (dialogueOpenTimer !== null) window.clearTimeout(dialogueOpenTimer);
+    dialogueOpenTimer = null;
+    dialogueLayer.classList.remove('is-opening');
+    dialogueLayer.hidden = true;
+    gameLayer.hidden = true;
+    game.running = false;
+    game.keys.clear();
+    flowMode = 'story-transition';
+    document.body.dataset.flowMode = 'story';
+    storyStage.classList.remove('is-game-mode');
+    storyStage.classList.add('is-full-story');
+    setActor('left', null, null, {});
+    setActor('right', null, null, {});
+    hideActorCluster('left');
+    hideStoryEffects();
+    finishIllustrationHide();
+
+    const portal = ensureCorePortalOverlay();
+    portal.classList.remove('is-opening', 'is-entering', 'is-traveling');
+    void portal.offsetWidth;
+    portal.classList.add('is-opening', 'is-entering', 'is-traveling');
+    playPlayerExitSound();
+
+    corePortalSequenceTimer = window.setTimeout(() => {
+      currentSceneId = '';
+      updateScene(bossInteriorPreviewScene, { silent: true });
+      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.('학사 코어 영역');
+      portal.classList.remove('is-opening', 'is-entering', 'is-traveling');
+      portal.remove();
+      corePortalOverlay = null;
+      corePortalSequenceTimer = null;
+      beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
+    }, 8500);
+  }`;
+  if (!normalized.includes(corePortalEntryHook)) {
+    throw new Error('Chapter 1 core portal entry hook was not found.');
+  }
+  normalized = normalized.replace(corePortalEntryHook, corePortalEntryV26);
+
   return normalized;
 }
 
@@ -523,7 +678,21 @@ html.is-embedded-story .chapter1-core-portal-overlay.is-opening .chapter1-core-p
   animation: chapter1CorePortalOpen 2.5s cubic-bezier(.16,.86,.22,1) both;
 }
 html.is-embedded-story .chapter1-core-portal-overlay.is-entering .chapter1-core-portal-ring {
-  animation: chapter1CorePortalEnter 2.2s cubic-bezier(.5,.02,.2,1) both;
+  animation: chapter1CorePortalEnter 2.35s cubic-bezier(.5,.02,.2,1) both;
+}
+html.is-embedded-story .chapter1-core-portal-entry-fade {
+  position: absolute;
+  z-index: 80;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: #fff;
+}
+html.is-embedded-story .chapter1-core-portal-overlay.is-traveling .chapter1-core-portal-entry-fade {
+  animation: chapter1CorePortalWhiteBlack 8.5s linear both;
+}
+html.is-embedded-story .chapter1-core-portal-overlay.is-traveling {
+  animation: chapter1CorePortalCameraShake 2.35s cubic-bezier(.18,.82,.2,1) both;
 }
 html.is-embedded-story .chapter1-core-portal-sparks,
 html.is-embedded-story .chapter1-core-portal-sparks::before,
@@ -565,9 +734,29 @@ html.is-embedded-story .chapter1-core-portal-sparks::after { transform: rotate(1
   100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: saturate(1.34) brightness(1.22); }
 }
 @keyframes chapter1CorePortalEnter {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  42% { opacity: 1; transform: translate(-50%, -50%) scale(1.42); filter: saturate(1.55) brightness(1.55); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(7.4); filter: saturate(1.7) brightness(1.8) blur(1px); }
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  16% { opacity: 1; transform: translate(calc(-50% - 8px), calc(-50% + 5px)) scale(1.08) rotate(-10deg); }
+  30% { opacity: 1; transform: translate(calc(-50% + 10px), calc(-50% - 6px)) scale(1.22) rotate(14deg); }
+  46% { opacity: 1; transform: translate(calc(-50% - 9px), calc(-50% + 7px)) scale(1.52) rotate(-28deg); filter: saturate(1.55) brightness(1.55); }
+  64% { opacity: 1; transform: translate(calc(-50% + 12px), calc(-50% - 8px)) scale(2.35) rotate(74deg); }
+  82% { opacity: 1; transform: translate(calc(-50% - 6px), calc(-50% + 4px)) scale(4.6) rotate(220deg); filter: saturate(1.68) brightness(1.72); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(7.8) rotate(520deg); filter: saturate(1.8) brightness(2.05) blur(1px); }
+}
+@keyframes chapter1CorePortalCameraShake {
+  0% { transform: translate(0,0) rotate(0deg); }
+  18% { transform: translate(-5px,3px) rotate(-.6deg); }
+  34% { transform: translate(7px,-5px) rotate(.8deg); }
+  52% { transform: translate(-8px,5px) rotate(-1deg); }
+  70% { transform: translate(9px,-4px) rotate(1.2deg); }
+  86% { transform: translate(-5px,3px) rotate(-.5deg); }
+  100% { transform: translate(0,0) rotate(0deg); }
+}
+@keyframes chapter1CorePortalWhiteBlack {
+  0%, 19% { opacity: 0; background: #fff; }
+  30% { opacity: 1; background: #fff; }
+  65% { opacity: 1; background: #fff; }
+  76% { opacity: 1; background: #000; }
+  100% { opacity: 1; background: #000; }
 }
 @keyframes chapter1CorePortalSparks {
   0%, 100% { opacity: .28; filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 12px #ffd84d); }

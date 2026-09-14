@@ -13,7 +13,8 @@ import { spawnChapter1EnemyHitEffectSystem } from "../chapter1/chapter1WaveImpac
 
 const W = 900;
 const H = 1200;
-const MONSTER_SCALE = 1.92;
+const MONSTER_SCALE = 1.28 * 1.3;
+const ENEMY_BULLET_SCALE = 1.3;
 // Keep the simulator's original enemy/effect proportions. The source simulator
 // rendered a 900 x 1200 virtual field into a 720 x 960 canvas (uniform 0.8x).
 // The integrated game is wider (922 x 960), so only X positions are widened to
@@ -476,8 +477,8 @@ function spawnBullet(kind: string, x: number, y: number, angle: number, speed: n
     t: 0,
     stateT: 0,
     state: options.state || "main",
-    r: options.r || 14,
-    scale: options.scale || 1,
+    r: (options.r || 14) * ENEMY_BULLET_SCALE,
+    scale: (options.scale || 1) * ENEMY_BULLET_SCALE,
     alpha: options.alpha ?? 1,
     active: options.active ?? true,
     dormant: options.dormant || false,
@@ -485,8 +486,8 @@ function spawnBullet(kind: string, x: number, y: number, angle: number, speed: n
     turnAt: options.turnAt || 0,
     turned: false,
     wall: options.wall || false,
-    w: options.w || 0,
-    h: options.h || 0,
+    w: (options.w || 0) * ENEMY_BULLET_SCALE,
+    h: (options.h || 0) * ENEMY_BULLET_SCALE,
     cool: options.cool || 0,
     spin: options.spin || 0,
     seed: Math.random() * Math.PI * 2,
