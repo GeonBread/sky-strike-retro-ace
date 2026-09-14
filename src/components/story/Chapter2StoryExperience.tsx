@@ -939,14 +939,14 @@ export function Chapter2StoryExperience({
       )}
 
       {exitConfirmOpen && (
-        <div className="chapter2-story-exit-overlay" role="presentation">
-          <section role="dialog" aria-modal="true" aria-label="스토리 중단 확인">
+        <div className="chapterGamePauseOverlay chapterStoryPauseOverlay" role="presentation">
+          <section className="chapterGamePauseDialog chapterStoryPauseDialog" role="dialog" aria-modal="true" aria-label="스토리 중단 확인">
             <small>STORY PAUSED</small>
             <h2>스토리를 중단하시겠습니까?</h2>
-            <p>현재 진행 위치는 자동 저장됩니다.</p>
-            <div className="chapter2-integration-actions">
+            <p>진행 기록은 자동 저장됩니다.</p>
+            <div className="chapterGamePauseActions isConfirm">
               <button type="button" className="secondary" onClick={() => setExitConfirmOpen(false)}>계속하기</button>
-              <button type="button" className="danger" onClick={onMenu}>메인 화면</button>
+              <button type="button" className="danger" onClick={onMenu}>메인화면</button>
             </div>
           </section>
         </div>
