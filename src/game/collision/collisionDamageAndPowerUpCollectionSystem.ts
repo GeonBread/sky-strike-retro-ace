@@ -350,7 +350,7 @@ engine.bullets.forEach((b) => {
             pu.height = 16;
             pu.vy = 120;
             const typeRoll = Math.random();
-            const allowSatellite = engine.stage !== 1;
+            const allowSatellite = engine.stage !== 1 && engine.stage !== 2;
             pu.type = allowSatellite && typeRoll < 0.18
               ? "satellite"
               : typeRoll < (allowSatellite ? 0.42 : 0.34)

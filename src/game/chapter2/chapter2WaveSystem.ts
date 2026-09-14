@@ -13,7 +13,7 @@ import { spawnChapter1EnemyHitEffectSystem } from "../chapter1/chapter1WaveImpac
 
 const W = 900;
 const H = 1200;
-const MONSTER_SCALE = 1.28;
+const MONSTER_SCALE = 1.92;
 // Keep the simulator's original enemy/effect proportions. The source simulator
 // rendered a 900 x 1200 virtual field into a 720 x 960 canvas (uniform 0.8x).
 // The integrated game is wider (922 x 960), so only X positions are widened to

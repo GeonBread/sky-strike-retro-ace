@@ -155,10 +155,10 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
   const core = runtime.core;
   if (!core) return;
   const hud = core.getHudState() as Chapter2BossHudState;
-  const cinematicLocked = !!hud.cinematic || !!hud.clearStage || hud.victoryComplete;
+  const cinematicLocked = !!hud.cinematic;
+  const hardLocked = !!hud.clearStage || hud.victoryComplete;
 
-  if (cinematicLocked) {
-    // 페이즈 전환 중에도 플레이어 탄은 계속 발사/이동하게 두고, 보스 데미지만 잠급니다.
+  if (cinematicLocked && hardLocked) {
     return;
   }
 

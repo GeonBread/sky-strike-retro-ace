@@ -974,25 +974,40 @@ export function createChapter1StoryRuntime({
     "정상화된 학사 서버",
     "경북대학교 본관",
   ]);
-  const locationOverlay = document.createElement("div");
+  const overlayDocument = (() => {
+    try {
+      return window.parent && window.parent !== window ? window.parent.document : document;
+    } catch {
+      return document;
+    }
+  })();
+  const overlayWindow = (() => {
+    try {
+      return window.parent && window.parent !== window ? window.parent : window;
+    } catch {
+      return window;
+    }
+  })();
+
+  const locationOverlay = overlayDocument.createElement("div");
   locationOverlay.className = "chapter1-location-title-overlay";
   locationOverlay.setAttribute("aria-hidden", "true");
   locationOverlay.style.setProperty("--chapter1-location-title-duration", "2500ms");
 
-  const locationOverlayBackground = document.createElement("div");
+  const locationOverlayBackground = overlayDocument.createElement("div");
   locationOverlayBackground.className = "chapter1-location-title-background";
-  const locationOverlayVignette = document.createElement("div");
+  const locationOverlayVignette = overlayDocument.createElement("div");
   locationOverlayVignette.className = "chapter1-location-title-vignette";
-  const locationOverlayGrid = document.createElement("div");
+  const locationOverlayGrid = overlayDocument.createElement("div");
   locationOverlayGrid.className = "chapter1-location-title-grid";
-  const locationOverlayCopy = document.createElement("div");
+  const locationOverlayCopy = overlayDocument.createElement("div");
   locationOverlayCopy.className = "chapter1-location-title-copy";
-  const locationOverlayLabel = document.createElement("small");
+  const locationOverlayLabel = overlayDocument.createElement("small");
   locationOverlayLabel.textContent = "LOCATION";
-  const locationOverlayText = document.createElement("strong");
+  const locationOverlayText = overlayDocument.createElement("strong");
   locationOverlayCopy.append(locationOverlayLabel, locationOverlayText);
   locationOverlay.append(locationOverlayBackground, locationOverlayVignette, locationOverlayGrid, locationOverlayCopy);
-  document.body.appendChild(locationOverlay);
+  overlayDocument.body.appendChild(locationOverlay);
 
   let locationOverlayTimer: number | null = null;
   let lastLocationTitle = "";
@@ -1030,8 +1045,8 @@ export function createChapter1StoryRuntime({
     locationOverlay.classList.remove("is-active");
     void locationOverlay.offsetWidth;
     locationOverlay.classList.add("is-active");
-    if (locationOverlayTimer !== null) trackedClearTimeout(locationOverlayTimer);
-    locationOverlayTimer = trackedSetTimeout(() => {
+    if (locationOverlayTimer !== null) overlayWindow.clearTimeout(locationOverlayTimer);
+    locationOverlayTimer = overlayWindow.setTimeout(() => {
       locationOverlayTimer = null;
       locationOverlay.classList.remove("is-active");
     }, 2500) as unknown as number;
