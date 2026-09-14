@@ -570,6 +570,10 @@ export function Chapter2StoryExperience({
         // 검은 화면이 유지되는 동안 iframe 스토리를 먼저 다음 장면으로 진행시킨 뒤 공개한다.
         // 이렇게 하면 전투 화면/이전 스토리 배경이 한 프레임 비치는 현상을 막을 수 있다.
         purificationTimerRef.current = window.setTimeout(() => {
+          // 일반 전투 직후 이어지는 정화조각 → 학생증 흡수 시네마틱은
+          // effect progress 이벤트가 story phase보다 먼저 도착할 수 있습니다.
+          // 다음 custom effect가 시작되는 순간부터 iframe shell을 전체 화면으로 확장해 둡니다.
+          setStoryFullscreenEffectActive(true);
           postCommand("resumeIntegrationGate");
           purificationTimerRef.current = window.setTimeout(() => {
             purificationTimerRef.current = null;
