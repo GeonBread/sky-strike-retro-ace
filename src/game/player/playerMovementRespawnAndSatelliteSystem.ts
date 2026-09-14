@@ -50,10 +50,8 @@ function getHobanuPlayerFireInterval(engine: PlayerRuntime): number {
 }
 
 function canHobanuPlayerShootNow(engine: PlayerRuntime): boolean {
-  // Chapter 2 보스전에서는 패턴 전환/딜레이 구간을 포함해 플레이어 사격 입력을 항상 허용합니다.
-  // 보스가 무적이어야 하는 시네마틱에서는 충돌 쪽에서 데미지만 무시합니다.
-  if (engine.chapter2Boss?.active) return true;
-
+  // Chapter 2 보스전도 Chapter 1과 동일한 전공별 발사 리듬을 사용합니다.
+  // 패턴 전환 중에도 입력/탄 생성 자체는 계속 처리하되, science의 1.0초 연사 + 0.2초 휴식은 유지합니다.
   const style = engine.player?.weaponStyle ?? "science";
 
   if (engine.player?.color === "vanguard") {

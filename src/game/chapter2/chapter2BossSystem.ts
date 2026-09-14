@@ -158,7 +158,9 @@ function hitBossAndPatternObjectsWithPlayerBullets(engine: any, runtime: Chapter
   const cinematicLocked = !!hud.cinematic;
   const hardLocked = !!hud.clearStage || hud.victoryComplete;
 
-  if (cinematicLocked && hardLocked) {
+  // 보스 등장/페이즈 전환 시네마틱에서는 플레이어 탄은 계속 날아가지만
+  // 보스와 패턴 오브젝트에 대한 타격 판정은 완전히 잠급니다.
+  if (cinematicLocked || hardLocked) {
     return;
   }
 
