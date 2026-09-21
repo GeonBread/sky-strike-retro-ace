@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000">
+  <defs>
+    <linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#07141f"/>
+      <stop offset=".58" stop-color="#122837"/>
+      <stop offset="1" stop-color="#101014"/>
+    </linearGradient>
+    <pattern id="grid" width="56" height="56" patternUnits="userSpaceOnUse">
+      <path d="M0 56H56V0" fill="none" stroke="#69d5ff" stroke-opacity=".07" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="1000" fill="url(#g)"/>
+  <rect width="1200" height="1000" fill="url(#grid)"/>
+  <path d="M100 850L310 330 520 850ZM410 850L650 230 890 850ZM760 850L980 390 1140 850Z" fill="#04090d" opacity=".62"/>
+  <circle cx="790" cy="315" r="145" fill="#35c5ff" opacity=".11"/>
+  <text x="1160" y="950" text-anchor="end" fill="#35c5ff" opacity=".35" font-family="monospace" font-size="22">CHAPTER 2 BACKGROUND 02</text>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="armor" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2c2637"/>
+      <stop offset="0.45" stop-color="#090a10"/>
+      <stop offset="1" stop-color="#3a111e"/>
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="45%" r="50%">
+      <stop offset="0" stop-color="#fff4c1"/>
+      <stop offset="0.18" stop-color="#ffbe3d"/>
+      <stop offset="0.5" stop-color="#e13341"/>
+      <stop offset="1" stop-color="#4a0711"/>
+    </radialGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g stroke="#050506" stroke-width="22" stroke-linejoin="round">
+    <path d="M320 220L170 85l52 190L65 240l180 126-122 110 220-40z" fill="url(#armor)"/>
+    <path d="M480 220L630 85l-52 190 157-35-180 126 122 110-220-40z" fill="url(#armor)"/>
+    <path d="M305 180l-72-130 142 96zM495 180l72-130-142 96z" fill="#6f2235"/>
+    <path d="M258 242Q400 155 542 242l-28 178Q400 510 286 420z" fill="url(#armor)"/>
+    <path d="M304 326l54-28 42 31 42-31 54 28-38 57-58-22-58 22z" fill="#1b1721"/>
+    <path d="M286 420l-95 112 65 112-28 250 172 67 172-67-28-250 65-112-95-112z" fill="url(#armor)"/>
+    <path d="M244 540L75 642l145 36-109 145 198-58z" fill="url(#armor)"/>
+    <path d="M556 540l169 102-145 36 109 145-198-58z" fill="url(#armor)"/>
+    <path d="M330 865l-68 105 138-52 138 52-68-105z" fill="#1b1721"/>
+  </g>
+  <g filter="url(#glow)">
+    <path d="M320 297l42 9-26 28zM480 297l-42 9 26 28z" fill="#ff4057"/>
+    <circle cx="400" cy="585" r="86" fill="url(#core)" stroke="#2d0711" stroke-width="18"/>
+    <path d="M352 585h96M400 537v96" stroke="#fff2a6" stroke-width="11" opacity=".72"/>
+  </g>
+  <g font-family="Arial,sans-serif" font-weight="700" font-size="24" fill="#d9d8df" opacity=".7" text-anchor="middle">
+    <text x="400" y="470">미완료</text>
+    <text x="400" y="715">자격 부족</text>
+    <text x="400" y="760">미래 불확실</text>
+  </g>
+</svg>

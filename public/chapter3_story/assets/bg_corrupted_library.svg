@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3a0e2f"/><stop offset="1" stop-color="#09030d"/></linearGradient></defs>
+<rect width="960" height="600" fill="url(#g)"/><circle cx="480" cy="300" r="190" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="46"/><circle cx="480" cy="300" r="95" fill="#05040a"/><path d="M150 300C260 110 700 70 815 310C680 520 270 525 150 300Z" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="18"/>
+<rect x="42" y="42" width="876" height="516" rx="28" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/>
+<text x="72" y="500" fill="rgba(255,255,255,.9)" font-family="sans-serif" font-size="42" font-weight="700">오염된 도서관</text>
+<text x="74" y="540" fill="rgba(255,255,255,.55)" font-family="sans-serif" font-size="20">시험·팀플 구역 오염 발생</text>
+</svg>

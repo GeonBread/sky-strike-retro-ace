@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#203052"/><stop offset="1" stop-color="#0f1425"/></linearGradient></defs>
+<rect width="960" height="600" fill="url(#g)"/><rect x="100" y="110" width="220" height="90" rx="24" fill="rgba(255,255,255,.07)"/><rect x="360" y="110" width="220" height="90" rx="24" fill="rgba(255,255,255,.07)"/><rect x="620" y="110" width="220" height="90" rx="24" fill="rgba(255,255,255,.07)"/><rect x="100" y="260" width="220" height="90" rx="24" fill="rgba(255,255,255,.07)"/><rect x="360" y="260" width="220" height="90" rx="24" fill="rgba(255,255,255,.07)"/><rect x="620" y="260" width="220" height="90" rx="24" fill="rgba(255,255,255,.07)"/>
+<rect x="42" y="42" width="876" height="516" rx="28" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/>
+<text x="72" y="500" fill="rgba(255,255,255,.9)" font-family="sans-serif" font-size="42" font-weight="700">단체 채팅방</text>
+<text x="74" y="540" fill="rgba(255,255,255,.55)" font-family="sans-serif" font-size="20">읽음 3 · 응답 없음</text>
+</svg>
