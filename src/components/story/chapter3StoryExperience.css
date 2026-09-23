@@ -34,7 +34,8 @@
   z-index: 1;
 }
 
-.chapter3StoryLoading {
+.chapter3StoryLoading,
+.chapter3WaveLoading {
   position: fixed;
   left: 50%;
   top: 50%;
@@ -42,7 +43,8 @@
   transform: translate(-50%, -50%);
   padding: 12px 18px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(0, 0, 0, 0.78);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.82);
   color: #fff;
   font: 800 13px/1.2 "Courier New", monospace;
   letter-spacing: 0.12em;
@@ -70,176 +72,237 @@
   background: rgba(67, 13, 20, 0.94);
 }
 
-.chapter3StartSelector {
+.chapter3DetailSelector {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 60;
   display: grid;
   place-items: center;
-  padding: clamp(14px, 3vw, 34px);
-  overflow: auto;
-  color: #fff;
+  padding: 22px;
+  font-family: "Noto Sans KR", system-ui, sans-serif;
 }
 
-.chapter3StartSelectorBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(circle at 50% 28%, rgba(133, 18, 35, 0.28), transparent 44%),
-    linear-gradient(180deg, rgba(12, 5, 8, 0.94), rgba(2, 3, 6, 0.99));
-}
-
-.chapter3StartSelectorBackdrop::before,
-.chapter3StartSelectorBackdrop::after {
-  content: "";
+.chapter3DetailSelectorBackdrop {
   position: absolute;
-  pointer-events: none;
-}
-
-.chapter3StartSelectorBackdrop::before {
   inset: 0;
-  opacity: 0.22;
-  background-image:
-    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
-  background-size: 42px 42px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(95, 18, 30, .22), transparent 38%),
+    linear-gradient(180deg, rgba(5, 6, 10, .92), rgba(2, 3, 7, .98));
 }
 
-.chapter3StartSelectorBackdrop::after {
-  left: 50%;
-  top: 15%;
-  width: min(76vw, 920px);
-  height: 1px;
-  transform: translateX(-50%);
-  background: linear-gradient(90deg, transparent, rgba(219, 69, 75, .76), transparent);
-  box-shadow: 0 0 28px rgba(219, 69, 75, .38);
-}
-
-.chapter3StartSelectorPanel {
-  width: min(980px, 94vw);
-  max-height: min(900px, 92dvh);
-  overflow: auto;
-  padding: clamp(20px, 3vw, 34px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-top: 3px solid #b92d36;
+.chapter3DetailSelectorPanel {
+  position: relative;
+  width: min(1220px, 96vw);
+  height: min(900px, 94dvh);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid rgba(219, 178, 93, .34);
   border-radius: 18px;
-  background: linear-gradient(145deg, rgba(23, 20, 24, 0.97), rgba(5, 6, 9, 0.98));
-  box-shadow: 0 28px 100px rgba(0,0,0,.66), 0 0 50px rgba(139, 19, 35, .13);
+  background: linear-gradient(155deg, rgba(21, 23, 31, .98), rgba(8, 9, 14, .99));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .58);
+  color: #f5f7ff;
+  overflow: hidden;
 }
 
-.chapter3StartSelectorHeader {
+.chapter3DetailSelectorHeader {
   display: flex;
-  align-items: end;
   justify-content: space-between;
-  gap: 26px;
-  margin-bottom: 22px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgba(255,255,255,.12);
+  align-items: end;
+  gap: 22px;
+  padding: 2px 2px 4px;
 }
 
-.chapter3StartSelectorHeader small {
+.chapter3DetailSelectorHeader small {
   display: block;
-  margin-bottom: 6px;
-  color: #d7a96c;
+  color: #ddb76e;
   font: 900 11px/1.2 "Courier New", monospace;
   letter-spacing: .18em;
 }
 
-.chapter3StartSelectorHeader h2 {
-  margin: 0;
-  font-size: clamp(26px, 4vw, 44px);
-  line-height: 1.05;
-  letter-spacing: -.045em;
+.chapter3DetailSelectorHeader h2 {
+  margin: 6px 0 0;
+  font-size: clamp(26px, 3vw, 42px);
+  line-height: 1.04;
+  letter-spacing: -.035em;
 }
 
-.chapter3StartSelectorHeader p {
-  max-width: 360px;
+.chapter3DetailSelectorHeader p {
+  max-width: 460px;
   margin: 0;
-  color: rgba(255,255,255,.58);
+  color: rgba(231, 235, 247, .66);
   font-size: 12px;
   line-height: 1.55;
   text-align: right;
 }
 
-.chapter3StartSelectorGrid {
+.chapter3DetailTabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, .23);
 }
 
-.chapter3StartCard {
-  min-height: 150px;
+.chapter3DetailTabs button {
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(235, 239, 250, .68);
+  font-weight: 900;
+  cursor: pointer;
+  transition: .16s ease;
+}
+
+.chapter3DetailTabs button span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  margin-left: 5px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  color: #c6cddd;
+  font: 800 10px/1.2 "Courier New", monospace;
+}
+
+.chapter3DetailTabs button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .05);
+}
+
+.chapter3DetailTabs button.active {
+  border-color: rgba(226, 188, 104, .52);
+  background: linear-gradient(180deg, rgba(114, 70, 28, .38), rgba(59, 31, 17, .32));
+  color: #ffe6b3;
+  box-shadow: inset 0 -2px rgba(224, 180, 88, .6);
+}
+
+.chapter3DetailGrid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 10px;
+  padding: 4px 5px 6px 2px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(215, 174, 92, .45) rgba(255, 255, 255, .05);
+}
+
+.chapter3SelectCard {
+  min-height: 112px;
   display: grid;
   align-content: center;
-  gap: 8px;
-  padding: 20px;
-  border: 1px solid rgba(255,255,255,.18);
-  border-left: 4px solid rgba(190, 48, 57, .58);
-  border-radius: 12px;
-  background: linear-gradient(145deg, rgba(41, 40, 45, .94), rgba(10, 11, 14, .98));
+  gap: 6px;
+  padding: 14px 15px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(34, 36, 46, .95), rgba(12, 13, 19, .98));
   color: #fff;
   text-align: left;
   cursor: pointer;
-  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
 }
 
-.chapter3StartCard:hover,
-.chapter3StartCard:focus-visible {
-  transform: translateY(-3px);
-  border-color: rgba(224, 65, 73, .86);
-  border-left-color: #e24149;
-  background: linear-gradient(145deg, rgba(86, 18, 27, .96), rgba(17, 10, 14, .99));
-  box-shadow: 0 14px 34px rgba(0,0,0,.38), 0 0 22px rgba(199, 38, 48, .14);
+.chapter3SelectCard:hover,
+.chapter3SelectCard:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(224, 178, 87, .72);
+  background: linear-gradient(145deg, rgba(74, 48, 28, .94), rgba(19, 15, 16, .98));
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .32);
   outline: none;
 }
 
-.chapter3StartCard.is-wide {
+.chapter3SelectCard b {
+  color: #e7bc70;
+  font: 900 10px/1.2 "Courier New", monospace;
+  letter-spacing: .1em;
+}
+
+.chapter3SelectCard strong {
+  color: #f6f7fb;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.chapter3SelectCard span {
+  color: rgba(222, 228, 242, .62);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.chapter3SelectCard.is-wide {
   grid-column: 1 / -1;
-  min-height: 120px;
+  min-height: 90px;
+  border-color: rgba(218, 174, 91, .34);
 }
 
-.chapter3StartCard b {
-  color: #d7a96c;
-  font: 900 11px/1.2 "Courier New", monospace;
-  letter-spacing: .13em;
+.chapter3SelectCard.is-pattern b {
+  color: #83e8f0;
 }
 
-.chapter3StartCard strong {
-  font-size: clamp(18px, 2.2vw, 24px);
-  letter-spacing: -.025em;
+.chapter3SelectCard.is-pattern:hover {
+  border-color: rgba(87, 215, 228, .72);
+  background: linear-gradient(145deg, rgba(18, 58, 67, .88), rgba(10, 17, 22, .98));
 }
 
-.chapter3StartCard span {
-  color: rgba(255,255,255,.62);
-  font-size: 13px;
+.chapter3SelectCard.is-boss b {
+  color: #e887a0;
+}
+
+.chapter3SelectCard.is-boss:hover {
+  border-color: rgba(219, 91, 126, .72);
+  background: linear-gradient(145deg, rgba(71, 23, 38, .9), rgba(18, 10, 15, .98));
+}
+
+.chapter3BossRuntimeNotice {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 1px dashed rgba(219, 103, 126, .42);
+  border-radius: 10px;
+  background: rgba(76, 21, 35, .18);
+}
+
+.chapter3BossRuntimeNotice b {
+  color: #ef91a8;
+  font: 900 10px/1.2 "Courier New", monospace;
+  letter-spacing: .12em;
+}
+
+.chapter3BossRuntimeNotice span {
+  color: rgba(236, 224, 229, .66);
+  font-size: 11px;
   line-height: 1.5;
 }
 
-.chapter3StartSelectorFooter {
+.chapter3DetailSelectorFooter {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  margin-top: 18px;
-  color: rgba(255,255,255,.46);
-  font-size: 11px;
+  gap: 16px;
+  min-height: 38px;
+  padding-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+  color: rgba(230, 233, 242, .52);
+  font-size: 10px;
 }
 
-.chapter3StartSelectorFooter button {
-  flex: 0 0 auto;
-  padding: 9px 15px;
-  border: 1px solid rgba(255,255,255,.22);
+.chapter3DetailSelectorFooter button {
+  flex: none;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, .18);
   border-radius: 8px;
-  background: rgba(255,255,255,.05);
+  background: rgba(255, 255, 255, .04);
   color: #fff;
   font-weight: 900;
   cursor: pointer;
-}
-
-.chapter3StartSelectorFooter button:hover {
-  border-color: rgba(226, 65, 73, .72);
-  background: rgba(115, 24, 34, .46);
 }
 
 .chapter3WaveStage {
@@ -262,97 +325,50 @@
   box-shadow: 0 0 48px rgba(0, 0, 0, 0.8);
 }
 
-.chapter3WaveLoading {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  z-index: 10;
-  transform: translate(-50%, -50%);
-  padding: 12px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.82);
-  color: #fff;
-  font: 800 13px/1.2 "Courier New", monospace;
-  letter-spacing: 0.12em;
-  pointer-events: none;
-}
-
 .chapter3WaveRetryOverlay {
   position: fixed;
   inset: 0;
   z-index: 20;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(5px);
+  padding: 20px;
+  background: rgba(0, 0, 0, .76);
+  backdrop-filter: blur(7px);
 }
 
 .chapter3WaveRetryDialog {
-  width: min(88vw, 430px);
-  padding: 28px 26px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 18px;
-  background: rgba(8, 10, 16, 0.96);
+  width: min(430px, 92vw);
+  padding: 26px;
+  border: 1px solid rgba(224, 178, 87, .45);
+  border-radius: 15px;
+  background: linear-gradient(160deg, rgba(29, 31, 40, .98), rgba(8, 9, 14, .99));
   color: #fff;
   text-align: center;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.62);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, .55);
 }
 
-.chapter3WaveRetryDialog small {
-  color: #d8b65f;
-  font: 900 11px/1.2 "Courier New", monospace;
-  letter-spacing: 0.18em;
+.chapter3WaveRetryDialog small { color: #deb56a; font: 900 11px/1.2 "Courier New", monospace; letter-spacing: .14em; }
+.chapter3WaveRetryDialog h2 { margin: 8px 0; font-size: 27px; }
+.chapter3WaveRetryDialog p { margin: 6px 0; color: rgba(232, 236, 247, .68); font-size: 13px; }
+.chapter3WaveRetryBoost { color: #8de7ff !important; font-weight: 900; }
+.chapter3WaveRetryActions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 19px; }
+.chapter3WaveRetryActions button { min-height: 42px; border-radius: 8px; font-weight: 900; cursor: pointer; }
+.chapter3WaveRetryActions .secondary { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #fff; }
+.chapter3WaveRetryActions .primary { border: 1px solid rgba(228,181,91,.65); background: #805525; color: #fff0cc; }
+
+@media (max-width: 900px) {
+  .chapter3DetailSelector { padding: 10px; }
+  .chapter3DetailSelectorPanel { width: 100%; height: 97dvh; padding: 15px; }
+  .chapter3DetailSelectorHeader { align-items: start; }
+  .chapter3DetailSelectorHeader p { display: none; }
+  .chapter3DetailTabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chapter3DetailGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.chapter3WaveRetryDialog h2 {
-  margin: 10px 0 8px;
-  font-size: 25px;
-}
-
-.chapter3WaveRetryDialog p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 13px;
-}
-
-.chapter3WaveRetryDialog .chapter3WaveRetryBoost {
-  margin-top: 10px;
-  color: #f9d86b;
-  font-weight: 900;
-}
-
-.chapter3WaveRetryActions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.chapter3WaveRetryActions button {
-  min-height: 44px;
-  border-radius: 9px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.chapter3WaveRetryActions .secondary {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
-}
-
-.chapter3WaveRetryActions .primary {
-  border: 1px solid rgba(250, 204, 21, 0.55);
-  background: rgba(234, 179, 8, 0.18);
-  color: #fde68a;
-}
-
-@media (max-width: 800px) {
+@media (max-width: 560px) {
   .chapter3StoryFrame { width: 100vw; }
-  .chapter3StartSelectorHeader { align-items: start; }
-  .chapter3StartSelectorHeader p { display: none; }
-  .chapter3StartSelectorGrid { grid-template-columns: 1fr; }
-  .chapter3StartCard.is-wide { grid-column: auto; }
-  .chapter3StartSelectorFooter { align-items: start; flex-direction: column; }
+  .chapter3DetailGrid { grid-template-columns: 1fr; }
+  .chapter3SelectCard.is-wide { grid-column: auto; }
+  .chapter3DetailSelectorFooter span { display: none; }
+  .chapter3DetailSelectorFooter { justify-content: end; }
 }

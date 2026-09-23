@@ -3406,6 +3406,7 @@ window.STORY_HOOKS = {
   },
   onReady() { this._emit('ready'); },
   onLineChange(payload) { this._emit('line-change', { index: payload?.index ?? -1 }); },
+  onSegmentComplete(payload) { if (payload?.sectionOnly) this._emit('section-complete', { segmentId: payload?.segmentId || '', sectionOnly: true }); },
   onEffectStart(payload) { this._emit('effect-start', { effectId: payload?.effectId || '' }); },
   onEffectEnd(payload) { this._emit('effect-end', { effectId: payload?.effectId || '' }); },
   onStoryComplete(payload) { this._emit('story-complete', { segmentId: payload?.segmentId || '' }); }
@@ -7016,6 +7017,23 @@ function runCustomEffect(item) {
 
     if (message.type === 'start-section') {
       startAtSectionTitle(message.detail?.titlePrefix || '장면 1.');
+      return;
+    }
+
+    if (message.type === 'play-section') {
+      const ordinal = Number(message.detail?.ordinal);
+      if (Number.isFinite(ordinal)) playSection(ordinal);
+      return;
+    }
+
+    if (message.type === 'start-section-ordinal') {
+      const ordinal = Number(message.detail?.ordinal);
+      const entries = sectionEntries();
+      const entry = entries[ordinal];
+      if (entry) {
+        start(storyData.startSegment || config.startSegment);
+        if (entry.index > 0) jumpTo(entry.index);
+      }
       return;
     }
 
