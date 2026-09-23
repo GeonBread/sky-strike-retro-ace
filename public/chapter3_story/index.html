@@ -6833,31 +6833,54 @@ function runCustomEffect(item) {
     if (restoreEndPanel && state.completed) el.endPanel.hidden = false;
   }
 
-  function playSection(position) {
+  function loadDefaultStorySegmentForSectionJump() {
+    const segmentId = storyData.startSegment || config.startSegment;
+    const items = storyData.segments?.[segmentId];
+    if (!Array.isArray(items)) return false;
+    state.segmentId = segmentId;
+    state.items = items;
+    return true;
+  }
+
+  function startSectionByOrdinal(position, sectionOnly = true) {
+    if (!state.items.length && !loadDefaultStorySegmentForSectionJump()) return false;
     const entries = sectionEntries();
     const ordinal = Number(position);
     const entry = entries[ordinal];
-    if (!entry) return;
+    if (!entry) return false;
     const nextEntry = entries[ordinal + 1];
+
     clearRuntimeTimers();
     cleanupActiveEffect();
     clearPersistentOverlay();
     removeSectionCurtain(true);
     closeJumpPanel();
     closeSectionPanel();
+    closeEffectPanel();
     closeDialoguePanel();
     hideActors();
     hideIllustration();
-    state.sectionOnly = true;
-    state.sectionEndIndex = nextEntry?.index ?? state.items.length;
+
+    state.sectionOnly = Boolean(sectionOnly);
+    state.sectionEndIndex = sectionOnly ? (nextEntry?.index ?? state.items.length) : Infinity;
     state.activeSectionStart = entry.index;
     state.activeSectionTitle = entry.title;
     state.index = entry.index;
     state.completed = false;
     state.sceneKey = '';
     state.scene = null;
+    window.__c2StudyVariantCounter = 0;
     el.endPanel.hidden = true;
     showCurrent();
+    return true;
+  }
+
+  function playSection(position) {
+    return startSectionByOrdinal(position, true);
+  }
+
+  function startFromSection(position) {
+    return startSectionByOrdinal(position, false);
   }
 
   function playEffectEntry(position) {
@@ -6943,14 +6966,11 @@ function runCustomEffect(item) {
   }
 
   function startAtSectionTitle(titlePrefix) {
-    const segmentId = storyData.startSegment || config.startSegment;
-    const items = storyData.segments?.[segmentId];
-    if (!Array.isArray(items)) return false;
-    const targetIndex = items.findIndex(item => item?.type === 'section-marker' && String(item?.title || '').startsWith(String(titlePrefix || '')));
-    if (targetIndex < 0) return false;
-    start(segmentId);
-    if (targetIndex > 0) jumpTo(targetIndex);
-    return true;
+    if (!state.items.length && !loadDefaultStorySegmentForSectionJump()) return false;
+    const entries = sectionEntries();
+    const position = entries.findIndex(entry => String(entry?.title || '').startsWith(String(titlePrefix || '')));
+    if (position < 0) return false;
+    return startFromSection(position);
   }
 
   function getState() {
@@ -6985,6 +7005,7 @@ function runCustomEffect(item) {
     openSectionPanel,
     closeSectionPanel,
     playSection,
+    startFromSection,
     openEffectPanel,
     closeEffectPanel,
     playEffectEntry,
@@ -7028,12 +7049,7 @@ function runCustomEffect(item) {
 
     if (message.type === 'start-section-ordinal') {
       const ordinal = Number(message.detail?.ordinal);
-      const entries = sectionEntries();
-      const entry = entries[ordinal];
-      if (entry) {
-        start(storyData.startSegment || config.startSegment);
-        if (entry.index > 0) jumpTo(entry.index);
-      }
+      if (Number.isFinite(ordinal)) startFromSection(ordinal);
       return;
     }
 

@@ -75,7 +75,7 @@ const restartBtn=document.getElementById('restartBtn'), invBtn=document.getEleme
 const prevBtn=document.getElementById('prevBtn'), nextBtn=document.getElementById('nextBtn'), clearBtn=document.getElementById('clearBtn');
 const W=cvs.width,H=cvs.height;
 const QUERY=new URLSearchParams(location.search);
-const EMBEDDED=QUERY.get('embedded')==='1';
+const EMBEDDED=QUERY.get('embedded')==='1'||(window.parent&&window.parent!==window);
 const SINGLE_WAVE=QUERY.get('single')==='1';
 const INITIAL_WAVE_INDEX=Math.max(0,Math.min(999,Number.parseInt(QUERY.get('start')||'0',10)||0));
 const INITIAL_POWER_LEVEL=Math.max(1,Math.min(5,Number.parseInt(QUERY.get('power')||'1',10)||1));
@@ -1372,7 +1372,7 @@ function startWave(i,resetRun=false){
  showNotice(w.title,w.desc);renderWaveButtons();
 }
 
-function showNotice(title,desc){noticeTitle.textContent=title;noticeDesc.textContent=desc;notice.classList.toggle('viewShift',!!waves[waveIndex]?.viewShift);notice.classList.add('show');noticeTimer=EMBEDDED?.8:2.2;if(EMBEDDED){window.setTimeout(()=>notice.classList.remove('show'),850);}}
+function showNotice(title,desc){noticeTitle.textContent=title;noticeDesc.textContent=desc;notice.classList.toggle('viewShift',!!waves[waveIndex]?.viewShift);notice.classList.add('show');noticeTimer=EMBEDDED?.55:2.2;if(EMBEDDED){window.setTimeout(()=>notice.classList.remove('show'),600);}}
 function rebuildPairs(){tractorPairs=[];const map=new Map();for(const e of enemies.filter(e=>e.type==='tractor'&&!e.grandExiting)){if(!map.has(e.pairId))map.set(e.pairId,[]);map.get(e.pairId).push(e);}for(const arr of map.values())if(arr.length===2)tractorPairs.push(arr);}
 
 function splitEnemy(e){
@@ -1785,6 +1785,50 @@ function updateBullets(dt){for(const b of bullets){b.t=(b.t||0)+dt;b.x+=b.vx*dt;
  for(const b of playerBullets){b.x+=(b.vx||0)*dt;b.y+=b.vy*dt;b.life-=dt;for(const e of enemies){if(e.dead||e.attackable===false)continue;if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+b.r){e.hp-=b.damage??18;e.hitFlash=1;e.hurtPulse=.22;b.life=0;addEffect({kind:'hit',x:b.x,y:b.y,life:.16,color:enemyGlowColor(e)});if(e.hp<=0)killEnemy(e,true);break;}}}playerBullets=playerBullets.filter(b=>b.life>0&&b.y>-40&&b.x>-40&&b.x<W+40);
 }
 function damagePlayer(force=false){if(gameOver||player.dead)return;if(invincible&&!force)return;if(player.hitTimer>0&&!force)return;player.hp--;player.dead=true;player.respawnTimer=.55;player.drag=false;addEffect({kind:'ring',x:player.x,y:player.y,life:.45,color:'#ffffff'});if(player.hp<=0&&EMBEDDED){/* failure is emitted after the short death beat */}}
+function updateSpecialWave(dt){
+ const special=waves[waveIndex].special;
+ if(isSurvivalSpecial(special)){updateSurvivalWave(dt);return;}
+ if(special==='grandFinaleMixed')updateGrandFinaleMixed(dt);
+ if(special==='laserSquad'){const arr=enemies.filter(e=>e.type==='laser'&&!e.dead&&e.dynamicSquad);if(arr.length&&arr.every(e=>e.shotComplete)){specialState.laserFormation=(specialState.laserFormation+1)%4;applyLaserSquadFormation(specialState.laserFormation);}}
+ if(special==='laserTop3'&&!specialState.laserReleased){
+  const arr=enemies.filter(e=>e.type==='laser'&&!e.dead);
+  if(arr.length===0){specialState.laserReleased=true;}
+  else if(arr.every(e=>e.state==='ready')){arr.forEach(e=>{e.state='track';e.phase=1.15;});specialState.laserReleased=true;}
+ }
+ if(special==='mineFlowerMixed'){
+  if(specialState.group<specialState.total){specialState.timer-=dt;if(specialState.timer<=0){spawnMineFlowerGroupMixed(specialState.group);specialState.group++;specialState.timer=.52;}}
+ }
+ if(special==='electricMandalaMixed'){
+  specialState.rotateT-=dt;if(specialState.rotateT<=0&&enemies.some(e=>e.type==='linker'&&!e.dead&&e.mandala)){rotateElectricMandalaMixed();specialState.rotateT=5.0;}
+ }
+ if(special==='mineCascade'){
+  if(!specialState.started){spawnMineBatch(specialState.seq[0],true);specialState.started=true;specialState.idx=1;return;}
+  const alive=enemies.some(e=>e.type==='mine'&&!e.dead);
+  if(!alive&&specialState.idx<specialState.seq.length){specialState.delay+=dt;if(specialState.delay>.45){spawnMineBatch(specialState.seq[specialState.idx],true);specialState.idx++;specialState.delay=0;}}
+ }
+ if(special==='chargerAlternate12'){
+  if(specialState.spawned<specialState.total){specialState.timer-=dt;if(specialState.timer<=0){spawnSideCharger(specialState.nextSide,specialState.spawned);specialState.spawned++;specialState.nextSide=specialState.nextSide==='left'?'right':'left';specialState.timer=1.08;}}
+ }
+ if(special==='chargerClock8'){
+  if(specialState.spawned<specialState.total){specialState.timer-=dt;if(specialState.timer<=0){spawnClockCharger(specialState.spawned);specialState.spawned++;if(specialState.spawned>=4&&!specialState.droneRingSpawned){spawnDronePentagonCenter();specialState.droneRingSpawned=true;}specialState.timer=.80;}}
+ }
+ if(special==='chargerSolo45'||special==='chargerRushMixed'){
+  if(specialState.groups<specialState.totalGroups){specialState.timer-=dt;if(specialState.timer<=0){spawnChargerTriple();specialState.groups++;specialState.timer=.48;
+   if(special==='chargerRushMixed'){
+    if([3,6,10,13].includes(specialState.groups))spawnType('drone',2);
+    if(specialState.groups===8&&!specialState.electricSpawned){spawnType('linker',8);specialState.electricSpawned=true;}
+   }
+  }}
+ }
+ if(special==='tractorRollercoaster'&&specialState.rollerChargerBursts<specialState.rollerChargerMax){specialState.rollerChargerT-=dt;if(specialState.rollerChargerT<=0){spawnRollerSideChargerBurst();specialState.rollerChargerBursts++;specialState.rollerChargerT=4.35;}}
+ if(special==='tractorSequence'&&specialState.phase===0&&!enemies.some(e=>e.type==='tractor'&&!e.dead)){
+  specialState.phase=1;spawnTractorPair('left');spawnTractorPair('right');
+ }
+ if(special==='mobileLink31'){
+  specialState.relocateT-=dt;if(specialState.relocateT<=0&&enemies.some(e=>e.type==='linker'&&!e.dead)){relocateLinkNetwork();specialState.relocateT=5.2;}
+ }
+}
+
 function updateFinale(){
  if(waves[waveIndex].special!=='finale')return;if(waveTime<finaleNext)return;finalePhase++;
  if(finalePhase===1){spawnType('splitter',1);finaleNext=6;}
