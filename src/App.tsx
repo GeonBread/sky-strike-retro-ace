@@ -15,6 +15,7 @@ import {
   type Chapter1StoryPreviewRequest,
 } from "./components/story/Chapter1StoryPlayer";
 import { Chapter2StoryExperience } from "./components/story/Chapter2StoryExperience";
+import { Chapter3StoryExperience } from "./components/story/Chapter3StoryExperience";
 import "./components/ui/hobanwooOverlayPanels.css";
 import "./components/story/storyChapterFlow.css";
 import {
@@ -1747,6 +1748,19 @@ export default function App() {
         />
       );
     }
+    if (selectedStoryChapter === 3) {
+      return (
+        <Chapter3StoryExperience
+          onExit={() => setGameState("MENU")}
+          onComplete={() => {
+            setStoryProgress(markStoryChapterCleared(3));
+            setSelectedStoryCheckpoint(null);
+            setGameState("MENU");
+          }}
+        />
+      );
+    }
+
     return <ChapterIntegrationPlaceholder chapter={3} onMenu={() => setGameState("MENU")} />;
   }
 
