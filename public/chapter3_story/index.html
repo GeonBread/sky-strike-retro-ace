@@ -5294,6 +5294,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   const storyData = window.STORY_DATA || { segments: {} };
   const hooks = window.STORY_HOOKS || {};
   const customEffects = window.STORY_CUSTOM_EFFECTS || {};
+  const HOST_SELECTOR_MODE = new URLSearchParams(window.location.search).get('hostSelector') === '1';
 
   const required = name => {
     const element = document.getElementById(name);
@@ -6940,6 +6941,17 @@ function runCustomEffect(item) {
     showCurrent();
   }
 
+  function startAtSectionTitle(titlePrefix) {
+    const segmentId = storyData.startSegment || config.startSegment;
+    const items = storyData.segments?.[segmentId];
+    if (!Array.isArray(items)) return false;
+    const targetIndex = items.findIndex(item => item?.type === 'section-marker' && String(item?.title || '').startsWith(String(titlePrefix || '')));
+    if (targetIndex < 0) return false;
+    start(segmentId);
+    if (targetIndex > 0) jumpTo(targetIndex);
+    return true;
+  }
+
   function getState() {
     return {
       segmentId: state.segmentId,
@@ -6976,6 +6988,7 @@ function runCustomEffect(item) {
     closeEffectPanel,
     playEffectEntry,
     playFullStory,
+    startAtSectionTitle,
     setMode,
     updateScene,
     registerEffect,
@@ -6995,9 +7008,21 @@ function runCustomEffect(item) {
     if (event.origin !== window.location.origin) return;
     const message = event.data || {};
     if (message.channel !== 'sky-strike-chapter3-host') return;
-    if (message.type !== 'wave-complete') return;
-    if (!state.effectRunning || state.currentEffectId !== 'battle-running') return;
-    skipCurrent();
+
+    if (message.type === 'start-full-story') {
+      start(storyData.startSegment || config.startSegment);
+      return;
+    }
+
+    if (message.type === 'start-section') {
+      startAtSectionTitle(message.detail?.titlePrefix || '장면 1.');
+      return;
+    }
+
+    if (message.type === 'wave-complete') {
+      if (!state.effectRunning || state.currentEffectId !== 'battle-running') return;
+      skipCurrent();
+    }
   });
   window.__chapter3DialogueDebug = {
     getAudioState: () => ({
@@ -7068,13 +7093,13 @@ function runCustomEffect(item) {
     } else if (event.key === 'Backspace') {
       event.preventDefault();
       previous();
-    } else if (event.key.toLowerCase() === 'j') {
+    } else if (!HOST_SELECTOR_MODE && event.key.toLowerCase() === 'j') {
       event.preventDefault();
       openJumpPanel();
-    } else if (event.key.toLowerCase() === 'c') {
+    } else if (!HOST_SELECTOR_MODE && event.key.toLowerCase() === 'c') {
       event.preventDefault();
       openSectionPanel();
-    } else if (event.key.toLowerCase() === 'e') {
+    } else if (!HOST_SELECTOR_MODE && event.key.toLowerCase() === 'e') {
       event.preventDefault();
       openEffectPanel();
     } else if (event.key.toLowerCase() === 's') {
@@ -7085,7 +7110,7 @@ function runCustomEffect(item) {
 
   setMode(state.mode);
   hooks.onReady?.(api);
-  start(storyData.startSegment || config.startSegment);
+  if (!HOST_SELECTOR_MODE) start(storyData.startSegment || config.startSegment);
 })();
 /* === CHAPTER3 PATCH 008 overrides === */
 window.STORY_CUSTOM_EFFECTS['monthly-schedule'] = ({ layer, item }) => {
@@ -10846,5 +10871,13 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 }
 </style>
 
+
+<style id="chapter3-patch-040-host-selector-style">
+/* CH3 selector is now owned by the React host, matching the Chapter 2 start-route logic. */
+.story-controls,
+#storySectionPanel,
+#storyEffectPanel,
+#dialogueJumpPanel { display:none !important; }
+</style>
 </body>
 </html>

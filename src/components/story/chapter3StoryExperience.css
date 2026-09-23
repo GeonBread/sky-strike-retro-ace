@@ -16,7 +16,13 @@
   height: 100dvh;
   border: 0;
   background: #050506;
-  transition: width 180ms ease;
+  transition: width 180ms ease, opacity 160ms ease;
+}
+
+.chapter3StoryExperience.is-selector-open .chapter3StoryFrame,
+.chapter3StoryExperience.is-wave-active .chapter3StoryFrame {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame {
@@ -32,7 +38,7 @@
   position: fixed;
   left: 50%;
   top: 50%;
-  z-index: 4;
+  z-index: 40;
   transform: translate(-50%, -50%);
   padding: 12px 18px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -43,32 +49,198 @@
   pointer-events: none;
 }
 
-.chapter3StoryExit {
+.chapter3StoryRouteSelect {
   position: fixed;
-  z-index: 6;
+  z-index: 35;
   top: 14px;
   right: 16px;
-  min-width: 90px;
+  min-width: 92px;
   padding: 9px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 8px;
-  background: rgba(5, 6, 10, 0.82);
+  background: rgba(5, 6, 10, 0.86);
   color: #fff;
-  font: 800 13px/1 "Noto Sans KR", sans-serif;
+  font: 900 13px/1 "Noto Sans KR", sans-serif;
   cursor: pointer;
   backdrop-filter: blur(6px);
 }
 
-.chapter3StoryExit:hover {
-  background: rgba(50, 20, 30, 0.92);
+.chapter3StoryRouteSelect:hover {
+  border-color: rgba(222, 54, 65, 0.85);
+  background: rgba(67, 13, 20, 0.94);
 }
 
-@media (max-width: 800px) {
-  .chapter3StoryFrame {
-    width: 100vw;
-  }
+.chapter3StartSelector {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 3vw, 34px);
+  overflow: auto;
+  color: #fff;
 }
 
+.chapter3StartSelectorBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(133, 18, 35, 0.28), transparent 44%),
+    linear-gradient(180deg, rgba(12, 5, 8, 0.94), rgba(2, 3, 6, 0.99));
+}
+
+.chapter3StartSelectorBackdrop::before,
+.chapter3StartSelectorBackdrop::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.chapter3StartSelectorBackdrop::before {
+  inset: 0;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.chapter3StartSelectorBackdrop::after {
+  left: 50%;
+  top: 15%;
+  width: min(76vw, 920px);
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(219, 69, 75, .76), transparent);
+  box-shadow: 0 0 28px rgba(219, 69, 75, .38);
+}
+
+.chapter3StartSelectorPanel {
+  width: min(980px, 94vw);
+  max-height: min(900px, 92dvh);
+  overflow: auto;
+  padding: clamp(20px, 3vw, 34px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 3px solid #b92d36;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(23, 20, 24, 0.97), rgba(5, 6, 9, 0.98));
+  box-shadow: 0 28px 100px rgba(0,0,0,.66), 0 0 50px rgba(139, 19, 35, .13);
+}
+
+.chapter3StartSelectorHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 26px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+
+.chapter3StartSelectorHeader small {
+  display: block;
+  margin-bottom: 6px;
+  color: #d7a96c;
+  font: 900 11px/1.2 "Courier New", monospace;
+  letter-spacing: .18em;
+}
+
+.chapter3StartSelectorHeader h2 {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -.045em;
+}
+
+.chapter3StartSelectorHeader p {
+  max-width: 360px;
+  margin: 0;
+  color: rgba(255,255,255,.58);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.chapter3StartSelectorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.chapter3StartCard {
+  min-height: 150px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-left: 4px solid rgba(190, 48, 57, .58);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(41, 40, 45, .94), rgba(10, 11, 14, .98));
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.chapter3StartCard:hover,
+.chapter3StartCard:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(224, 65, 73, .86);
+  border-left-color: #e24149;
+  background: linear-gradient(145deg, rgba(86, 18, 27, .96), rgba(17, 10, 14, .99));
+  box-shadow: 0 14px 34px rgba(0,0,0,.38), 0 0 22px rgba(199, 38, 48, .14);
+  outline: none;
+}
+
+.chapter3StartCard.is-wide {
+  grid-column: 1 / -1;
+  min-height: 120px;
+}
+
+.chapter3StartCard b {
+  color: #d7a96c;
+  font: 900 11px/1.2 "Courier New", monospace;
+  letter-spacing: .13em;
+}
+
+.chapter3StartCard strong {
+  font-size: clamp(18px, 2.2vw, 24px);
+  letter-spacing: -.025em;
+}
+
+.chapter3StartCard span {
+  color: rgba(255,255,255,.62);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chapter3StartSelectorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 18px;
+  color: rgba(255,255,255,.46);
+  font-size: 11px;
+}
+
+.chapter3StartSelectorFooter button {
+  flex: 0 0 auto;
+  padding: 9px 15px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 8px;
+  background: rgba(255,255,255,.05);
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.chapter3StartSelectorFooter button:hover {
+  border-color: rgba(226, 65, 73, .72);
+  background: rgba(115, 24, 34, .46);
+}
 
 .chapter3WaveStage {
   position: fixed;
@@ -128,49 +300,59 @@
 }
 
 .chapter3WaveRetryDialog small {
-  color: #9bdcff;
-  font: 800 11px/1 "Courier New", monospace;
+  color: #d8b65f;
+  font: 900 11px/1.2 "Courier New", monospace;
   letter-spacing: 0.18em;
 }
 
 .chapter3WaveRetryDialog h2 {
-  margin: 13px 0 9px;
+  margin: 10px 0 8px;
   font-size: 25px;
 }
 
 .chapter3WaveRetryDialog p {
-  margin: 0 0 18px;
-  color: #c7cad4;
-  font-size: 14px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
 }
 
 .chapter3WaveRetryDialog .chapter3WaveRetryBoost {
-  margin: -6px 0 18px;
-  color: #ffd77a;
-  font-weight: 800;
+  margin-top: 10px;
+  color: #f9d86b;
+  font-weight: 900;
 }
 
 .chapter3WaveRetryActions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-top: 22px;
 }
 
 .chapter3WaveRetryActions button {
-  min-height: 46px;
-  border-radius: 10px;
+  min-height: 44px;
+  border-radius: 9px;
   font-weight: 900;
   cursor: pointer;
 }
 
 .chapter3WaveRetryActions .secondary {
-  border: 1px solid #4c5568;
-  background: #151a25;
-  color: #e8ebf3;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
 }
 
 .chapter3WaveRetryActions .primary {
-  border: 1px solid #46b8ea;
-  background: #08739f;
-  color: #fff;
+  border: 1px solid rgba(250, 204, 21, 0.55);
+  background: rgba(234, 179, 8, 0.18);
+  color: #fde68a;
+}
+
+@media (max-width: 800px) {
+  .chapter3StoryFrame { width: 100vw; }
+  .chapter3StartSelectorHeader { align-items: start; }
+  .chapter3StartSelectorHeader p { display: none; }
+  .chapter3StartSelectorGrid { grid-template-columns: 1fr; }
+  .chapter3StartCard.is-wide { grid-column: auto; }
+  .chapter3StartSelectorFooter { align-items: start; flex-direction: column; }
 }
