@@ -3613,7 +3613,7 @@ window.STORY_DATA = {
       C3D.fx("combat-transition", "combat_zone", 4200, {chapter:"CHAPTER 3",title:"졸업 오염 파편 정화"}),
 
       C3D.sec("장면 15. 일반 몬스터 웨이브", "combat_zone"),
-      C3D.fx("battle-running", "combat_zone", 3000, {title:"일반 몬스터 웨이브",subtitle:"챕터 3 일반 오염 파편 정화"}),
+      C3D.fx("battle-running", "combat_zone", 86400000, {title:"일반 몬스터 웨이브",subtitle:"챕터 3 일반 오염 파편 정화"}),
 
       C3D.sec("장면 16. 정화율 100%", "combat_zone"),
       C3D.fx("purification-100", "combat_zone", 6200),
@@ -6989,6 +6989,16 @@ function runCustomEffect(item) {
   });
   window.__chapter3StoryApi = api;
   window.__chapter3SkipCurrentEffect = skipCurrent;
+  // The actual Chapter 3 combat runtime is hosted by React. Keep scene 15 parked on
+  // battle-running until the host confirms that every monster wave has been cleared.
+  window.addEventListener('message', event => {
+    if (event.origin !== window.location.origin) return;
+    const message = event.data || {};
+    if (message.channel !== 'sky-strike-chapter3-host') return;
+    if (message.type !== 'wave-complete') return;
+    if (!state.effectRunning || state.currentEffectId !== 'battle-running') return;
+    skipCurrent();
+  });
   window.__chapter3DialogueDebug = {
     getAudioState: () => ({
       supported: Boolean(window.AudioContext || window.webkitAudioContext),

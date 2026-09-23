@@ -68,3 +68,109 @@
     width: 100vw;
   }
 }
+
+
+.chapter3WaveStage {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.chapter3WaveFrame {
+  display: block;
+  width: min(83.333dvh, 100vw);
+  height: min(100dvh, 120vw);
+  aspect-ratio: 5 / 6;
+  border: 0;
+  background: #05070c;
+  box-shadow: 0 0 48px rgba(0, 0, 0, 0.8);
+}
+
+.chapter3WaveLoading {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font: 800 13px/1.2 "Courier New", monospace;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.chapter3WaveRetryOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.chapter3WaveRetryDialog {
+  width: min(88vw, 430px);
+  padding: 28px 26px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 18px;
+  background: rgba(8, 10, 16, 0.96);
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.62);
+}
+
+.chapter3WaveRetryDialog small {
+  color: #9bdcff;
+  font: 800 11px/1 "Courier New", monospace;
+  letter-spacing: 0.18em;
+}
+
+.chapter3WaveRetryDialog h2 {
+  margin: 13px 0 9px;
+  font-size: 25px;
+}
+
+.chapter3WaveRetryDialog p {
+  margin: 0 0 18px;
+  color: #c7cad4;
+  font-size: 14px;
+}
+
+.chapter3WaveRetryDialog .chapter3WaveRetryBoost {
+  margin: -6px 0 18px;
+  color: #ffd77a;
+  font-weight: 800;
+}
+
+.chapter3WaveRetryActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.chapter3WaveRetryActions button {
+  min-height: 46px;
+  border-radius: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.chapter3WaveRetryActions .secondary {
+  border: 1px solid #4c5568;
+  background: #151a25;
+  color: #e8ebf3;
+}
+
+.chapter3WaveRetryActions .primary {
+  border: 1px solid #46b8ea;
+  background: #08739f;
+  color: #fff;
+}

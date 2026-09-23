@@ -1,0 +1,59 @@
+{
+  "version": "v21",
+  "canvas": "512x512 RGBA normalized sprite canvas",
+  "mapping_policy": "13 independent designs mapped 1:1 to the 13 gameplay behavior types; no visual aliases",
+  "monsters": {
+    "drone": {
+      "file": "inspection_eye.png",
+      "name_ko": "졸업 검수 아이"
+    },
+    "laser": {
+      "file": "review_pointer.png",
+      "name_ko": "졸업 심사 포인터 드론"
+    },
+    "snake": {
+      "file": "document_panel.png",
+      "name_ko": "졸업 서류 판넬"
+    },
+    "boomer": {
+      "file": "file_carrier.png",
+      "name_ko": "결재 파일 캐리어"
+    },
+    "charger": {
+      "file": "credit_drill.png",
+      "name_ko": "학점 압박 드릴"
+    },
+    "splitter": {
+      "file": "revision_cube.png",
+      "name_ko": "수정안 큐브"
+    },
+    "tractor": {
+      "file": "requirement_tow.png",
+      "name_ko": "졸업요건 견인기"
+    },
+    "mine": {
+      "file": "deadline_bomb.png",
+      "name_ko": "수정 마감 폭탄"
+    },
+    "suicide": {
+      "file": "unsubmitted_rampage.png",
+      "name_ko": "미제출 폭주체"
+    },
+    "swarm": {
+      "file": "incomplete_swarm.png",
+      "name_ko": "미이수 군집체"
+    },
+    "linker": {
+      "file": "career_block_linker.png",
+      "name_ko": "진로방해 연결체"
+    },
+    "gravity": {
+      "file": "employment_pressure_absorber.png",
+      "name_ko": "취업압박 흡수체"
+    },
+    "branch": {
+      "file": "career_branch_variant.png",
+      "name_ko": "진로분기 변칙체"
+    }
+  }
+}
