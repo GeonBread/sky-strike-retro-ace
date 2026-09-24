@@ -3717,7 +3717,7 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "나 졸업하고 싶다!", "campus_night", "핵심 오염원 추적", {right:"hobanwoo",pose:"brave",left:"student_card"}),
 
       C3D.sec("장면 20. 최종 공간", "graduation_core"),
-      C3D.fx("teleport-core", "graduation_core", 9000),
+      C3D.fx("teleport-core", "graduation_core", 16000),
       C3D.line("student_card", "최상위 오염 개체를 확인했습니다.", "graduation_core", "최종 공간", {left:"student_card",right:"hobanwoo"}),
       C3D.line("student_card", "미졸업의 군주.", "graduation_core", "최종 공간", {left:"student_card",right:"hobanwoo"}),
       C3D.line("student_card", "디그리온.", "graduation_core", "최종 공간", {left:"student_card",right:"hobanwoo"}),
@@ -11043,7 +11043,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
 
 <style id="chapter3-patch-041-core-rift-style">
-/* === CHAPTER 3 PATCH 041: spatial-rift core transfer ===
+/* === CHAPTER 3 PATCH 042: spatial-rift core transfer + white/black transition hold ===
    Deliberately avoids the circular portal / radial burst language used by earlier chapters.
    The space itself is cut into slabs, an angular dimensional gate opens, then the camera is pulled
    through a stack of rectangular depth frames into the Digrion core. */
@@ -11176,7 +11176,22 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 .c3-core-rift-029.breach .breach-flash{animation:c3BreachFlash029 .42s ease-out both}
 @keyframes c3BreachFlash029{0%{opacity:0}18%{opacity:.96}42%{opacity:.72}100%{opacity:0}}
 
-/* Arrival is continuous: the core replaces the tunnel immediately after the dimensional breach. */
+/* V42 transition: after entering the Chapter 3 spatial fracture, the frame slowly washes to white,
+   holds pure white for roughly three seconds, fades slowly into black, holds black for two seconds,
+   and only then reveals the Digrion core. This deliberately stays separate from Chapter 1/2 portal language. */
+.c3-core-rift-029 .core-transition-white,
+.c3-core-rift-029 .core-transition-black{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+}
+.c3-core-rift-029 .core-transition-white{z-index:32;background:#fff;transition:opacity 1.2s cubic-bezier(.22,.68,.2,1)}
+.c3-core-rift-029 .core-transition-black{z-index:31;background:#000;transition:opacity 1.4s ease}
+.c3-core-rift-029.white-in .core-transition-white{opacity:1}
+.c3-core-rift-029.fade-to-black .core-transition-black{opacity:1}
+.c3-core-rift-029.fade-to-black .core-transition-white{opacity:0;transition-duration:1.4s}
+.c3-core-rift-029.black-hold .core-transition-black{opacity:1;transition:none}
+.c3-core-rift-029.reveal-core .core-transition-black{opacity:0;transition:opacity .9s ease}
+
+/* Arrival remains hidden behind the white/black transition until the blackout hold is complete. */
 .c3-core-rift-029 .arrival-camera{position:absolute;z-index:10;inset:0;opacity:0;background:#05020b;overflow:hidden;transition:opacity .42s ease}
 .c3-core-rift-029 .arrival-camera img{position:absolute;inset:-1%;width:102%;height:102%;object-fit:cover;object-position:50% 100%;transform:translate3d(0,2.8vh,0) scale(1.02);transform-origin:50% 25%;filter:brightness(.60) saturate(.96);will-change:transform,object-position,filter}
 .c3-core-rift-029.arrived .arrival-camera{opacity:1}
@@ -11216,8 +11231,9 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 </style>
 <script id="chapter3-patch-041-core-rift-script">
 (() => {
-  /* Final override: Chapter 3 uses an angular spatial fracture + architectural depth tunnel,
-     intentionally distinct from Chapter 1/2 circular portal travel. */
+  /* Final override V42: Chapter 3 uses an angular spatial fracture + architectural depth tunnel,
+     then a white hold -> slow blackout -> two-second black hold before the core reveal.
+     It remains intentionally distinct from Chapter 1/2 circular portal travel. */
   window.STORY_CUSTOM_EFFECTS['teleport-core'] = ({ layer, api }) => c3Mount(layer, `
     <div class="c3-core-rift-029">
       <div class="rift-space"></div>
@@ -11243,6 +11259,8 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       <div class="arrival-camera"><img src="assets/chapter3/backgrounds/digrion_core.png" alt="첨성대 코어 졸업 영역"></div>
       <div class="arrival-vignette"></div>
       <div class="core-domain-title"><small>FINAL DOMAIN</small><strong>첨성대 코어 · 졸업 영역</strong><span>CHEOMSEONGDAE CORE · GRADUATION DOMAIN</span></div>
+      <div class="core-transition-black" aria-hidden="true"></div>
+      <div class="core-transition-white" aria-hidden="true"></div>
     </div>`, (root, later) => {
       const scene = root.querySelector('.c3-core-rift-029');
       const arrival = root.querySelector('.arrival-camera img');
@@ -11284,14 +11302,25 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       later(() => scene?.classList.add('gate-open'), 720);
       /* The fractured slabs separate and the angular gate becomes a depth tunnel. */
       later(() => scene?.classList.add('transit'), 2020);
-      /* Breach the boundary; no long black hold. */
-      later(() => scene?.classList.add('breach'), 3300);
-      later(() => { scene?.classList.add('arrived'); startArrivalCamera(); }, 3500);
-      /* Arrival camera climbs from the road to the upper core structure. */
-      later(() => scene?.classList.add('show-title'), 5750);
-      later(() => scene?.classList.add('hide-title'), 7140);
-      later(prepareHandoff, 7320);
-      later(() => scene?.classList.add('handoff'), 7540);
+
+      /* After the player has entered the rift, wash the entire screen slowly to white. */
+      later(() => scene?.classList.add('white-in'), 3250);
+      /* White reaches full opacity at about 4.45s, then remains completely white for ~3 seconds. */
+      later(() => scene?.classList.add('fade-to-black'), 7450);
+      /* The white screen now fades slowly into black over 1.4s. */
+      later(() => scene?.classList.add('black-hold'), 8850);
+      /* Hold full black for exactly ~2 seconds before revealing the destination. */
+      later(() => {
+        scene?.classList.add('arrived');
+        scene?.classList.add('reveal-core');
+        startArrivalCamera();
+      }, 10850);
+
+      /* Arrival camera climbs from the road to the upper core structure only after the blackout. */
+      later(() => scene?.classList.add('show-title'), 13100);
+      later(() => scene?.classList.add('hide-title'), 14350);
+      later(prepareHandoff, 14550);
+      later(() => scene?.classList.add('handoff'), 14750);
 
       return () => { if (raf) cancelAnimationFrame(raf); };
     });
