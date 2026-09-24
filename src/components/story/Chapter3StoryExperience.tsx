@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bomb, Shield } from "lucide-react";
 import { NotificationDialog } from "../ui/NotificationDialog";
 import "./chapter3StoryExperience.css";
 
@@ -540,17 +539,16 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
       {waveActive && !waveFailed && (
         <div className="chapter3WaveHostHud" aria-hidden="true">
-          <div className="chapter3WaveHudTopRight">
-            <div className="chapter3WaveHudHp">
+          <div className="chapter3WaveChapter1HudTop">
+            <div className="combat-hud-life-row">
               {[...Array(waveHud.maxHp)].map((_, i) => (
-                <Shield key={i} size={18} className={i < waveHud.hp ? "text-rose-500 fill-rose-500" : "text-slate-800 fill-transparent"} />
+                <span key={i} className={`combat-hud-life-icon${i < waveHud.hp ? " is-active" : ""}`} />
               ))}
             </div>
-            <span className="chapter3WavePowerBadge">POWER LV {waveHud.powerLevel}</span>
           </div>
-          <div className="chapter3WaveHudBottomRight">
+          <div className="combat-hud-bomb-row">
             {[...Array(3)].map((_, i) => (
-              <Bomb key={i} size={19} className={i < waveHud.bombs ? "text-yellow-300 fill-yellow-300" : "text-slate-700 fill-transparent"} />
+              <span key={i} className={`combat-hud-bomb-icon${i < waveHud.bombs ? " is-active" : ""}`} />
             ))}
           </div>
         </div>
