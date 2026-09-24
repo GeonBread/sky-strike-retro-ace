@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { NotificationDialog } from "../ui/NotificationDialog";
 import "./chapter3StoryExperience.css";
 
 type Chapter3StoryExperienceProps = {
@@ -188,6 +187,7 @@ function writeChapter3Progress(progress: Chapter3SavedProgress): void {
 export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExperienceProps) {
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const waveFrameRef = useRef<HTMLIFrameElement | null>(null);
+  const waveRetryPromptTimerRef = useRef<number | null>(null);
   const [fullscreenEffect, setFullscreenEffect] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [screen, setScreen] = useState<Chapter3Screen>("story");
@@ -206,6 +206,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const [storyIsTestJump, setStoryIsTestJump] = useState(false);
   const [waveExitConfirm, setWaveExitConfirm] = useState(false);
   const [wavePaused, setWavePaused] = useState(false);
+  const [waveRetryPromptVisible, setWaveRetryPromptVisible] = useState(false);
   const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: 0, totalWaves: WAVES.length, enemies: 0 });
 
   const frameSrc = useMemo(
@@ -233,6 +234,11 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     setFullscreenEffect(null);
     setWaveActive(false);
     setWaveFailed(false);
+    setWaveRetryPromptVisible(false);
+    if (waveRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(waveRetryPromptTimerRef.current);
+      waveRetryPromptTimerRef.current = null;
+    }
     setWaveReady(false);
     setFailedWaveIndex(null);
     setWaveExitConfirm(false);
@@ -244,6 +250,11 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     setFullscreenEffect(null);
     setWaveActive(false);
     setWaveFailed(false);
+    setWaveRetryPromptVisible(false);
+    if (waveRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(waveRetryPromptTimerRef.current);
+      waveRetryPromptTimerRef.current = null;
+    }
     setWaveReady(false);
     setFailedWaveIndex(null);
     setWaveExitConfirm(false);
@@ -263,6 +274,11 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     setFullscreenEffect(null);
     setWaveOrigin(origin);
     setWaveFailed(false);
+    setWaveRetryPromptVisible(false);
+    if (waveRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(waveRetryPromptTimerRef.current);
+      waveRetryPromptTimerRef.current = null;
+    }
     setWaveReady(false);
     setWaveStartIndex(index);
     setWaveSingle(single);
@@ -369,7 +385,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
         if (message.type === "escape-request") {
           setWavePaused(true);
-          setWaveExitConfirm(true);
+          setWaveExitConfirm(false);
           postWaveCommand("set-paused", { paused: true });
           return;
         }
@@ -387,11 +403,22 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
             [failedWave]: (counts[failedWave] ?? 0) + 1,
           }));
           setWaveFailed(true);
+          setWaveRetryPromptVisible(false);
+          if (waveRetryPromptTimerRef.current !== null) window.clearTimeout(waveRetryPromptTimerRef.current);
+          waveRetryPromptTimerRef.current = window.setTimeout(() => {
+            waveRetryPromptTimerRef.current = null;
+            setWaveRetryPromptVisible(true);
+          }, 1350);
           return;
         }
 
         if (message.type === "wave-complete") {
           setWaveFailed(false);
+          setWaveRetryPromptVisible(false);
+          if (waveRetryPromptTimerRef.current !== null) {
+            window.clearTimeout(waveRetryPromptTimerRef.current);
+            waveRetryPromptTimerRef.current = null;
+          }
           setWaveExitConfirm(false);
           setWavePaused(false);
           setWaveActive(false);
@@ -419,12 +446,21 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   }, [onComplete, onExit, storyIsTestJump, storyLaunch, waveOrigin, waveStartIndex]);
 
   const retryWave = () => {
+    if (waveRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(waveRetryPromptTimerRef.current);
+      waveRetryPromptTimerRef.current = null;
+    }
     if (failedWaveIndex !== null) setWaveStartIndex(failedWaveIndex);
     setFailedWaveIndex(null);
     setWaveFailed(false);
+    setWaveRetryPromptVisible(false);
     setWaveReady(false);
     setWaveRunKey((key) => key + 1);
   };
+
+  useEffect(() => () => {
+    if (waveRetryPromptTimerRef.current !== null) window.clearTimeout(waveRetryPromptTimerRef.current);
+  }, []);
 
   const renderStoryCards = () => (
     <>
@@ -555,44 +591,61 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       )}
 
       {waveActive && waveFailed && (
-        <div className="chapter3WaveRetryOverlay" role="presentation">
-          <section className="chapter3WaveRetryDialog" role="dialog" aria-modal="true" aria-label="챕터 3 전투 재도전 확인">
-            <small>WAVE {(failedWaveIndex ?? waveStartIndex) + 1}</small>
-            <h2>다시 도전하시겠습니까?</h2>
-            <p>현재 웨이브의 처음부터 다시 시작합니다.</p>
-            {(waveDeathCounts[failedWaveIndex ?? waveStartIndex] ?? 0) >= 3 && <p className="chapter3WaveRetryBoost">반복 실패 보정 · 화력 레벨 5로 재시작</p>}
-            <div className="chapter3WaveRetryActions">
-              <button type="button" className="secondary" onClick={waveOrigin === "selector" ? returnToSelector : onExit}>아니오</button>
-              <button type="button" className="primary" onClick={retryWave}>예</button>
+        <div className="chapter1-combat-death-overlay" role="presentation">
+          {waveRetryPromptVisible && (
+            <div className="chapterGamePauseOverlay chapterCombatRetryOverlay">
+              <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="챕터 3 전투 재도전 확인">
+                <small>WAVE {(failedWaveIndex ?? waveStartIndex) + 1}</small>
+                <h2>다시 도전하시겠습니까?</h2>
+                <p>현재 웨이브의 처음부터 다시 시작합니다.</p>
+                <div className="chapterGamePauseActions isConfirm">
+                  <button type="button" className="secondary" onClick={waveOrigin === "selector" ? returnToSelector : onExit}>아니오</button>
+                  <button type="button" className="primary" onClick={retryWave}>예</button>
+                </div>
+              </section>
             </div>
-          </section>
+          )}
+        </div>
+      )}
+
+      {waveActive && wavePaused && !waveFailed && (
+        <div className="chapterGamePauseOverlay">
+          {!waveExitConfirm ? (
+            <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="일시 정지">
+              <small>GAME PAUSED</small>
+              <h2>일시 정지</h2>
+              <p>현재 전투가 일시 정지되었습니다.</p>
+              <div className="chapterGamePauseActions">
+                <button type="button" className="primary" onClick={() => { setWavePaused(false); postWaveCommand("set-paused", { paused: false }); waveFrameRef.current?.contentWindow?.focus(); }}>계속하기</button>
+                <button type="button" className="secondary" onClick={() => setWaveExitConfirm(true)}>메인화면</button>
+              </div>
+            </section>
+          ) : (
+            <section className="chapterGamePauseDialog chapterGameExitConfirmDialog" role="dialog" aria-modal="true" aria-label="메인 화면 이동 확인">
+              <small>RETURN TO MENU</small>
+              <h2>메인 화면으로 이동</h2>
+              <p>현재 진행 중인 챕터 3 전투를 중단하고 이전 화면으로 돌아갑니다.</p>
+              <div className="chapterGamePauseActions isConfirm">
+                <button type="button" className="secondary" onClick={() => setWaveExitConfirm(false)}>취소</button>
+                <button type="button" className="danger" onClick={() => {
+                  setWaveExitConfirm(false);
+                  setWavePaused(false);
+                  postWaveCommand("set-paused", { paused: false });
+                  if (waveOrigin === "selector") returnToSelector();
+                  else onExit?.();
+                }}>확인</button>
+              </div>
+            </section>
+          )}
         </div>
       )}
 
       {screen === "story" && !ready && <div className="chapter3StoryLoading" aria-live="polite">CHAPTER 3 STORY LOADING</div>}
 
-      {screen !== "selector" && !fullscreenEffect && !waveFailed && (
+      {screen !== "selector" && !fullscreenEffect && !waveFailed && !wavePaused && (
         <button className="chapter3StoryRouteSelect" type="button" onClick={returnToSelector} aria-label="챕터 3 구간 선택으로 돌아가기">구간 선택</button>
       )}
 
-      <NotificationDialog
-        open={waveExitConfirm}
-        title="스토리를 중단하시겠습니까?"
-        message="현재 진행 중인 챕터 3 전투를 중단하고 메인 화면으로 돌아갑니다."
-        onCancel={() => {
-          setWaveExitConfirm(false);
-          setWavePaused(false);
-          postWaveCommand("set-paused", { paused: false });
-          waveFrameRef.current?.contentWindow?.focus();
-        }}
-        onConfirm={() => {
-          setWaveExitConfirm(false);
-          setWavePaused(false);
-          postWaveCommand("set-paused", { paused: false });
-          if (waveOrigin === "selector") returnToSelector();
-          else onExit?.();
-        }}
-      />
     </section>
   );
 }
