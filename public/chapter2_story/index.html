@@ -1653,6 +1653,91 @@ kbd {
   transform: scaleX(-1) scale(var(--character-scale, 1)) !important;
 }
 
+/* Chapter 3 기준 스토리 UI 비율/대사창/폰트 크기 동기화. */
+.story-stage.is-full-story:not(.is-game-mode) {
+  width: min(96dvh, 100vw) !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  aspect-ratio: 24 / 25 !important;
+}
+.dialogue-layer:not(.is-global-dialogue) {
+  left: 3.5% !important;
+  right: 3.5% !important;
+  bottom: 4.5% !important;
+}
+.dialogue-layer.is-global-dialogue {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.dialogue-box {
+  min-height: clamp(142px, 18vw, 202px) !important;
+  display: flex !important;
+  align-items: center !important;
+  padding-top: clamp(30px, 3vw, 38px) !important;
+  padding-bottom: clamp(30px, 3vw, 38px) !important;
+  padding-left: clamp(26px, 3vw, 42px) !important;
+  padding-right: clamp(26px, 3vw, 42px) !important;
+}
+.dialogue-box .portrait-frame,
+.dialogue-box .story-status,
+.dialogue-box .dialogue-progress {
+  display: none !important;
+}
+.dialogue-copy {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  column-gap: clamp(12px, 1.8vw, 20px) !important;
+  row-gap: 0 !important;
+  align-items: center !important;
+  align-content: center !important;
+}
+.dialogue-marker {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: clamp(24px, 3vw, 38px) !important;
+}
+.dialogue-text {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding-right: 0 !important;
+  font-family: "Noto Sans KR", system-ui, sans-serif !important;
+  font-size: clamp(18px, 2.3vw, 31px) !important;
+  font-weight: 800 !important;
+  line-height: 1.48 !important;
+  letter-spacing: -.025em !important;
+  word-break: keep-all !important;
+  white-space: pre-line !important;
+}
+.speaker-tag {
+  left: 34px !important;
+  top: -31px !important;
+  min-width: 176px !important;
+  padding: 8px 20px !important;
+  font-size: clamp(13px, 1.5vw, 18px) !important;
+}
+.dialogue-layer.speaker-right .speaker-tag {
+  left: auto !important;
+  right: 34px !important;
+}
+.continue-indicator {
+  right: 28px !important;
+  bottom: 18px !important;
+  font-size: 22px !important;
+}
+@media (max-width: 800px) {
+  .story-stage.is-full-story:not(.is-game-mode) {
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+}
+
 /* Embedded mode used by the Vite/React chapter router. */
 html.is-chapter2-embedded .story-controls { display: none !important; }
 html.is-chapter2-embedded body { background: #000; }

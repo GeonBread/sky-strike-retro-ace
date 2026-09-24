@@ -546,8 +546,20 @@ html.is-embedded-story .story-stage.is-game-mode {
   border: 0 !important;
   box-shadow: none !important;
 }
-/* 대사창은 초상화 영역을 제거하고 텍스트가 전체 폭을 사용한다. */
+/* Chapter 3 기준 스토리 UI: 화면 비율, 대사창 비율, 타이포그래피를 동일하게 고정한다. */
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) {
+  width: min(96dvh, 100vw) !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  aspect-ratio: 24 / 25 !important;
+}
+html.is-embedded-story .dialogue-layer {
+  left: 3.5% !important;
+  right: 3.5% !important;
+  bottom: 4.5% !important;
+}
 html.is-embedded-story .dialogue-box {
+  min-height: clamp(142px, 18vw, 202px) !important;
   grid-template-columns: minmax(0, 1fr) !important;
   gap: 0 !important;
   display: flex !important;
@@ -555,6 +567,8 @@ html.is-embedded-story .dialogue-box {
   justify-content: center !important;
   padding-top: clamp(30px, 3vw, 38px) !important;
   padding-bottom: clamp(30px, 3vw, 38px) !important;
+  padding-left: clamp(26px, 3vw, 42px) !important;
+  padding-right: clamp(26px, 3vw, 42px) !important;
 }
 html.is-embedded-story .dialogue-copy,
 html.is-embedded-story .dialogue-layer.speaker-right .dialogue-copy {
@@ -567,6 +581,7 @@ html.is-embedded-story .dialogue-layer.speaker-right .dialogue-copy {
   align-items: center !important;
   align-content: center !important;
   column-gap: clamp(12px, 1.8vw, 20px) !important;
+  row-gap: 0 !important;
   margin: auto 0 !important;
 }
 html.is-embedded-story .dialogue-marker {
@@ -575,12 +590,39 @@ html.is-embedded-story .dialogue-marker {
   justify-content: center !important;
   align-self: center !important;
   justify-self: center !important;
+  font-size: clamp(24px, 3vw, 38px) !important;
   line-height: 1 !important;
   transform: none !important;
 }
 html.is-embedded-story .dialogue-text {
+  width: 100% !important;
+  min-width: 0 !important;
   align-self: center !important;
   margin: 0 !important;
+  padding-right: 0 !important;
+  font-family: "Noto Sans KR", system-ui, sans-serif !important;
+  font-size: clamp(18px, 2.3vw, 31px) !important;
+  font-weight: 800 !important;
+  line-height: 1.48 !important;
+  letter-spacing: -.025em !important;
+  word-break: keep-all !important;
+  white-space: pre-line !important;
+}
+html.is-embedded-story .speaker-tag {
+  left: 34px !important;
+  top: -31px !important;
+  min-width: 176px !important;
+  padding: 8px 20px !important;
+  font-size: clamp(13px, 1.5vw, 18px) !important;
+}
+html.is-embedded-story .dialogue-layer.speaker-right .speaker-tag {
+  left: auto !important;
+  right: 34px !important;
+}
+html.is-embedded-story .continue-indicator {
+  right: 28px !important;
+  bottom: 18px !important;
+  font-size: 22px !important;
 }
 
 /* 포탈 진입/보스 등장 동안만 브라우저 전체 화면을 사용한다. */
