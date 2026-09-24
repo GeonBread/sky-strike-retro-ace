@@ -3790,7 +3790,7 @@ window.STORY_DATA = {
       C3D.line("student_card", "여섯 개의 별 모두 회수되었습니다.", "graduation_core", "졸업의 별", {left:"student_card",right:"hobanwoo"}),
 
       C3D.sec("장면 32. 디그리온 본체 파괴", "graduation_core"),
-      C3D.fx("digrion-body-break", "graduation_core", 8200),
+      C3D.fx("digrion-body-break", "graduation_core", 18800),
       C3D.line("student_card", "디그리온의 육체 활동 정지 확인.", "graduation_core_purified", "디그리온 본체 파괴", {left:"student_card",right:"hobanwoo"}),
       C3D.line("hobanwoo", "끝난 건가?", "graduation_core_purified", "디그리온 본체 파괴", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
       C3D.line("student_card", "아닙니다.", "graduation_core_purified", "디그리온 본체 파괴", {left:"student_card",right:"hobanwoo"}),
@@ -11326,5 +11326,439 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
     });
 })();
 </script>
+
+
+<style id="chapter3-patch-041-digrion-body-finale">
+/* === CHAPTER3 PATCH 041: Digrion body death - spatial verdict / suspended fracture / vertical collapse ===
+   Chapter 3 only. Deliberately avoids CH1/CH2 circular portal/explosion language and rising-sun radial rays. */
+.story-body-effect-host[data-effect="digrion-body-break"]{
+  background:#030106 !important;
+}
+.story-body-effect-host[data-effect="digrion-body-break"] > .ch3-effect{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  overflow:hidden !important;
+}
+.c3-digrion-body-finale041{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  isolation:isolate;
+  background:#030106;
+  font-family:"Noto Sans KR",system-ui,sans-serif;
+}
+.c3-digrion-body-finale041 .death-bg041{
+  position:absolute;
+  z-index:0;
+  inset:-3%;
+  width:106%;
+  height:106%;
+  object-fit:cover;
+  object-position:center 18%;
+  transform:scale(1.035);
+  will-change:transform,filter,opacity,clip-path;
+}
+.c3-digrion-body-finale041 .death-bg-dark041{
+  filter:brightness(.52) saturate(1.16) contrast(1.08);
+  transition:filter 4.8s ease,opacity 4.8s ease,transform 5.5s cubic-bezier(.18,.76,.2,1);
+}
+.c3-digrion-body-finale041 .death-bg-clean041{
+  z-index:1;
+  filter:brightness(1.02) saturate(.88);
+  transform:scale(1.07);
+  clip-path:inset(100% 0 0 0);
+  transition:clip-path 4.3s cubic-bezier(.18,.8,.18,1),transform 4.3s ease,filter 4.3s ease;
+}
+.c3-digrion-body-finale041 .death-void041{
+  position:absolute;
+  z-index:2;
+  inset:0;
+  background:
+    linear-gradient(180deg,rgba(12,3,22,.18),rgba(4,1,9,.05) 40%,rgba(2,0,6,.70)),
+    radial-gradient(ellipse at 50% 52%,transparent 0 22%,rgba(20,5,34,.24) 52%,rgba(0,0,0,.76) 100%);
+  transition:opacity 4.2s ease;
+}
+.c3-digrion-body-finale041 .death-grid041{
+  position:absolute;
+  z-index:3;
+  inset:-12%;
+  opacity:0;
+  background-image:
+    linear-gradient(rgba(201,158,255,.09) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,158,255,.075) 1px,transparent 1px);
+  background-size:74px 74px;
+  transform:perspective(800px) rotateX(63deg) translateY(29%) scale(1.25);
+  transform-origin:50% 74%;
+  mask-image:linear-gradient(180deg,transparent 0 23%,#000 46%,#000 100%);
+  transition:opacity 1.3s ease;
+  animation:c3DeathGridDrift041 5s linear infinite;
+}
+.c3-digrion-body-finale041 .death-horizon041{
+  position:absolute;
+  z-index:4;
+  left:0;
+  right:0;
+  bottom:-5%;
+  height:3px;
+  opacity:0;
+  background:linear-gradient(90deg,transparent 0 8%,rgba(255,226,124,.44) 28%,#fff4be 50%,rgba(255,226,124,.44) 72%,transparent 92%);
+  box-shadow:0 0 18px rgba(255,229,139,.78),0 0 42px rgba(255,183,48,.34);
+}
+.c3-digrion-body-finale041 .death-rails041{
+  position:absolute;
+  z-index:5;
+  inset:0;
+  pointer-events:none;
+}
+.c3-digrion-body-finale041 .death-rails041 i{
+  position:absolute;
+  top:50%;
+  left:var(--x);
+  width:clamp(2px,.22vw,4px);
+  height:0;
+  translate:-50% -50%;
+  opacity:0;
+  background:linear-gradient(180deg,transparent,#d6a4ff 12%,#fff0b0 50%,#b36bff 88%,transparent);
+  box-shadow:0 0 12px rgba(218,176,255,.72),0 0 26px rgba(136,58,224,.34);
+  transition:height 1.6s cubic-bezier(.14,.78,.18,1),opacity .55s ease,filter 1.2s ease;
+}
+.c3-digrion-body-finale041 .death-boss041,
+.c3-digrion-body-finale041 .death-after041 img,
+.c3-digrion-body-finale041 .death-slices041 img{
+  position:absolute;
+  left:50%;
+  top:53%;
+  width:min(49vw,57vh,670px);
+  height:min(74vh,750px);
+  object-fit:contain;
+  object-position:center;
+  transform:translate(-50%,-50%) scale(.96);
+  transform-origin:center center;
+}
+.c3-digrion-body-finale041 .death-boss041{
+  z-index:9;
+  filter:drop-shadow(0 28px 52px rgba(0,0,0,.84)) drop-shadow(0 0 30px rgba(156,72,224,.48));
+  transition:filter 2.2s ease,opacity 1.8s ease,transform 3.2s cubic-bezier(.14,.78,.18,1);
+}
+.c3-digrion-body-finale041 .death-after041{
+  position:absolute;
+  z-index:7;
+  inset:0;
+  pointer-events:none;
+}
+.c3-digrion-body-finale041 .death-after041 img{
+  opacity:0;
+  mix-blend-mode:screen;
+  filter:brightness(1.55) saturate(1.6);
+  transition:opacity .7s ease,transform 1.4s cubic-bezier(.14,.82,.2,1),filter 1.2s ease;
+}
+.c3-digrion-body-finale041 .death-after041 .a1{filter:hue-rotate(-22deg) brightness(1.55) saturate(1.5)}
+.c3-digrion-body-finale041 .death-after041 .a2{filter:hue-rotate(34deg) brightness(1.55) saturate(1.6)}
+.c3-digrion-body-finale041 .death-faults041{
+  position:absolute;
+  z-index:11;
+  left:50%;
+  top:53%;
+  width:min(58vw,68vh,790px);
+  height:min(80vh,820px);
+  transform:translate(-50%,-50%);
+  overflow:visible;
+  pointer-events:none;
+}
+.c3-digrion-body-finale041 .death-faults041 path{
+  fill:none;
+  stroke:#f3d7ff;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-dasharray:220;
+  stroke-dashoffset:220;
+  opacity:0;
+  filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 9px #b666ff);
+}
+.c3-digrion-body-finale041 .death-prism041{
+  position:absolute;
+  z-index:13;
+  left:50%;
+  top:53%;
+  width:min(12vmin,128px);
+  height:min(30vmin,310px);
+  transform:translate(-50%,-50%) scale(.08,.16);
+  opacity:0;
+  clip-path:polygon(50% 0,100% 22%,100% 78%,50% 100%,0 78%,0 22%);
+  background:linear-gradient(135deg,#fff 0 9%,#ffe78d 17%,#a950f1 48%,#4b087f 76%,#12001f 100%);
+  box-shadow:0 0 24px #fff2b8,0 0 70px rgba(255,212,90,.78),0 0 130px rgba(164,65,236,.55);
+  transition:opacity .5s ease,transform 1.25s cubic-bezier(.12,.84,.18,1),filter .8s ease;
+}
+.c3-digrion-body-finale041 .death-prism041::before,
+.c3-digrion-body-finale041 .death-prism041::after{
+  content:"";
+  position:absolute;
+  inset:8%;
+  clip-path:inherit;
+  border:1px solid rgba(255,248,203,.82);
+  box-shadow:inset 0 0 22px rgba(255,255,255,.22);
+}
+.c3-digrion-body-finale041 .death-prism041::after{
+  inset:27%;
+  background:#fff6c8;
+  border:0;
+  filter:blur(2px);
+  box-shadow:0 0 14px #fff,0 0 36px #ffd85a;
+}
+.c3-digrion-body-finale041 .death-slices041{
+  position:absolute;
+  z-index:10;
+  inset:0;
+  pointer-events:none;
+}
+.c3-digrion-body-finale041 .death-slices041 img{
+  opacity:0;
+  filter:brightness(1.02) drop-shadow(0 0 18px rgba(199,114,255,.44));
+  transition:opacity .5s ease,transform 2.1s cubic-bezier(.16,.84,.2,1),filter 1.4s ease;
+}
+.c3-digrion-body-finale041 .death-slices041 .s1{clip-path:polygon(0 0,52% 0,45% 25%,0 31%);--tx:-5.5vw;--ty:-4.4vh;--rr:-3deg}
+.c3-digrion-body-finale041 .death-slices041 .s2{clip-path:polygon(52% 0,100% 0,100% 30%,45% 25%);--tx:5.7vw;--ty:-4.8vh;--rr:3.4deg}
+.c3-digrion-body-finale041 .death-slices041 .s3{clip-path:polygon(0 31%,45% 25%,52% 50%,0 58%);--tx:-7.2vw;--ty:-.7vh;--rr:-4.2deg}
+.c3-digrion-body-finale041 .death-slices041 .s4{clip-path:polygon(45% 25%,100% 30%,100% 59%,52% 50%);--tx:7.5vw;--ty:.4vh;--rr:4.4deg}
+.c3-digrion-body-finale041 .death-slices041 .s5{clip-path:polygon(0 58%,52% 50%,46% 76%,0 84%);--tx:-5.2vw;--ty:4.8vh;--rr:-3deg}
+.c3-digrion-body-finale041 .death-slices041 .s6{clip-path:polygon(52% 50%,100% 59%,100% 84%,46% 76%);--tx:5.5vw;--ty:5.2vh;--rr:3.2deg}
+.c3-digrion-body-finale041 .death-slices041 .s7{clip-path:polygon(0 84%,46% 76%,100% 84%,100% 100%,0 100%);--tx:0vw;--ty:8vh;--rr:.4deg}
+.c3-digrion-body-finale041 .death-fragments041,
+.c3-digrion-body-finale041 .death-pixels041,
+.c3-digrion-body-finale041 .death-dust041{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.c3-digrion-body-finale041 .death-fragments041{z-index:12}
+.c3-digrion-body-finale041 .death-fragments041 i{
+  position:absolute;
+  left:50%;
+  top:53%;
+  width:var(--w);
+  height:var(--h);
+  opacity:0;
+  background:linear-gradient(135deg,rgba(239,207,255,.96),rgba(157,75,218,.86) 45%,rgba(57,13,88,.92));
+  clip-path:polygon(14% 0,100% 16%,78% 100%,0 75%);
+  box-shadow:0 0 7px rgba(218,164,255,.72);
+  transform:translate(-50%,-50%) rotate(var(--r)) scale(.15);
+}
+.c3-digrion-body-finale041 .death-pixels041{z-index:14}
+.c3-digrion-body-finale041 .death-pixels041 i{
+  position:absolute;
+  left:50%;
+  top:53%;
+  width:var(--s);
+  height:calc(var(--s) + 3px);
+  opacity:0;
+  background:linear-gradient(#fff6be,#ffd34d 42%,#a84ce4 76%,rgba(78,14,112,.9));
+  box-shadow:0 0 7px rgba(255,226,104,.7);
+  transform:translate(-50%,-50%) scale(.2);
+}
+.c3-digrion-body-finale041 .death-cut041{
+  position:absolute;
+  z-index:16;
+  left:50%;
+  top:4%;
+  bottom:4%;
+  width:2px;
+  translate:-50% 0;
+  opacity:0;
+  background:linear-gradient(180deg,transparent,#fff3b0 18%,#fff 50%,#fff3b0 82%,transparent);
+  box-shadow:0 0 10px #fff,0 0 30px rgba(255,223,103,.8),0 0 70px rgba(171,85,232,.44);
+  transform:scaleY(.02);
+  transform-origin:center;
+}
+.c3-digrion-body-finale041 .death-final-white041{
+  position:absolute;
+  z-index:17;
+  inset:0;
+  opacity:0;
+  background:linear-gradient(90deg,rgba(255,255,255,0) 0 44%,#fff 49.6%,#fff 50.4%,rgba(255,251,219,.18) 57%,transparent 100%);
+  mix-blend-mode:screen;
+}
+.c3-digrion-body-finale041 .death-dust041{z-index:8;opacity:0;transition:opacity 1.2s ease}
+.c3-digrion-body-finale041 .death-dust041 i{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:var(--s);
+  height:var(--s);
+  opacity:0;
+  background:#fff4b2;
+  border-radius:2px;
+  box-shadow:0 0 6px rgba(255,229,137,.76);
+  animation:c3DeathDust041 var(--dur) var(--d) ease-in-out infinite;
+}
+
+/* Phase 1: the arena freezes and six vertical coordinate clamps descend. */
+.c3-digrion-body-finale041.lock .death-grid041{opacity:.48}
+.c3-digrion-body-finale041.lock .death-rails041 i{height:76vh;opacity:.72}
+.c3-digrion-body-finale041.lock .death-boss041{filter:brightness(.82) saturate(.84) drop-shadow(0 26px 48px rgba(0,0,0,.9)) drop-shadow(0 0 28px rgba(150,65,220,.36));transform:translate(-50%,-50%) scale(1)}
+
+/* Phase 2: geometry de-synchronizes; fault lines crawl through the body. */
+.c3-digrion-body-finale041.fracture .death-after041 img{opacity:.20}
+.c3-digrion-body-finale041.fracture .death-after041 .a1{transform:translate(-52.6%,-50%) scale(1.01)}
+.c3-digrion-body-finale041.fracture .death-after041 .a2{transform:translate(-47.4%,-50%) scale(.995)}
+.c3-digrion-body-finale041.fracture .death-faults041 path{opacity:.86;animation:c3DeathFaultDraw041 2.25s var(--d) cubic-bezier(.15,.78,.2,1) forwards}
+.c3-digrion-body-finale041.fracture .death-boss041{filter:brightness(.74) saturate(.66) contrast(1.12) drop-shadow(0 30px 55px rgba(0,0,0,.92)) drop-shadow(0 0 44px rgba(183,91,255,.55))}
+
+/* Phase 3: the body is cut into suspended spatial plates and the inner prism appears. */
+.c3-digrion-body-finale041.split .death-boss041{opacity:.18;filter:brightness(1.8) saturate(.28) blur(1.2px)}
+.c3-digrion-body-finale041.split .death-after041 img{opacity:0;transform:translate(-50%,-50%) scale(1.05)}
+.c3-digrion-body-finale041.split .death-slices041 img{opacity:1;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) rotate(var(--rr)) scale(.985)}
+.c3-digrion-body-finale041.split .death-prism041{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.c3-digrion-body-finale041.split .death-rails041 i{filter:brightness(1.35);opacity:.92}
+
+/* Phase 4: fragments leave the body, but hang in time instead of exploding radially. */
+.c3-digrion-body-finale041.suspend .death-fragments041 i{animation:c3DeathFragmentSuspend041 3.35s var(--d) cubic-bezier(.12,.78,.18,1) both}
+.c3-digrion-body-finale041.suspend .death-prism041{filter:brightness(1.35) saturate(1.12)}
+.c3-digrion-body-finale041.suspend .death-grid041{opacity:.68}
+
+/* Phase 5: purification climbs upward through the world like a horizon sweep, never a circular blast. */
+.c3-digrion-body-finale041.purify .death-bg-clean041{clip-path:inset(0 0 0 0);transform:scale(1.015)}
+.c3-digrion-body-finale041.purify .death-bg-dark041{opacity:.10;filter:brightness(.92) saturate(.42);transform:scale(1.07)}
+.c3-digrion-body-finale041.purify .death-void041{opacity:.16}
+.c3-digrion-body-finale041.purify .death-horizon041{opacity:1;animation:c3DeathHorizon041 4.25s cubic-bezier(.16,.8,.18,1) both}
+.c3-digrion-body-finale041.purify .death-rails041 i{opacity:.28;filter:brightness(.82)}
+
+/* Phase 6: matter disassembles into rectangular pixels; slices drift upward and lose saturation. */
+.c3-digrion-body-finale041.dissolve .death-pixels041 i{animation:c3DeathPixel041 4.2s var(--d) cubic-bezier(.12,.72,.18,1) both}
+.c3-digrion-body-finale041.dissolve .death-slices041 img{opacity:.12;filter:brightness(2.4) saturate(.18) blur(2px);transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty) - 9vh)) rotate(var(--rr)) scale(.94)}
+.c3-digrion-body-finale041.dissolve .death-faults041{opacity:.12;transition:1.4s ease}
+
+/* Phase 7: the prism is crushed into a single vertical line, then cut out of the scene. */
+.c3-digrion-body-finale041.collapse .death-prism041{opacity:.95;transform:translate(-50%,-50%) scale(.055,1.24);filter:brightness(2.35) saturate(.45);transition:transform 1.15s cubic-bezier(.12,.86,.16,1),filter .9s ease,opacity .7s 1.05s ease}
+.c3-digrion-body-finale041.collapse .death-cut041{opacity:1;animation:c3DeathCut041 1.85s cubic-bezier(.12,.82,.2,1) both}
+.c3-digrion-body-finale041.collapse .death-final-white041{animation:c3DeathWhiteCut041 1.5s .52s ease-out both}
+.c3-digrion-body-finale041.collapse .death-fragments041{opacity:.08;transition:1s ease}
+.c3-digrion-body-finale041.collapse .death-slices041{opacity:0;transition:.8s ease}
+.c3-digrion-body-finale041.collapse .death-boss041{opacity:0}
+
+/* Phase 8: long silent aftermath on the fully purified core. */
+.c3-digrion-body-finale041.silence .death-grid041,
+.c3-digrion-body-finale041.silence .death-rails041,
+.c3-digrion-body-finale041.silence .death-faults041,
+.c3-digrion-body-finale041.silence .death-fragments041,
+.c3-digrion-body-finale041.silence .death-pixels041,
+.c3-digrion-body-finale041.silence .death-cut041,
+.c3-digrion-body-finale041.silence .death-final-white041{opacity:0;transition:1.25s ease}
+.c3-digrion-body-finale041.silence .death-dust041{opacity:.72}
+.c3-digrion-body-finale041.silence .death-bg-dark041{opacity:0}
+.c3-digrion-body-finale041.silence .death-void041{opacity:.08}
+
+@keyframes c3DeathGridDrift041{from{background-position:0 0,0 0}to{background-position:0 74px,74px 0}}
+@keyframes c3DeathFaultDraw041{0%{stroke-dashoffset:220;opacity:0}18%{opacity:.9}100%{stroke-dashoffset:0;opacity:.78}}
+@keyframes c3DeathFragmentSuspend041{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--r)) scale(.12)}
+  24%{opacity:.92}
+  72%{opacity:.78;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(calc(var(--r) + 24deg)) scale(1)}
+  100%{opacity:.42;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y) - 1.5vh)) rotate(calc(var(--r) + 29deg)) scale(.94)}
+}
+@keyframes c3DeathHorizon041{0%{bottom:-5%;opacity:0}8%{opacity:1}84%{opacity:.9}100%{bottom:104%;opacity:0}}
+@keyframes c3DeathPixel041{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+  14%{opacity:1}
+  58%{opacity:.88;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y) - 18vh)) scale(.18)}
+}
+@keyframes c3DeathCut041{
+  0%{opacity:0;transform:scaleY(.02);filter:brightness(1)}
+  22%{opacity:1;transform:scaleY(1);filter:brightness(1.3)}
+  58%{opacity:1;transform:scaleY(1);filter:brightness(2.1)}
+  100%{opacity:0;transform:scaleY(1);filter:brightness(1)}
+}
+@keyframes c3DeathWhiteCut041{0%{opacity:0;transform:scaleX(.1)}24%{opacity:.94;transform:scaleX(1)}55%{opacity:.42}100%{opacity:0;transform:scaleX(1.5)}}
+@keyframes c3DeathDust041{0%,100%{opacity:.14;transform:translateY(12px)}50%{opacity:.82;transform:translateY(-9px)}}
+@media(max-width:760px){
+  .c3-digrion-body-finale041 .death-boss041,
+  .c3-digrion-body-finale041 .death-after041 img,
+  .c3-digrion-body-finale041 .death-slices041 img{width:min(70vw,56vh,590px);height:min(70vh,650px)}
+  .c3-digrion-body-finale041 .death-rails041 i{height:70vh}
+  .c3-digrion-body-finale041 .death-prism041{width:min(16vmin,112px);height:min(33vmin,260px)}
+}
+</style>
+
+<script id="chapter3-patch-041-digrion-body-finale-script">
+(() => {
+  const makeFragments041 = () => Array.from({length:44},(_,i)=>{
+    const ang=((i*79)%360)*Math.PI/180;
+    const radius=6+((i*37)%23);
+    const x=(Math.cos(ang)*radius).toFixed(2)+'vw';
+    const y=(Math.sin(ang)*radius*.72).toFixed(2)+'vh';
+    const w=(3+(i%5)*1.25).toFixed(1)+'px';
+    const h=(8+(i%7)*2.1).toFixed(1)+'px';
+    const r=((i*47)%180-90)+'deg';
+    const d=((i%13)*.045).toFixed(3)+'s';
+    return `<i style="--x:${x};--y:${y};--w:${w};--h:${h};--r:${r};--d:${d}"></i>`;
+  }).join('');
+  const makePixels041 = () => Array.from({length:88},(_,i)=>{
+    const ang=((i*53)%360)*Math.PI/180;
+    const radius=4+((i*29)%28);
+    const x=(Math.cos(ang)*radius).toFixed(2)+'vw';
+    const y=(Math.sin(ang)*radius*.76).toFixed(2)+'vh';
+    const s=(2.2+(i%6)*.8).toFixed(1)+'px';
+    const d=((i%19)*.055).toFixed(3)+'s';
+    return `<i style="--x:${x};--y:${y};--s:${s};--d:${d}"></i>`;
+  }).join('');
+  const makeDust041 = () => Array.from({length:46},(_,i)=>{
+    const x=5+((i*37)%91), y=8+((i*61)%84), s=(1.8+(i%4)*.9).toFixed(1);
+    const d=((i%17)*-.11).toFixed(2), dur=(2.8+(i%7)*.28).toFixed(2);
+    return `<i style="--x:${x}%;--y:${y}%;--s:${s}px;--d:${d}s;--dur:${dur}s"></i>`;
+  }).join('');
+  const faultPaths041 = [
+    ['M510 120 L480 245 L533 330 L492 438 L518 535 L470 664 L505 820','.05s'],
+    ['M330 230 L420 285 L398 372 L468 418','.28s'],
+    ['M690 215 L590 294 L614 375 L532 430','.46s'],
+    ['M290 520 L390 486 L458 534 L420 646','.62s'],
+    ['M710 500 L620 474 L545 533 L586 654','.78s'],
+    ['M370 720 L458 655 L505 724 L472 846','.94s']
+  ].map(([d,delay])=>`<path d="${d}" style="--d:${delay}"></path>`).join('');
+  const rails041 = [30,38,45,55,62,70].map(x=>`<i style="--x:${x}%"></i>`).join('');
+  const bossSrc041='assets/chapter3/characters/digrion_phase2_final.png';
+
+  window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer, api }) => c3Mount(layer, `
+    <div class="c3-digrion-body-finale041">
+      <img class="death-bg041 death-bg-dark041" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
+      <img class="death-bg041 death-bg-clean041" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <div class="death-void041"></div>
+      <div class="death-grid041"></div>
+      <div class="death-horizon041"></div>
+      <div class="death-rails041">${rails041}</div>
+      <div class="death-after041"><img class="a1" src="${bossSrc041}" alt=""><img class="a2" src="${bossSrc041}" alt=""></div>
+      <img class="death-boss041" src="${bossSrc041}" alt="디그리온">
+      <div class="death-slices041">${Array.from({length:7},(_,i)=>`<img class="s${i+1}" src="${bossSrc041}" alt="">`).join('')}</div>
+      <svg class="death-faults041" viewBox="0 0 1000 1000" aria-hidden="true">${faultPaths041}</svg>
+      <div class="death-prism041" aria-hidden="true"></div>
+      <div class="death-fragments041">${makeFragments041()}</div>
+      <div class="death-pixels041">${makePixels041()}</div>
+      <div class="death-cut041"></div>
+      <div class="death-final-white041"></div>
+      <div class="death-dust041">${makeDust041()}</div>
+    </div>`, (root, later) => {
+      const scene=root.querySelector('.c3-digrion-body-finale041');
+      /* 0-2s: silence and six vertical coordinate clamps. */
+      later(()=>scene?.classList.add('lock'),260);
+      /* 2-5s: reality and body geometry fall out of sync. */
+      later(()=>scene?.classList.add('fracture'),2050);
+      /* 5-8s: the body is literally sliced into suspended spatial plates. */
+      later(()=>scene?.classList.add('split'),4950);
+      later(()=>scene?.classList.add('suspend'),6800);
+      /* 9-13s: purification climbs from the floor while matter hangs in frozen time. */
+      later(()=>scene?.classList.add('purify'),9000);
+      later(()=>scene?.classList.add('dissolve'),10650);
+      /* 13.8s: the exposed core is crushed into a vertical line and severed. */
+      later(()=>scene?.classList.add('collapse'),13750);
+      /* Update the underlying story scene only after the body is already gone. */
+      later(()=>api?.updateScene?.('graduation_core_purified',{force:true,suppressFlash:true}),15450);
+      /* 15.6-18.8s: long silent purified aftermath before dialogue resumes. */
+      later(()=>scene?.classList.add('silence'),15600);
+    });
+})();
+</script>
+
 </body>
 </html>
