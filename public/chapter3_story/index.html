@@ -1711,7 +1711,79 @@ kbd {
 .ch3-effect{position:absolute;inset:0;overflow:hidden;font-family:"Noto Sans KR","Courier New",monospace}.ch3-black{background:#000}.ch3-title-card{position:absolute;inset:0;width:100%;height:100%;min-height:100%;display:grid;place-content:center;align-content:center;justify-content:center;justify-items:center;gap:14px;background:#000;text-align:center}.ch3-title-card small{font-size:clamp(16px,2vw,24px);letter-spacing:.32em;color:#dab866;animation:fadeUp .7s ease both}.ch3-title-card strong{font-size:clamp(44px,7vw,96px);letter-spacing:.06em;animation:fadeUp .7s .25s ease both}.ch3-title-card span{font-size:clamp(14px,1.7vw,20px);color:#9e9e9e;animation:fadeUp .7s .48s ease both}@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 .ch3-diagnosis{display:grid;grid-template-columns:220px 1fr;background:#f1f2f5;color:#1f2630;padding:2.2%;gap:0}.ch3-diagnosis-nav{background:#d9a22b;color:#fff;padding:20px 14px;box-shadow:inset -1px 0 #b78319}.ch3-diagnosis-nav h3{margin:0 0 20px;font-size:22px}.ch3-diagnosis-nav div{padding:10px 8px;border-top:1px solid rgba(255,255,255,.25)}.ch3-diagnosis-nav .active{background:#fff;color:#6f4b00;font-weight:800}.ch3-diagnosis-main{background:#fff;padding:20px 24px;overflow:hidden}.ch3-diagnosis-main h2{margin:0 0 8px}.ch3-notice{font-size:12px;color:#2450d6;line-height:1.55;margin-bottom:14px}.ch3-student-grid{display:grid;grid-template-columns:110px 1fr 100px 1fr;border:1px solid #ccd0d7;border-bottom:0;font-size:13px}.ch3-student-grid>*{padding:8px 10px;border-right:1px solid #ccd0d7;border-bottom:1px solid #ccd0d7}.ch3-student-grid b{background:#edf0f4}.ch3-tabs{display:flex;margin-top:16px;border-bottom:1px solid #888}.ch3-tabs span{padding:8px 13px;border:1px solid #c0c3c8;border-bottom:0;background:#f7f7f7;font-size:12px}.ch3-tabs .active{background:#7d6b58;color:#fff}.ch3-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}.ch3-table th,.ch3-table td{padding:9px 8px;border:1px solid #d2d5da;text-align:center}.ch3-table th{background:#eef0f3}.ch3-table td.course{text-align:left}.ch3-ok{font-weight:900;color:#185f28}.ch3-bad{font-weight:900;color:#c8212b}.ch3-diagnosis.is-glitch{animation:screenShake .12s linear infinite}.ch3-diagnosis.is-glitch:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 6px,rgba(155,0,20,.08) 7px 8px);mix-blend-mode:multiply;animation:glitchScan .42s linear infinite}.ch3-diagnosis.is-glitch .glitchable{animation:valueGlitch .25s steps(2,end) infinite}@keyframes screenShake{0%,100%{transform:none}30%{transform:translateX(-2px)}70%{transform:translateX(2px)}}@keyframes glitchScan{to{transform:translateY(8px)}}@keyframes valueGlitch{50%{color:#d10c1f;text-shadow:2px 0 #0ff,-2px 0 #f0f}}
 .ch3-corruption{display:grid;place-content:center;justify-items:center;background:radial-gradient(circle at center,rgba(124,20,58,.55),rgba(4,3,10,.94));color:#fff}.ch3-corruption-grid{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:16px;width:min(880px,88%)}.ch3-monster-chip{padding:18px 14px;text-align:center;border:1px solid rgba(255,255,255,.18);background:rgba(13,8,20,.8);box-shadow:0 0 24px rgba(168,33,89,.2);animation:chipFloat 1.4s ease-in-out infinite}.ch3-monster-chip:nth-child(2n){animation-delay:.25s}.ch3-monster-chip b{display:block;font-size:15px;color:#ffb4c0}.ch3-monster-chip small{display:block;margin-top:6px;color:#aaa}@keyframes chipFloat{50%{transform:translateY(-8px);box-shadow:0 0 32px rgba(215,52,99,.35)}}
-.ch3-combat{display:grid;place-content:center;justify-items:center;gap:18px;background:linear-gradient(180deg,rgba(3,6,12,.86),rgba(28,5,31,.92));text-align:center}.ch3-combat strong{font-size:clamp(38px,6vw,76px);color:#f5d06d;text-shadow:0 0 18px rgba(245,208,109,.3)}.ch3-combat p{margin:0;color:#d1c6d5;font-size:clamp(14px,2vw,21px)}.ch3-combat-zones{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}.ch3-combat-zones span{padding:8px 14px;border:1px solid #725774;background:#160e20}.ch3-progress{width:min(600px,75vw);height:16px;border:1px solid #6c6274;background:#09080b;overflow:hidden}.ch3-progress i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#8e314f,#f1d16d);transform-origin:left;animation:fillProgress 2.6s ease both}@keyframes fillProgress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+/* Chapter 1 최초 웨이브 진입의 붉은 셔터 전환을 Chapter 3에도 그대로 사용한다. */
+.ch3-combat{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  pointer-events:none;
+  background:transparent;
+}
+.ch3-battle-red-shutter{
+  position:absolute;
+  inset:0;
+  background:#e60000;
+  transform:scaleY(0);
+  transform-origin:center;
+  animation:ch3BattleShutter 3.2s cubic-bezier(.75,0,.25,1) forwards;
+}
+.ch3-battle-transition-cross{
+  position:absolute;
+  width:170vmax;
+  height:4px;
+  background:#fff;
+  transform:rotate(-18deg) scaleX(0);
+  box-shadow:0 0 30px #fff;
+  animation:ch3BattleSlash .72s .34s ease-out forwards;
+}
+.ch3-battle-transition-title{
+  position:relative;
+  z-index:2;
+  opacity:0;
+  transform:scale(.78);
+  text-align:center;
+  text-shadow:0 8px 0 rgba(0,0,0,.32);
+  animation:ch3BattleTitleReveal 2.5s .48s ease forwards;
+}
+.ch3-battle-transition-title small{
+  display:block;
+  color:#fff;
+  font-size:clamp(12px,1.5vw,18px);
+  font-weight:1000;
+  letter-spacing:.42em;
+}
+.ch3-battle-transition-title strong{
+  display:block;
+  color:#fff;
+  font-size:clamp(52px,11vw,150px);
+  font-style:italic;
+  font-weight:1000;
+  letter-spacing:-.05em;
+}
+.ch3-battle-transition-title span{
+  display:block;
+  margin-top:8px;
+  color:#ffe0a8;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.2em;
+}
+@keyframes ch3BattleShutter{
+  0%{transform:scaleY(0)}
+  18%,82%{transform:scaleY(1)}
+  100%{transform:scaleY(0)}
+}
+@keyframes ch3BattleSlash{
+  to{transform:rotate(-18deg) scaleX(1)}
+}
+@keyframes ch3BattleTitleReveal{
+  0%{opacity:0;transform:scale(.78)}
+  10%,84%{opacity:1;transform:scale(1.08)}
+  100%{opacity:0;transform:scale(1.18)}
+}
+@keyframes fillProgress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .ch3-submit{display:grid;place-content:center;justify-items:center;gap:16px;background:rgba(3,5,10,.76);backdrop-filter:blur(4px)}.ch3-submit-window{width:min(780px,88vw);padding:24px;border:1px solid #777;background:#f8f8fa;color:#222;box-shadow:0 30px 80px #000}.ch3-submit-window h3{margin:0 0 18px}.ch3-submit-row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid #ddd}.ch3-submit-button{margin-top:22px;margin-left:auto;width:max-content;padding:11px 24px;background:#b51f2b;color:#fff;font-weight:900}.ch3-submit.is-done .ch3-submit-button{background:#2b7b44}.ch3-submit.is-done .ch3-submit-button:after{content:" · 완료"}
 .ch3-core-arrival{display:grid;place-content:center;justify-items:center;gap:20px;background:radial-gradient(circle,rgba(148,67,106,.18),rgba(0,0,0,.92));text-align:center}.ch3-core-orbit{position:relative;width:min(58vh,560px);aspect-ratio:1;border-radius:50%;border:2px solid rgba(240,201,106,.26);animation:orbitTurn 10s linear infinite}.ch3-core-orbit:before,.ch3-core-orbit:after{content:"";position:absolute;inset:15%;border:1px solid rgba(240,201,106,.22);border-radius:50%}.ch3-core-orbit:after{inset:31%}.ch3-core-star{position:absolute;width:28px;height:28px;background:#f2d06d;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 10px #f2d06d)}.ch3-core-star.s1{left:50%;top:-14px}.ch3-core-star.s2{right:4%;top:23%}.ch3-core-star.s3{right:4%;bottom:23%}.ch3-core-star.s4{left:50%;bottom:-14px}.ch3-core-star.locked{background:#2d2532;filter:drop-shadow(0 0 8px #b8294e)}.ch3-core-star.s5{left:4%;bottom:23%}.ch3-core-star.s6{left:4%;top:23%}@keyframes orbitTurn{to{transform:rotate(360deg)}}
 .ch3-boss-emerge{display:grid;place-content:center;justify-items:center;background:radial-gradient(circle at 50% 45%,rgba(120,24,58,.3),rgba(0,0,0,.93));overflow:hidden}.ch3-boss-emerge img{height:min(78vh,760px);max-width:82vw;object-fit:contain;filter:drop-shadow(0 0 28px rgba(222,50,88,.38));animation:bossRise 2s cubic-bezier(.17,.82,.22,1) both}.ch3-boss-emerge strong{position:absolute;bottom:9%;font-size:clamp(26px,4vw,52px);letter-spacing:.08em;text-shadow:0 4px 18px #000}@keyframes bossRise{from{opacity:0;transform:translateY(80px) scale(.82);filter:brightness(.2)}to{opacity:1;transform:none;filter:brightness(1) drop-shadow(0 0 28px rgba(222,50,88,.38))}}
@@ -3372,13 +3444,12 @@ window.STORY_CONFIG = {
 window.STORY_SCENES = {
   black_screen: { chapter:'', title:'', subtitle:'', background:'none', backgroundColor:'#000', position:'center center', tint:'rgba(0,0,0,1)' },
   campus_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'4학년 2학기', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(14,13,10,.14)' },
-  campus_baegyangro_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'4학년 2학기', background:'chapter3/backgrounds/campus_baegyangro_day.png', position:'center center', tint:'rgba(14,13,10,.14)' },
-  campus_autumn: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'가을의 4조', background:'chapter3/backgrounds/campus_ilcheongdam.png', position:'center center', tint:'rgba(95,46,8,.20)', filter:'saturate(.92) sepia(.08)' },
+  campus_autumn: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'가을의 4조', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(95,46,8,.20)', filter:'saturate(.92) sepia(.08)' },
   hobanwoo_room: { chapter:'CHAPTER 3', title:'호반우의 방', subtitle:'막학기의 밤', background:'chapter3/backgrounds/hobanwoo_room.png', position:'center center', tint:'rgba(12,13,21,.24)' },
   library_day: { chapter:'CHAPTER 3', title:'도서관', subtitle:'막학기의 일상', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(12,14,17,.12)' },
   library_night: { chapter:'CHAPTER 3', title:'도서관 신관 지하 1층', subtitle:'늦은 밤', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(8,10,15,.30)' },
   future_creator_hall: { chapter:'CHAPTER 3', title:'미래창직관 1층', subtitle:'학생증 인증', background:'chapter2/backgrounds/bg_ch2_future_creator_hall.png', position:'center center', tint:'rgba(11,14,18,.14)' },
-  campus_night: { chapter:'CHAPTER 3', title:'밤의 경북대학교', subtitle:'화면 밖으로 나온 이상', background:'chapter3/backgrounds/campus_night_promenade.png', position:'center center', tint:'rgba(4,7,16,.30)' },
+  campus_night: { chapter:'CHAPTER 3', title:'밤의 경북대학교', subtitle:'화면 밖으로 나온 이상', background:'chapter3/backgrounds/campus_night.png', position:'center center', tint:'rgba(4,7,16,.30)' },
   cheomseongdae_night: { chapter:'CHAPTER 3', title:'밤의 경북대학교', subtitle:'코어 진입 전', background:'chapter3/backgrounds/campus_night.png', position:'center center', tint:'rgba(4,5,12,.36)' },
   combat_zone: { chapter:'CHAPTER 3', title:'졸업 오염 구역', subtitle:'일반 오염 파편 정화', background:'chapter3/backgrounds/graduation_core.svg', position:'center center', tint:'rgba(18,4,28,.24)' },
   graduation_core: { chapter:'CHAPTER 3', title:'첨성대 코어 · 졸업 영역', subtitle:'최심부', background:'chapter3/backgrounds/digrion_core.png', position:'center 18%', tint:'rgba(6,3,12,.10)' },
@@ -3560,16 +3631,16 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "저번 채용 지원 내역 확인할 때도 지원 안 했다고 뜨더니만.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral"}),
       C3D.line("hobanwoo", "그냥 내 컴퓨터가 이상한건가..", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"thinking"}),
 
-      C3D.sec("장면 9. 나만 그런 게 아니다", "campus_baegyangro_day"),
-      C3D.fx("story-intertitle", "campus_baegyangro_day", 2200, {text:"다음 날 아침"}),
-      C3D.loc("campus_baegyangro_day", 1200),
-      C3D.line("student1", "요즘 학교 서버 좀 이상하지 않아?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
-      C3D.line("student2", "난 과제 제출한 게 갑자기 미제출로 뜨던데?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student2",right:"hobanwoo"}),
-      C3D.line("student3", "난 이수한 강의 내역이 갑자기 사라졌어.", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student3",right:"hobanwoo"}),
-      C3D.line("student1", "요즘 학교 시스템 왜 이러냐.", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "(…….)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "(나만 그런 게 아니었구나..)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "(근데 정말 서버 문제일까..?)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"worried"}),
+      C3D.sec("장면 9. 나만 그런 게 아니다", "campus_day"),
+      C3D.fx("story-intertitle", "campus_day", 2200, {text:"다음 날 아침"}),
+      C3D.loc("campus_day", 1200),
+      C3D.line("student1", "요즘 학교 서버 좀 이상하지 않아?", "campus_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
+      C3D.line("student2", "난 과제 제출한 게 갑자기 미제출로 뜨던데?", "campus_day", "나만 그런 게 아니다", {left:"student2",right:"hobanwoo"}),
+      C3D.line("student3", "난 이수한 강의 내역이 갑자기 사라졌어.", "campus_day", "나만 그런 게 아니다", {left:"student3",right:"hobanwoo"}),
+      C3D.line("student1", "요즘 학교 시스템 왜 이러냐.", "campus_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "(…….)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
+      C3D.line("hobanwoo", "(나만 그런 게 아니었구나..)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
+      C3D.line("hobanwoo", "(근데 정말 서버 문제일까..?)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"worried"}),
 
       C3D.sec("장면 10. 오염 흔적", "campus_night"),
       C3D.loc("campus_night", 1200),
@@ -3619,7 +3690,7 @@ window.STORY_DATA = {
       C3D.line("student_card", "방치할 경우 학생들의 졸업 기록까지 영향을 받을 수 있습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
       C3D.line("hobanwoo", "그럼 더더욱 해야지.", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"brave",left:"student_card"}),
       C3D.line("hobanwoo", "난 졸업할 거야. 빨리 가자!", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"combat",left:"student_card"}),
-      C3D.fx("combat-transition", "combat_zone", 4200, {chapter:"CHAPTER 3",title:"졸업 오염 파편 정화"}),
+      C3D.fx("combat-transition", "combat_zone", 3220, {chapter:"CHAPTER 3",title:"전투 개시",subtitle:"졸업 오염 파편 정화 · PURIFICATION"}),
 
       C3D.sec("장면 15. 일반 몬스터 웨이브", "combat_zone"),
       C3D.fx("battle-running", "combat_zone", 86400000, {title:"일반 몬스터 웨이브",subtitle:"챕터 3 일반 오염 파편 정화"}),
@@ -4367,8 +4438,15 @@ window.STORY_CUSTOM_EFFECTS['corruption-birth'] = ({ layer }) => {
 
 window.STORY_CUSTOM_EFFECTS['combat-transition'] = ({ layer, item, api }) => {
   api.setMode('game');
-  const zones = item.zones || [];
-  return c3Mount(layer, `<div class="ch3-combat"><strong>${c3Esc(item.title || '일반 오염 전투')}</strong><p>${c3Esc(item.subtitle || '오염 파편을 정화하십시오.')}</p><div class="ch3-combat-zones">${zones.map(z=>`<span>${c3Esc(z)}</span>`).join('')}</div><div class="ch3-progress"><i></i></div><p>정화율 0% → 100%</p></div>`);
+  return c3Mount(layer, `<div class="ch3-combat">
+    <div class="ch3-battle-red-shutter"></div>
+    <div class="ch3-battle-transition-cross"></div>
+    <div class="ch3-battle-transition-title">
+      <small>${c3Esc(item.chapter || 'CHAPTER 3')}</small>
+      <strong>${c3Esc(item.title || '전투 개시')}</strong>
+      <span>${c3Esc(item.subtitle || '졸업 오염 파편 정화 · PURIFICATION')}</span>
+    </div>
+  </div>`);
 };
 
 window.STORY_CUSTOM_EFFECTS['submission-complete'] = ({ layer, item }) => c3Mount(layer, `
@@ -10962,5 +11040,262 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 #storyEffectPanel,
 #dialogueJumpPanel { display:none !important; }
 </style>
+
+
+<style id="chapter3-patch-041-core-rift-style">
+/* === CHAPTER 3 PATCH 041: spatial-rift core transfer ===
+   Deliberately avoids the circular portal / radial burst language used by earlier chapters.
+   The space itself is cut into slabs, an angular dimensional gate opens, then the camera is pulled
+   through a stack of rectangular depth frames into the Digrion core. */
+.story-body-effect-host[data-effect="teleport-core"]{
+  background:#020106!important;
+}
+.c3-core-rift-029{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  background:#020106!important;
+  color:#fff;
+  font-family:"Noto Sans KR",system-ui,sans-serif;
+  transform-origin:0 0;
+}
+.c3-core-rift-029 .rift-space{
+  position:absolute;z-index:0;inset:0;
+  background:
+    linear-gradient(180deg,rgba(8,3,18,.28),rgba(2,1,7,.88)),
+    linear-gradient(135deg,#090314 0%,#030108 46%,#10051d 100%);
+  transition:filter .6s ease,opacity .6s ease;
+}
+.c3-core-rift-029 .coord-grid{
+  position:absolute;z-index:1;left:-20%;right:-20%;top:38%;height:82%;
+  transform-origin:50% 0;
+  transform:perspective(820px) rotateX(67deg) translateY(7%);
+  background-image:
+    linear-gradient(rgba(185,118,255,.12) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(185,118,255,.12) 1px,transparent 1px);
+  background-size:62px 62px;
+  opacity:.18;
+  mask-image:linear-gradient(180deg,transparent 0%,#000 18%,#000 72%,transparent 100%);
+  transition:opacity .5s ease,background-position 1.2s cubic-bezier(.2,.8,.2,1),transform 1.2s cubic-bezier(.2,.8,.2,1);
+}
+.c3-core-rift-029.gate-form .coord-grid{opacity:.42;background-position:0 32px,32px 0;transform:perspective(780px) rotateX(69deg) translateY(1%)}
+.c3-core-rift-029.transit .coord-grid{opacity:.72;background-position:0 330px,330px 0;transform:perspective(620px) rotateX(73deg) translateY(-18%) scale(1.22)}
+
+.c3-core-rift-029 .axis-lock{
+  position:absolute;z-index:3;left:50%;top:50%;width:2px;height:0;
+  transform:translate(-50%,-50%);
+  background:linear-gradient(180deg,transparent,#f0d7ff 12%,#b365ff 50%,#f0d7ff 88%,transparent);
+  box-shadow:0 0 9px rgba(224,183,255,.9),0 0 28px rgba(155,73,255,.65);
+  opacity:0;
+  transition:height .62s cubic-bezier(.16,.86,.2,1),opacity .2s ease,width .28s ease;
+}
+.c3-core-rift-029.gate-form .axis-lock{height:64vh;opacity:1}
+.c3-core-rift-029.gate-open .axis-lock{width:8px;height:88vh;opacity:.58}
+.c3-core-rift-029.transit .axis-lock{opacity:0;height:120vh}
+
+.c3-core-rift-029 .rift-aura{
+  position:absolute;z-index:2;left:50%;top:50%;width:min(50vw,640px);height:82vh;
+  transform:translate(-50%,-50%) scaleX(.03);
+  opacity:0;
+  background:linear-gradient(90deg,transparent,rgba(113,38,205,.06) 18%,rgba(190,108,255,.26) 48%,rgba(113,38,205,.06) 82%,transparent);
+  filter:blur(28px);
+  transition:transform .9s cubic-bezier(.16,.82,.2,1),opacity .45s ease;
+}
+.c3-core-rift-029.gate-open .rift-aura{opacity:1;transform:translate(-50%,-50%) scaleX(1)}
+.c3-core-rift-029.transit .rift-aura{opacity:.3;transform:translate(-50%,-50%) scaleX(2.1)}
+
+/* Angular aperture: not a circle. */
+.c3-core-rift-029 .rift-gate{
+  position:absolute;z-index:5;left:50%;top:50%;width:min(34vw,390px);height:min(76vh,760px);
+  transform:translate(-50%,-50%) scaleX(.018) scaleY(.88);
+  transform-origin:50% 50%;
+  clip-path:polygon(42% 0,59% 4%,72% 25%,67% 70%,55% 100%,37% 94%,27% 66%,32% 23%);
+  background:linear-gradient(180deg,#ead3ff 0%,#9a50e8 13%,#271039 30%,#08030f 100%);
+  filter:drop-shadow(0 0 12px #e0b5ff) drop-shadow(0 0 38px rgba(163,75,255,.78)) drop-shadow(0 0 90px rgba(111,37,210,.52));
+  opacity:0;
+  transition:transform .92s cubic-bezier(.14,.86,.2,1),opacity .25s ease,filter .45s ease;
+}
+.c3-core-rift-029 .rift-gate::before{
+  content:"";position:absolute;inset:clamp(5px,.55vw,10px);
+  clip-path:inherit;
+  background:#030107;
+}
+.c3-core-rift-029 .rift-gate img{
+  position:absolute;z-index:2;inset:clamp(10px,1vw,18px);width:calc(100% - clamp(20px,2vw,36px));height:calc(100% - clamp(20px,2vw,36px));
+  object-fit:cover;object-position:50% 72%;clip-path:inherit;
+  filter:brightness(.62) saturate(1.22) contrast(1.06);
+  transform:scale(1.20);
+  transition:filter .65s ease,transform 1.25s cubic-bezier(.14,.82,.18,1),object-position 1.25s ease;
+}
+.c3-core-rift-029.gate-open .rift-gate{opacity:1;transform:translate(-50%,-50%) scaleX(1) scaleY(1)}
+.c3-core-rift-029.gate-open .rift-gate img{filter:brightness(.82) saturate(1.28) contrast(1.04);transform:scale(1.10)}
+.c3-core-rift-029.transit .rift-gate{transform:translate(-50%,-50%) scale(2.8);filter:brightness(1.25) drop-shadow(0 0 26px #f0d8ff) drop-shadow(0 0 100px rgba(155,70,255,.95));transition-duration:1.15s}
+.c3-core-rift-029.transit .rift-gate img{object-position:50% 36%;transform:scale(1.02);filter:brightness(1.05) saturate(1.13)}
+
+/* The current space breaks into rigid slabs and slides out of the way. */
+.c3-core-rift-029 .space-slabs{position:absolute;z-index:4;inset:0;pointer-events:none}
+.c3-core-rift-029 .space-slabs i{
+  position:absolute;left:var(--x);top:var(--y);width:var(--w);height:var(--h);
+  border:1px solid rgba(199,145,255,.28);
+  background:linear-gradient(145deg,rgba(69,23,101,.28),rgba(9,4,17,.88));
+  box-shadow:inset 0 0 22px rgba(173,89,255,.10),0 8px 26px rgba(0,0,0,.32);
+  opacity:0;
+  transform:translate3d(0,0,0) rotate(0deg) scale(.98);
+  transition:transform 1.05s cubic-bezier(.18,.82,.18,1),opacity .28s ease;
+}
+.c3-core-rift-029.gate-form .space-slabs i{opacity:.48}
+.c3-core-rift-029.gate-open .space-slabs i{opacity:.88;transform:translate3d(var(--tx),var(--ty),0) rotate(var(--r)) scale(1.03)}
+.c3-core-rift-029.transit .space-slabs i{opacity:0;transform:translate3d(var(--tx),var(--ty),0) rotate(var(--r)) scale(.72);transition-duration:.72s}
+
+/* Rectangular depth tunnel. This is intentionally architectural, not radial. */
+.c3-core-rift-029 .depth-tunnel{position:absolute;z-index:6;inset:0;perspective:760px;pointer-events:none;opacity:0;transition:opacity .22s ease}
+.c3-core-rift-029 .depth-tunnel i{
+  position:absolute;left:50%;top:50%;width:62vw;height:62vh;
+  border:clamp(1px,.16vw,3px) solid rgba(212,166,255,.72);
+  transform:translate(-50%,-50%) scale(var(--s)) rotate(var(--rot));
+  box-shadow:0 0 15px rgba(151,70,255,.42),inset 0 0 15px rgba(151,70,255,.18);
+  clip-path:polygon(7% 0,93% 0,100% 12%,100% 88%,93% 100%,7% 100%,0 88%,0 12%);
+  opacity:var(--o);
+}
+.c3-core-rift-029.transit .depth-tunnel{opacity:1}
+.c3-core-rift-029.transit .depth-tunnel i{animation:c3DepthRush029 .92s cubic-bezier(.12,.72,.16,1) var(--d) both}
+@keyframes c3DepthRush029{0%{transform:translate(-50%,-50%) scale(.08) rotate(var(--rot));opacity:0}18%{opacity:.82}100%{transform:translate(-50%,-50%) scale(2.45) rotate(var(--rot-end));opacity:0}}
+
+.c3-core-rift-029 .rift-labels{position:absolute;z-index:7;inset:0;pointer-events:none;color:#c89df5;font-family:"Courier New",monospace;font-weight:900;letter-spacing:.18em;font-size:clamp(9px,.7vw,12px);opacity:0;transition:opacity .35s ease}
+.c3-core-rift-029 .rift-labels span{position:absolute;padding:5px 8px;border-left:2px solid #a85cf0;background:rgba(19,6,29,.44)}
+.c3-core-rift-029 .rift-labels .l1{left:8%;top:19%}.c3-core-rift-029 .rift-labels .l2{right:7%;top:31%}.c3-core-rift-029 .rift-labels .l3{left:10%;bottom:18%}.c3-core-rift-029 .rift-labels .l4{right:9%;bottom:14%}
+.c3-core-rift-029.gate-form .rift-labels{opacity:.72}.c3-core-rift-029.transit .rift-labels{opacity:0}
+
+.c3-core-rift-029 .breach-flash{
+  position:absolute;z-index:20;inset:0;opacity:0;pointer-events:none;
+  background:#f7efff;
+}
+.c3-core-rift-029.breach .breach-flash{animation:c3BreachFlash029 .42s ease-out both}
+@keyframes c3BreachFlash029{0%{opacity:0}18%{opacity:.96}42%{opacity:.72}100%{opacity:0}}
+
+/* Arrival is continuous: the core replaces the tunnel immediately after the dimensional breach. */
+.c3-core-rift-029 .arrival-camera{position:absolute;z-index:10;inset:0;opacity:0;background:#05020b;overflow:hidden;transition:opacity .42s ease}
+.c3-core-rift-029 .arrival-camera img{position:absolute;inset:-1%;width:102%;height:102%;object-fit:cover;object-position:50% 100%;transform:translate3d(0,2.8vh,0) scale(1.02);transform-origin:50% 25%;filter:brightness(.60) saturate(.96);will-change:transform,object-position,filter}
+.c3-core-rift-029.arrived .arrival-camera{opacity:1}
+.c3-core-rift-029.arrived .rift-space,.c3-core-rift-029.arrived .coord-grid,.c3-core-rift-029.arrived .rift-aura,.c3-core-rift-029.arrived .rift-gate,.c3-core-rift-029.arrived .space-slabs,.c3-core-rift-029.arrived .depth-tunnel,.c3-core-rift-029.arrived .axis-lock{opacity:0!important;visibility:hidden;transition:opacity .18s ease,visibility 0s .2s}
+.c3-core-rift-029 .arrival-vignette{position:absolute;z-index:11;inset:0;opacity:0;background:linear-gradient(180deg,rgba(0,0,0,.12),transparent 32%,rgba(0,0,0,.26) 76%,rgba(0,0,0,.48)),radial-gradient(ellipse at 50% 44%,transparent 36%,rgba(4,0,12,.46) 100%);transition:opacity .8s ease}
+.c3-core-rift-029.arrived .arrival-vignette{opacity:1}
+
+.c3-core-rift-029 .core-domain-title{position:absolute;z-index:14;left:50%;top:49%;width:min(980px,88vw);transform:translate(-50%,-40%) scale(.965);display:grid;justify-items:center;gap:8px;text-align:center;opacity:0;color:#fff;text-shadow:0 5px 28px rgba(0,0,0,.88)}
+.c3-core-rift-029 .core-domain-title::before,.c3-core-rift-029 .core-domain-title::after{content:"";width:min(650px,74vw);height:1px;background:linear-gradient(90deg,transparent,rgba(189,131,243,.72),#f6eaff,rgba(189,131,243,.72),transparent);transform:scaleX(.18);opacity:0}
+.c3-core-rift-029 .core-domain-title small{color:#c798f4;font-size:clamp(11px,.9vw,15px);font-weight:1000;letter-spacing:.44em}
+.c3-core-rift-029 .core-domain-title strong{font-size:clamp(40px,5.6vw,86px);line-height:1.06;font-weight:1000;letter-spacing:-.025em}
+.c3-core-rift-029 .core-domain-title span{color:rgba(230,216,244,.76);font-size:clamp(10px,.82vw,14px);font-weight:700;letter-spacing:.18em}
+.c3-core-rift-029.show-title .core-domain-title{animation:c3DomainTitleIn029 .72s cubic-bezier(.16,.86,.2,1) both}
+.c3-core-rift-029.show-title .core-domain-title::before,.c3-core-rift-029.show-title .core-domain-title::after{animation:c3DomainLine029 .68s .14s ease-out both}
+.c3-core-rift-029.hide-title .core-domain-title{opacity:0!important;transform:translate(-50%,-54%) scale(.99)!important;filter:blur(4px);transition:opacity .32s ease,transform .42s ease,filter .32s ease}
+@keyframes c3DomainTitleIn029{0%{opacity:0;transform:translate(-50%,-37%) scale(.94);filter:blur(7px)}100%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:none}}
+@keyframes c3DomainLine029{to{opacity:1;transform:scaleX(1)}}
+
+.c3-core-rift-029.handoff{
+  left:var(--target-left)!important;top:var(--target-top)!important;width:var(--target-width)!important;height:var(--target-height)!important;right:auto!important;bottom:auto!important;
+  border-radius:0!important;box-shadow:0 24px 82px rgba(0,0,0,.42);
+  transition:left 1.05s cubic-bezier(.18,.82,.18,1),top 1.05s cubic-bezier(.18,.82,.18,1),width 1.05s cubic-bezier(.18,.82,.18,1),height 1.05s cubic-bezier(.18,.82,.18,1),box-shadow 1.05s ease!important;
+}
+.c3-core-rift-029.handoff .core-domain-title{opacity:0!important}
+.c3-core-rift-029.handoff .arrival-camera img{transition:object-position 1.05s ease,transform 1.05s ease,filter 1.05s ease!important;object-position:50% 18%!important;transform:translate3d(0,0,0) scale(1)!important;filter:brightness(.96) saturate(1.04)!important}
+.c3-core-rift-029.handoff .arrival-vignette{opacity:.18;transition:opacity 1.05s ease}
+
+@media(max-width:760px){
+  .c3-core-rift-029 .rift-gate{width:min(54vw,330px);height:min(70vh,620px)}
+  .c3-core-rift-029 .depth-tunnel i{width:78vw;height:56vh}
+  .c3-core-rift-029 .rift-labels{display:none}
+  .c3-core-rift-029 .core-domain-title strong{font-size:clamp(34px,8vw,58px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .c3-core-rift-029 *{animation-duration:1ms!important;transition-duration:1ms!important}
+}
+</style>
+<script id="chapter3-patch-041-core-rift-script">
+(() => {
+  /* Final override: Chapter 3 uses an angular spatial fracture + architectural depth tunnel,
+     intentionally distinct from Chapter 1/2 circular portal travel. */
+  window.STORY_CUSTOM_EFFECTS['teleport-core'] = ({ layer, api }) => c3Mount(layer, `
+    <div class="c3-core-rift-029">
+      <div class="rift-space"></div>
+      <div class="coord-grid"></div>
+      <div class="axis-lock"></div>
+      <div class="rift-aura"></div>
+      <div class="space-slabs" aria-hidden="true">
+        <i style="--x:2%;--y:8%;--w:28%;--h:22%;--tx:-18vw;--ty:-13vh;--r:-7deg"></i>
+        <i style="--x:31%;--y:3%;--w:18%;--h:28%;--tx:-7vw;--ty:-22vh;--r:4deg"></i>
+        <i style="--x:52%;--y:4%;--w:19%;--h:24%;--tx:8vw;--ty:-20vh;--r:-5deg"></i>
+        <i style="--x:72%;--y:10%;--w:27%;--h:25%;--tx:18vw;--ty:-14vh;--r:8deg"></i>
+        <i style="--x:0%;--y:34%;--w:31%;--h:25%;--tx:-24vw;--ty:-2vh;--r:5deg"></i>
+        <i style="--x:70%;--y:36%;--w:30%;--h:24%;--tx:24vw;--ty:1vh;--r:-6deg"></i>
+        <i style="--x:1%;--y:62%;--w:29%;--h:28%;--tx:-20vw;--ty:15vh;--r:-8deg"></i>
+        <i style="--x:30%;--y:70%;--w:19%;--h:27%;--tx:-7vw;--ty:20vh;--r:6deg"></i>
+        <i style="--x:52%;--y:69%;--w:18%;--h:29%;--tx:8vw;--ty:21vh;--r:-5deg"></i>
+        <i style="--x:71%;--y:61%;--w:28%;--h:30%;--tx:20vw;--ty:16vh;--r:7deg"></i>
+      </div>
+      <div class="rift-gate" aria-hidden="true"><img src="assets/chapter3/backgrounds/digrion_core.png" alt=""></div>
+      <div class="depth-tunnel" aria-hidden="true">${Array.from({length:9},(_,i)=>`<i style="--s:${(.18+i*.065).toFixed(3)};--o:${(.26+i*.065).toFixed(3)};--rot:${((i-4)*1.7).toFixed(2)}deg;--rot-end:${((i-4)*-.7).toFixed(2)}deg;--d:${(i*.055).toFixed(3)}s"></i>`).join('')}</div>
+      <div class="rift-labels" aria-hidden="true"><span class="l1">COORDINATE // UNBOUND</span><span class="l2">CORE VECTOR // LOCKED</span><span class="l3">STAR LINK // 4 OF 6</span><span class="l4">DOMAIN // GRADUATION</span></div>
+      <div class="breach-flash"></div>
+      <div class="arrival-camera"><img src="assets/chapter3/backgrounds/digrion_core.png" alt="첨성대 코어 졸업 영역"></div>
+      <div class="arrival-vignette"></div>
+      <div class="core-domain-title"><small>FINAL DOMAIN</small><strong>첨성대 코어 · 졸업 영역</strong><span>CHEOMSEONGDAE CORE · GRADUATION DOMAIN</span></div>
+    </div>`, (root, later) => {
+      const scene = root.querySelector('.c3-core-rift-029');
+      const arrival = root.querySelector('.arrival-camera img');
+      const stage = document.getElementById('storyStage');
+      let raf = 0;
+
+      const startArrivalCamera = () => {
+        if (!arrival) return;
+        const started = performance.now();
+        const duration = 2050;
+        const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+        const frame = now => {
+          const raw = Math.max(0, Math.min(1, (now - started) / duration));
+          const p = ease(raw);
+          const pos = 100 + (5 - 100) * p;
+          const shift = 2.8 + (-3.1 - 2.8) * p;
+          const scale = 1.02 + (1.145 - 1.02) * p;
+          const bright = .60 + (.98 - .60) * p;
+          arrival.style.setProperty('object-position', `50% ${pos.toFixed(2)}%`, 'important');
+          arrival.style.setProperty('transform', `translate3d(0,${shift.toFixed(2)}vh,0) scale(${scale.toFixed(4)})`, 'important');
+          arrival.style.setProperty('filter', `brightness(${bright.toFixed(3)}) saturate(1.04)`, 'important');
+          if (raw < 1) raf = requestAnimationFrame(frame); else raf = 0;
+        };
+        raf = requestAnimationFrame(frame);
+      };
+
+      const prepareHandoff = () => {
+        api?.updateScene?.('graduation_core', { force: true, suppressFlash: true });
+        const rect = stage?.getBoundingClientRect?.();
+        if (!scene || !rect) return;
+        scene.style.setProperty('--target-left', `${Math.max(0,rect.left)}px`);
+        scene.style.setProperty('--target-top', `${Math.max(0,rect.top)}px`);
+        scene.style.setProperty('--target-width', `${Math.max(1,rect.width)}px`);
+        scene.style.setProperty('--target-height', `${Math.max(1,rect.height)}px`);
+      };
+
+      /* 0.2s: coordinate axis appears. 0.7s: the world fractures open. */
+      later(() => scene?.classList.add('gate-form'), 180);
+      later(() => scene?.classList.add('gate-open'), 720);
+      /* The fractured slabs separate and the angular gate becomes a depth tunnel. */
+      later(() => scene?.classList.add('transit'), 2020);
+      /* Breach the boundary; no long black hold. */
+      later(() => scene?.classList.add('breach'), 3300);
+      later(() => { scene?.classList.add('arrived'); startArrivalCamera(); }, 3500);
+      /* Arrival camera climbs from the road to the upper core structure. */
+      later(() => scene?.classList.add('show-title'), 5750);
+      later(() => scene?.classList.add('hide-title'), 7140);
+      later(prepareHandoff, 7320);
+      later(() => scene?.classList.add('handoff'), 7540);
+
+      return () => { if (raf) cancelAnimationFrame(raf); };
+    });
+})();
+</script>
 </body>
 </html>
