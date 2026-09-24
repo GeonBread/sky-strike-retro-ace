@@ -1711,79 +1711,7 @@ kbd {
 .ch3-effect{position:absolute;inset:0;overflow:hidden;font-family:"Noto Sans KR","Courier New",monospace}.ch3-black{background:#000}.ch3-title-card{position:absolute;inset:0;width:100%;height:100%;min-height:100%;display:grid;place-content:center;align-content:center;justify-content:center;justify-items:center;gap:14px;background:#000;text-align:center}.ch3-title-card small{font-size:clamp(16px,2vw,24px);letter-spacing:.32em;color:#dab866;animation:fadeUp .7s ease both}.ch3-title-card strong{font-size:clamp(44px,7vw,96px);letter-spacing:.06em;animation:fadeUp .7s .25s ease both}.ch3-title-card span{font-size:clamp(14px,1.7vw,20px);color:#9e9e9e;animation:fadeUp .7s .48s ease both}@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 .ch3-diagnosis{display:grid;grid-template-columns:220px 1fr;background:#f1f2f5;color:#1f2630;padding:2.2%;gap:0}.ch3-diagnosis-nav{background:#d9a22b;color:#fff;padding:20px 14px;box-shadow:inset -1px 0 #b78319}.ch3-diagnosis-nav h3{margin:0 0 20px;font-size:22px}.ch3-diagnosis-nav div{padding:10px 8px;border-top:1px solid rgba(255,255,255,.25)}.ch3-diagnosis-nav .active{background:#fff;color:#6f4b00;font-weight:800}.ch3-diagnosis-main{background:#fff;padding:20px 24px;overflow:hidden}.ch3-diagnosis-main h2{margin:0 0 8px}.ch3-notice{font-size:12px;color:#2450d6;line-height:1.55;margin-bottom:14px}.ch3-student-grid{display:grid;grid-template-columns:110px 1fr 100px 1fr;border:1px solid #ccd0d7;border-bottom:0;font-size:13px}.ch3-student-grid>*{padding:8px 10px;border-right:1px solid #ccd0d7;border-bottom:1px solid #ccd0d7}.ch3-student-grid b{background:#edf0f4}.ch3-tabs{display:flex;margin-top:16px;border-bottom:1px solid #888}.ch3-tabs span{padding:8px 13px;border:1px solid #c0c3c8;border-bottom:0;background:#f7f7f7;font-size:12px}.ch3-tabs .active{background:#7d6b58;color:#fff}.ch3-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}.ch3-table th,.ch3-table td{padding:9px 8px;border:1px solid #d2d5da;text-align:center}.ch3-table th{background:#eef0f3}.ch3-table td.course{text-align:left}.ch3-ok{font-weight:900;color:#185f28}.ch3-bad{font-weight:900;color:#c8212b}.ch3-diagnosis.is-glitch{animation:screenShake .12s linear infinite}.ch3-diagnosis.is-glitch:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 6px,rgba(155,0,20,.08) 7px 8px);mix-blend-mode:multiply;animation:glitchScan .42s linear infinite}.ch3-diagnosis.is-glitch .glitchable{animation:valueGlitch .25s steps(2,end) infinite}@keyframes screenShake{0%,100%{transform:none}30%{transform:translateX(-2px)}70%{transform:translateX(2px)}}@keyframes glitchScan{to{transform:translateY(8px)}}@keyframes valueGlitch{50%{color:#d10c1f;text-shadow:2px 0 #0ff,-2px 0 #f0f}}
 .ch3-corruption{display:grid;place-content:center;justify-items:center;background:radial-gradient(circle at center,rgba(124,20,58,.55),rgba(4,3,10,.94));color:#fff}.ch3-corruption-grid{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:16px;width:min(880px,88%)}.ch3-monster-chip{padding:18px 14px;text-align:center;border:1px solid rgba(255,255,255,.18);background:rgba(13,8,20,.8);box-shadow:0 0 24px rgba(168,33,89,.2);animation:chipFloat 1.4s ease-in-out infinite}.ch3-monster-chip:nth-child(2n){animation-delay:.25s}.ch3-monster-chip b{display:block;font-size:15px;color:#ffb4c0}.ch3-monster-chip small{display:block;margin-top:6px;color:#aaa}@keyframes chipFloat{50%{transform:translateY(-8px);box-shadow:0 0 32px rgba(215,52,99,.35)}}
-/* Chapter 1 최초 웨이브 진입의 붉은 셔터 전환을 Chapter 3에도 그대로 사용한다. */
-.ch3-combat{
-  position:absolute;
-  inset:0;
-  overflow:hidden;
-  display:grid;
-  place-items:center;
-  pointer-events:none;
-  background:transparent;
-}
-.ch3-battle-red-shutter{
-  position:absolute;
-  inset:0;
-  background:#e60000;
-  transform:scaleY(0);
-  transform-origin:center;
-  animation:ch3BattleShutter 3.2s cubic-bezier(.75,0,.25,1) forwards;
-}
-.ch3-battle-transition-cross{
-  position:absolute;
-  width:170vmax;
-  height:4px;
-  background:#fff;
-  transform:rotate(-18deg) scaleX(0);
-  box-shadow:0 0 30px #fff;
-  animation:ch3BattleSlash .72s .34s ease-out forwards;
-}
-.ch3-battle-transition-title{
-  position:relative;
-  z-index:2;
-  opacity:0;
-  transform:scale(.78);
-  text-align:center;
-  text-shadow:0 8px 0 rgba(0,0,0,.32);
-  animation:ch3BattleTitleReveal 2.5s .48s ease forwards;
-}
-.ch3-battle-transition-title small{
-  display:block;
-  color:#fff;
-  font-size:clamp(12px,1.5vw,18px);
-  font-weight:1000;
-  letter-spacing:.42em;
-}
-.ch3-battle-transition-title strong{
-  display:block;
-  color:#fff;
-  font-size:clamp(52px,11vw,150px);
-  font-style:italic;
-  font-weight:1000;
-  letter-spacing:-.05em;
-}
-.ch3-battle-transition-title span{
-  display:block;
-  margin-top:8px;
-  color:#ffe0a8;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.2em;
-}
-@keyframes ch3BattleShutter{
-  0%{transform:scaleY(0)}
-  18%,82%{transform:scaleY(1)}
-  100%{transform:scaleY(0)}
-}
-@keyframes ch3BattleSlash{
-  to{transform:rotate(-18deg) scaleX(1)}
-}
-@keyframes ch3BattleTitleReveal{
-  0%{opacity:0;transform:scale(.78)}
-  10%,84%{opacity:1;transform:scale(1.08)}
-  100%{opacity:0;transform:scale(1.18)}
-}
-@keyframes fillProgress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.ch3-combat{display:grid;place-content:center;justify-items:center;gap:18px;background:linear-gradient(180deg,rgba(3,6,12,.86),rgba(28,5,31,.92));text-align:center}.ch3-combat strong{font-size:clamp(38px,6vw,76px);color:#f5d06d;text-shadow:0 0 18px rgba(245,208,109,.3)}.ch3-combat p{margin:0;color:#d1c6d5;font-size:clamp(14px,2vw,21px)}.ch3-combat-zones{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}.ch3-combat-zones span{padding:8px 14px;border:1px solid #725774;background:#160e20}.ch3-progress{width:min(600px,75vw);height:16px;border:1px solid #6c6274;background:#09080b;overflow:hidden}.ch3-progress i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#8e314f,#f1d16d);transform-origin:left;animation:fillProgress 2.6s ease both}@keyframes fillProgress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .ch3-submit{display:grid;place-content:center;justify-items:center;gap:16px;background:rgba(3,5,10,.76);backdrop-filter:blur(4px)}.ch3-submit-window{width:min(780px,88vw);padding:24px;border:1px solid #777;background:#f8f8fa;color:#222;box-shadow:0 30px 80px #000}.ch3-submit-window h3{margin:0 0 18px}.ch3-submit-row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid #ddd}.ch3-submit-button{margin-top:22px;margin-left:auto;width:max-content;padding:11px 24px;background:#b51f2b;color:#fff;font-weight:900}.ch3-submit.is-done .ch3-submit-button{background:#2b7b44}.ch3-submit.is-done .ch3-submit-button:after{content:" · 완료"}
 .ch3-core-arrival{display:grid;place-content:center;justify-items:center;gap:20px;background:radial-gradient(circle,rgba(148,67,106,.18),rgba(0,0,0,.92));text-align:center}.ch3-core-orbit{position:relative;width:min(58vh,560px);aspect-ratio:1;border-radius:50%;border:2px solid rgba(240,201,106,.26);animation:orbitTurn 10s linear infinite}.ch3-core-orbit:before,.ch3-core-orbit:after{content:"";position:absolute;inset:15%;border:1px solid rgba(240,201,106,.22);border-radius:50%}.ch3-core-orbit:after{inset:31%}.ch3-core-star{position:absolute;width:28px;height:28px;background:#f2d06d;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%);filter:drop-shadow(0 0 10px #f2d06d)}.ch3-core-star.s1{left:50%;top:-14px}.ch3-core-star.s2{right:4%;top:23%}.ch3-core-star.s3{right:4%;bottom:23%}.ch3-core-star.s4{left:50%;bottom:-14px}.ch3-core-star.locked{background:#2d2532;filter:drop-shadow(0 0 8px #b8294e)}.ch3-core-star.s5{left:4%;bottom:23%}.ch3-core-star.s6{left:4%;top:23%}@keyframes orbitTurn{to{transform:rotate(360deg)}}
 .ch3-boss-emerge{display:grid;place-content:center;justify-items:center;background:radial-gradient(circle at 50% 45%,rgba(120,24,58,.3),rgba(0,0,0,.93));overflow:hidden}.ch3-boss-emerge img{height:min(78vh,760px);max-width:82vw;object-fit:contain;filter:drop-shadow(0 0 28px rgba(222,50,88,.38));animation:bossRise 2s cubic-bezier(.17,.82,.22,1) both}.ch3-boss-emerge strong{position:absolute;bottom:9%;font-size:clamp(26px,4vw,52px);letter-spacing:.08em;text-shadow:0 4px 18px #000}@keyframes bossRise{from{opacity:0;transform:translateY(80px) scale(.82);filter:brightness(.2)}to{opacity:1;transform:none;filter:brightness(1) drop-shadow(0 0 28px rgba(222,50,88,.38))}}
@@ -3444,12 +3372,13 @@ window.STORY_CONFIG = {
 window.STORY_SCENES = {
   black_screen: { chapter:'', title:'', subtitle:'', background:'none', backgroundColor:'#000', position:'center center', tint:'rgba(0,0,0,1)' },
   campus_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'4학년 2학기', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(14,13,10,.14)' },
-  campus_autumn: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'가을의 4조', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(95,46,8,.20)', filter:'saturate(.92) sepia(.08)' },
+  campus_baegyangro_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'4학년 2학기', background:'chapter3/backgrounds/campus_baegyangro_day.png', position:'center center', tint:'rgba(14,13,10,.14)' },
+  campus_autumn: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'가을의 4조', background:'chapter3/backgrounds/campus_ilcheongdam.png', position:'center center', tint:'rgba(95,46,8,.20)', filter:'saturate(.92) sepia(.08)' },
   hobanwoo_room: { chapter:'CHAPTER 3', title:'호반우의 방', subtitle:'막학기의 밤', background:'chapter3/backgrounds/hobanwoo_room.png', position:'center center', tint:'rgba(12,13,21,.24)' },
   library_day: { chapter:'CHAPTER 3', title:'도서관', subtitle:'막학기의 일상', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(12,14,17,.12)' },
   library_night: { chapter:'CHAPTER 3', title:'도서관 신관 지하 1층', subtitle:'늦은 밤', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(8,10,15,.30)' },
   future_creator_hall: { chapter:'CHAPTER 3', title:'미래창직관 1층', subtitle:'학생증 인증', background:'chapter2/backgrounds/bg_ch2_future_creator_hall.png', position:'center center', tint:'rgba(11,14,18,.14)' },
-  campus_night: { chapter:'CHAPTER 3', title:'밤의 경북대학교', subtitle:'화면 밖으로 나온 이상', background:'chapter3/backgrounds/campus_night.png', position:'center center', tint:'rgba(4,7,16,.30)' },
+  campus_night: { chapter:'CHAPTER 3', title:'밤의 경북대학교', subtitle:'화면 밖으로 나온 이상', background:'chapter3/backgrounds/campus_night_promenade.png', position:'center center', tint:'rgba(4,7,16,.30)' },
   cheomseongdae_night: { chapter:'CHAPTER 3', title:'밤의 경북대학교', subtitle:'코어 진입 전', background:'chapter3/backgrounds/campus_night.png', position:'center center', tint:'rgba(4,5,12,.36)' },
   combat_zone: { chapter:'CHAPTER 3', title:'졸업 오염 구역', subtitle:'일반 오염 파편 정화', background:'chapter3/backgrounds/graduation_core.svg', position:'center center', tint:'rgba(18,4,28,.24)' },
   graduation_core: { chapter:'CHAPTER 3', title:'첨성대 코어 · 졸업 영역', subtitle:'최심부', background:'chapter3/backgrounds/digrion_core.png', position:'center 18%', tint:'rgba(6,3,12,.10)' },
@@ -3631,16 +3560,16 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "저번 채용 지원 내역 확인할 때도 지원 안 했다고 뜨더니만.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral"}),
       C3D.line("hobanwoo", "그냥 내 컴퓨터가 이상한건가..", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"thinking"}),
 
-      C3D.sec("장면 9. 나만 그런 게 아니다", "campus_day"),
-      C3D.fx("story-intertitle", "campus_day", 2200, {text:"다음 날 아침"}),
-      C3D.loc("campus_day", 1200),
-      C3D.line("student1", "요즘 학교 서버 좀 이상하지 않아?", "campus_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
-      C3D.line("student2", "난 과제 제출한 게 갑자기 미제출로 뜨던데?", "campus_day", "나만 그런 게 아니다", {left:"student2",right:"hobanwoo"}),
-      C3D.line("student3", "난 이수한 강의 내역이 갑자기 사라졌어.", "campus_day", "나만 그런 게 아니다", {left:"student3",right:"hobanwoo"}),
-      C3D.line("student1", "요즘 학교 시스템 왜 이러냐.", "campus_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "(…….)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "(나만 그런 게 아니었구나..)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "(근데 정말 서버 문제일까..?)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"worried"}),
+      C3D.sec("장면 9. 나만 그런 게 아니다", "campus_baegyangro_day"),
+      C3D.fx("story-intertitle", "campus_baegyangro_day", 2200, {text:"다음 날 아침"}),
+      C3D.loc("campus_baegyangro_day", 1200),
+      C3D.line("student1", "요즘 학교 서버 좀 이상하지 않아?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
+      C3D.line("student2", "난 과제 제출한 게 갑자기 미제출로 뜨던데?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student2",right:"hobanwoo"}),
+      C3D.line("student3", "난 이수한 강의 내역이 갑자기 사라졌어.", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student3",right:"hobanwoo"}),
+      C3D.line("student1", "요즘 학교 시스템 왜 이러냐.", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "(…….)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
+      C3D.line("hobanwoo", "(나만 그런 게 아니었구나..)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
+      C3D.line("hobanwoo", "(근데 정말 서버 문제일까..?)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"worried"}),
 
       C3D.sec("장면 10. 오염 흔적", "campus_night"),
       C3D.loc("campus_night", 1200),
@@ -3690,7 +3619,7 @@ window.STORY_DATA = {
       C3D.line("student_card", "방치할 경우 학생들의 졸업 기록까지 영향을 받을 수 있습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
       C3D.line("hobanwoo", "그럼 더더욱 해야지.", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"brave",left:"student_card"}),
       C3D.line("hobanwoo", "난 졸업할 거야. 빨리 가자!", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"combat",left:"student_card"}),
-      C3D.fx("combat-transition", "combat_zone", 3220, {chapter:"CHAPTER 3",title:"전투 개시",subtitle:"졸업 오염 파편 정화 · PURIFICATION"}),
+      C3D.fx("combat-transition", "combat_zone", 4200, {chapter:"CHAPTER 3",title:"졸업 오염 파편 정화"}),
 
       C3D.sec("장면 15. 일반 몬스터 웨이브", "combat_zone"),
       C3D.fx("battle-running", "combat_zone", 86400000, {title:"일반 몬스터 웨이브",subtitle:"챕터 3 일반 오염 파편 정화"}),
@@ -4438,15 +4367,8 @@ window.STORY_CUSTOM_EFFECTS['corruption-birth'] = ({ layer }) => {
 
 window.STORY_CUSTOM_EFFECTS['combat-transition'] = ({ layer, item, api }) => {
   api.setMode('game');
-  return c3Mount(layer, `<div class="ch3-combat">
-    <div class="ch3-battle-red-shutter"></div>
-    <div class="ch3-battle-transition-cross"></div>
-    <div class="ch3-battle-transition-title">
-      <small>${c3Esc(item.chapter || 'CHAPTER 3')}</small>
-      <strong>${c3Esc(item.title || '전투 개시')}</strong>
-      <span>${c3Esc(item.subtitle || '졸업 오염 파편 정화 · PURIFICATION')}</span>
-    </div>
-  </div>`);
+  const zones = item.zones || [];
+  return c3Mount(layer, `<div class="ch3-combat"><strong>${c3Esc(item.title || '일반 오염 전투')}</strong><p>${c3Esc(item.subtitle || '오염 파편을 정화하십시오.')}</p><div class="ch3-combat-zones">${zones.map(z=>`<span>${c3Esc(z)}</span>`).join('')}</div><div class="ch3-progress"><i></i></div><p>정화율 0% → 100%</p></div>`);
 };
 
 window.STORY_CUSTOM_EFFECTS['submission-complete'] = ({ layer, item }) => c3Mount(layer, `
