@@ -317,44 +317,23 @@
 
 .chapter3WaveFrame {
   display: block;
-  width: min(83.333dvh, 100vw);
-  height: min(100dvh, 120vw);
-  aspect-ratio: 5 / 6;
+  width: min(96dvh, 100vw);
+  height: min(100dvh, 104.167vw);
+  aspect-ratio: 24 / 25;
   border: 0;
   background: #05070c;
   box-shadow: 0 0 48px rgba(0, 0, 0, 0.8);
 }
 
-.chapter3WaveRetryOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, .76);
-  backdrop-filter: blur(7px);
+.chapter3WaveRetryOverlay,
+.chapter3WavePauseOverlay {
+  z-index: 90;
 }
 
-.chapter3WaveRetryDialog {
-  width: min(430px, 92vw);
-  padding: 26px;
-  border: 1px solid rgba(224, 178, 87, .45);
-  border-radius: 15px;
-  background: linear-gradient(160deg, rgba(29, 31, 40, .98), rgba(8, 9, 14, .99));
-  color: #fff;
-  text-align: center;
-  box-shadow: 0 22px 70px rgba(0, 0, 0, .55);
+.chapter3WaveRetryBoost {
+  color: #8de7ff !important;
+  font-weight: 900;
 }
-
-.chapter3WaveRetryDialog small { color: #deb56a; font: 900 11px/1.2 "Courier New", monospace; letter-spacing: .14em; }
-.chapter3WaveRetryDialog h2 { margin: 8px 0; font-size: 27px; }
-.chapter3WaveRetryDialog p { margin: 6px 0; color: rgba(232, 236, 247, .68); font-size: 13px; }
-.chapter3WaveRetryBoost { color: #8de7ff !important; font-weight: 900; }
-.chapter3WaveRetryActions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 19px; }
-.chapter3WaveRetryActions button { min-height: 42px; border-radius: 8px; font-weight: 900; cursor: pointer; }
-.chapter3WaveRetryActions .secondary { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #fff; }
-.chapter3WaveRetryActions .primary { border: 1px solid rgba(228,181,91,.65); background: #805525; color: #fff0cc; }
 
 @media (max-width: 900px) {
   .chapter3DetailSelector { padding: 10px; }
@@ -374,28 +353,36 @@
 }
 
 
-/* Chapter 3 embedded wave HUD uses the exact Chapter 1 life/bomb icon system. */
+/* Chapter 2 combat viewport/HUD parity for the embedded Chapter 3 wave runtime. */
 .chapter3WaveHostHud {
   position: fixed;
   left: 50%;
-  top: 0;
+  top: 50%;
   z-index: 18;
-  width: min(83.333dvh, 100vw);
-  height: min(100dvh, 120vw);
-  transform: translateX(-50%);
+  width: min(96dvh, 100vw);
+  height: min(100dvh, 104.167vw);
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
-.chapter3WaveChapter1HudTop {
+.chapter3WaveHudTopBar {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  padding: 16px 32px 0 20px;
+  z-index: 10;
   display: flex;
-  justify-content: flex-end;
+  width: 100%;
   align-items: flex-start;
-  pointer-events: none;
+  justify-content: space-between;
+  padding: 16px 32px 0 20px;
+  background: linear-gradient(to bottom, rgba(2, 6, 23, .8), transparent);
+}
+
+.chapter3WaveHudRightColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .chapter3StoryExperience.is-wave-active .chapter3StoryRouteSelect {

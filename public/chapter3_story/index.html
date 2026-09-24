@@ -5303,6 +5303,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   const hooks = window.STORY_HOOKS || {};
   const customEffects = window.STORY_CUSTOM_EFFECTS || {};
   const HOST_SELECTOR_MODE = new URLSearchParams(window.location.search).get('hostSelector') === '1';
+  if (HOST_SELECTOR_MODE) document.documentElement.classList.add('is-chapter3-hosted');
 
   const required = name => {
     const element = document.getElementById(name);
@@ -10225,6 +10226,13 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 @keyframes c3SpiritRevealShock029{0%,3%{opacity:0;transform:translate(-50%,-50%) scale(.1)}9%{opacity:1}62%{opacity:.74;transform:translate(-50%,-50%) scale(6.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(10)}}
 @keyframes c3SpiritRevealFlash029{0%,5%{opacity:0}18%{opacity:1}42%{opacity:.38}100%{opacity:0}}
 
+
+/* Hosted by the React chapter router: use the same frameless story stage as Chapter 2. */
+html.is-chapter3-hosted .story-stage,
+html.is-chapter3-hosted .story-stage.is-full-story {
+  border: 0 !important;
+  box-shadow: none !important;
+}
 
 /* === CHAPTER3 PATCH 031: Chapter 2 story UI geometry parity === */
 .story-stage.is-full-story:not(.is-game-mode) {

@@ -536,11 +536,15 @@ html.is-embedded-story .demo-shell {
   align-items: center !important;
   justify-content: center !important;
 }
-html.is-embedded-story .story-stage {
-  max-height: 100dvh !important;
-}
+html.is-embedded-story .story-stage,
+html.is-embedded-story .story-stage.is-full-story,
 html.is-embedded-story .story-stage.is-game-mode {
   width: min(96dvh, 100vw) !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  aspect-ratio: 24 / 25 !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 /* 대사창은 초상화 영역을 제거하고 텍스트가 전체 폭을 사용한다. */
 html.is-embedded-story .dialogue-box {
