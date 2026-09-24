@@ -9667,7 +9667,7 @@ window.STORY_DATA = {
       {
         "type": "custom-effect",
         "effect": "boss-arrival-background-title",
-        "duration": 3100,
+        "duration": 4300,
         "scene": "boss_arena"
       },
       {
@@ -12698,23 +12698,39 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
   const sceneKey = item.scene || 'boss_arena';
   const sceneInfo = c2GetSceneInfo(sceneKey) || {};
   const bg = c2GetSceneBackground(sceneKey);
+  const stage = document.getElementById('storyStage');
+  const rect = stage?.getBoundingClientRect?.();
+  const left = rect ? `${rect.left}px` : '2vw';
+  const top = rect ? `${rect.top}px` : '0px';
+  const width = rect ? `${rect.width}px` : '96dvh';
+  const height = rect ? `${rect.height}px` : '100dvh';
   return c2MakeLayer(layer, `
-    <div class="c2-boss-arrival-combined">
-      <div class="c2-boss-arrival-combined-bg"${bg ? ` style="background-image:url('${c2Escape(bg)}')"` : ''}></div>
-      <div class="c2-boss-arrival-combined-copy">
-        <small>LOCATION</small>
-        <strong>${c2Escape(sceneInfo.title || '책임의 블랙홀')}</strong>
-        <span>${c2Escape(sceneInfo.subtitle || '팀플 블랙홀 무임승차자')}</span>
+    <div class="c2-boss-arrival-combined" style="--c2-arrive-left:${left};--c2-arrive-top:${top};--c2-arrive-width:${width};--c2-arrive-height:${height}">
+      <div class="c2-boss-arrival-combined-frame">
+        <div class="c2-boss-arrival-combined-bg"${bg ? ` style="background-image:url('${c2Escape(bg)}')"` : ''}></div>
+        <div class="c2-boss-arrival-combined-dim"></div>
+        <div class="c2-boss-arrival-combined-copy">
+          <small>LOCATION</small>
+          <strong>${c2Escape(sceneInfo.title || '\ucc45\uc784\uc758 \ube14\ub799\ud640')}</strong>
+          <span>${c2Escape(sceneInfo.subtitle || '\ud300\ud50c \ube14\ub799\ud640 \ubb34\uc784\uc2b9\ucc28\uc790')}</span>
+        </div>
       </div>
     </div>
     <style>
-      .c2-boss-arrival-combined{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#000}
-      .c2-boss-arrival-combined-bg{position:absolute;inset:0;background-size:cover;background-position:center center;background-repeat:no-repeat;filter:none!important;opacity:1;transform:none}
-      .c2-boss-arrival-combined-copy{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateY(12px);width:min(86%,760px);padding:0 24px;color:#fff;text-align:center;text-shadow:0 3px 16px rgba(0,0,0,.92),0 0 28px rgba(0,0,0,.72);opacity:0;animation:c2BossArrivalCombinedCopy .65s ease forwards;animation-delay:1s}
+      .c2-boss-arrival-combined{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#000;animation:c2BossArrivalOuter 4.3s linear both}
+      .c2-boss-arrival-combined-frame{position:absolute;left:0;top:0;width:100vw;height:100dvh;overflow:hidden;background:#090a0d;isolation:isolate;animation:c2BossArrivalFrame 4.3s cubic-bezier(.2,.82,.22,1) both}
+      .c2-boss-arrival-combined-bg{position:absolute;inset:-2%;z-index:0;background-size:cover;background-position:center center;background-repeat:no-repeat;filter:none;opacity:1;transform:scale(1);animation:c2BossArrivalBackgroundMatch 4.3s ease both}
+      .c2-boss-arrival-combined-dim{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;background:linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.03) 42%,rgba(0,0,0,.58) 82%),var(--scene-tint);box-shadow:inset 0 0 130px rgba(0,0,0,.78),inset 0 -150px 120px rgba(0,0,0,.52);animation:c2BossArrivalDimMatch 4.3s ease both}
+      .c2-boss-arrival-combined-dim::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 44%,transparent 28%,rgba(0,0,0,.26) 78%)}
+      .c2-boss-arrival-combined-copy{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%) translateY(12px);width:min(86%,760px);padding:0 24px;color:#fff;text-align:center;text-shadow:0 3px 16px rgba(0,0,0,.92),0 0 28px rgba(0,0,0,.72);opacity:0;animation:c2BossArrivalCombinedCopy 4.3s ease both}
       .c2-boss-arrival-combined-copy small{display:block;margin-bottom:10px;font-size:clamp(13px,1.5vw,19px);font-weight:950;letter-spacing:.28em;color:#ffd77f}
       .c2-boss-arrival-combined-copy strong{display:block;font-size:clamp(38px,5.6vw,72px);font-weight:1000;letter-spacing:-.04em;line-height:1.04}
       .c2-boss-arrival-combined-copy span{display:block;margin-top:12px;font-size:clamp(17px,2.15vw,27px);font-weight:800;color:rgba(255,255,255,.94)}
-      @keyframes c2BossArrivalCombinedCopy{from{opacity:0;transform:translate(-50%,-50%) translateY(12px)}to{opacity:1;transform:translate(-50%,-50%) translateY(0)}}
+      @keyframes c2BossArrivalOuter{0%,58%{background:#000}88%,100%{background:rgba(0,0,0,0)}}
+      @keyframes c2BossArrivalFrame{0%{left:0;top:0;width:100vw;height:100dvh;opacity:0;transform:scale(1.035)}10%,58%{left:0;top:0;width:100vw;height:100dvh;opacity:1;transform:scale(1)}88%,100%{left:var(--c2-arrive-left);top:var(--c2-arrive-top);width:var(--c2-arrive-width);height:var(--c2-arrive-height);opacity:1;transform:scale(1)}}
+      @keyframes c2BossArrivalBackgroundMatch{0%,58%{filter:none;transform:scale(1)}88%,100%{filter:saturate(.9) brightness(.76) contrast(1.05);transform:scale(1.075)}}
+      @keyframes c2BossArrivalDimMatch{0%,58%{opacity:0}88%,100%{opacity:1}}
+      @keyframes c2BossArrivalCombinedCopy{0%,12%{opacity:0;transform:translate(-50%,-50%) translateY(12px)}24%,50%{opacity:1;transform:translate(-50%,-50%) translateY(0)}58%,100%{opacity:0;transform:translate(-50%,-50%) translateY(-10px)}}
     </style>`);
 };
 
