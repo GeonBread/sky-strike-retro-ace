@@ -3406,6 +3406,13 @@ window.STORY_HOOKS = {
   },
   onReady() { this._emit('ready'); },
   onLineChange(payload) { this._emit('line-change', { index: payload?.index ?? -1 }); },
+  onProgressChange(payload) {
+    this._emit('progress-change', {
+      segmentId: payload?.segmentId || '',
+      index: Number.isFinite(payload?.index) ? payload.index : 0,
+      sectionOrdinal: Number.isFinite(payload?.sectionOrdinal) ? payload.sectionOrdinal : 0
+    });
+  },
   onSegmentComplete(payload) { if (payload?.sectionOnly) this._emit('section-complete', { segmentId: payload?.segmentId || '', sectionOnly: true }); },
   onEffectStart(payload) { this._emit('effect-start', { effectId: payload?.effectId || '' }); },
   onEffectEnd(payload) { this._emit('effect-end', { effectId: payload?.effectId || '' }); },
@@ -6537,6 +6544,13 @@ function runCustomEffect(item) {
       return;
     }
     const item = state.items[state.index];
+    const entries = sectionEntries();
+    let sectionOrdinal = 0;
+    for (let i = 0; i < entries.length; i += 1) {
+      if (entries[i].index <= state.index) sectionOrdinal = i;
+      else break;
+    }
+    hooks.onProgressChange?.({ segmentId: state.segmentId, index: state.index, sectionOrdinal, item, api });
     if (isEffect(item)) runEffect(item);
     else showDialogue(item);
   }
@@ -6973,6 +6987,33 @@ function runCustomEffect(item) {
     return startFromSection(position);
   }
 
+  function startAtItemIndex(itemIndex) {
+    if (!state.items.length && !loadDefaultStorySegmentForSectionJump()) return false;
+    const normalized = Math.max(0, Math.min(state.items.length - 1, Math.floor(Number(itemIndex) || 0)));
+    clearRuntimeTimers();
+    cleanupActiveEffect();
+    clearPersistentOverlay();
+    removeSectionCurtain(true);
+    closeJumpPanel();
+    closeSectionPanel();
+    closeEffectPanel();
+    closeDialoguePanel();
+    hideActors();
+    hideIllustration();
+    state.index = normalized;
+    state.completed = false;
+    state.sectionOnly = false;
+    state.sectionEndIndex = Infinity;
+    state.activeSectionStart = normalized;
+    state.activeSectionTitle = '';
+    state.sceneKey = '';
+    state.scene = null;
+    window.__c2StudyVariantCounter = 0;
+    el.endPanel.hidden = true;
+    showCurrent();
+    return true;
+  }
+
   function getState() {
     return {
       segmentId: state.segmentId,
@@ -7011,6 +7052,7 @@ function runCustomEffect(item) {
     playEffectEntry,
     playFullStory,
     startAtSectionTitle,
+    startAtItemIndex,
     setMode,
     updateScene,
     registerEffect,
@@ -7050,6 +7092,12 @@ function runCustomEffect(item) {
     if (message.type === 'start-section-ordinal') {
       const ordinal = Number(message.detail?.ordinal);
       if (Number.isFinite(ordinal)) startFromSection(ordinal);
+      return;
+    }
+
+    if (message.type === 'start-item-index') {
+      const index = Number(message.detail?.index);
+      if (Number.isFinite(index)) startAtItemIndex(index);
       return;
     }
 
