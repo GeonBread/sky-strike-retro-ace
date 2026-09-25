@@ -12634,7 +12634,6 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
         <div class="sc52-motes">${motes052()}</div>
         <div class="sc52-impact"></div><div class="sc52-wave w1"></div><div class="sc52-wave w2"></div><div class="sc52-wave w3"></div>
         <div class="sc52-after">${after052()}</div>
-        <div class="sc52-label"><strong>${c3Esc(item.name||'별')}</strong><span>STAR LINK · ${c3Esc(item.count||'')}</span></div>
       </div>`,(root,later)=>{
         const scene=root.querySelector('.c3-star-card-absorb052');
         later(()=>scene?.classList.add('star-in'),120);
@@ -12647,6 +12646,15 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   };
 })();
 </script>
+
+
+<style id="chapter3-patch-053-star-absorb-no-text-style">
+/* CHAPTER 3 PATCH 053: star absorption cinematic contains visuals only. */
+.c3-star-card-absorb052 .sc52-label,
+.c3-star-card-absorb051 .sc-label{
+  display:none !important;
+}
+</style>
 
 </body>
 </html>
