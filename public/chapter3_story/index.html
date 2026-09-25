@@ -3567,11 +3567,11 @@ window.STORY_DATA = {
       C3D.sec("장면 3. 9월과 10월", "campus_day"),
       C3D.line("narrator", "학교 안에서도 채용 관련 일정이 계속 이어졌다.", "campus_day", "9월과 10월"),
       C3D.line("narrator", "호반우는 채용 사이트를 뒤져 보며 지원할 공고를 계속 찾아봤다.", "campus_day", "9월과 10월"),
-      C3D.fx("job-posting-browse", "campus_day", 17500, {date:"09.24."}),
+      C3D.fx("job-posting-browse", "campus_day", 17500, {date:"09.24.",persistDialogueCount:3}),
       C3D.line("narrator", "호반우에게 선택은 없었다.", "campus_day", "9월과 10월"),
       C3D.line("narrator", "중소, 중견, 대기업 가리지 않고 전부 지원을 했다.", "campus_day", "9월과 10월"),
       C3D.line("narrator", "그리고 열심히 자기소개서를 작성했다.", "campus_day", "9월과 10월"),
-      C3D.fx("job-application-submit", "campus_day", 24600, {date:"09.27."}),
+      C3D.fx("job-application-submit", "campus_day", 24600, {date:"09.27.",persistDialogueCount:2}),
       C3D.fx("dialogue-reference-image", "campus_day", 240, {title:"",caption:"",image:"assets/chapter3/illustrations/certificate_study.png",persistDialogueCount:2,hideText:true}),
       C3D.line("narrator", "그리고 조금이라도 경쟁력을 갖추고자,", "campus_day", "9월과 10월"),
       C3D.line("narrator", "틈날때마다 자격증 공부도 했다.", "campus_day", "9월과 10월"),
@@ -3624,13 +3624,13 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "이제 종강까지 3주 남았네?", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral"}),
       C3D.line("hobanwoo", "졸업요건도 슬슬 한번 봐야겠다.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"thinking"}),
       C3D.line("hobanwoo", "'경북대 통합정보시스템'에 들어가서 확인해볼 수 있었지!", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"thinking"}),
-      C3D.fx("graduation-portal-sequence", "hobanwoo_room", 22500),
-      C3D.line("hobanwoo", "이번 학기만 잘 끝내면 졸업 학점 잘 채우겠다.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral"}),
+      C3D.fx("graduation-portal-sequence", "hobanwoo_room", 22500, {persistDialogueCount:1}),
+      C3D.line("hobanwoo", "이번 학기만 잘 끝내면 졸업 학점 잘 채우겠다.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral",forceAbovePersistentEffect:true}),
       C3D.fx("diagnosis-glitch", "hobanwoo_room", 5600, {persistDialogueCount:4}),
-      C3D.line("hobanwoo", "뭐지..?", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"surprised"}),
-      C3D.line("hobanwoo", "또 이러네!", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"uneasy"}),
-      C3D.line("hobanwoo", "저번 채용 지원 내역 확인할 때도 지원 안 했다고 뜨더니만.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "그냥 내 컴퓨터가 이상한건가..", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"thinking"}),
+      C3D.line("hobanwoo", "뭐지..?", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"surprised",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "또 이러네!", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"uneasy",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "저번 채용 지원 내역 확인할 때도 지원 안 했다고 뜨더니만.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "그냥 내 컴퓨터가 이상한건가..", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"thinking",forceAbovePersistentEffect:true}),
 
       C3D.sec("장면 9. 나만 그런 게 아니다", "campus_baegyangro_day"),
       C3D.fx("story-intertitle", "campus_baegyangro_day", 2200, {text:"다음 날 아침"}),
@@ -3655,42 +3655,42 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "이거 서버 문제 아니네.", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"worried"}),
       C3D.line("hobanwoo", "'오염' 때문이었어!", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"worried"}),
 
-      C3D.sec("장면 11. 첫 오염 개체", "campus_night"),
-      C3D.fx("first-monster-birth", "campus_night", 7600),
-      C3D.line("hobanwoo", "뭐야…!", "campus_night", "첫 오염 개체", {right:"hobanwoo",pose:"surprised"}),
-      C3D.line("hobanwoo", "점점 몬스터가 생성되고 있잖아!", "campus_night", "첫 오염 개체", {right:"hobanwoo",pose:"surprised"}),
+      C3D.sec("장면 11. 첫 오염 개체", "campus_night_promenade"),
+      C3D.fx("first-monster-birth", "campus_night_promenade", 7600),
+      C3D.line("hobanwoo", "뭐야…!", "campus_night_promenade", "첫 오염 개체", {right:"hobanwoo",pose:"surprised"}),
+      C3D.line("hobanwoo", "점점 몬스터가 생성되고 있잖아!", "campus_night_promenade", "첫 오염 개체", {right:"hobanwoo",pose:"surprised"}),
 
-      C3D.sec("장면 12. 학생증 재활성화와 마지막 두 별", "campus_night"),
-      C3D.fx("student-card-reactivation", "campus_night", 4300),
-      C3D.line("student_card", "오염 반응을 감지했습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("student_card", "첨성대 코어 내부에서 대규모 오염을 확인했습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "와.. 너 오랜만이다!", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"happy",left:"student_card"}),
-      C3D.line("hobanwoo", "아.. 지금 반가워 할 때가 아니지..", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"uneasy",left:"student_card"}),
-      C3D.line("hobanwoo", "이번엔 규모가 꽤 큰 거 같은데?", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
-      C3D.line("student_card", "맞습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("student_card", "현재 보유한 네 개의 별과 첨성대 코어의 연결이 안정화되어 있습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "지난번에 회수한 별들?", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
-      C3D.line("student_card", "그렇습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("student_card", "그 영향으로 별 탐지 기능도 이전보다 강화되었습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그러면 이번에는 남은 별도 바로 찾을 수 있어?", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"thinking",left:"student_card"}),
-      C3D.line("student_card", "추적해보겠습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("student_card", "미회수 별 두 개를 확인했습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("student_card", "이번에는 별의 특성까지 식별할 수 있습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "진짜 기능이 좋아지긴 했네.", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
-      C3D.line("student_card", "긍지의 별.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo",highlights:[{text:"긍지의 별",color:"#ff6fb5"}]}),
-      C3D.line("student_card", "졸업의 별.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo",highlights:[{text:"졸업의 별",color:"#9b5cff"}]}),
-      C3D.line("hobanwoo", "마지막 남은 별 두 개구나..", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"neutral",left:"student_card"}),
-      C3D.line("student_card", "그렇습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("student_card", "현재 두 별 모두 강한 오염에 의해 봉인되어 있습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그럼 저 오염부터 정화해야 별을 되찾을 수 있는 거네?", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"thinking",left:"student_card"}),
-      C3D.line("student_card", "그렇습니다. 게다가 오염 반응이 빠르게 확산되고 있습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "좋아. 그럼 지체하면 안 되겠다.", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"combat",left:"student_card"}),
-      C3D.line("student_card", "다만 이번 오염은 이전 두 차례보다 훨씬 공격적입니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("student_card", "정화 과정에서 강한 저항이 예상됩니다. 주의하십시오.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그래도 정화를 안 할 순 없잖아.", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"neutral",left:"student_card"}),
-      C3D.line("student_card", "방치할 경우 학생들의 졸업 기록까지 영향을 받을 수 있습니다.", "campus_night", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그럼 더더욱 해야지.", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"brave",left:"student_card"}),
-      C3D.line("hobanwoo", "난 졸업할 거야. 빨리 가자!", "campus_night", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"combat",left:"student_card"}),
+      C3D.sec("장면 12. 학생증 재활성화와 마지막 두 별", "campus_night_promenade"),
+      C3D.fx("student-card-reactivation", "campus_night_promenade", 4300),
+      C3D.line("student_card", "오염 반응을 감지했습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("student_card", "첨성대 코어 내부에서 대규모 오염을 확인했습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "와.. 너 오랜만이다!", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"happy",left:"student_card"}),
+      C3D.line("hobanwoo", "아.. 지금 반가워 할 때가 아니지..", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"uneasy",left:"student_card"}),
+      C3D.line("hobanwoo", "이번엔 규모가 꽤 큰 거 같은데?", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
+      C3D.line("student_card", "맞습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("student_card", "현재 보유한 네 개의 별과 첨성대 코어의 연결이 안정화되어 있습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "지난번에 회수한 별들?", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
+      C3D.line("student_card", "그렇습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("student_card", "그 영향으로 별 탐지 기능도 이전보다 강화되었습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그러면 이번에는 남은 별도 바로 찾을 수 있어?", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"thinking",left:"student_card"}),
+      C3D.line("student_card", "추적해보겠습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("student_card", "미회수 별 두 개를 확인했습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("student_card", "이번에는 별의 특성까지 식별할 수 있습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "진짜 기능이 좋아지긴 했네.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
+      C3D.line("student_card", "긍지의 별.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo",highlights:[{text:"긍지의 별",color:"#ff6fb5"}]}),
+      C3D.line("student_card", "졸업의 별.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo",highlights:[{text:"졸업의 별",color:"#9b5cff"}]}),
+      C3D.line("hobanwoo", "마지막 남은 별 두 개구나..", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"neutral",left:"student_card"}),
+      C3D.line("student_card", "그렇습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("student_card", "현재 두 별 모두 강한 오염에 의해 봉인되어 있습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그럼 저 오염부터 정화해야 별을 되찾을 수 있는 거네?", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"thinking",left:"student_card"}),
+      C3D.line("student_card", "그렇습니다. 게다가 오염 반응이 빠르게 확산되고 있습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "좋아. 그럼 지체하면 안 되겠다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"combat",left:"student_card"}),
+      C3D.line("student_card", "다만 이번 오염은 이전 두 차례보다 훨씬 공격적입니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("student_card", "정화 과정에서 강한 저항이 예상됩니다. 주의하십시오.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그래도 정화를 안 할 순 없잖아.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"neutral",left:"student_card"}),
+      C3D.line("student_card", "방치할 경우 학생들의 졸업 기록까지 영향을 받을 수 있습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그럼 더더욱 해야지.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"brave",left:"student_card"}),
+      C3D.line("hobanwoo", "난 졸업할 거야. 빨리 가자!", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"combat",left:"student_card"}),
       C3D.fx("combat-transition", "combat_zone", 3220, {chapter:"CHAPTER 3",title:"전투 개시",subtitle:"졸업 오염 파편 정화 · PURIFICATION"}),
 
       C3D.sec("장면 15. 일반 몬스터 웨이브", "combat_zone"),
@@ -3730,39 +3730,36 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "그럼 그동안 있었던 일도 전부 너 때문이야?", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"angry",left:"digrion"}),
       C3D.line("digrion", "그렇다.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
 
-      C3D.sec("장면 21. 디그리온과 불안", "graduation_core"),
-      C3D.line("hobanwoo", "대체 왜 이런 짓을 한 건데?", "graduation_core", "디그리온과 불안", {right:"hobanwoo",pose:"angry",left:"digrion"}),
-      C3D.line("digrion", "나는 없는 것을 만들어내지 않았다.", "graduation_core", "디그리온과 불안", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("digrion", "시험에 대한 불안.", "graduation_core", "디그리온과 불안", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("digrion", "책임을 피하고 싶은 마음.", "graduation_core", "디그리온과 불안", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("digrion", "실패에 대한 두려움.", "graduation_core", "디그리온과 불안", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("digrion", "이미 있던 것을 키웠을 뿐이다.", "graduation_core", "디그리온과 불안", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "결국 네가 다 망쳐놓은 거잖아.", "graduation_core", "디그리온과 불안", {right:"hobanwoo",pose:"angry",left:"digrion"}),
-      C3D.line("digrion", "그리고 너에게도 남아 있지.", "graduation_core", "디그리온과 불안", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("digrion", "졸업하면 뭘 할 거지?", "graduation_core", "디그리온과 불안", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "…….", "graduation_core", "디그리온과 불안", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
+      C3D.line("hobanwoo", "대체 왜 이런 짓을 한 건데?", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"angry",left:"digrion"}),
+      C3D.line("digrion", "나는 없는 것을 만들어내지 않았다.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("digrion", "시험에 대한 불안.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("digrion", "책임을 피하고 싶은 마음.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("digrion", "실패에 대한 두려움.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("digrion", "이미 있던 것을 키웠을 뿐이다.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "결국 네가 다 망쳐놓은 거잖아.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"angry",left:"digrion"}),
+      C3D.line("digrion", "그리고 너에게도 남아 있지.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("digrion", "졸업하면 뭘 할 거지?", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "…….", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
 
-      C3D.sec("장면 22. 졸업 이후", "graduation_core"),
-      C3D.line("hobanwoo", "아직 몰라.", "graduation_core", "졸업 이후", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
-      C3D.line("digrion", "취업은?", "graduation_core", "졸업 이후", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그것도 아직.", "graduation_core", "졸업 이후", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
-      C3D.line("digrion", "그렇다면 남아라.", "graduation_core", "졸업 이후", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "뭐?", "graduation_core", "졸업 이후", {right:"hobanwoo",pose:"surprised",left:"digrion"}),
-      C3D.line("digrion", "준비될 때까지.", "graduation_core", "졸업 이후", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("digrion", "모든 답을 찾을 때까지.", "graduation_core", "졸업 이후", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그럼 평생 여기 있어야겠는데?", "graduation_core", "졸업 이후", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
+      C3D.line("hobanwoo", "아직 몰라.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
+      C3D.line("digrion", "취업은?", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그것도 아직.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
+      C3D.line("digrion", "그렇다면 남아라.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "뭐?", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"surprised",left:"digrion"}),
+      C3D.line("digrion", "준비될 때까지.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("digrion", "모든 답을 찾을 때까지.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그럼 평생 여기 있어야겠는데?", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
 
-      C3D.sec("장면 23. 호반우의 대답", "graduation_core"),
-      C3D.line("digrion", "준비되지 않은 채 나가는 것보다는 낫다.", "graduation_core", "호반우의 대답", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "나 입학할 때도 준비된 건 하나도 없었어.", "graduation_core", "호반우의 대답", {right:"hobanwoo",pose:"neutral",left:"digrion"}),
-      C3D.line("hobanwoo", "그래도 여기까지 왔고.", "graduation_core", "호반우의 대답", {right:"hobanwoo",pose:"brave",left:"digrion"}),
-      C3D.line("digrion", "학교 밖에는 정해진 답이 없다.", "graduation_core", "호반우의 대답", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그건 좀 무섭긴 하지.", "graduation_core", "호반우의 대답", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
-      C3D.line("hobanwoo", "그래도 답이 없다고 계속 여기 있을 순 없잖아.", "graduation_core", "호반우의 대답", {right:"hobanwoo",pose:"brave",left:"digrion"}),
-      C3D.line("hobanwoo", "모르면 가서 배우면 되지.", "graduation_core", "호반우의 대답", {right:"hobanwoo",pose:"neutral",left:"digrion"}),
-      C3D.line("digrion", "어리석군.", "graduation_core", "호반우의 대답", {left:"digrion",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "그럴 수도 있고.", "graduation_core", "호반우의 대답", {right:"hobanwoo",pose:"neutral",left:"digrion"}),
-      C3D.line("hobanwoo", "그래도 난 졸업할 거야.", "graduation_core", "호반우의 대답", {right:"hobanwoo",pose:"brave",left:"digrion"}),
+      C3D.line("digrion", "준비되지 않은 채 나가는 것보다는 낫다.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "나 입학할 때도 준비된 건 하나도 없었어.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"neutral",left:"digrion"}),
+      C3D.line("hobanwoo", "그래도 여기까지 왔고.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"brave",left:"digrion"}),
+      C3D.line("digrion", "학교 밖에는 정해진 답이 없다.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그건 좀 무섭긴 하지.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"uneasy",left:"digrion"}),
+      C3D.line("hobanwoo", "그래도 답이 없다고 계속 여기 있을 순 없잖아.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"brave",left:"digrion"}),
+      C3D.line("hobanwoo", "모르면 가서 배우면 되지.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"neutral",left:"digrion"}),
+      C3D.line("digrion", "어리석군.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "그럴 수도 있고.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"neutral",left:"digrion"}),
+      C3D.line("hobanwoo", "그래도 난 졸업할 거야.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"brave",left:"digrion"}),
       C3D.fx("boss-battle-transition", "graduation_core", 4300),
 
       C3D.sec("장면 29. 마지막 두 별 봉인 약화", "graduation_core"),
@@ -6476,7 +6473,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     return false;
   };
 
-  const bodyViewportEffectIds = new Set(['teleport-core', 'boss-emergence', 'recruitment-result', 'digrion-body-break', 'monthly-schedule', 'recruitment-application-glitch', 'graduation-portal-sequence', 'diagnosis-glitch', 'semester-time-passage', 'digrion-spirit-reveal', 'purification-energy-form', 'purification-launch', 'purification-collision', 'purification-explosion', 'first-monster-birth', 'student-card-shutdown']);
+  const bodyViewportEffectIds = new Set(['teleport-core', 'boss-emergence', 'recruitment-result', 'digrion-body-break', 'monthly-schedule', 'job-posting-browse', 'job-application-submit', 'recruitment-application-glitch', 'graduation-portal-sequence', 'diagnosis-glitch', 'semester-time-passage', 'combat-transition', 'digrion-spirit-reveal', 'purification-energy-form', 'purification-launch', 'purification-collision', 'purification-explosion', 'first-monster-birth', 'student-card-shutdown']);
 
   function itemKeepsPersistentOverlay(item, effectId) {
     return effectId === 'chat-snapshot' || Number(item?.persistDialogueCount || 0) > 0;
@@ -11323,26 +11320,28 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       later(() => scene?.classList.add('gate-form'), 180);
       later(() => scene?.classList.add('gate-open'), 720);
       /* The fractured slabs separate and the angular gate becomes a depth tunnel. */
-      later(() => scene?.classList.add('transit'), 2020);
+      later(() => scene?.classList.add('transit'), 1900);
+      /* PATCH057: after entering, the entire spatial frame accelerates toward the gate so it feels like the player is being sucked in. */
+      later(() => scene?.classList.add('suction'), 2480);
 
-      /* After the player has entered the rift, wash the entire screen slowly to white. */
-      later(() => scene?.classList.add('white-in'), 3250);
-      /* White reaches full opacity at about 4.45s, then remains completely white for ~3 seconds. */
-      later(() => scene?.classList.add('fade-to-black'), 7450);
-      /* The white screen now fades slowly into black over 1.4s. */
-      later(() => scene?.classList.add('black-hold'), 8850);
-      /* Hold full black for exactly ~2 seconds before revealing the destination. */
+      /* Slowly wash the whole viewport to pure white while the suction is still accelerating. */
+      later(() => scene?.classList.add('white-in'), 3500);
+      /* White is fully opaque at about 4.7 s and is held as a completely blank white screen for ~2 s. */
+      later(() => scene?.classList.add('fade-to-black'), 6700);
+      /* Black fades ON TOP of the still-solid white layer, so the portal can never show through the crossfade. */
+      later(() => scene?.classList.add('black-hold'), 8200);
+      /* Hold pure black for ~2 s, then reveal only the existing corridor/core climb. */
       later(() => {
         scene?.classList.add('arrived');
         scene?.classList.add('reveal-core');
         startArrivalCamera();
-      }, 10850);
+      }, 10200);
 
-      /* Arrival camera climbs from the road to the upper core structure only after the blackout. */
-      later(() => scene?.classList.add('show-title'), 13100);
-      later(() => scene?.classList.add('hide-title'), 14350);
-      later(prepareHandoff, 14550);
-      later(() => scene?.classList.add('handoff'), 14750);
+      /* Existing arrival camera: climb from the lower road/corridor to the upper core structure. */
+      later(() => scene?.classList.add('show-title'), 12450);
+      later(() => scene?.classList.add('hide-title'), 13700);
+      later(prepareHandoff, 13900);
+      later(() => scene?.classList.add('handoff'), 14100);
 
       return () => { if (raf) cancelAnimationFrame(raf); };
     });
@@ -12669,6 +12668,121 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 .global-effect-actor-overlay .global-effect-actor-shell,
 .global-effect-actor-overlay .global-effect-actor-image{opacity:1 !important; visibility:visible !important;}
 .dialogue-layer.is-global-dialogue{z-index:2147483646 !important;}
+</style>
+
+
+
+<style id="chapter3-patch-057-flow-and-portal-style">
+/* === CHAPTER 3 PATCH 057 ===
+   Browser UI persists full viewport behind dialogue; combat transition is viewport-wide;
+   teleport gains a strong suction phase and a portal-free white -> black crossfade. */
+
+/* All browser-style effects used by Chapter 3 keep their real fullscreen geometry when persistent. */
+.story-body-effect-host[data-effect="monthly-schedule"],
+.story-body-effect-host[data-effect="job-posting-browse"],
+.story-body-effect-host[data-effect="job-application-submit"],
+.story-body-effect-host[data-effect="recruitment-result"],
+.story-body-effect-host[data-effect="recruitment-application-glitch"],
+.story-body-effect-host[data-effect="graduation-portal-sequence"],
+.story-body-effect-host[data-effect="diagnosis-glitch"]{
+  position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important;
+  z-index:2147483000!important; overflow:hidden!important; opacity:1!important; visibility:visible!important;
+  pointer-events:none!important;
+}
+.story-body-effect-host[data-effect="monthly-schedule"]>.ch3-effect,
+.story-body-effect-host[data-effect="job-posting-browse"]>.ch3-effect,
+.story-body-effect-host[data-effect="job-application-submit"]>.ch3-effect,
+.story-body-effect-host[data-effect="recruitment-result"]>.ch3-effect,
+.story-body-effect-host[data-effect="recruitment-application-glitch"]>.ch3-effect,
+.story-body-effect-host[data-effect="graduation-portal-sequence"]>.ch3-effect,
+.story-body-effect-host[data-effect="diagnosis-glitch"]>.ch3-effect{
+  position:absolute!important; inset:0!important; width:100%!important; height:100%!important;
+  max-width:none!important; max-height:none!important; margin:0!important; overflow:hidden!important;
+}
+.story-body-effect-host[data-effect="job-posting-browse"] .c3-job-posting-browser,
+.story-body-effect-host[data-effect="job-application-submit"] .c3-cover-workflow,
+.story-body-effect-host[data-effect="graduation-portal-sequence"] .ch3-portal-sequence,
+.story-body-effect-host[data-effect="diagnosis-glitch"] .ch3-portal-glitch{
+  position:absolute!important; inset:0!important; width:100%!important; height:100%!important;
+  max-width:none!important; max-height:none!important; margin:0!important; border-radius:0!important;
+}
+/* browser UI < speaking actor < dialogue */
+.global-effect-actor-overlay{z-index:2147483645!important;opacity:1!important;visibility:visible!important;pointer-events:none!important}
+.dialogue-layer.is-global-dialogue{z-index:2147483646!important}
+
+/* Scene 12 -> wave transition must cover the physical browser viewport, not just the story frame. */
+.story-body-effect-host[data-effect="combat-transition"]{
+  position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important;
+  z-index:2147483300!important; overflow:hidden!important; background:transparent!important; pointer-events:none!important;
+}
+.story-body-effect-host[data-effect="combat-transition"]>.ch3-effect,
+.story-body-effect-host[data-effect="combat-transition"] .ch3-combat{
+  position:absolute!important; inset:0!important; width:100%!important; height:100%!important;
+  max-width:none!important; max-height:none!important; margin:0!important;
+}
+
+/* Strong forward suction without using a Chapter 1/2 circular/radial portal language. */
+.c3-core-rift-029.suction .rift-space{
+  transform:scale(1.16) translateY(-1.2vh);
+  filter:brightness(1.12) contrast(1.06) blur(1.4px);
+  transition:transform 1.25s cubic-bezier(.12,.86,.16,1),filter 1.2s ease!important;
+}
+.c3-core-rift-029.suction .coord-grid{
+  opacity:.92!important;
+  background-position:0 640px,640px 0!important;
+  transform:perspective(470px) rotateX(78deg) translateY(-35%) scale(1.62)!important;
+  filter:blur(.7px) brightness(1.25);
+  transition:all 1.15s cubic-bezier(.1,.9,.15,1)!important;
+}
+.c3-core-rift-029.suction .rift-gate{
+  opacity:1!important;
+  transform:translate(-50%,-50%) scale(5.6)!important;
+  filter:brightness(1.55) blur(.7px) drop-shadow(0 0 38px #f0d8ff) drop-shadow(0 0 130px rgba(155,70,255,.98))!important;
+  transition:transform 1.45s cubic-bezier(.08,.92,.12,1),filter 1.05s ease!important;
+}
+.c3-core-rift-029.suction .rift-gate img{
+  transform:scale(.92)!important;
+  object-position:50% 30%!important;
+  filter:brightness(1.28) saturate(1.16) contrast(1.04)!important;
+  transition:transform 1.15s cubic-bezier(.08,.9,.12,1),object-position 1.15s ease,filter .9s ease!important;
+}
+.c3-core-rift-029.suction .depth-tunnel{
+  opacity:1!important;
+  transform:scale(1.45);
+  filter:blur(.45px) brightness(1.25);
+  transition:transform 1.1s cubic-bezier(.1,.88,.14,1),filter .8s ease!important;
+}
+.c3-core-rift-029.suction .depth-tunnel i{
+  animation-duration:.58s!important;
+  animation-iteration-count:2!important;
+}
+.c3-core-rift-029.suction .space-slabs i{
+  opacity:0!important;
+  transform:translate3d(calc(var(--tx) * 1.6),calc(var(--ty) * 1.6),0) rotate(var(--r)) scale(.52)!important;
+  transition:transform .8s cubic-bezier(.1,.85,.15,1),opacity .55s ease!important;
+}
+.c3-core-rift-029.suction .axis-lock,.c3-core-rift-029.suction .rift-labels{opacity:0!important;transition:opacity .2s ease!important}
+
+/* White reaches 100%, stays white, then black is painted OVER the white. The portal never reappears. */
+.c3-core-rift-029 .core-transition-white{z-index:40!important;background:#fff!important;transition:opacity 1.2s cubic-bezier(.22,.68,.2,1)!important}
+.c3-core-rift-029 .core-transition-black{z-index:41!important;background:#000!important;transition:opacity 1.5s ease!important}
+.c3-core-rift-029.white-in .core-transition-white{opacity:1!important}
+.c3-core-rift-029.fade-to-black .core-transition-white{opacity:1!important;transition:none!important}
+.c3-core-rift-029.fade-to-black .core-transition-black{opacity:1!important}
+.c3-core-rift-029.fade-to-black .rift-space,
+.c3-core-rift-029.fade-to-black .coord-grid,
+.c3-core-rift-029.fade-to-black .axis-lock,
+.c3-core-rift-029.fade-to-black .rift-aura,
+.c3-core-rift-029.fade-to-black .rift-gate,
+.c3-core-rift-029.fade-to-black .space-slabs,
+.c3-core-rift-029.fade-to-black .depth-tunnel,
+.c3-core-rift-029.fade-to-black .rift-labels,
+.c3-core-rift-029.fade-to-black .breach-flash{
+  opacity:0!important; visibility:hidden!important; transition:none!important;
+}
+.c3-core-rift-029.black-hold .core-transition-black{opacity:1!important;transition:none!important}
+.c3-core-rift-029.black-hold .core-transition-white{opacity:0!important;transition:none!important}
+.c3-core-rift-029.reveal-core .core-transition-black{opacity:0!important;transition:opacity .9s ease!important}
 </style>
 
 </body>
