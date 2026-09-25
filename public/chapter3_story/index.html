@@ -3444,7 +3444,9 @@ window.STORY_CONFIG = {
 window.STORY_SCENES = {
   black_screen: { chapter:'', title:'', subtitle:'', background:'none', backgroundColor:'#000', position:'center center', tint:'rgba(0,0,0,1)' },
   campus_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'4학년 2학기', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(14,13,10,.14)' },
-  campus_autumn: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'가을의 4조', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(95,46,8,.20)', filter:'saturate(.92) sepia(.08)' },
+  campus_autumn: { chapter:'CHAPTER 3', title:'일청담', subtitle:'다시 만난 4조', background:'chapter3/backgrounds/campus_ilcheongdam.png', position:'center center', tint:'rgba(95,46,8,.12)', filter:'saturate(.98) sepia(.03)' },
+  campus_baegyangro_day: { chapter:'CHAPTER 3', title:'경북대학교 백양로', subtitle:'나만 그런 게 아니다', background:'chapter3/backgrounds/campus_baegyangro_day.png', position:'center center', tint:'rgba(14,13,10,.10)' },
+  campus_night_promenade: { chapter:'CHAPTER 3', title:'밤의 경북대학교 산책로', subtitle:'오염 흔적', background:'chapter3/backgrounds/campus_night_promenade.png', position:'center center', tint:'rgba(4,7,16,.24)' },
   hobanwoo_room: { chapter:'CHAPTER 3', title:'호반우의 방', subtitle:'막학기의 밤', background:'chapter3/backgrounds/hobanwoo_room.png', position:'center center', tint:'rgba(12,13,21,.24)' },
   library_day: { chapter:'CHAPTER 3', title:'도서관', subtitle:'막학기의 일상', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(12,14,17,.12)' },
   library_night: { chapter:'CHAPTER 3', title:'도서관 신관 지하 1층', subtitle:'늦은 밤', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(8,10,15,.30)' },
@@ -3555,12 +3557,12 @@ window.STORY_DATA = {
         {day:26,text:"교수님 상담 / 지원서 점검"},{day:27,text:"자기소개서 최종 제출"},{day:28,text:"ADsP 문제풀이"},{day:29,text:"OO반도체 서류 마감"},
         {day:30,text:"기사 필기 기출 정리"}
       ]}),
-      C3D.line("hobanwoo", "내일까지 자소서 하나 끝내야 되고.", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "금요일까지 과제 내야 되고.", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "자격증 공부도 해야 되고…….", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "아니 막학기면 좀 편해야 되는 거 아니냐?", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "취업이 제일 걱정이다 정말..", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "일단 하나씩 차근차근 끝내보자!", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"thinking"}),
+      C3D.line("hobanwoo", "내일까지 자소서 하나 끝내야 되고.", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "금요일까지 과제 내야 되고.", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "자격증 공부도 해야 되고…….", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "아니 막학기면 좀 편해야 되는 거 아니냐?", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "취업이 제일 걱정이다 정말..", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"neutral",forceAbovePersistentEffect:true}),
+      C3D.line("hobanwoo", "일단 하나씩 차근차근 끝내보자!", "hobanwoo_room", "할 게 왜 이렇게 많냐", {right:"hobanwoo",pose:"thinking",forceAbovePersistentEffect:true}),
 
       C3D.sec("장면 3. 9월과 10월", "campus_day"),
       C3D.line("narrator", "학교 안에서도 채용 관련 일정이 계속 이어졌다.", "campus_day", "9월과 10월"),
@@ -3583,28 +3585,27 @@ window.STORY_DATA = {
       C3D.sec("장면 4. 다시 만난 4조", "campus_autumn"),
       C3D.fx("story-intertitle", "campus_autumn", 2200, {text:"중간고사가 끝난 이후"}),
       C3D.loc("campus_autumn", 1200),
-      C3D.line("junho", "야! 호반우!", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"greeting"}),
-      C3D.line("hobanwoo", "어?", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"surprised",left:"junho"}),
-      C3D.line("soyeon", "와, 진짜 오랜만에 본다!", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"greeting"}),
-      C3D.line("minjae", "요즘 어디 숨어 다니냐?", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"greeting"}),
-      C3D.line("hobanwoo", "안 숨었거든! 그냥 바빴지.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho"}),
-      C3D.line("junho", "또 자소서 쓰냐?", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "자소서도 쓰고, 과제도 하고, 자격증 공부도 해야 되고..", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho"}),
-      C3D.line("soyeon", "다들 똑같네 뭐.", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("minjae", "취업 준비는 좀 되고 있어?", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "그냥 계속 넣는 중이야.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho"}),
-      C3D.line("junho", "나도. 메일만 와도 괜히 긴장된다..", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("soyeon", "오늘만큼은 그 얘기 그만하자.", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "그건 찬성!", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"happy",left:"junho"}),
-      C3D.line("minjae", "우리 밥 먹으러 가는데 같이 갈래?", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "어디 가는데?", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho"}),
-      C3D.line("junho", "아직 안 정했어.", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("soyeon", "싫으면 안 와도 되고.", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "누가 싫대! 당연히 가야지.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"happy",left:"junho"}),
-      C3D.line("minjae", "그럼 가자.", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("junho", "빨리 와. 배고파.", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "알았어, 간다.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"happy",left:"junho"}),
-
+      C3D.line("junho", "야! 호반우!", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"greeting",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("hobanwoo", "어?", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"surprised",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("soyeon", "와, 진짜 오랜만에 본다!", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"greeting",leftImage:"chapter3/characters/soyeon_team4_scene_greeting_v52.png"}),
+      C3D.line("minjae", "요즘 어디 숨어 다니냐?", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"greeting",leftImage:"chapter3/characters/minjae_team4_scene_greeting_v52.png"}),
+      C3D.line("hobanwoo", "안 숨었거든! 그냥 바빴지.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("junho", "또 자소서 쓰냐?", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("hobanwoo", "자소서도 쓰고, 과제도 하고, 자격증 공부도 해야 되고..", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("soyeon", "다들 똑같네 뭐.", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/soyeon_team4_scene_default_v52.png"}),
+      C3D.line("minjae", "취업 준비는 좀 되고 있어?", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/minjae_team4_scene_default_v52.png"}),
+      C3D.line("hobanwoo", "그냥 계속 넣는 중이야.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("junho", "나도. 메일만 와도 괜히 긴장된다..", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("soyeon", "오늘만큼은 그 얘기 그만하자.", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/soyeon_team4_scene_default_v52.png"}),
+      C3D.line("hobanwoo", "그건 찬성!", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"happy",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("minjae", "우리 밥 먹으러 가는데 같이 갈래?", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/minjae_team4_scene_default_v52.png"}),
+      C3D.line("hobanwoo", "어디 가는데?", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"neutral",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("junho", "아직 안 정했어.", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("soyeon", "싫으면 안 와도 되고.", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/soyeon_team4_scene_default_v52.png"}),
+      C3D.line("hobanwoo", "누가 싫대! 당연히 가야지.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"happy",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("minjae", "그럼 가자.", "campus_autumn", "다시 만난 4조", {left:"minjae",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/minjae_team4_scene_default_v52.png"}),
+      C3D.line("junho", "빨리 와. 배고파.", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"neutral",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
+      C3D.line("hobanwoo", "알았어, 간다.", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"happy",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
       C3D.sec("장면 6. 이상한 지원 기록", "hobanwoo_room"),
       C3D.fx("story-intertitle", "hobanwoo_room", 2200, {text:"그러던 중 어느날"}),
       C3D.line("hobanwoo", "내일까지는 OO전자 서류 접수해야 되고..", "hobanwoo_room", "이상한 지원 기록", {right:"hobanwoo",pose:"neutral"}),
@@ -3631,28 +3632,28 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "저번 채용 지원 내역 확인할 때도 지원 안 했다고 뜨더니만.", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"neutral"}),
       C3D.line("hobanwoo", "그냥 내 컴퓨터가 이상한건가..", "hobanwoo_room", "졸업자가진단", {right:"hobanwoo",pose:"thinking"}),
 
-      C3D.sec("장면 9. 나만 그런 게 아니다", "campus_day"),
-      C3D.fx("story-intertitle", "campus_day", 2200, {text:"다음 날 아침"}),
-      C3D.loc("campus_day", 1200),
-      C3D.line("student1", "요즘 학교 서버 좀 이상하지 않아?", "campus_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
-      C3D.line("student2", "난 과제 제출한 게 갑자기 미제출로 뜨던데?", "campus_day", "나만 그런 게 아니다", {left:"student2",right:"hobanwoo"}),
-      C3D.line("student3", "난 이수한 강의 내역이 갑자기 사라졌어.", "campus_day", "나만 그런 게 아니다", {left:"student3",right:"hobanwoo"}),
-      C3D.line("student1", "요즘 학교 시스템 왜 이러냐.", "campus_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
-      C3D.line("hobanwoo", "(…….)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "(나만 그런 게 아니었구나..)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "(근데 정말 서버 문제일까..?)", "campus_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"worried"}),
+      C3D.sec("장면 9. 나만 그런 게 아니다", "campus_baegyangro_day"),
+      C3D.fx("story-intertitle", "campus_baegyangro_day", 2200, {text:"다음 날 아침"}),
+      C3D.loc("campus_baegyangro_day", 1200),
+      C3D.line("student1", "요즘 학교 서버 좀 이상하지 않아?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
+      C3D.line("student2", "난 과제 제출한 게 갑자기 미제출로 뜨던데?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student2",right:"hobanwoo"}),
+      C3D.line("student3", "난 이수한 강의 내역이 갑자기 사라졌어.", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student3",right:"hobanwoo"}),
+      C3D.line("student1", "요즘 학교 시스템 왜 이러냐.", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
+      C3D.line("hobanwoo", "(…….)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
+      C3D.line("hobanwoo", "(나만 그런 게 아니었구나..)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"neutral"}),
+      C3D.line("hobanwoo", "(근데 정말 서버 문제일까..?)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"worried"}),
 
-      C3D.sec("장면 10. 오염 흔적", "campus_night"),
-      C3D.loc("campus_night", 1200),
-      C3D.line("hobanwoo", "휴.. 자소서 다 썼다.", "campus_night", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
-      C3D.line("hobanwoo", "피곤하니까 빨리 집 가서 자야겠다.", "campus_night", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
-      C3D.fx("corruption-trace", "campus_night", 2400, {stage:1}),
-      C3D.line("hobanwoo", "저게 뭐지..?", "campus_night", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
-      C3D.fx("corruption-trace", "campus_night", 2400, {stage:2}),
-      C3D.line("hobanwoo", "어! 설마..", "campus_night", "오염 흔적", {right:"hobanwoo",pose:"thinking"}),
-      C3D.fx("corruption-trace", "campus_night", 2600, {stage:3}),
-      C3D.line("hobanwoo", "이거 서버 문제 아니네.", "campus_night", "오염 흔적", {right:"hobanwoo",pose:"worried"}),
-      C3D.line("hobanwoo", "'오염' 때문이었어!", "campus_night", "오염 흔적", {right:"hobanwoo",pose:"worried"}),
+      C3D.sec("장면 10. 오염 흔적", "campus_night_promenade"),
+      C3D.loc("campus_night_promenade", 1200),
+      C3D.line("hobanwoo", "휴.. 자소서 다 썼다.", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
+      C3D.line("hobanwoo", "피곤하니까 빨리 집 가서 자야겠다.", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
+      C3D.fx("corruption-trace", "campus_night_promenade", 2400, {stage:1}),
+      C3D.line("hobanwoo", "저게 뭐지..?", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
+      C3D.fx("corruption-trace", "campus_night_promenade", 2400, {stage:2}),
+      C3D.line("hobanwoo", "어! 설마..", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"thinking"}),
+      C3D.fx("corruption-trace", "campus_night_promenade", 2600, {stage:3}),
+      C3D.line("hobanwoo", "이거 서버 문제 아니네.", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"worried"}),
+      C3D.line("hobanwoo", "'오염' 때문이었어!", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"worried"}),
 
       C3D.sec("장면 11. 첫 오염 개체", "campus_night"),
       C3D.fx("first-monster-birth", "campus_night", 7600),
@@ -6136,8 +6137,9 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
 
   function syncGlobalEffectActorOverlay(item, speakerId) {
     const persistentBodyEffect = document.querySelector('.story-body-effect-host[data-persistent-dialogue="true"]');
-    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host, .story-body-effect-host[data-effect="recruitment-result"], .story-body-effect-host[data-effect="recruitment-application-glitch"]'));
-    const shouldShowOverlayActor = Boolean(persistentBodyEffect || (item?.forceAbovePersistentEffect && hasBlockingGlobalEffect));
+    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host, .story-body-effect-host, .story-global-effect-layer[aria-hidden="false"] > .ch3-effect'));
+    /* PATCH055: all visible fullscreen/browser effects keep the speaking actor above the UI. */
+    const shouldShowOverlayActor = Boolean(persistentBodyEffect || hasBlockingGlobalEffect);
     if (!shouldShowOverlayActor) {
       removeGlobalEffectActorOverlay();
       return;
@@ -6208,7 +6210,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   }
 
   function elevateDialogueAboveGlobalEffects(item, speakerId) {
-    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host, .story-body-effect-host[data-persistent-dialogue="true"], .story-body-effect-host[data-effect="recruitment-result"], .story-body-effect-host[data-effect="recruitment-application-glitch"], .story-body-effect-host[data-effect="monthly-schedule"]'));
+    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host, .story-body-effect-host, .story-global-effect-layer[aria-hidden="false"] > .ch3-effect'));
     if (!hasBlockingGlobalEffect) {
       restoreDialogueLayerHome();
       return;
@@ -12647,6 +12649,27 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 .c3-star-card-absorb051 .sc-label{
   display:none !important;
 }
+</style>
+
+
+<style id="chapter3-patch-055-browser-layer-and-restoration-style">
+/* PATCH055: calendar remains full-browser viewport while its dialogue continues. */
+.story-body-effect-host[data-effect="monthly-schedule"],
+.story-body-effect-host[data-effect="monthly-schedule"][data-persistent-dialogue="true"]{
+  position:fixed !important; inset:0 !important; width:100vw !important; height:100dvh !important;
+  z-index:2147483000 !important; overflow:hidden !important; opacity:1 !important; visibility:visible !important;
+  background:#f7f8fb !important;
+}
+.story-body-effect-host[data-effect="monthly-schedule"] > .ch3-effect,
+.story-body-effect-host[data-effect="monthly-schedule"] .c3-monthly-calendar{
+  position:absolute !important; inset:0 !important; width:100% !important; height:100% !important;
+  max-width:none !important; max-height:none !important; margin:0 !important; border-radius:0 !important; box-shadow:none !important;
+}
+/* Shared rule for all internet/browser effects: browser < actor < dialogue. */
+.global-effect-actor-overlay{z-index:2147483645 !important; overflow:visible !important; opacity:1 !important; visibility:visible !important;}
+.global-effect-actor-overlay .global-effect-actor-shell,
+.global-effect-actor-overlay .global-effect-actor-image{opacity:1 !important; visibility:visible !important;}
+.dialogue-layer.is-global-dialogue{z-index:2147483646 !important;}
 </style>
 
 </body>
