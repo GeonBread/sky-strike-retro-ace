@@ -3790,7 +3790,7 @@ window.STORY_DATA = {
       C3D.line("student_card", "여섯 개의 별 모두 회수되었습니다.", "graduation_core", "졸업의 별", {left:"student_card",right:"hobanwoo"}),
 
       C3D.sec("장면 32. 디그리온 본체 파괴", "graduation_core"),
-      C3D.fx("digrion-body-break", "graduation_core", 18800),
+      C3D.fx("digrion-body-break", "graduation_core", 17500),
       C3D.line("student_card", "디그리온의 육체 활동 정지 확인.", "graduation_core_purified", "디그리온 본체 파괴", {left:"student_card",right:"hobanwoo"}),
       C3D.line("hobanwoo", "끝난 건가?", "graduation_core_purified", "디그리온 본체 파괴", {right:"hobanwoo",pose:"surprised",left:"student_card"}),
       C3D.line("student_card", "아닙니다.", "graduation_core_purified", "디그리온 본체 파괴", {left:"student_card",right:"hobanwoo"}),
@@ -3813,8 +3813,6 @@ window.STORY_DATA = {
 
       C3D.sec("장면 34. 정화 에너지 형성", "graduation_core_purified"),
       C3D.fx("purification-energy-form", "graduation_core_purified", 7200),
-      C3D.line("student_card", "정화 에너지 집속 완료.", "graduation_core_purified", "정화 에너지 형성", {left:"student_card",right:"hobanwoo"}),
-
       C3D.sec("장면 35. 발사", "graduation_core_purified"),
       C3D.fx("purification-launch", "graduation_core_purified", 5200),
 
@@ -11985,6 +11983,314 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       later(()=>scene?.classList.add('dissolve'),10650);
       later(()=>api?.updateScene?.('graduation_core_purified',{force:true,suppressFlash:true}),14550);
       later(()=>scene?.classList.add('aftermath'),14720);
+    });
+})();
+</script>
+
+
+
+<style id="chapter3-patch-047-digrion-body-purify-style">
+/* === CHAPTER3 PATCH 047: shatter -> giant yellow purification wave -> purified sparkle aftermath === */
+.c3-digrion-body-purify047{position:absolute; inset:0; overflow:hidden; background:#030107; --shakeX:0px; --shakeY:0px;}
+.c3-digrion-body-purify047 .p-bg,.c3-digrion-body-purify047 .p-clean{position:absolute; inset:-4%; width:108%; height:108%; object-fit:cover; transform:translate(var(--shakeX),var(--shakeY)) scale(1.03)}
+.c3-digrion-body-purify047 .p-bg{opacity:1; filter:brightness(.24) saturate(.9) blur(.45px)}
+.c3-digrion-body-purify047 .p-clean{opacity:0; filter:brightness(1.02) saturate(1.08) blur(.2px)}
+.c3-digrion-body-purify047 .p-vignette{position:absolute; inset:0; background:radial-gradient(circle at 50% 48%, rgba(255,255,255,0) 0 20%, rgba(13,4,19,.16) 36%, rgba(0,0,0,.76) 100%)}
+.c3-digrion-body-purify047 .p-body-wrap{position:absolute; inset:0; display:grid; place-items:center; transform:translate(var(--shakeX),var(--shakeY)); z-index:4}
+.c3-digrion-body-purify047 .p-body-box{position:relative; width:min(47vmin,400px); height:min(78vh,720px)}
+.c3-digrion-body-purify047 .p-body-box img,
+.c3-digrion-body-purify047 .p-slices img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain}
+.c3-digrion-body-purify047 .p-body{z-index:3; filter:brightness(.7) saturate(.94) drop-shadow(0 0 16px rgba(149,76,239,.52)) drop-shadow(0 20px 54px rgba(0,0,0,.95));}
+.c3-digrion-body-purify047 .p-ghost{position:absolute; inset:0; z-index:2; opacity:0; mix-blend-mode:screen; filter:brightness(1.9) blur(1px)}
+.c3-digrion-body-purify047 .p-ghost.g1{transform:translate(-2.0vmin,.2vmin)}
+.c3-digrion-body-purify047 .p-ghost.g2{transform:translate(2.0vmin,-.4vmin)}
+.c3-digrion-body-purify047 .p-cracks, .c3-digrion-body-purify047 .p-cracks2{position:absolute; inset:0; z-index:5; opacity:0; -webkit-mask-image:var(--bossMask); mask-image:var(--bossMask); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-position:center; mask-position:center; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;}
+.c3-digrion-body-purify047 .p-cracks path,.c3-digrion-body-purify047 .p-cracks2 path{fill:none; stroke-linecap:round; stroke-linejoin:round;}
+.c3-digrion-body-purify047 .p-cracks path{stroke:url(#pGradA047); stroke-width:6; filter:drop-shadow(0 0 16px rgba(255,255,255,.95)) drop-shadow(0 0 34px rgba(180,73,255,.88)); opacity:0}
+.c3-digrion-body-purify047 .p-cracks2 path{stroke:url(#pGradB047); stroke-width:2.5; filter:drop-shadow(0 0 10px rgba(255,245,255,.9)) drop-shadow(0 0 18px rgba(255,166,225,.65)); opacity:0}
+.c3-digrion-body-purify047 .p-distort{position:absolute; inset:0; z-index:1; opacity:0; background:linear-gradient(90deg, rgba(255,255,255,.10), rgba(255,255,255,0) 18% 82%, rgba(255,255,255,.09)), repeating-linear-gradient(180deg, rgba(255,255,255,.045) 0 2px, rgba(0,0,0,0) 2px 8px); mix-blend-mode:screen; filter:blur(1px)}
+.c3-digrion-body-purify047 .p-beams{position:absolute; inset:0; z-index:2; pointer-events:none}
+.c3-digrion-body-purify047 .p-beams i{position:absolute; top:-15%; left:var(--x); width:1.2vmin; height:130%; transform:translateX(-50%) scaleY(.75); opacity:0; background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,241,253,.98) 16%, rgba(232,171,255,.86) 34%, rgba(138,50,223,.18) 82%, rgba(0,0,0,0)); box-shadow:0 0 16px rgba(249,215,255,.72), 0 0 48px rgba(171,71,237,.55)}
+.c3-digrion-body-purify047 .p-bloom,.c3-digrion-body-purify047 .p-flash,.c3-digrion-body-purify047 .p-black{position:absolute; inset:0; opacity:0; pointer-events:none}
+.c3-digrion-body-purify047 .p-bloom{background:radial-gradient(circle at 50% 49%, rgba(255,250,255,.98) 0, rgba(237,186,255,.66) 14%, rgba(170,75,237,.28) 32%, rgba(0,0,0,0) 70%); mix-blend-mode:screen; filter:blur(16px); z-index:1}
+.c3-digrion-body-purify047 .p-flash{background:#fff; z-index:14}
+.c3-digrion-body-purify047 .p-black{background:#000; z-index:13}
+.c3-digrion-body-purify047 .p-sparks,.c3-digrion-body-purify047 .p-embers,.c3-digrion-body-purify047 .p-ash,.c3-digrion-body-purify047 .p-sparkles{position:absolute; inset:0; z-index:7; pointer-events:none}
+.c3-digrion-body-purify047 .p-sparks i{position:absolute; left:50%; top:50%; width:var(--w); height:var(--h); transform:translate(-50%,-50%) rotate(var(--r)); border-radius:999px; background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,173,232,.88) 35%, rgba(171,82,255,.42) 74%, rgba(0,0,0,0)); box-shadow:0 0 12px rgba(255,228,248,.95); opacity:0}
+.c3-digrion-body-purify047 .p-embers i{position:absolute; left:50%; top:50%; width:var(--s); height:var(--s); transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(circle, #fff 0, #ffd4fd 40%, #c56cff 75%, rgba(0,0,0,0) 79%); box-shadow:0 0 14px rgba(255,214,247,.88); opacity:0}
+.c3-digrion-body-purify047 .p-ash i{position:absolute; left:var(--x); top:var(--y); width:var(--s); height:calc(var(--s)*1.4); opacity:0; border-radius:999px; background:linear-gradient(180deg, rgba(255,255,255,.86), rgba(233,197,255,.55) 40%, rgba(0,0,0,0)); filter:blur(.3px)}
+.c3-digrion-body-purify047 .p-sparkles i{position:absolute; left:var(--x); top:var(--y); width:var(--s); height:var(--s); border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,1) 0, rgba(255,248,204,.95) 28%, rgba(255,221,116,.86) 48%, rgba(255,207,81,.28) 70%, rgba(0,0,0,0) 76%); box-shadow:0 0 10px rgba(255,241,186,.95), 0 0 18px rgba(255,219,112,.72); opacity:0}
+.c3-digrion-body-purify047 .p-slices{position:absolute; inset:0; z-index:8; pointer-events:none}
+.c3-digrion-body-purify047 .p-slices img{opacity:0; clip-path:var(--clip); filter:brightness(1.22) saturate(1.14) drop-shadow(0 0 18px rgba(239,184,255,.6));}
+.c3-digrion-body-purify047 .p-explosion{position:absolute; left:50%; top:50%; width:18vmin; height:18vmin; transform:translate(-50%,-50%); border-radius:50%; opacity:0; z-index:10; background:radial-gradient(circle, rgba(255,255,255,1) 0, rgba(255,248,205,1) 22%, rgba(255,227,120,.98) 43%, rgba(255,201,76,.72) 58%, rgba(255,214,128,.18) 72%, rgba(255,255,255,0) 76%); filter:blur(2px)}
+.c3-digrion-body-purify047 .p-wave{position:absolute; left:50%; top:50%; width:14vmin; height:14vmin; border-radius:50%; transform:translate(-50%,-50%) scale(.08); opacity:0; z-index:11; border:12px solid rgba(255,224,95,.95); box-shadow:0 0 0 8px rgba(255,245,181,.35), 0 0 40px 12px rgba(255,219,87,.52), inset 0 0 24px rgba(255,251,218,.72)}
+.c3-digrion-body-purify047 .p-wave-fill{position:absolute; inset:0; opacity:0; z-index:9; background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.88) 0, rgba(255,244,186,.78) 16%, rgba(255,228,115,.42) 28%, rgba(255,213,86,.16) 42%, rgba(255,219,126,.04) 56%, rgba(0,0,0,0) 70%)}
+.c3-digrion-body-purify047.lock{animation:p047LowShake .34s linear infinite}
+.c3-digrion-body-purify047.overload{animation:p047HardShake .1s steps(2,end) infinite}
+.c3-digrion-body-purify047.lock .p-beams i{opacity:.9; animation:p047BeamRise 1.1s ease-out forwards}
+.c3-digrion-body-purify047.overload .p-body{filter:brightness(1.18) saturate(1.18) drop-shadow(0 0 30px rgba(248,229,255,.96)) drop-shadow(0 0 84px rgba(178,77,239,.96))}
+.c3-digrion-body-purify047.overload .p-ghost{opacity:.44; animation:p047Ghost .16s linear infinite}
+.c3-digrion-body-purify047.overload .p-distort{opacity:.82; animation:p047Scan .62s linear infinite}
+.c3-digrion-body-purify047.overload .p-cracks,.c3-digrion-body-purify047.overload .p-cracks2{opacity:1}
+.c3-digrion-body-purify047.overload .p-cracks path,.c3-digrion-body-purify047.overload .p-cracks2 path{stroke-dasharray:1 999; animation:p047CrackDraw 1.35s ease-out forwards var(--d), p047Flicker .16s steps(2,end) infinite calc(var(--d) + .72s); opacity:1}
+.c3-digrion-body-purify047.overload .p-sparks i{opacity:1; animation:p047Spark 1.1s ease-out infinite var(--d)}
+.c3-digrion-body-purify047.overload .p-embers i{opacity:1; animation:p047Ember 1.8s ease-out infinite var(--d)}
+.c3-digrion-body-purify047.overload .p-bloom{opacity:.76; animation:p047Bloom .55s ease-in-out infinite}
+.c3-digrion-body-purify047.rupture .p-body{animation:p047BodyFade .95s ease-out forwards}
+.c3-digrion-body-purify047.rupture .p-ghost{opacity:.6; animation:p047GhostBurst .74s ease-out forwards}
+.c3-digrion-body-purify047.rupture .p-slices img{opacity:1; animation:p047SliceBurst 3.8s cubic-bezier(.16,.86,.17,1) forwards var(--d)}
+.c3-digrion-body-purify047.rupture .p-flash{animation:p047FlashPulse 1.1s ease-out 2}
+.c3-digrion-body-purify047.rupture .p-black{animation:p047BlackPulse 1.1s ease-out 2}
+.c3-digrion-body-purify047.explode{animation:none}
+.c3-digrion-body-purify047.explode .p-explosion{animation:p047Explosion .95s ease-out forwards}
+.c3-digrion-body-purify047.explode .p-wave{animation:p047Wave 1.2s cubic-bezier(.12,.9,.24,1) forwards}
+.c3-digrion-body-purify047.explode .p-wave-fill{animation:p047WaveFill 1.15s ease-out forwards}
+.c3-digrion-body-purify047.explode .p-clean{opacity:1; transition:opacity .55s ease}
+.c3-digrion-body-purify047.explode .p-bg{opacity:0; transition:opacity .55s ease}
+.c3-digrion-body-purify047.explode .p-bloom{opacity:1; animation:p047GoldBloom 1.1s ease-out forwards}
+.c3-digrion-body-purify047.explode .p-cracks,.c3-digrion-body-purify047.explode .p-cracks2,.c3-digrion-body-purify047.explode .p-body-wrap,.c3-digrion-body-purify047.explode .p-distort{opacity:0; transition:opacity .25s ease}
+.c3-digrion-body-purify047.explode .p-sparkles i{opacity:1; animation:p047SparkleFloat 3s ease-in-out infinite var(--d)}
+.c3-digrion-body-purify047.explode .p-ash i{opacity:1; animation:p047Ash 3.2s ease-in-out infinite var(--d)}
+.c3-digrion-body-purify047.aftermath .p-sparkles i{animation-duration:2.7s}
+@keyframes p047LowShake{25%{--shakeX:1.4px;--shakeY:-1px}50%{--shakeX:-2.1px;--shakeY:1.1px}75%{--shakeX:1px;--shakeY:1.6px}100%{--shakeX:0px;--shakeY:0px}}
+@keyframes p047HardShake{0%{transform:translate(0,0)}25%{transform:translate(6px,-3px)}50%{transform:translate(-7px,4px)}75%{transform:translate(4px,5px)}100%{transform:translate(0,0)}}
+@keyframes p047BeamRise{0%{opacity:0; transform:translateX(-50%) scaleY(.34)}100%{opacity:.92; transform:translateX(-50%) scaleY(1)}}
+@keyframes p047Ghost{50%{filter:brightness(2.1) blur(2px)}}
+@keyframes p047Scan{50%{transform:translateY(6px) scaleY(1.02)}}
+@keyframes p047CrackDraw{0%{stroke-dasharray:0 1200}100%{stroke-dasharray:1200 0}}
+@keyframes p047Flicker{50%{opacity:.35}}
+@keyframes p047Spark{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(.35); opacity:0}16%{opacity:1}100%{transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r)) scale(1); opacity:0}}
+@keyframes p047Ember{0%{transform:translate(-50%,-50%) scale(.2); opacity:0}18%{opacity:1}100%{transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.22); opacity:0}}
+@keyframes p047Bloom{50%{opacity:.98; filter:blur(24px)}}
+@keyframes p047BodyFade{0%{opacity:1; transform:scale(1); filter:brightness(1.3) saturate(1.18) drop-shadow(0 0 36px rgba(255,240,255,.95)) drop-shadow(0 0 90px rgba(181,77,243,.95))}50%{opacity:.55; transform:scale(1.05)}100%{opacity:0; transform:scale(1.14); filter:brightness(2.4) blur(6px)}}
+@keyframes p047GhostBurst{0%{opacity:.65}100%{opacity:0; transform:scale(1.14)}}
+@keyframes p047SliceBurst{0%{opacity:0; transform:translate(0,0) rotate(0) scale(1)}8%{opacity:1}100%{opacity:0; transform:translate(var(--x), var(--y)) rotate(var(--r)) scale(1.05)}}
+@keyframes p047FlashPulse{0%,100%{opacity:0}14%{opacity:.92}28%{opacity:0}54%{opacity:.98}68%{opacity:0}}
+@keyframes p047BlackPulse{0%,100%{opacity:0}20%{opacity:.22}34%{opacity:0}58%{opacity:.28}72%{opacity:0}}
+@keyframes p047Explosion{0%{opacity:0; transform:translate(-50%,-50%) scale(.25)}28%{opacity:1}100%{opacity:0; transform:translate(-50%,-50%) scale(5.2)}}
+@keyframes p047Wave{0%{opacity:0; transform:translate(-50%,-50%) scale(.05)}12%{opacity:1}85%{opacity:.95}100%{opacity:0; transform:translate(-50%,-50%) scale(22)}}
+@keyframes p047WaveFill{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+@keyframes p047GoldBloom{0%{opacity:1; filter:blur(10px)}100%{opacity:0; filter:blur(26px)}}
+@keyframes p047Ash{0%{transform:translateY(12px) scale(.84); opacity:0}16%{opacity:.92}100%{transform:translateY(-104px) scale(1.18); opacity:0}}
+@keyframes p047SparkleFloat{0%{transform:translateY(16px) scale(.78); opacity:0}18%{opacity:1}50%{transform:translateY(-8px) scale(1.06)}100%{transform:translateY(-22px) scale(.82); opacity:0}}
+@media (max-width:900px){.c3-digrion-body-purify047 .p-body-box{width:min(51vmin,360px);height:min(74vh,640px)}}
+</style>
+
+<script id="chapter3-patch-047-digrion-body-purify-script">
+(() => {
+  const bossSrc='assets/chapter3/characters/digrion_phase2_final.png';
+  const beamHtml=[18,30,40,50,60,70,82].map(x=>`<i style="--x:${x}%"></i>`).join('');
+  const crackA=[
+    ['M510 112 L486 206 L514 280 L472 372 L498 470 L460 572 L496 690 L478 856','.04s'],
+    ['M332 246 L424 296 L396 370 L454 420','.18s'],
+    ['M672 238 L582 308 L608 388 L538 444','.28s'],
+    ['M302 522 L392 492 L452 548 L420 660','.42s'],
+    ['M702 510 L618 480 L554 536 L584 652','.54s'],
+    ['M372 716 L456 658 L508 722 L474 846','.68s'],
+    ['M542 150 L568 284 L544 412 L578 568 L540 792','.80s']
+  ];
+  const crackB=[
+    ['M498 164 L494 244 L510 340 L478 430 L500 534 L478 668 L498 818','.12s'],
+    ['M362 344 L448 388 L430 454','.32s'],
+    ['M644 340 L560 388 L580 454','.46s'],
+    ['M430 590 L490 640 L468 754','.58s'],
+    ['M572 590 L512 640 L532 754','.72s']
+  ];
+  const mkSvg=(cls,id,paths)=>`<svg class="${cls}" viewBox="0 0 1000 1000" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".32" stop-color="#ffd9f5"/><stop offset=".72" stop-color="#c86eff"/><stop offset="1" stop-color="#6923a8"/></linearGradient></defs>${paths.map(([d,delay])=>`<path d="${d}" style="--d:${delay}"></path>`).join('')}</svg>`;
+  const sliceClips=['polygon(27% 2%,72% 0%,68% 20%,32% 22%)','polygon(25% 18%,73% 20%,69% 38%,28% 42%)','polygon(26% 38%,72% 40%,68% 56%,31% 58%)','polygon(24% 54%,74% 56%,70% 72%,27% 74%)','polygon(28% 70%,70% 72%,66% 88%,30% 90%)','polygon(36% 8%,46% 8%,47% 90%,34% 90%)','polygon(52% 6%,63% 7%,60% 92%,49% 91%)'];
+  const sliceMotion=[['-28vmin','-12vmin','-12deg','.02s'],['20vmin','-10vmin','9deg','.08s'],['-22vmin','2vmin','-7deg','.14s'],['24vmin','6vmin','13deg','.20s'],['-14vmin','16vmin','-10deg','.26s'],['9vmin','-18vmin','15deg','.32s'],['0vmin','18vmin','0deg','.38s']];
+  const slices=sliceClips.map((clip,i)=>`<img src="${bossSrc}" alt="" style="--clip:${clip}; --x:${sliceMotion[i][0]}; --y:${sliceMotion[i][1]}; --r:${sliceMotion[i][2]}; --d:${sliceMotion[i][3]}">`).join('');
+  const sparks=Array.from({length:70},(_,i)=>{const ang=((i*37)%360)*Math.PI/180; const rad=7+(i%10)*2.6; const x=(Math.cos(ang)*rad).toFixed(2)+'vmin'; const y=(Math.sin(ang)*rad*0.78).toFixed(2)+'vmin'; const w=(2.2+(i%4)*.7).toFixed(1)+'px'; const h=(36+(i%8)*8).toFixed(1)+'px'; const r=((i*29)%360).toFixed(0)+'deg'; const d=((i%15)*.06).toFixed(2)+'s'; return `<i style="--x:${x};--y:${y};--w:${w};--h:${h};--r:${r};--d:${d}"></i>`;}).join('');
+  const embers=Array.from({length:56},(_,i)=>{const ang=((i*61)%360)*Math.PI/180; const rad=5+(i%11)*2.2; const x=(Math.cos(ang)*rad).toFixed(2)+'vmin'; const y=(Math.sin(ang)*rad*0.82).toFixed(2)+'vmin'; const s=(3.2+(i%5)*1.15).toFixed(1)+'px'; const d=((i%14)*.075).toFixed(2)+'s'; return `<i style="--x:${x};--y:${y};--s:${s};--d:${d}"></i>`;}).join('');
+  const ash=Array.from({length:44},(_,i)=>{const x=(8+(i*37)%84).toFixed(1)+'%'; const y=(20+(i*43)%60).toFixed(1)+'%'; const s=(1.6+(i%5)*.9).toFixed(1)+'px'; const d=((i%17)*-.12).toFixed(2)+'s'; return `<i style="--x:${x};--y:${y};--s:${s};--d:${d}"></i>`;}).join('');
+  const sparkles=Array.from({length:40},(_,i)=>{const x=(10+(i*29)%80).toFixed(1)+'%'; const y=(18+(i*41)%60).toFixed(1)+'%'; const s=(3.0+(i%4)*1.1).toFixed(1)+'px'; const d=((i%13)*-.17).toFixed(2)+'s'; return `<i style="--x:${x};--y:${y};--s:${s};--d:${d}"></i>`;}).join('');
+  window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer, api }) => c3Mount(layer, `
+    <div class="c3-digrion-body-purify047" style="--bossMask:url('${bossSrc}')">
+      <img class="p-bg" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
+      <img class="p-clean" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <div class="p-vignette"></div>
+      <div class="p-black"></div>
+      <div class="p-flash"></div>
+      <div class="p-bloom"></div>
+      <div class="p-wave-fill"></div>
+      <div class="p-explosion"></div>
+      <div class="p-wave"></div>
+      <div class="p-beams">${beamHtml}</div>
+      <div class="p-distort"></div>
+      <div class="p-body-wrap">
+        <div class="p-body-box">
+          <img class="p-ghost g1" src="${bossSrc}" alt="">
+          <img class="p-ghost g2" src="${bossSrc}" alt="">
+          <img class="p-body" src="${bossSrc}" alt="디그리온 최종 형태">
+          ${mkSvg('p-cracks','pGradA047',crackA)}
+          ${mkSvg('p-cracks2','pGradB047',crackB)}
+        </div>
+      </div>
+      <div class="p-slices"><div class="p-body-box">${slices}</div></div>
+      <div class="p-sparks">${sparks}</div>
+      <div class="p-embers">${embers}</div>
+      <div class="p-ash">${ash}</div>
+      <div class="p-sparkles">${sparkles}</div>
+    </div>`, (root,later) => {
+      const scene=root.querySelector('.c3-digrion-body-purify047');
+      later(()=>scene?.classList.add('lock'),180);
+      later(()=>scene?.classList.add('overload'),1900);
+      later(()=>scene?.classList.add('rupture'),7200);
+      later(()=>scene?.classList.add('explode'),11250);
+      later(()=>api?.updateScene?.('graduation_core_purified',{force:true,suppressFlash:true}),11320);
+      later(()=>scene?.classList.add('aftermath'),14500);
+    });
+})();
+</script>
+
+
+
+<style id="chapter3-patch-048-digrion-body-exact-style">
+/* === PATCH 048: body-only progressive cracks -> shatter -> foreground yellow purification blast -> calm sparkle aftermath === */
+.c3-digrion-death048{position:absolute;inset:0;overflow:hidden;background:#020106;isolation:isolate;--sx:0px;--sy:0px}
+.c3-digrion-death048 .d48-bg,.c3-digrion-death048 .d48-clean{position:absolute;z-index:0;inset:-3%;width:106%;height:106%;object-fit:cover;transform:translate(var(--sx),var(--sy)) scale(1.025)}
+.c3-digrion-death048 .d48-bg{opacity:1;filter:brightness(.30) saturate(.92)}
+.c3-digrion-death048 .d48-clean{opacity:0;filter:brightness(1.03) saturate(1.08)}
+.c3-digrion-death048 .d48-vignette{position:absolute;z-index:1;inset:0;background:radial-gradient(circle at 50% 48%,transparent 0 24%,rgba(12,4,18,.14) 40%,rgba(0,0,0,.76) 100%)}
+.c3-digrion-death048 .d48-body-stage{position:absolute;z-index:12;left:50%;top:50%;width:min(52vmin,430px);height:min(78vh,740px);transform:translate(-50%,-50%) translate(var(--sx),var(--sy));}
+.c3-digrion-death048 .d48-body,.c3-digrion-death048 .d48-ghost,.c3-digrion-death048 .d48-piece{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center}
+.c3-digrion-death048 .d48-body{z-index:4;filter:brightness(.78) saturate(.96) drop-shadow(0 20px 46px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(158,72,226,.42));}
+.c3-digrion-death048 .d48-ghost{z-index:3;opacity:0;mix-blend-mode:screen;filter:brightness(1.8) blur(1px)}
+/* The crack canvas itself is alpha-masked by Digrion's PNG, so no crack can exist outside the body silhouette. */
+.c3-digrion-death048 .d48-crack-mask{position:absolute;z-index:8;inset:0;pointer-events:none;opacity:0;
+  -webkit-mask-image:url("assets/chapter3/characters/digrion_phase2_final.png");
+  -webkit-mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-mode:alpha;
+  mask-image:url("assets/chapter3/characters/digrion_phase2_final.png");
+  mask-size:contain;mask-position:center;mask-repeat:no-repeat;mask-mode:alpha;
+}
+.c3-digrion-death048 .d48-crack-mask svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.c3-digrion-death048 .d48-crack-mask path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:0 1800;opacity:0}
+.c3-digrion-death048 .d48-crack-mask .major{stroke:url(#d48Major);stroke-width:8;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 18px rgba(229,156,255,.98)) drop-shadow(0 0 35px rgba(157,57,233,.88))}
+.c3-digrion-death048 .d48-crack-mask .minor{stroke:url(#d48Minor);stroke-width:3.6;filter:drop-shadow(0 0 5px rgba(255,255,255,.9)) drop-shadow(0 0 15px rgba(217,124,255,.78))}
+.c3-digrion-death048.crack1 .d48-crack-mask,.c3-digrion-death048.crack2 .d48-crack-mask,.c3-digrion-death048.crack3 .d48-crack-mask{opacity:1}
+.c3-digrion-death048.crack1 .d48-crack-mask .c1{opacity:1;animation:d48CrackDraw .95s ease-out forwards}
+.c3-digrion-death048.crack2 .d48-crack-mask .c2{opacity:1;animation:d48CrackDraw 1.1s ease-out forwards}
+.c3-digrion-death048.crack3 .d48-crack-mask .c3{opacity:1;animation:d48CrackDraw 1.2s ease-out forwards}
+.c3-digrion-death048.crack1 .d48-body{filter:brightness(.96) saturate(1.03) drop-shadow(0 0 22px rgba(204,128,255,.65)) drop-shadow(0 20px 46px rgba(0,0,0,.9))}
+.c3-digrion-death048.crack2{animation:d48ShakeMid .18s linear infinite}
+.c3-digrion-death048.crack2 .d48-body{filter:brightness(1.12) saturate(1.12) drop-shadow(0 0 34px rgba(241,207,255,.92)) drop-shadow(0 0 72px rgba(168,69,237,.78))}
+.c3-digrion-death048.crack2 .d48-ghost{opacity:.28;animation:d48GhostFlicker .18s steps(2,end) infinite}
+.c3-digrion-death048.crack3{animation:d48ShakeHard .095s steps(2,end) infinite}
+.c3-digrion-death048.crack3 .d48-body{animation:d48BodyOverload .52s ease-in-out infinite alternate}
+.c3-digrion-death048.crack3 .d48-crack-mask{animation:d48CrackFlash .22s steps(2,end) infinite}
+.c3-digrion-death048 .d48-leaks{position:absolute;z-index:5;inset:0;opacity:0;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,rgba(255,250,255,.72) 0,rgba(225,161,255,.34) 18%,rgba(149,55,224,.15) 37%,transparent 58%);filter:blur(18px);mix-blend-mode:screen}
+.c3-digrion-death048.crack3 .d48-leaks{opacity:1;animation:d48LeakPulse .5s ease-in-out infinite alternate}
+.c3-digrion-death048 .d48-sparks{position:absolute;z-index:14;inset:0;pointer-events:none}
+.c3-digrion-death048 .d48-sparks i{position:absolute;left:50%;top:50%;width:var(--w);height:var(--h);border-radius:999px;background:linear-gradient(180deg,#fff,#f7caff 35%,#b767f3 72%,transparent);box-shadow:0 0 12px rgba(255,223,252,.9);opacity:0;transform:translate(-50%,-50%) rotate(var(--r))}
+.c3-digrion-death048.crack3 .d48-sparks i{animation:d48Spark .92s ease-out infinite var(--d)}
+.c3-digrion-death048 .d48-pieces{position:absolute;z-index:18;inset:0;pointer-events:none}
+.c3-digrion-death048 .d48-piece{opacity:0;clip-path:var(--clip);filter:brightness(1.28) saturate(1.15) drop-shadow(0 0 20px rgba(237,187,255,.72))}
+.c3-digrion-death048.shatter{animation:d48ImpactShake .07s steps(2,end) infinite}
+.c3-digrion-death048.shatter .d48-body{animation:d48BodyGone .34s ease-out forwards}
+.c3-digrion-death048.shatter .d48-ghost{opacity:.48;animation:d48GhostBurst .48s ease-out forwards}
+.c3-digrion-death048.shatter .d48-crack-mask{opacity:1;animation:d48CrackWhiteout .42s ease-out forwards}
+.c3-digrion-death048.shatter .d48-piece{opacity:1;animation:d48PieceFly 1.8s cubic-bezier(.12,.86,.2,1) forwards var(--d)}
+.c3-digrion-death048 .d48-impact-flash{position:absolute;z-index:35;inset:0;background:#fff;opacity:0;pointer-events:none}
+.c3-digrion-death048.shatter .d48-impact-flash{animation:d48ImpactFlash .72s ease-out forwards}
+/* Explosion and waves are deliberately above every Digrion image/fragment layer. */
+.c3-digrion-death048 .d48-purify-explosion{position:absolute;z-index:60;left:50%;top:50%;width:18vmin;height:18vmin;transform:translate(-50%,-50%) scale(.08);border-radius:50%;opacity:0;pointer-events:none;background:radial-gradient(circle,#fff 0 8%,#fffceb 14%,#fff0a4 26%,#ffd95c 43%,rgba(255,199,48,.86) 56%,rgba(255,211,93,.32) 69%,transparent 77%);box-shadow:0 0 50px 18px rgba(255,232,127,.82),0 0 120px 45px rgba(255,192,49,.56);mix-blend-mode:screen}
+.c3-digrion-death048 .d48-wave-stack{position:absolute;z-index:58;inset:0;pointer-events:none}
+.c3-digrion-death048 .d48-wave{position:absolute;left:50%;top:50%;width:12vmin;height:12vmin;border-radius:50%;transform:translate(-50%,-50%) scale(.08);opacity:0;border:clamp(5px,.6vmin,10px) solid rgba(255,224,91,.96);box-shadow:0 0 0 5px rgba(255,250,199,.26),0 0 34px 12px rgba(255,218,77,.62),inset 0 0 22px rgba(255,250,205,.7)}
+.c3-digrion-death048 .d48-gold-fill{position:absolute;z-index:55;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.96) 0,rgba(255,246,189,.84) 16%,rgba(255,225,96,.48) 29%,rgba(255,203,48,.18) 43%,transparent 66%)}
+.c3-digrion-death048.blast .d48-purify-explosion{animation:d48Explosion .92s ease-out forwards}
+.c3-digrion-death048.blast .d48-wave{animation:d48HugeWave 1.65s cubic-bezier(.08,.9,.18,1) forwards var(--wd)}
+.c3-digrion-death048.blast .d48-gold-fill{animation:d48GoldFill 1.55s ease-out forwards}
+.c3-digrion-death048.blast .d48-clean{opacity:1;transition:opacity .48s ease}
+.c3-digrion-death048.blast .d48-bg{opacity:0;transition:opacity .48s ease}
+.c3-digrion-death048 .d48-sparkles{position:absolute;z-index:22;inset:0;pointer-events:none;opacity:0}
+.c3-digrion-death048 .d48-sparkles i{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);border-radius:50%;background:radial-gradient(circle,#fff 0,#fffde6 26%,#ffe67d 48%,rgba(255,211,65,.44) 66%,transparent 74%);box-shadow:0 0 8px rgba(255,249,206,.95),0 0 18px rgba(255,221,95,.72);opacity:0}
+.c3-digrion-death048.settle{animation:none!important;--sx:0px;--sy:0px;transform:none!important}
+.c3-digrion-death048.settle .d48-body-stage,.c3-digrion-death048.settle .d48-sparks,.c3-digrion-death048.settle .d48-wave-stack,.c3-digrion-death048.settle .d48-purify-explosion,.c3-digrion-death048.settle .d48-gold-fill,.c3-digrion-death048.settle .d48-impact-flash{opacity:0!important;animation:none!important}
+.c3-digrion-death048.settle .d48-clean{opacity:1!important;transform:scale(1.025)!important;transition:none!important}
+.c3-digrion-death048.settle .d48-bg{opacity:0!important}
+.c3-digrion-death048.settle .d48-vignette{background:radial-gradient(circle at 50% 48%,transparent 0 42%,rgba(11,7,2,.10) 74%,rgba(0,0,0,.24) 100%)}
+.c3-digrion-death048.settle .d48-sparkles{opacity:1}
+.c3-digrion-death048.settle .d48-sparkles i{animation:d48SparkleFloat var(--dur) ease-in-out infinite var(--d)}
+@keyframes d48CrackDraw{from{stroke-dasharray:0 1800}to{stroke-dasharray:1800 0}}
+@keyframes d48ShakeMid{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-1px)}50%{transform:translate(-3px,2px)}75%{transform:translate(1px,2px)}}
+@keyframes d48ShakeHard{0%{transform:translate(0,0)}25%{transform:translate(6px,-3px)}50%{transform:translate(-7px,4px)}75%{transform:translate(4px,5px)}100%{transform:translate(0,0)}}
+@keyframes d48GhostFlicker{50%{transform:translateX(2.2vmin);filter:brightness(2.2) blur(2px)}}
+@keyframes d48BodyOverload{from{filter:brightness(1.22) saturate(1.15) drop-shadow(0 0 32px rgba(255,232,255,.95)) drop-shadow(0 0 78px rgba(174,69,239,.88))}to{filter:brightness(1.78) saturate(1.28) drop-shadow(0 0 52px rgba(255,248,255,1)) drop-shadow(0 0 112px rgba(193,83,255,.98))}}
+@keyframes d48CrackFlash{50%{filter:brightness(1.7)}}
+@keyframes d48LeakPulse{to{opacity:.58;filter:blur(25px)}}
+@keyframes d48Spark{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--r)) scale(.25)}14%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r)) scale(1)}}
+@keyframes d48BodyGone{0%{opacity:1;filter:brightness(2)}50%{opacity:1;filter:brightness(3.6) blur(1px)}100%{opacity:0;filter:brightness(4) blur(7px);transform:scale(1.07)}}
+@keyframes d48GhostBurst{to{opacity:0;transform:scale(1.14)}}
+@keyframes d48CrackWhiteout{0%{filter:brightness(1.5)}60%{filter:brightness(3)}100%{opacity:0;filter:brightness(4)}}
+@keyframes d48PieceFly{0%{opacity:0;transform:translate(0,0) rotate(0) scale(1)}8%{opacity:1}76%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(.95);filter:brightness(1.7) blur(1px)}}
+@keyframes d48ImpactShake{0%{transform:translate(0,0)}25%{transform:translate(9px,-5px)}50%{transform:translate(-10px,6px)}75%{transform:translate(6px,7px)}100%{transform:translate(0,0)}}
+@keyframes d48ImpactFlash{0%{opacity:0}10%{opacity:.96}32%{opacity:.18}100%{opacity:0}}
+@keyframes d48Explosion{0%{opacity:0;transform:translate(-50%,-50%) scale(.08)}18%{opacity:1}62%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(7.2)}}
+@keyframes d48HugeWave{0%{opacity:0;transform:translate(-50%,-50%) scale(.08)}8%{opacity:1}76%{opacity:.98}100%{opacity:0;transform:translate(-50%,-50%) scale(24)}}
+@keyframes d48GoldFill{0%{opacity:0}14%{opacity:.92}42%{opacity:.7}100%{opacity:0}}
+@keyframes d48SparkleFloat{0%{opacity:0;transform:translateY(12px) scale(.72)}18%{opacity:.96}52%{opacity:.72;transform:translateY(-7px) scale(1.12)}100%{opacity:0;transform:translateY(-24px) scale(.78)}}
+@media(max-width:900px){.c3-digrion-death048 .d48-body-stage{width:min(58vmin,390px);height:min(74vh,650px)}}
+</style>
+
+<script id="chapter3-patch-048-digrion-body-exact-script">
+(() => {
+  const boss='assets/chapter3/characters/digrion_phase2_final.png';
+  const major=[
+    ['c1','M510 120 L488 250 L524 350 L476 468 L512 596 L478 748 L505 910'],
+    ['c1','M350 260 L430 310 L402 402 L477 468'],
+    ['c2','M675 238 L588 320 L614 420 L522 500'],
+    ['c2','M310 565 L402 522 L470 590 L430 720'],
+    ['c2','M705 544 L618 510 L540 582 L588 720'],
+    ['c3','M370 780 L462 710 L516 782 L478 938'],
+    ['c3','M548 165 L576 300 L548 438 L590 602 L548 835']
+  ];
+  const minor=[
+    ['c2','M474 286 L430 245 L390 230'],['c2','M516 350 L564 296 L615 278'],
+    ['c2','M482 468 L424 452 L376 480'],['c2','M524 500 L580 470 L634 488'],
+    ['c3','M470 590 L408 628 L370 682'],['c3','M540 582 L606 620 L646 686'],
+    ['c3','M430 720 L390 756 L360 830'],['c3','M588 720 L628 766 L650 842'],
+    ['c3','M506 910 L458 986 L444 1080'],['c3','M548 835 L598 906 L618 1010']
+  ];
+  const svg=`<svg viewBox="0 0 1000 1536" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="d48Major" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".28" stop-color="#ffe5ff"/><stop offset=".68" stop-color="#ce7aff"/><stop offset="1" stop-color="#7625b8"/></linearGradient><linearGradient id="d48Minor" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#eebcff"/><stop offset="1" stop-color="#a64be3"/></linearGradient></defs>${major.map(([c,d])=>`<path class="major ${c}" d="${d}"></path>`).join('')}${minor.map(([c,d])=>`<path class="minor ${c}" d="${d}"></path>`).join('')}</svg>`;
+  const clips=['polygon(20% 0,80% 0,73% 18%,27% 22%)','polygon(18% 17%,82% 18%,74% 38%,25% 42%)','polygon(19% 38%,81% 39%,74% 57%,24% 60%)','polygon(17% 55%,83% 57%,76% 74%,23% 77%)','polygon(22% 72%,78% 74%,71% 92%,27% 94%)','polygon(25% 10%,45% 8%,48% 94%,29% 94%)','polygon(53% 7%,73% 10%,69% 94%,50% 92%)'];
+  const mv=[['-30vmin','-13vmin','-13deg','.00s'],['24vmin','-11vmin','10deg','.05s'],['-25vmin','2vmin','-8deg','.10s'],['27vmin','8vmin','14deg','.15s'],['-17vmin','19vmin','-11deg','.20s'],['11vmin','-21vmin','16deg','.25s'],['2vmin','21vmin','3deg','.30s']];
+  const pieces=clips.map((clip,i)=>`<img class="d48-piece" src="${boss}" alt="" style="--clip:${clip};--x:${mv[i][0]};--y:${mv[i][1]};--r:${mv[i][2]};--d:${mv[i][3]}">`).join('');
+  const sparks=Array.from({length:64},(_,i)=>{const a=((i*47)%360)*Math.PI/180,r=7+(i%9)*2.5;return `<i style="--x:${(Math.cos(a)*r).toFixed(1)}vmin;--y:${(Math.sin(a)*r*.76).toFixed(1)}vmin;--w:${2+(i%4)}px;--h:${34+(i%7)*7}px;--r:${(i*31)%360}deg;--d:${((i%13)*.055).toFixed(2)}s"></i>`}).join('');
+  const waves=Array.from({length:9},(_,i)=>`<i class="d48-wave" style="--wd:${(i*.105).toFixed(3)}s"></i>`).join('');
+  const sparkles=Array.from({length:52},(_,i)=>`<i style="--x:${8+(i*37)%85}%;--y:${12+(i*53)%72}%;--s:${(2.5+(i%5)*1.1).toFixed(1)}px;--d:${((i%17)*-.14).toFixed(2)}s;--dur:${(2.6+(i%7)*.23).toFixed(2)}s"></i>`).join('');
+  window.STORY_CUSTOM_EFFECTS['digrion-body-break']=({layer,api})=>c3Mount(layer,`
+    <div class="c3-digrion-death048">
+      <img class="d48-bg" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
+      <img class="d48-clean" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <div class="d48-vignette"></div>
+      <div class="d48-body-stage">
+        <img class="d48-ghost" src="${boss}" alt="">
+        <img class="d48-body" src="${boss}" alt="디그리온">
+        <div class="d48-leaks"></div>
+        <div class="d48-crack-mask">${svg}</div>
+        <div class="d48-pieces">${pieces}</div>
+      </div>
+      <div class="d48-sparks">${sparks}</div>
+      <div class="d48-impact-flash"></div>
+      <div class="d48-gold-fill"></div>
+      <div class="d48-wave-stack">${waves}</div>
+      <div class="d48-purify-explosion"></div>
+      <div class="d48-sparkles">${sparkles}</div>
+    </div>`,(root,later)=>{
+      const s=root.querySelector('.c3-digrion-death048');
+      /* Body stays intact first, then cracks only inside the alpha silhouette and progressively branches. */
+      later(()=>s?.classList.add('crack1'),1050);
+      later(()=>s?.classList.add('crack2'),2700);
+      later(()=>s?.classList.add('crack3'),4550);
+      /* The illustration itself shatters into pieces. */
+      later(()=>s?.classList.add('shatter'),7050);
+      /* After the pieces separate, a foreground yellow purification explosion erupts from the exact center. */
+      later(()=>{
+        s?.classList.add('blast');
+        api?.updateScene?.('graduation_core_purified',{force:true,suppressFlash:true});
+      },8950);
+      /* Once the waves have disappeared, all shake stops. Only the purified map and floating sparkles remain. */
+      later(()=>s?.classList.add('settle'),11150);
     });
 })();
 </script>
