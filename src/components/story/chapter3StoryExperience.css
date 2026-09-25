@@ -389,3 +389,17 @@
   top: 86px;
   right: 16px;
 }
+
+
+/* v56: keep Chapter 3 wave viewport at an exact 922:960 ratio so the iframe/canvas cannot stretch sprites horizontally. */
+.chapter3WaveFrame {
+  width: min(96dvh, 100vw);
+  height: auto;
+  aspect-ratio: 24 / 25;
+  max-height: 100dvh;
+}
+
+.chapter3WaveHostHud {
+  width: min(96dvh, 100vw);
+  height: min(100dvh, 104.167vw);
+}
