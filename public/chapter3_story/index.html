@@ -11308,10 +11308,46 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       let raf = 0;
 
       const startArrivalCamera = () => {
-        /* PATCH058: use one compositor-friendly CSS transform instead of writing
-           object-position + transform + filter every animation frame. */
+        /* PATCH061:
+           The CSS-only climb was being collapsed to an effectively fixed frame on some systems.
+           Move only object-position + transform from JS so the lower corridor -> upper core travel
+           is guaranteed to happen, while avoiding the old per-frame filter work that caused lag. */
         if (!arrival || !scene) return;
-        scene.classList.add('camera-run-058');
+        if (raf) cancelAnimationFrame(raf);
+
+        scene.classList.remove('camera-run-058');
+
+        const started = performance.now();
+        const duration = 2800;
+        const ease = t => t < .5
+          ? 4 * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+        const frame = now => {
+          const raw = Math.max(0, Math.min(1, (now - started) / duration));
+          const p = ease(raw);
+
+          /* Start at the bottom of the tall image and travel all the way toward its upper region. */
+          const objectY = 100 + (8 - 100) * p;
+          const shift = 8 + (-8 - 8) * p;
+          const scale = 1.025 + (1.075 - 1.025) * p;
+
+          arrival.style.setProperty('object-position', `50% ${objectY.toFixed(2)}%`, 'important');
+          arrival.style.setProperty(
+            'transform',
+            `translate3d(0,${shift.toFixed(2)}vh,0) scale(${scale.toFixed(4)})`,
+            'important'
+          );
+          arrival.style.setProperty('opacity', `${(.78 + .22 * p).toFixed(3)}`, 'important');
+
+          if (raw < 1) {
+            raf = requestAnimationFrame(frame);
+          } else {
+            raf = 0;
+          }
+        };
+
+        raf = requestAnimationFrame(frame);
       };
 
       const prepareHandoff = () => {
@@ -13075,6 +13111,35 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   transform:translate3d(0,24%,0) scale(1.015)!important;
   opacity:1!important;
   transition:transform 1.05s ease,opacity .28s ease!important;
+}
+</style>
+
+
+<style id="chapter3-patch-061-corridor-climb-guarantee">
+/* PATCH 061: make the arrival image tall enough that object-position travel is visually obvious.
+   No CSS animation is required; JS updates only object-position/transform/opacity. */
+.c3-core-rift-029 .arrival-camera{
+  overflow:hidden!important;
+  background:#05020b!important;
+}
+.c3-core-rift-029 .arrival-camera img{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:50% 100%!important;
+  transform:translate3d(0,8vh,0) scale(1.025)!important;
+  transform-origin:50% 50%!important;
+  filter:none!important;
+  opacity:.78!important;
+  will-change:object-position,transform,opacity!important;
+  animation:none!important;
+}
+.c3-core-rift-029.camera-run-058 .arrival-camera img{
+  animation:none!important;
 }
 </style>
 
