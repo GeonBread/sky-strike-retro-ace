@@ -11327,9 +11327,9 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
           const raw = Math.max(0, Math.min(1, (now - started) / duration));
           const p = ease(raw);
 
-          /* Start at the bottom of the tall image and travel all the way toward its upper region. */
-          const objectY = 100 + (8 - 100) * p;
-          const shift = 8 + (-8 - 8) * p;
+          /* Start at the absolute bottom of the image and travel to the absolute top edge. */
+          const objectY = 100 + (0 - 100) * p;
+          const shift = 6 + (0 - 6) * p;
           const scale = 1.025 + (1.075 - 1.025) * p;
 
           arrival.style.setProperty('object-position', `50% ${objectY.toFixed(2)}%`, 'important');
@@ -13131,7 +13131,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   max-height:none!important;
   object-fit:cover!important;
   object-position:50% 100%!important;
-  transform:translate3d(0,8vh,0) scale(1.025)!important;
+  transform:translate3d(0,6vh,0) scale(1.025)!important;
   transform-origin:50% 50%!important;
   filter:none!important;
   opacity:.78!important;
