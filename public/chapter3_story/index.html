@@ -3717,7 +3717,7 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "나 졸업하고 싶다!", "campus_night", "핵심 오염원 추적", {right:"hobanwoo",pose:"brave",left:"student_card"}),
 
       C3D.sec("장면 20. 최종 공간", "graduation_core"),
-      C3D.fx("teleport-core", "graduation_core", 16000),
+      C3D.fx("teleport-core", "graduation_core", 17000),
       C3D.line("student_card", "최상위 오염 개체를 확인했습니다.", "graduation_core", "최종 공간", {left:"student_card",right:"hobanwoo"}),
       C3D.line("student_card", "미졸업의 군주.", "graduation_core", "최종 공간", {left:"student_card",right:"hobanwoo"}),
       C3D.line("student_card", "디그리온.", "graduation_core", "최종 공간", {left:"student_card",right:"hobanwoo"}),
@@ -3987,6 +3987,22 @@ function c3InstallResponsiveWebFit(root) {
   };
 }
 
+const C3_NATIVE_FULLSCREEN_WEB_EFFECTS = new Set([
+  'monthly-schedule',
+  'job-posting-browse',
+  'job-application-submit',
+  'recruitment-result',
+  'recruitment-application-glitch',
+  'graduation-portal-sequence',
+  'diagnosis-glitch',
+  'eclass-assignment-submit',
+  'eclass-assignment-glitch',
+  'assignment-submit-timeline',
+  'graduation-portal-static',
+  'graduation-portal-static-zoom',
+  'diagnosis-course-mismatch'
+]);
+
 function c3Mount(layer, html, setup) {
   const root = document.createElement('div');
   root.className = 'ch3-effect';
@@ -3996,7 +4012,12 @@ function c3Mount(layer, html, setup) {
   const timers = [];
   const later = (fn, ms) => timers.push(setTimeout(fn, ms));
   const setupCleanup = setup?.(root, later);
-  const responsiveCleanup = c3InstallResponsiveWebFit(root);
+  const effectId = String(layer?.dataset?.effect || '');
+  const useNativeFullscreenWeb = Boolean(
+    layer?.classList?.contains('story-body-effect-host') && C3_NATIVE_FULLSCREEN_WEB_EFFECTS.has(effectId)
+  );
+  if (useNativeFullscreenWeb) root.classList.add('c3-native-fullscreen-web');
+  const responsiveCleanup = useNativeFullscreenWeb ? null : c3InstallResponsiveWebFit(root);
   return () => { timers.forEach(clearTimeout); responsiveCleanup?.(); setupCleanup?.(); layer.replaceChildren(); };
 }
 
@@ -11319,18 +11340,20 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       later(() => scene?.classList.add('fade-to-black'), 6700);
       /* Black fades ON TOP of the still-solid white layer, so the portal can never show through the crossfade. */
       later(() => scene?.classList.add('black-hold'), 8200);
-      /* Hold pure black for ~2 s, then reveal only the existing corridor/core climb. */
+      /* Hold pure black for ~2 s, then reveal the arrival background first. */
       later(() => {
         scene?.classList.add('arrived');
         scene?.classList.add('reveal-core');
-        startArrivalCamera();
       }, 10200);
 
-      /* Existing arrival camera: climb from the lower road/corridor to the upper core structure. */
-      later(() => scene?.classList.add('show-title'), 12450);
-      later(() => scene?.classList.add('hide-title'), 13700);
-      later(prepareHandoff, 13900);
-      later(() => scene?.classList.add('handoff'), 14100);
+      /* PATCH059: wait until the blackout has almost completely cleared, then perform
+         a long, obvious lower-corridor -> upper-core climb. This keeps the v58 GPU
+         optimization but restores the missing camera travel. */
+      later(() => startArrivalCamera(), 11050);
+      later(() => scene?.classList.add('show-title'), 13900);
+      later(() => scene?.classList.add('hide-title'), 14900);
+      later(prepareHandoff, 15150);
+      later(() => scene?.classList.add('handoff'), 15350);
 
       return () => { if (raf) cancelAnimationFrame(raf); };
     });
@@ -12917,6 +12940,141 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   filter:none!important;
   opacity:1!important;
   transition:transform 1.05s ease,opacity .3s ease!important;
+}
+</style>
+
+
+
+<style id="chapter3-patch-059-fullscreen-web-and-corridor-style">
+/* === CHAPTER 3 PATCH 059 ===
+   A) Browser/homepage cinematics remain the physical browser viewport during their following dialogue.
+   B) Restore the visible lower-corridor -> upper-core camera climb without bringing back v57's costly filters. */
+
+/* Native full viewport: do not collapse these internet/browser sequences back into the story/game canvas. */
+.story-body-effect-host[data-effect="monthly-schedule"],
+.story-body-effect-host[data-effect="job-posting-browse"],
+.story-body-effect-host[data-effect="job-application-submit"],
+.story-body-effect-host[data-effect="recruitment-result"],
+.story-body-effect-host[data-effect="recruitment-application-glitch"],
+.story-body-effect-host[data-effect="graduation-portal-sequence"],
+.story-body-effect-host[data-effect="diagnosis-glitch"],
+.story-body-effect-host[data-effect="eclass-assignment-submit"],
+.story-body-effect-host[data-effect="eclass-assignment-glitch"],
+.story-body-effect-host[data-effect="assignment-submit-timeline"],
+.story-body-effect-host[data-effect="graduation-portal-static"],
+.story-body-effect-host[data-effect="graduation-portal-static-zoom"],
+.story-body-effect-host[data-effect="diagnosis-course-mismatch"]{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  z-index:2147483000!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:none!important;
+}
+.story-body-effect-host > .ch3-effect.c3-native-fullscreen-web{
+  position:fixed!important;
+  inset:0!important;
+  left:0!important;
+  top:0!important;
+  right:0!important;
+  bottom:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  transform:none!important;
+  transform-origin:50% 50%!important;
+  margin:0!important;
+  overflow:hidden!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+/* Ensure each website surface itself fills that viewport. Existing Chrome-frame rules may still reserve the 84px browser bar. */
+.ch3-effect.c3-native-fullscreen-web > .c3-monthly-calendar,
+.ch3-effect.c3-native-fullscreen-web > .c3-job-posting-browser,
+.ch3-effect.c3-native-fullscreen-web > .c3-cover-workflow,
+.ch3-effect.c3-native-fullscreen-web > .c3-recruit-result,
+.ch3-effect.c3-native-fullscreen-web > .c3-recruit-glitch,
+.ch3-effect.c3-native-fullscreen-web > .c3-eclass-submit,
+.ch3-effect.c3-native-fullscreen-web > .c3-eclass-glitch,
+.ch3-effect.c3-native-fullscreen-web > .c3-last-submit,
+.ch3-effect.c3-native-fullscreen-web > .ch3-portal-sequence,
+.ch3-effect.c3-native-fullscreen-web > .ch3-portal-glitch,
+.ch3-effect.c3-native-fullscreen-web > .ch3-mismatch{
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  width:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.ch3-effect.c3-native-fullscreen-web:not(.c3-has-browser-frame) > .c3-monthly-calendar,
+.ch3-effect.c3-native-fullscreen-web:not(.c3-has-browser-frame) > .ch3-portal-sequence,
+.ch3-effect.c3-native-fullscreen-web:not(.c3-has-browser-frame) > .ch3-portal-glitch{
+  top:0!important;
+  height:100%!important;
+}
+/* During the persistent dialogue phase the website remains below the actor/dialogue, never below the game frame. */
+.story-body-effect-host[data-persistent-dialogue="true"]{opacity:1!important;visibility:visible!important}
+.global-effect-actor-overlay{
+  position:fixed!important;
+  z-index:2147483645!important;
+  opacity:1!important;
+  visibility:visible!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+}
+.dialogue-layer.is-global-dialogue{
+  position:fixed!important;
+  z-index:2147483646!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+
+/* Restore a large and unmistakable corridor climb with one compositor-only transform. */
+.c3-core-rift-029 .arrival-camera{
+  overflow:hidden!important;
+  background:#05020b!important;
+}
+.c3-core-rift-029 .arrival-camera img{
+  position:absolute!important;
+  left:-6%!important;
+  top:-48%!important;
+  width:112%!important;
+  height:196%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:50% 50%!important;
+  transform:translate3d(0,-24%,0) scale(1.015)!important;
+  transform-origin:50% 50%!important;
+  filter:none!important;
+  opacity:.72!important;
+  will-change:transform,opacity!important;
+}
+.c3-core-rift-029.camera-run-058 .arrival-camera img{
+  animation:c3ArrivalClimb059 2.8s cubic-bezier(.55,.02,.22,1) both!important;
+}
+@keyframes c3ArrivalClimb059{
+  0%{transform:translate3d(0,-24%,0) scale(1.015);opacity:.70}
+  16%{opacity:.86}
+  100%{transform:translate3d(0,24%,0) scale(1.015);opacity:1}
+}
+.c3-core-rift-029.handoff .arrival-camera img{
+  animation:none!important;
+  transform:translate3d(0,24%,0) scale(1.015)!important;
+  opacity:1!important;
+  transition:transform 1.05s ease,opacity .28s ease!important;
 }
 </style>
 
