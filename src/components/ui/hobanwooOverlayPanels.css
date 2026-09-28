@@ -326,3 +326,16 @@
   0%, 68.5% { opacity: 0; }
   74.4%, 100% { opacity: 1; }
 }
+
+
+/* v60: keep the ESC story-stop question on one line across all chapter pause dialogs. */
+.chapterStoryPauseDialog h2,
+.chapterGameExitConfirmDialog h2 {
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: clamp(20px, 4.2vw, 34px);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}

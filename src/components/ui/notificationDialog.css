@@ -100,3 +100,13 @@
   from { opacity: 0; transform: translateY(12px) scale(.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+
+/* v60: same one-line story-stop title rule for the shared notification dialog path. */
+.hobanwooNotificationContent h2 {
+  max-width: 100%;
+  font-size: clamp(20px, 4.2vw, 34px);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}

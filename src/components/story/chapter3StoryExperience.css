@@ -403,3 +403,16 @@
   width: min(96dvh, 100vw);
   height: min(100dvh, 104.167vw);
 }
+
+
+/* v60: Chapter 1 exact HUD placement for Chapter 3 wave life display. */
+.chapter3WaveHudTopBar {
+  top: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  padding: 16px 32px 0 20px;
+  justify-content: flex-end;
+}
+.chapter3WaveHudTopBar > :first-child:empty { display: none; }
+.chapter3WaveHudRightColumn { margin-left: auto; align-items: flex-end; }
