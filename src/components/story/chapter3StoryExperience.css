@@ -416,3 +416,29 @@
 }
 .chapter3WaveHudTopBar > :first-child:empty { display: none; }
 .chapter3WaveHudRightColumn { margin-left: auto; align-items: flex-end; }
+
+
+/* v62: force the actual Chapter 3 host-life HUD to the Chapter 1 top-right position. */
+.chapter3WaveHostHud .chapter3WaveHudTopRight {
+  position: absolute !important;
+  top: 16px !important;
+  right: 32px !important;
+  left: auto !important;
+  bottom: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.chapter3WaveHostHud .chapter3WaveHudHp {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin: 0 !important;
+}

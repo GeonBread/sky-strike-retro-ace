@@ -1946,7 +1946,16 @@ function update(dt){
  if(!gameOver){
   updateCombatView(dt);
   if(finalPurification.active)updateFinalPurification(dt);
-  else{updatePlayer(dt);if(!player.dead){updateEnemies(dt);updateBullets(dt);updatePowerUps(dt);updateSmartBomb(dt);updateSpecialWave(dt);updateFinale();}}
+  else{
+   /* v62: death/respawn only pauses the player. Enemy AI, enemy bullets and wave timers keep moving. */
+   updatePlayer(dt);
+   updateEnemies(dt);
+   updateBullets(dt);
+   updatePowerUps(dt);
+   updateSmartBomb(dt);
+   updateSpecialWave(dt);
+   updateFinale();
+  }
  }
  for(const f of effects){
   f.t+=dt;
