@@ -11287,23 +11287,10 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       let raf = 0;
 
       const startArrivalCamera = () => {
-        if (!arrival) return;
-        const started = performance.now();
-        const duration = 2050;
-        const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
-        const frame = now => {
-          const raw = Math.max(0, Math.min(1, (now - started) / duration));
-          const p = ease(raw);
-          const pos = 100 + (5 - 100) * p;
-          const shift = 2.8 + (-3.1 - 2.8) * p;
-          const scale = 1.02 + (1.145 - 1.02) * p;
-          const bright = .60 + (.98 - .60) * p;
-          arrival.style.setProperty('object-position', `50% ${pos.toFixed(2)}%`, 'important');
-          arrival.style.setProperty('transform', `translate3d(0,${shift.toFixed(2)}vh,0) scale(${scale.toFixed(4)})`, 'important');
-          arrival.style.setProperty('filter', `brightness(${bright.toFixed(3)}) saturate(1.04)`, 'important');
-          if (raw < 1) raf = requestAnimationFrame(frame); else raf = 0;
-        };
-        raf = requestAnimationFrame(frame);
+        /* PATCH058: use one compositor-friendly CSS transform instead of writing
+           object-position + transform + filter every animation frame. */
+        if (!arrival || !scene) return;
+        scene.classList.add('camera-run-058');
       };
 
       const prepareHandoff = () => {
@@ -11326,6 +11313,8 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
       /* Slowly wash the whole viewport to pure white while the suction is still accelerating. */
       later(() => scene?.classList.add('white-in'), 3500);
+      /* Once the white cover is opaque, stop painting the heavy rift layers behind it. */
+      later(() => scene?.classList.add('perf-hide-058'), 4850);
       /* White is fully opaque at about 4.7 s and is held as a completely blank white screen for ~2 s. */
       later(() => scene?.classList.add('fade-to-black'), 6700);
       /* Black fades ON TOP of the still-solid white layer, so the portal can never show through the crossfade. */
@@ -12783,6 +12772,152 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 .c3-core-rift-029.black-hold .core-transition-black{opacity:1!important;transition:none!important}
 .c3-core-rift-029.black-hold .core-transition-white{opacity:0!important;transition:none!important}
 .c3-core-rift-029.reveal-core .core-transition-black{opacity:0!important;transition:opacity .9s ease!important}
+</style>
+
+
+
+<style id="chapter3-patch-058-core-rift-performance-style">
+/* === CHAPTER 3 PATCH 058: final-space entrance performance pass ===
+   Keeps PATCH057 timing and visual story, but removes the costly full-screen filters,
+   repaint-heavy background/object-position animation, duplicate tunnel passes, and hidden-layer work. */
+.c3-core-rift-029{
+  contain:layout paint style!important;
+}
+.c3-core-rift-029 .rift-space,
+.c3-core-rift-029 .coord-grid,
+.c3-core-rift-029 .rift-gate,
+.c3-core-rift-029 .rift-gate img,
+.c3-core-rift-029 .depth-tunnel,
+.c3-core-rift-029 .depth-tunnel i,
+.c3-core-rift-029 .space-slabs i,
+.c3-core-rift-029 .arrival-camera img{
+  backface-visibility:hidden!important;
+  transform-style:flat!important;
+}
+/* Large blurred layers were the biggest GPU cost. Keep the glow language without a viewport-sized blur. */
+.c3-core-rift-029 .rift-aura{
+  filter:none!important;
+  background:linear-gradient(90deg,transparent,rgba(113,38,205,.025) 18%,rgba(190,108,255,.20) 48%,rgba(113,38,205,.025) 82%,transparent)!important;
+}
+/* The grid now moves only by transform. Animating background-position repainted most of the viewport. */
+.c3-core-rift-029 .coord-grid{
+  transition:opacity .45s ease,transform 1.05s cubic-bezier(.2,.8,.2,1)!important;
+  background-position:0 0,0 0!important;
+  filter:none!important;
+  will-change:transform,opacity!important;
+}
+.c3-core-rift-029.gate-form .coord-grid,
+.c3-core-rift-029.transit .coord-grid,
+.c3-core-rift-029.suction .coord-grid{
+  background-position:0 0,0 0!important;
+}
+/* Keep the angular gate, but avoid multi-pass drop-shadow/blur on a 5.6x scaled clipped element. */
+.c3-core-rift-029 .rift-gate{
+  filter:none!important;
+  box-shadow:0 0 26px rgba(224,181,255,.72),0 0 66px rgba(131,52,220,.42)!important;
+  will-change:transform,opacity!important;
+}
+.c3-core-rift-029 .rift-gate img{
+  filter:none!important;
+  opacity:.72;
+  transition:transform 1.1s cubic-bezier(.14,.82,.18,1),opacity .55s ease!important;
+  will-change:transform,opacity!important;
+}
+.c3-core-rift-029.gate-open .rift-gate img{opacity:.86!important}
+.c3-core-rift-029.transit .rift-gate img,
+.c3-core-rift-029.suction .rift-gate img{
+  object-position:50% 58%!important;
+  filter:none!important;
+  opacity:1!important;
+}
+/* Six slabs are enough to sell the fracture; the other four no longer receive paint/composite work. */
+.c3-core-rift-029 .space-slabs i:nth-child(n+7){display:none!important}
+.c3-core-rift-029 .space-slabs i{
+  box-shadow:inset 0 0 12px rgba(173,89,255,.08)!important;
+  will-change:transform,opacity!important;
+}
+/* Five depth frames, one pass. PATCH057 used nine frames twice during suction. */
+.c3-core-rift-029 .depth-tunnel i:nth-child(n+6){display:none!important}
+.c3-core-rift-029 .depth-tunnel,
+.c3-core-rift-029.suction .depth-tunnel{
+  filter:none!important;
+  will-change:transform,opacity!important;
+}
+.c3-core-rift-029.suction .depth-tunnel i{
+  animation-duration:.72s!important;
+  animation-iteration-count:1!important;
+}
+/* Suction is now transform/opacity-only. This preserves the pull-in motion without continuous full-screen blur/filter paints. */
+.c3-core-rift-029.suction .rift-space{
+  transform:translate3d(0,-1.2vh,0) scale(1.14)!important;
+  filter:none!important;
+  transition:transform 1.25s cubic-bezier(.12,.86,.16,1),opacity .4s ease!important;
+  will-change:transform!important;
+}
+.c3-core-rift-029.suction .coord-grid{
+  opacity:.72!important;
+  transform:perspective(520px) rotateX(77deg) translate3d(0,-31%,0) scale(1.46)!important;
+  filter:none!important;
+  transition:transform 1.15s cubic-bezier(.1,.9,.15,1),opacity .35s ease!important;
+}
+.c3-core-rift-029.suction .rift-gate{
+  opacity:1!important;
+  transform:translate3d(-50%,-50%,0) scale(4.45)!important;
+  filter:none!important;
+  box-shadow:0 0 32px rgba(238,211,255,.82),0 0 84px rgba(144,60,232,.48)!important;
+  transition:transform 1.35s cubic-bezier(.08,.92,.12,1),opacity .25s ease!important;
+}
+.c3-core-rift-029.suction .rift-gate img{
+  transform:scale(.96)!important;
+  object-position:50% 58%!important;
+  filter:none!important;
+  transition:transform 1.05s cubic-bezier(.08,.9,.12,1),opacity .5s ease!important;
+}
+.c3-core-rift-029.suction .space-slabs i{
+  opacity:0!important;
+  transform:translate3d(var(--tx),var(--ty),0) rotate(var(--r)) scale(.58)!important;
+  transition:transform .72s cubic-bezier(.1,.85,.15,1),opacity .42s ease!important;
+}
+.c3-core-rift-029.suction .axis-lock,
+.c3-core-rift-029.suction .rift-labels{display:none!important}
+/* The white frame is already fully opaque here, so there is no reason to keep rendering the rift underneath for the hold/fade. */
+.c3-core-rift-029.perf-hide-058 .rift-space,
+.c3-core-rift-029.perf-hide-058 .coord-grid,
+.c3-core-rift-029.perf-hide-058 .axis-lock,
+.c3-core-rift-029.perf-hide-058 .rift-aura,
+.c3-core-rift-029.perf-hide-058 .rift-gate,
+.c3-core-rift-029.perf-hide-058 .space-slabs,
+.c3-core-rift-029.perf-hide-058 .depth-tunnel,
+.c3-core-rift-029.perf-hide-058 .rift-labels,
+.c3-core-rift-029.perf-hide-058 .breach-flash{
+  display:none!important;
+}
+/* Corridor climb: one GPU transform animation instead of a JS requestAnimationFrame loop that changed object-position and filter every frame. */
+.c3-core-rift-029 .arrival-camera img{
+  inset:-12.5% -5%!important;
+  width:110%!important;
+  height:125%!important;
+  object-position:50% 50%!important;
+  transform:translate3d(0,12vh,0) scale(1.04)!important;
+  filter:none!important;
+  opacity:.62;
+  will-change:transform,opacity!important;
+}
+.c3-core-rift-029.camera-run-058 .arrival-camera img{
+  animation:c3ArrivalClimb058 2.05s cubic-bezier(.65,0,.35,1) both!important;
+}
+@keyframes c3ArrivalClimb058{
+  0%{transform:translate3d(0,12vh,0) scale(1.04);opacity:.62}
+  100%{transform:translate3d(0,-12vh,0) scale(1.08);opacity:1}
+}
+.c3-core-rift-029.handoff .arrival-camera img{
+  animation:none!important;
+  object-position:50% 50%!important;
+  transform:translate3d(0,-12vh,0) scale(1.08)!important;
+  filter:none!important;
+  opacity:1!important;
+  transition:transform 1.05s ease,opacity .3s ease!important;
+}
 </style>
 
 </body>
