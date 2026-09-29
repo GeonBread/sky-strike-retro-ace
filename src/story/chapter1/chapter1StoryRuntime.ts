@@ -553,6 +553,18 @@ html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) {
   max-height: 100dvh !important;
   aspect-ratio: 24 / 25 !important;
 }
+/* 입학식의 두리번(wander) 프롤로그 연출만 스토리 프레임을 벗어나 브라우저 전체 화면을 사용한다. */
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="wander"] {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
 html.is-embedded-story .dialogue-layer {
   left: 3.5% !important;
   right: 3.5% !important;
