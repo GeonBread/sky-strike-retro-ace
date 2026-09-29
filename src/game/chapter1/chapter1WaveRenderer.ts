@@ -104,11 +104,12 @@ export function renderChapter1EnemySystem(
   ctx.fill();
   ctx.restore();
 
-  ctx.save();
-  ctx.translate(centerX, centerY + bob);
   const rotation = state.index === 4
     ? Math.max(-0.13, Math.min(0.13, state.motionX / 900)) + Math.sin(state.age * 3.2) * 0.035
     : Math.sin(state.age * 2) * 0.025;
+
+  ctx.save();
+  ctx.translate(centerX, centerY + bob);
   ctx.rotate(rotation);
   ctx.shadowColor = color;
   ctx.shadowBlur = 9 + Math.sin(performance.now() * 0.004 + state.phase) * 2;
@@ -116,46 +117,15 @@ export function renderChapter1EnemySystem(
   drawContainedImage(ctx, image, 0, 0, enemy.width, enemy.height);
   ctx.restore();
 
+  // Chapter 3 wave hit feedback: briefly flash the entire monster sprite white.
   if (state.hitFlash > 0) {
     const flash = Math.max(0, Math.min(1, state.hitFlash / 0.12));
-    const spread = (1 - flash) * 10;
-    const hitX = Number.isFinite(state.hitX) ? state.hitX! : centerX;
-    const hitY = (Number.isFinite(state.hitY) ? state.hitY! : centerY) + bob;
-    const angle = Number.isFinite(state.hitAngle) ? state.hitAngle! : -Math.PI * 0.5;
-
     ctx.save();
-    ctx.translate(hitX, hitY);
-    ctx.rotate(angle + Math.PI * 0.5);
-    ctx.globalCompositeOperation = "screen";
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 7 * flash;
-    ctx.lineCap = "square";
-
-    ctx.globalAlpha = flash * 0.9;
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 1.6 + flash * 1.8;
-    ctx.beginPath();
-    ctx.moveTo(-8 - spread * 0.25, -5 - spread * 0.18);
-    ctx.lineTo(9 + spread * 0.35, 6 + spread * 0.22);
-    ctx.moveTo(-6 - spread * 0.18, 7 + spread * 0.2);
-    ctx.lineTo(7 + spread * 0.28, -8 - spread * 0.24);
-    ctx.stroke();
-
-    ctx.globalAlpha = flash * 0.72;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.4 + flash;
-    for (const side of [-1, 1]) {
-      ctx.beginPath();
-      ctx.moveTo(side * (5 + spread * 0.2), -2);
-      ctx.lineTo(side * (13 + spread), -7 - spread * 0.22);
-      ctx.stroke();
-    }
-
-    ctx.rotate(Math.PI * 0.25);
-    ctx.globalAlpha = flash * 0.82;
-    ctx.fillStyle = "#ffffff";
-    const core = 3 + flash * 2.5;
-    ctx.fillRect(-core * 0.5, -core * 0.5, core, core);
+    ctx.translate(centerX, centerY + bob);
+    ctx.rotate(rotation);
+    ctx.globalAlpha = flash * 0.62;
+    ctx.filter = "brightness(4) saturate(0)";
+    drawContainedImage(ctx, image, 0, 0, enemy.width, enemy.height);
     ctx.restore();
   }
 

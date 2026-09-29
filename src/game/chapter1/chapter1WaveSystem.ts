@@ -882,6 +882,10 @@ export function cancelChapter1ScheduleWarningsSystem(engine: Chapter1WaveEngine,
 export function deactivateChapter1EnemySystem(engine: Chapter1WaveEngine, enemy: Enemy): void {
   if (!isChapter1EnemyType(enemy.type)) return;
   if (enemy.chapter1?.index === 6) cancelChapter1ScheduleWarningsSystem(engine, enemy);
+  if (engine.chapter1Wave?.enabled && !engine.bossActive && !engine.chapter1Boss?.active) {
+    // The shared renderer applies +/- intensity / 2; 10 matches Chapter 2's local +/- 5 death shake.
+    engine.screenShakeIntensity = Math.max(engine.screenShakeIntensity || 0, 10);
+  }
 }
 
 export function updateChapter1WaveEnemiesSystem(engine: Chapter1WaveEngine, dt: number): void {

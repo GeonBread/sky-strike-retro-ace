@@ -1552,7 +1552,7 @@ function processRealPlayerBullets(engine: any) {
       if (Math.hypot(shotX - enemy.x, shotY - enemy.y) >= shotRadius + enemy.r * 0.72) continue;
       shot.active = false;
       enemy.hp -= Math.max(1, Number(shot.damage) || 1);
-      enemy.hitFlash = 0.1;
+      enemy.hitFlash = 1;
       const impactCanvasX = shot.x + Math.max(2, shot.width || 0) / 2;
       const impactCanvasY = shot.y + Math.max(2, shot.height || 0) / 2;
       spawnChapter1EnemyHitEffectSystem(engine, impactCanvasX, impactCanvasY);
@@ -1667,7 +1667,7 @@ export function updateChapter2WaveSystem(engine: any, dt: number) {
   updateWaveSequence(engine, dt);
   for (const enemy of enemies) {
     spawnContextWaveRunId = enemy.waveRunId;
-    enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt);
+    enemy.hitFlash = Math.max(0, (enemy.hitFlash || 0) - dt * 7.5);
     updateEnemy(enemy, dt);
   }
   for (const bullet of bullets) {
@@ -1827,6 +1827,12 @@ function drawEnemy(e){
  ctx.save();ctx.shadowColor=color;ctx.shadowBlur=8;
  if(e.type==="submarine"||e.type==="drone"||(e.type==="highlighter"&&(!im||!im.complete||!im.naturalWidth)))drawSpecial(e.x,ry,1);else drawImageFit(im,e.x,ry,w,h,rot,alpha);
  ctx.restore();
+ const hitFlashAlpha=clamp(e.hitFlash||0,0,1)*.62;
+ if(hitFlashAlpha>0){
+  ctx.save();ctx.globalAlpha=hitFlashAlpha;ctx.filter="brightness(4) saturate(0)";
+  if(e.type==="submarine"||e.type==="drone"||(e.type==="highlighter"&&(!im||!im.complete||!im.naturalWidth)))drawSpecial(e.x,ry,1);else drawImageFit(im,e.x,ry,w,h,rot,alpha);
+  ctx.restore();
+ }
  drawMonsterDataSparks(e,e.x,ry,w,h,color);drawSpawnScan(e,e.x,ry,w,h,color);drawAttackCue(e,e.x,ry,w,h,color);
 
  if(e.type==="pointer"&&(e.state==="aim"||e.state==="flash")){const oy=e.y;e.y=ry;drawPointerTelegraph(e);e.y=oy}
