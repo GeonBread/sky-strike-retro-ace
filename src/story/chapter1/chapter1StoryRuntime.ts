@@ -397,6 +397,16 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       <div class="chapter1-core-portal-entry-fade"></div>`;
   if (normalized.includes(corePortalMarkupHook)) normalized = normalized.replace(corePortalMarkupHook, corePortalMarkupV26);
 
+  // 포탈 레이어를 story-stage 내부가 아니라 챕터 1 전체 뷰포트 호스트에 붙인다.
+  // 스토리 프레임이 24:25로 중앙 정렬되어 있어도 포탈 중심은 실제 브라우저 화면 정중앙을 유지한다.
+  const corePortalHostHook = `    storyStage.appendChild(corePortalOverlay);`;
+  const corePortalHostFullscreen = `    const portalHost = storyStage.closest('.chapter1-story-mount') || storyStage;
+    portalHost.appendChild(corePortalOverlay);`;
+  if (!normalized.includes(corePortalHostHook)) {
+    throw new Error('Chapter 1 core portal host hook was not found.');
+  }
+  normalized = normalized.replace(corePortalHostHook, corePortalHostFullscreen);
+
   const corePortalEntryHook = `  function startBossEntryCinematic(bossIntroCompletionAction = 'startBossBattle') {
     stopTyping();
     if (dialogueOpenTimer !== null) window.clearTimeout(dialogueOpenTimer);
@@ -464,9 +474,15 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       portal.classList.remove('is-opening', 'is-entering', 'is-traveling');
       portal.remove();
       corePortalOverlay = null;
-      corePortalSequenceTimer = null;
       storyStage.classList.remove('is-core-portal-fullscreen');
-      beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
+
+      /* 포탈 도착 직후 대사를 열지 않고, 기존 학사 코어 내부 투어 연출을 4초간 전체 화면으로 재생한다. */
+      setBossEntryStageClass('is-entry-interior-tour');
+      corePortalSequenceTimer = window.setTimeout(() => {
+        corePortalSequenceTimer = null;
+        setBossEntryStageClass('');
+        beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
+      }, 4000);
     }, 8500);
   }`;
   if (!normalized.includes(corePortalEntryHook)) {
@@ -660,9 +676,11 @@ html.is-embedded-story .story-stage.is-boss-appearance-fullscreen #gameCanvas {
 
 /* CH1 코어 영역 이동: 일러스트 없이, 세워진 타원형 포탈 자체가 영롱하게 발광한다. */
 html.is-embedded-story .chapter1-core-portal-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 14;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: 100001;
   pointer-events: none;
   overflow: hidden;
   opacity: 0;
@@ -677,8 +695,8 @@ html.is-embedded-story .chapter1-core-portal-overlay::after {
   position: absolute;
   left: 50%;
   top: 43%;
-  width: min(52cqw, 500px);
-  height: min(72cqh, 650px);
+  width: min(52vw, 500px);
+  height: min(72dvh, 650px);
   border-radius: 50% / 44%;
   transform: translate(-50%, -50%) scale(.72);
   opacity: 0;
@@ -694,8 +712,8 @@ html.is-embedded-story .chapter1-core-portal-overlay::before {
   filter: blur(7px);
 }
 html.is-embedded-story .chapter1-core-portal-overlay::after {
-  width: min(62cqw, 590px);
-  height: min(82cqh, 740px);
+  width: min(62vw, 590px);
+  height: min(82dvh, 740px);
   background:
     repeating-conic-gradient(from 12deg at 50% 50%, rgba(255,255,255,.09) 0 3deg, transparent 3deg 15deg),
     radial-gradient(ellipse at center, transparent 35%, rgba(129,225,255,.10) 48%, rgba(255,219,86,.08) 56%, transparent 69%);
@@ -715,11 +733,11 @@ html.is-embedded-story .chapter1-core-portal-ring {
   position: absolute;
   left: 50%;
   top: 43%;
-  width: min(25cqw, 238px);
-  height: min(55cqh, 520px);
+  width: min(25vw, 238px);
+  height: min(55dvh, 520px);
   transform: translate(-50%, -50%) scale(.025);
   border-radius: 50% / 44%;
-  padding: clamp(10px, 1.35cqw, 16px);
+  padding: clamp(10px, 1.35vw, 16px);
   background:
     conic-gradient(from 0deg, #fff 0deg, #fffbd1 36deg, #ffd84d 92deg, #85e6ff 155deg, #fff 214deg, #ffe26b 278deg, #8ce7ff 326deg, #fff 360deg);
   box-shadow:
