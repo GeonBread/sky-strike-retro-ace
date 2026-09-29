@@ -53,7 +53,7 @@
 
 .chapter3StoryRouteSelect {
   position: fixed;
-  z-index: 35;
+  z-index: 1000;
   top: 14px;
   right: 16px;
   min-width: 92px;
@@ -64,6 +64,9 @@
   color: #fff;
   font: 900 13px/1 "Noto Sans KR", sans-serif;
   cursor: pointer;
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
   backdrop-filter: blur(6px);
 }
 
@@ -385,10 +388,6 @@
   gap: 8px;
 }
 
-.chapter3StoryExperience.is-wave-active .chapter3StoryRouteSelect {
-  top: 86px;
-  right: 16px;
-}
 
 
 /* v56: keep Chapter 3 wave viewport at an exact 922:960 ratio so the iframe/canvas cannot stretch sprites horizontally. */
