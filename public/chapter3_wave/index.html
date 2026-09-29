@@ -288,9 +288,9 @@ const glowCache=new Map();
 const MAX_GLOW_CACHE=128;
 const USE_SPRITE_SHADOWS=false;
 const MAX_EFFECTS=72;
-const ENEMY_VISUAL_SCALE=1.30;
+const ENEMY_VISUAL_SCALE=1.66;
 const ENEMY_HITBOX_SCALE=1.14;
-const BULLET_VISUAL_SCALE=1.55;
+const BULLET_VISUAL_SCALE=2.00;
 const BULLET_KIND_BY_ENEMY={drone:'orb',swarm:'pod',snake:'paperChip',splitter:'splitShard',tractor:'hook'};
 function preloadSprite(path){
  if(!path)return null;
@@ -479,6 +479,25 @@ function beamPoint(v){return v&&typeof v.x==='number'?{x:v.x,y:v.y}:{x:0,y:0};}
 
 
 function addEffect(o){if(o.kind==='hit'&&effects.length>=MAX_EFFECTS*.72)return;if(effects.length>=MAX_EFFECTS)effects.shift();effects.push({...o,t:o.t??0,life:o.life??.5});}
+let chapter2DeathShake072=0;
+function addChapter2DeathParticle072(x,y,color,speed=180){
+ const a=rand(0,Math.PI*2),particleSpeed=rand(speed*.35,speed);
+ addEffect({
+  kind:'ch2DeathParticle072',x,y,
+  vx:Math.cos(a)*particleSpeed,vy:Math.sin(a)*particleSpeed,
+  life:rand(.2,.48),size:rand(1.5,4.2),color,
+  shape:particleSpeed>120?'streak':'diamond',spin:rand(-8,8),phase:rand(0,Math.PI*2)
+ });
+}
+function spawnChapter2EnemyDeath072(e){
+ const color=enemyGlowColor(e);
+ const isSmall=e.type==='swarm';
+ const count=isSmall?14:22;
+ const speed=isSmall?190:260;
+ for(let i=0;i<count;i++)addChapter2DeathParticle072(e.x,e.y,color,speed);
+ addEffect({kind:'ch2DeathPulse072',x:e.x,y:e.y,life:.48,r:e.r*.75,color,alpha:1});
+ chapter2DeathShake072=Math.max(chapter2DeathShake072,isSmall?5:9);
+}
 function spawnChapter1LikeEnemyHit(x,y){
  addEffect({kind:'ch1HitVanish',x,y,t:0,life:.2785,color:'#76e8ff',size:7,strength:.55});
  for(let i=0;i<2;i++){
@@ -1556,7 +1575,7 @@ function splitEnemy(e){
  }
 }
 function maybeDropPowerUp(e){if(!EMBEDDED||e.attackable===false||Math.random()>=.12)return;powerups.push({x:e.x,y:e.y,r:11,vy:120,type:Math.random()<.30?'heal':'power',t:0});}
-function killEnemy(e,rewardDrop=false){if(e.dead)return;if(waves[waveIndex]?.special==='grandFinaleMixed'&&e.grandBatch!=null&&!e.grandDefeatCounted){e.grandDefeatCounted=true;specialState.grandBatchDefeated=specialState.grandBatchDefeated||{};specialState.grandBatchDefeated[e.grandBatch]=(specialState.grandBatchDefeated[e.grandBatch]||0)+1;}e.dead=true;if(rewardDrop)maybeDropPowerUp(e);addEffect({kind:'burst',x:e.x,y:e.y,life:e.type==='swarm'?.18:.35,color:e.color});if(e.type!=='swarm')addEffect({kind:'ring',x:e.x,y:e.y,life:.28,color:enemyGlowColor(e)});if(e.type==='splitter')splitEnemy(e);if(e.type==='tractor')rebuildPairs();if(e.type==='snake')compactSnakeFormation();}
+function killEnemy(e,rewardDrop=false){if(e.dead)return;if(waves[waveIndex]?.special==='grandFinaleMixed'&&e.grandBatch!=null&&!e.grandDefeatCounted){e.grandDefeatCounted=true;specialState.grandBatchDefeated=specialState.grandBatchDefeated||{};specialState.grandBatchDefeated[e.grandBatch]=(specialState.grandBatchDefeated[e.grandBatch]||0)+1;}e.dead=true;if(rewardDrop)maybeDropPowerUp(e);spawnChapter2EnemyDeath072(e);if(e.type==='splitter')splitEnemy(e);if(e.type==='tractor')rebuildPairs();if(e.type==='snake')compactSnakeFormation();}
 
 const PLAYER_BULLET_SPEED_MULT=1.16;
 function addSciencePlayerBullet(kind,x,y,size,vxFrame,vyFrame,damage){
@@ -2145,9 +2164,13 @@ function update(dt){
    const drag=Math.pow(.975,dt*60);f.vx*=drag;f.vy*=drag;
   }else if(f.kind==='bombParticle'){
    f.x+=f.vx*dt;f.y+=f.vy*dt;
+  }else if(f.kind==='ch2DeathParticle072'){
+   f.x+=f.vx*dt;f.y+=f.vy*dt;
+   f.vx*=Math.pow(.2,dt);f.vy*=Math.pow(.2,dt);
   }
  }
  effects=effects.filter(f=>f.t<f.life);
+ chapter2DeathShake072*=Math.pow(.03,dt);
  if(finalPurification.active)return;
  if(!gameOver&&isWaveDone()){
   waveClearTimer+=dt;
@@ -2464,7 +2487,18 @@ function drawBomb(){
  ctx.restore();
 }
 function drawEffects(){for(const f of effects){const p=clamp(f.t/f.life,0,1);
- if(f.kind==='bombParticle'){ctx.save();ctx.globalAlpha=1-p;ctx.fillStyle=f.color;ctx.fillRect(f.x,f.y,f.size,f.size);ctx.restore();}
+ const k=1-p;
+ if(f.kind==='ch2DeathPulse072'){
+  ctx.save();ctx.globalAlpha=k*(f.alpha??1);ctx.strokeStyle=f.color;ctx.lineWidth=5;
+  ctx.beginPath();ctx.arc(f.x,f.y,f.r+f.t*90,0,Math.PI*2);ctx.stroke();ctx.restore();
+ }
+ else if(f.kind==='ch2DeathParticle072'){
+  const speed=Math.hypot(f.vx,f.vy);ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=k;ctx.strokeStyle=f.color;ctx.fillStyle=f.color;
+  if(f.shape==='streak'||speed>120){const d=speed||1,dx=f.vx/d,dy=f.vy/d,L=clamp(speed*.035,5,18);ctx.lineWidth=Math.max(1,f.size);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.x-dx*L,f.y-dy*L);ctx.stroke();}
+  else{ctx.translate(f.x,f.y);ctx.rotate(Math.PI*.25+f.t*f.spin+f.phase);ctx.fillRect(-f.size/2,-f.size/2,f.size,f.size);}
+  ctx.restore();
+ }
+ else if(f.kind==='bombParticle'){ctx.save();ctx.globalAlpha=1-p;ctx.fillStyle=f.color;ctx.fillRect(f.x,f.y,f.size,f.size);ctx.restore();}
  else if(f.kind==='ring'){ctx.strokeStyle=f.color;ctx.globalAlpha=1-p;ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y,10+70*p,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
  else if(f.kind==='ch1HitVanish'){
   const alpha=1-p,size=f.size*(1+p*.75);ctx.save();ctx.translate(f.x,f.y);ctx.globalCompositeOperation='screen';ctx.strokeStyle=f.color;ctx.fillStyle=f.color;ctx.shadowColor=f.color;ctx.shadowBlur=10*f.strength;ctx.globalAlpha=alpha*.85;ctx.lineWidth=Math.max(1.5,3*alpha*f.strength);ctx.rotate(Math.PI/4+p*.6);ctx.strokeRect(-size*.34,-size*.34,size*.68,size*.68);ctx.rotate(-Math.PI/4-p*.6);for(let k=0;k<4;k++){const a=k*Math.PI/2+p*.35;ctx.beginPath();ctx.moveTo(Math.cos(a)*size*.18,Math.sin(a)*size*.18);ctx.lineTo(Math.cos(a)*size*.72,Math.sin(a)*size*.72);ctx.stroke();}ctx.restore();
@@ -2559,7 +2593,7 @@ function drawChapter1PurificationHud069(){
 }
 
 function drawFinalPurification(){}
-function render(){drawBG();drawHazards();for(const e of enemies)drawEnemy(e);drawBullets();drawPowerUps();drawCombatFrame();drawPlayer();drawFinalPurification();drawEffects();drawBomb();drawChapter1PurificationHud069();
+function render(){ctx.save();if(chapter2DeathShake072>.2)ctx.translate(rand(-chapter2DeathShake072,chapter2DeathShake072),rand(-chapter2DeathShake072,chapter2DeathShake072));drawBG();drawHazards();for(const e of enemies)drawEnemy(e);drawBullets();drawPowerUps();drawCombatFrame();drawPlayer();drawFinalPurification();drawEffects();drawBomb();ctx.restore();drawChapter1PurificationHud069();
  renderEmbeddedLifeHud066();
  const hearts=Array.from({length:player.maxHp},(_,i)=>i<player.hp?'♥':'♡').join(' '),bombs=Array.from({length:3},(_,i)=>i<player.bombs?'◆':'◇').join(' ');
  hudLeft.innerHTML=`<b>${waves[waveIndex].title}</b><br>${EMBEDDED?`WAVE ${waveIndex+1} / ${waves.length}`:waves[waveIndex].desc}`;
