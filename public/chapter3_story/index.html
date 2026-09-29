@@ -3457,9 +3457,9 @@ window.STORY_SCENES = {
   graduation_core: { chapter:'CHAPTER 3', title:'첨성대 코어 · 졸업 영역', subtitle:'최심부', background:'chapter3/backgrounds/digrion_core.png', position:'center 18%', tint:'rgba(6,3,12,.10)' },
   graduation_core_purified: { chapter:'CHAPTER 3', title:'첨성대 코어 · 졸업 영역', subtitle:'정화된 최심부', background:'chapter3/backgrounds/graduation_core_purified.png', position:'center center', tint:'rgba(255,244,220,.02)', filter:'brightness(.92) saturate(.96) contrast(1.02)' },
   campus_winter: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'4학년 2학기 종료', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(152,177,195,.18)' },
-  graduation_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'졸업식', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(22,14,5,.08)' },
-  ceremony_hall: { chapter:'CHAPTER 3', title:'경북대학교 학위수여식장', subtitle:'2030학년도 전기 학위수여식', background:'bg_presentation_room.svg', position:'center center', tint:'rgba(8,8,10,.20)' },
-  graduation_campus: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'졸업식이 끝난 뒤', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(20,12,5,.10)' },
+  graduation_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'졸업식', background:'chapter3/backgrounds/graduation_ceremony_entrance.png', position:'center center', tint:'rgba(22,14,5,.04)' },
+  ceremony_hall: { chapter:'CHAPTER 3', title:'경북대학교 학위수여식장', subtitle:'2030학년도 전기 학위수여식', background:'chapter3/backgrounds/graduation_ceremony_hall.png', position:'center center', tint:'rgba(8,8,10,.06)' },
+  graduation_campus: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'졸업식이 끝난 뒤', background:'chapter3/backgrounds/graduation_ceremony_entrance.png', position:'center center', tint:'rgba(20,12,5,.05)' },
   cheomseongdae_graduation: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'마지막 대화', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(24,14,6,.18)' },
   campus_spring: { chapter:'EPILOGUE', title:'경북대학교 캠퍼스', subtitle:'새로운 학기', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(8,18,10,.08)' }
 };
@@ -4248,6 +4248,7 @@ function c3PortalStudentInfoMarkup(){
     <div class="ch3-portal-student-info">
       <b>학번</b><span>2027XXXXXX</span><b>성명</b><span>호반우</span><b>캠퍼스구분</b><span>산격동 캠퍼스</span>
       <b>학적세부상태</b><span>재학</span><b>과정구분</b><span>학사과정</span><b>학년/분반</b><span>4 /</span>
+      <b>입학구분</b><span>신입학</span><b>입학년도</b><span>2027</span><b>재학기간</b><span>4년</span>
       <b>교육과정년도</b><span>2027</span><b>학과</b><span class="wide">공과대학 기계공학부 기계공학전공</span>
     </div>`;
 }
@@ -4276,7 +4277,7 @@ function c3PortalOverviewMarkup(){
 }
 
 function c3PortalQualificationMarkup(){
-  const rows=[['실용영어영역','면제','편입생'],['상담영역','면제','편입생'],['소프트웨어영역','3학점 이수','이수 완료']];
+  const rows=[['실용영어영역','이수 완료','신입학'],['상담영역','이수 완료','신입학'],['소프트웨어영역','3학점 이수','이수 완료']];
   return `<div class="ch3-result-table-wrap"><h4>졸업자격인정정보 <span>3건</span></h4><table class="ch3-result-table"><thead><tr><th>No</th><th>졸업자격인정기준구분</th><th>처리내용</th><th>상세</th><th>충족여부</th><th>판정</th></tr></thead><tbody>${rows.map((r,i)=>`<tr data-pass-row="qualification${i}"><td>${i+1}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="pass-y" data-pass="qualification${i}">Y</td><td><b class="pass-label">통과</b></td></tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -4827,7 +4828,7 @@ window.STORY_CUSTOM_EFFECTS['semester-end-title'] = ({ layer, item }) => c3Mount
   <div class="ch3-semester-end"><small>${c3Esc(item.date||'2030. 12. 20.')}</small><strong>${c3Esc(item.title||'4학년 2학기 종료')}</strong><span>LAST SEMESTER COMPLETE</span></div>`);
 
 window.STORY_CUSTOM_EFFECTS['graduation-day-atmosphere'] = ({ layer }) => c3Mount(layer, `
-  <div class="ch3-graduation-day"><div class="banner">경북대학교 졸업식</div><div class="graduates"><i></i><i></i><i></i><i></i><i></i></div><strong>졸업식</strong><span>꽃다발 · 학사모 · 기념사진</span></div>`);
+  <div class="ch3-graduation-day ch3-graduation-day-image087"><div class="banner">2031년 2월 · 학위수여식</div><strong>졸업식 날</strong></div>`);
 
 window.STORY_CUSTOM_EFFECTS['degree-ceremony-opening'] = ({ layer }) => c3Mount(layer, `
   <div class="ch3-degree-ceremony"><small>KYUNGPOOK NATIONAL UNIVERSITY</small><strong>2030학년도 전기 학위수여식</strong><span>졸업생 여러분의 새로운 출발을 축하합니다.</span></div>`);
@@ -4836,7 +4837,7 @@ window.STORY_CUSTOM_EFFECTS['graduate-name-list'] = ({ layer, item }) => c3Mount
   <div class="ch3-graduate-list"><small>졸업생 명단</small><div class="names"><span>김○○</span><span>박○○</span><b>${c3Esc(item.name||'호반우')}</b><span>이○○</span><span>최○○</span></div></div>`);
 
 window.STORY_CUSTOM_EFFECTS['diploma-screen'] = ({ layer, item }) => c3Mount(layer, `
-  <div class="ch3-diploma"><div class="paper"><small>경북대학교</small><strong>학 위 증</strong><p>성명 &nbsp; <b>${c3Esc(item.name||'호반우')}</b></p><span>위 사람에게 소정의 학위를 수여함.</span><em>2031년 2월 20일</em></div></div>`);
+  <div class="ch3-diploma ch3-diploma-image087"><img src="assets/chapter3/illustrations/hobanwoo_degree_certificate.png" alt="호반우의 경북대학교 학위증서"></div>`);
 
 /* Revised final card: no chapter-clear/result popup, only the story title and FIN as requested. */
 window.STORY_CUSTOM_EFFECTS['chapter-ending'] = ({ layer, item }) => c3Mount(layer, `
@@ -13769,5 +13770,51 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
   background:rgba(86,48,8,.98)!important;
 }
 </style>
+
+<style id="chapter3-patch-087-graduation-assets-style">
+/* PATCH 087: user-provided graduation ceremony backgrounds + diploma illustration. */
+.ch3-diploma.ch3-diploma-image087{
+  position:absolute!important;
+  inset:0!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:3.5vh 3.5vw!important;
+  background:rgba(5,4,6,.74)!important;
+  overflow:hidden!important;
+}
+.ch3-diploma-image087>img{
+  display:block!important;
+  width:auto!important;
+  height:auto!important;
+  max-width:min(84vw,860px)!important;
+  max-height:92vh!important;
+  object-fit:contain!important;
+  filter:drop-shadow(0 24px 54px rgba(0,0,0,.48))!important;
+  animation:c3DiplomaImage087 1.15s cubic-bezier(.16,.82,.24,1) both!important;
+}
+@keyframes c3DiplomaImage087{
+  from{opacity:0;transform:translateY(18px) scale(.965)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.ch3-graduation-day.ch3-graduation-day-image087{
+  background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.28))!important;
+  align-content:end!important;
+  padding-bottom:8vh!important;
+  text-shadow:0 3px 16px rgba(0,0,0,.72)!important;
+}
+.ch3-graduation-day-image087 .banner{
+  background:rgba(150,20,35,.86)!important;
+  backdrop-filter:blur(5px)!important;
+}
+.ch3-graduation-day-image087 strong{
+  color:#fff!important;
+  font-size:clamp(42px,5vw,76px)!important;
+}
+.ch3-degree-ceremony{
+  background:linear-gradient(180deg,rgba(5,5,8,.08),rgba(5,5,8,.36))!important;
+  text-shadow:0 3px 18px rgba(0,0,0,.8)!important;
+}
+</style>
+
 </body>
 </html>
