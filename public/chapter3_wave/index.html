@@ -332,6 +332,7 @@ waves.forEach((w,i)=>{
 });
 
 let waveIndex=0, invincible=!EMBEDDED, autoProgress=EMBEDDED, waveTime=0, waveClearTimer=0, noticeTimer=0, finalePhase=0, finaleNext=0, specialState={};
+let purificationWaveProgress069=0;
 let paused=false,lastHudEmitAt=0;
 let enemies=[], bullets=[], playerBullets=[], effects=[], links=[], tractorPairs=[], boomerangs=[], powerups=[];
 const keys={};
@@ -1373,7 +1374,7 @@ function updateSurvivalWave(dt){
 
 function resetPlayerRun(){player.x=W/2;player.y=H-140;player.hp=player.maxHp;player.bombs=3;player.powerLevel=INITIAL_POWER_LEVEL;player.hitTimer=0;player.fire=0;player.drag=false;player.dead=false;player.respawnTimer=0;bombActive=false;bombRadius=0;bombOriginX=W/2;bombOriginY=H-140;bombMaxRadius=Math.hypot(W,H)+80;gameOver=false;waveFailureSent=false;waveRunCompleteSent=false;finalPurification={active:false,t:0,originX:W/2,originY:H-140,sent:false};}
 function startWave(i,resetRun=false){
- waveIndex=clamp(i,0,waves.length-1);enemies=[];bullets=[];playerBullets=[];effects=[];links=[];tractorPairs=[];boomerangs=[];survivalBeams=[];powerups=[];snakeState=null;waveTime=0;waveClearTimer=0;finalePhase=0;finaleNext=1;specialState={};movementMode='free';playerFireEnabled=true;finalPurification={active:false,t:0,originX:player.x,originY:player.y,sent:false};setCombatViewImmediate(FULL_COMBAT_VIEW);if(resetRun)resetPlayerRun();else clampPlayerToCombatView(false);
+ waveIndex=clamp(i,0,waves.length-1);enemies=[];bullets=[];playerBullets=[];effects=[];links=[];tractorPairs=[];boomerangs=[];survivalBeams=[];powerups=[];snakeState=null;waveTime=0;waveClearTimer=0;finalePhase=0;finaleNext=1;specialState={};purificationWaveProgress069=0;movementMode='free';playerFireEnabled=true;finalPurification={active:false,t:0,originX:player.x,originY:player.y,sent:false};setCombatViewImmediate(FULL_COMBAT_VIEW);if(resetRun)resetPlayerRun();else clampPlayerToCombatView(false);
  const w=waves[waveIndex],sp=w.special;
  if(sp==='droneBasic')spawnDroneBasic();
  else if(sp==='droneSides')spawnDroneSides();
@@ -2284,6 +2285,88 @@ function drawEffects(){for(const f of effects){const p=clamp(f.t/f.life,0,1);
  else{for(let k=0;k<7;k++){const a=k/7*Math.PI*2;circle(f.x+Math.cos(a)*25*p,f.y+Math.sin(a)*25*p,4*(1-p),f.color);}}
 }}
 
+function getPurificationRatio069(){
+ const waveCount=Math.max(1,waves.length);
+ let currentWaveRatio=0;
+ if(finalPurification.active)currentWaveRatio=1;
+ else if(isWaveDone())currentWaveRatio=1;
+ else{
+  const live=enemies.filter(e=>!e.dead&&e.countsForClear!==false&&e.attackable!==false);
+  const totalMaxHp=live.reduce((sum,e)=>sum+Math.max(1,Number(e.maxHp)||Number(e.hp)||1),0);
+  const remainingHp=live.reduce((sum,e)=>sum+Math.max(0,Number(e.hp)||0),0);
+  const damagedRatio=totalMaxHp>0?1-remainingHp/totalMaxHp:0;
+  /* Chapter 3 has several timed/survival waves. Use elapsed progress as the event component,
+     then combine it with current enemy damage in the same 70/30 spirit as Chapter 1. */
+  const eventRatio=Math.min(.94,Math.max(0,waveTime/18));
+  currentWaveRatio=Math.min(.985,eventRatio*.7+damagedRatio*.3);
+ }
+ purificationWaveProgress069=Math.max(purificationWaveProgress069,currentWaveRatio);
+ const completedWaves=finalPurification.active?waveCount:waveIndex;
+ return Math.max(0,Math.min(1,(completedWaves+purificationWaveProgress069)/waveCount));
+}
+
+function drawChapter1PurificationHud069(){
+ if(!EMBEDDED)return;
+ const purificationRatio=getPurificationRatio069();
+ const percent=Math.round(purificationRatio*100);
+
+ /* Copied from Chapter 1 renderChapter1WaveHudSystem: same dimensions, typography,
+    colors, shadows, border, progress bar and centered placement. */
+ const centerX=W/2;
+ const panelWidth=Math.min(330,W*.42);
+ const panelHeight=48;
+ const panelX=centerX-panelWidth/2;
+ const panelY=15;
+ const barX=panelX+14;
+ const barY=panelY+27;
+ const barWidth=panelWidth-28;
+ const barHeight=9;
+
+ ctx.save();
+ ctx.shadowColor='rgba(246,195,74,.34)';
+ ctx.shadowBlur=13;
+ ctx.fillStyle='rgba(4,8,15,.88)';
+ ctx.strokeStyle='rgba(246,195,74,.9)';
+ ctx.lineWidth=2;
+ ctx.beginPath();
+ ctx.roundRect(panelX,panelY,panelWidth,panelHeight,8);
+ ctx.fill();
+ ctx.stroke();
+ ctx.shadowBlur=0;
+
+ ctx.textBaseline='middle';
+ ctx.font="900 12px 'Noto Sans KR', system-ui, sans-serif";
+ ctx.fillStyle='#fff1b5';
+ ctx.textAlign='left';
+ ctx.fillText('정화 에너지',panelX+14,panelY+15);
+ ctx.textAlign='right';
+ ctx.fillStyle=percent>=100?'#fff7cf':'#9de9ff';
+ ctx.fillText(`${percent}%`,panelX+panelWidth-14,panelY+15);
+
+ ctx.fillStyle='rgba(2,6,13,.95)';
+ ctx.strokeStyle='rgba(255,255,255,.22)';
+ ctx.lineWidth=1;
+ ctx.beginPath();
+ ctx.roundRect(barX,barY,barWidth,barHeight,5);
+ ctx.fill();
+ ctx.stroke();
+
+ const fillWidth=Math.max(0,barWidth*purificationRatio);
+ if(fillWidth>0){
+  const gradient=ctx.createLinearGradient(barX,0,barX+barWidth,0);
+  gradient.addColorStop(0,'#38d8e8');
+  gradient.addColorStop(.62,'#f6c34a');
+  gradient.addColorStop(1,'#fff4a8');
+  ctx.shadowColor=percent>=100?'#fff3a8':'#38d8e8';
+  ctx.shadowBlur=percent>=100?14:7;
+  ctx.fillStyle=gradient;
+  ctx.beginPath();
+  ctx.roundRect(barX,barY,fillWidth,barHeight,5);
+  ctx.fill();
+ }
+ ctx.restore();
+}
+
 function drawFinalPurification(){
  if(!finalPurification.active)return;
  const t=finalPurification.t,cx=finalPurification.originX,cy=finalPurification.originY;
@@ -2300,7 +2383,7 @@ function drawFinalPurification(){
  }
  ctx.restore();
 }
-function render(){drawBG();drawHazards();for(const e of enemies)drawEnemy(e);drawBullets();drawPowerUps();drawCombatFrame();drawPlayer();drawFinalPurification();drawEffects();drawBomb();
+function render(){drawBG();drawHazards();for(const e of enemies)drawEnemy(e);drawBullets();drawPowerUps();drawCombatFrame();drawPlayer();drawFinalPurification();drawEffects();drawBomb();drawChapter1PurificationHud069();
  renderEmbeddedLifeHud066();
  const hearts=Array.from({length:player.maxHp},(_,i)=>i<player.hp?'♥':'♡').join(' '),bombs=Array.from({length:3},(_,i)=>i<player.bombs?'◆':'◇').join(' ');
  hudLeft.innerHTML=`<b>${waves[waveIndex].title}</b><br>${EMBEDDED?`WAVE ${waveIndex+1} / ${waves.length}`:waves[waveIndex].desc}`;
