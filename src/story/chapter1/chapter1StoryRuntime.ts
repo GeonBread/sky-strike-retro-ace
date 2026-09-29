@@ -122,6 +122,14 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   }
   normalized = normalized.replace(debugSetKillsHook, debugResumeCheckpointHook);
 
+  // 프롤로그 입학식 장면은 두리번거리는 wander 카메라를 사용하지 않는다.
+  // 3초 동안 원본 그림 전체가 잘리지 않도록 정지된 contain 프리뷰로 보여준 뒤 대사를 시작한다.
+  const admissionWanderPreview = `      effectOnly: true, effect: 'scene-preview', previewStyle: 'wander', effectDuration: 3000, scene: { ...admissionDayScene }`;
+  const admissionStaticPreview = `      effectOnly: true, effect: 'scene-preview', previewStyle: 'admission-hold-fit', effectDuration: 3000, scene: { ...admissionDayScene }`;
+  if (normalized.includes(admissionWanderPreview)) {
+    normalized = normalized.replace(admissionWanderPreview, admissionStaticPreview);
+  }
+
   // 장소명은 sceneTitle 변경 전체를 감시하지 않고 실제 장소 이동 연출에서만 호출한다.
   if (part === 1) {
     // 계단 추격 장면의 기존 WebAudio 합성음을 더 묵직한 전투 연출용 사운드로 교체한다.
@@ -476,7 +484,7 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       corePortalOverlay = null;
       storyStage.classList.remove('is-core-portal-fullscreen');
 
-      /* 포탈 도착 직후 대사를 열지 않고, 기존 학사 코어 내부 투어 연출을 4초간 전체 화면으로 재생한다. */
+      /* 포탈 도착 직후 대사를 열지 않고, 학사 코어 내부를 카메라 이동 없이 4초간 전체 화면으로 정지 표시한다. */
       setBossEntryStageClass('is-entry-interior-tour');
       corePortalSequenceTimer = window.setTimeout(() => {
         corePortalSequenceTimer = null;
@@ -569,8 +577,8 @@ html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) {
   max-height: 100dvh !important;
   aspect-ratio: 24 / 25 !important;
 }
-/* 입학식의 두리번(wander) 프롤로그 연출만 스토리 프레임을 벗어나 브라우저 전체 화면을 사용한다. */
-html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="wander"] {
+/* 입학식은 카메라 이동 없이, 원본 그림 전체가 보이는 정지 화면을 3초간 사용한다. */
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"] {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
@@ -579,6 +587,28 @@ html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="wander"
   max-height: none !important;
   aspect-ratio: auto !important;
   border: 0 !important;
+  box-shadow: none !important;
+  background: #050506 !important;
+}
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"] .background-stack,
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"] .scene-background {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"] .scene-background.is-visible {
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"] .background-dim,
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"] .scene-vignette {
+  opacity: 0 !important;
+  background: transparent !important;
   box-shadow: none !important;
 }
 html.is-embedded-story .dialogue-layer {
@@ -946,6 +976,17 @@ html.is-embedded-story .story-stage:is(
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* 보스맵 도착 장면은 기존 academicInteriorTour의 좌우/상하 카메라 이동을 완전히 제거한다. */
+html.is-embedded-story .story-stage.is-entry-interior-tour .scene-background.is-visible {
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
+  background-position: center center !important;
+}
+html.is-embedded-story .story-stage.is-entry-interior-tour .scene-vignette {
+  animation: none !important;
 }
 
 /* 기존 방사형 직선 광선은 제거하고, 중앙 광원·비네트·줌으로 내부 진입감을 만든다. */
