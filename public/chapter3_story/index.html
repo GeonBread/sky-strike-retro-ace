@@ -6153,6 +6153,22 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     }
   }
 
+  function getPersistentGameRect081(){
+    const vw = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 922);
+    const vh = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 960);
+    const scale = Math.min(vw / 922, vh / 960);
+    const width = 922 * scale;
+    const height = 960 * scale;
+    return {
+      width,
+      height,
+      left:(vw - width) / 2,
+      top:(vh - height) / 2,
+      right:(vw - width) / 2,
+      bottom:(vh - height) / 2
+    };
+  }
+
   function syncGlobalEffectActorOverlay(item, speakerId) {
     const persistentBodyEffect = document.querySelector('.story-body-effect-host[data-persistent-dialogue="true"]');
     const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host, .story-body-effect-host, .story-global-effect-layer[aria-hidden="false"] > .ch3-effect'));
@@ -6212,13 +6228,20 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     const image = globalEffectActorOverlay.querySelector('.global-effect-actor-image');
     const isSpeaking = actorId === speakerId;
 
-    /* For fullscreen web dialogue use the physical iframe viewport, not the 922x960 story-stage rect. */
+    /* PATCH081: website stays fullscreen, but the actor uses the original 922x960 game geometry. */
     if (isPersistentWebDialogue) {
-      globalEffectActorOverlay.style.left = '0px';
-      globalEffectActorOverlay.style.top = '0px';
-      globalEffectActorOverlay.style.width = '100vw';
-      globalEffectActorOverlay.style.height = '100dvh';
+      const rect = getPersistentGameRect081();
+      globalEffectActorOverlay.classList.add('is-game-geometry081');
+      globalEffectActorOverlay.style.setProperty('--c3-game-left-081', `${rect.left}px`);
+      globalEffectActorOverlay.style.setProperty('--c3-game-top-081', `${rect.top}px`);
+      globalEffectActorOverlay.style.setProperty('--c3-game-width-081', `${rect.width}px`);
+      globalEffectActorOverlay.style.setProperty('--c3-game-height-081', `${rect.height}px`);
+      globalEffectActorOverlay.style.left = `${rect.left}px`;
+      globalEffectActorOverlay.style.top = `${rect.top}px`;
+      globalEffectActorOverlay.style.width = `${rect.width}px`;
+      globalEffectActorOverlay.style.height = `${rect.height}px`;
     } else {
+      globalEffectActorOverlay.classList.remove('is-game-geometry081');
       const rect = el.stage.getBoundingClientRect();
       globalEffectActorOverlay.style.left = `${rect.left}px`;
       globalEffectActorOverlay.style.top = `${rect.top}px`;
@@ -6264,11 +6287,15 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
       return;
     }
 
-    const rect = el.stage.getBoundingClientRect();
+    const persistentBodyEffect = document.querySelector('.story-body-effect-host[data-persistent-dialogue="true"]');
+    const persistentEffectId = String(persistentBodyEffect?.dataset?.effect || '');
+    const isPersistentWebDialogue = C3_DIALOGUE_FULLSCREEN_WEB_EFFECTS078.has(persistentEffectId);
+    const rect = isPersistentWebDialogue ? getPersistentGameRect081() : el.stage.getBoundingClientRect();
     const sideInset = rect.width * 0.035;
-    const bottomInset = Math.max(0, window.innerHeight - rect.bottom + rect.height * 0.045);
+    const rectBottom = isPersistentWebDialogue ? (rect.top + rect.height) : rect.bottom;
+    const bottomInset = Math.max(0, window.innerHeight - rectBottom + rect.height * 0.045);
     const dialogueWidth = Math.max(0, rect.width - sideInset * 2);
-    const centeredLeft = Math.max(0, (window.innerWidth - dialogueWidth) / 2);
+    const centeredLeft = Math.max(0, rect.left + sideInset);
     if (el.dialogueLayer.parentNode !== document.body) document.body.appendChild(el.dialogueLayer);
     el.dialogueLayer.classList.add('is-global-dialogue');
     el.dialogueLayer.style.position = 'fixed';
@@ -13590,6 +13617,79 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"][data-effect="d
   visibility:visible!important;
   animation:none!important;
   filter:drop-shadow(0 22px 30px rgba(0,0,0,.62))!important;
+}
+</style>
+
+
+
+<style id="chapter3-patch-081-game-ui-over-fullscreen-web">
+/* PATCH081: Fullscreen browser stays fullscreen; actor/dialogue keep original 922x960 game proportions. */
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081{
+  position:fixed!important;
+  inset:auto!important;
+  left:var(--c3-game-left-081)!important;
+  top:var(--c3-game-top-081)!important;
+  width:var(--c3-game-width-081)!important;
+  height:var(--c3-game-height-081)!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+  z-index:2147483645!important;
+}
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-shell{
+  bottom:22%!important;
+  width:clamp(190px,42%,340px)!important;
+  height:64%!important;
+  opacity:1!important;
+  visibility:visible!important;
+  animation:none!important;
+}
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-shell.is-right{
+  right:1.5%!important;
+  left:auto!important;
+}
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-shell.is-left{
+  left:1.5%!important;
+  right:auto!important;
+}
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-image{
+  position:absolute!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  translate:-50% 0!important;
+  opacity:1!important;
+  visibility:visible!important;
+  filter:drop-shadow(0 22px 28px rgba(0,0,0,.58))!important;
+}
+
+/* Scene selection controls remain available while persistent fullscreen web dialogue is shown. */
+body:has(.story-body-effect-host[data-persistent-dialogue="true"][data-effect="monthly-schedule"]) .story-controls,
+body:has(.story-body-effect-host[data-persistent-dialogue="true"][data-effect="recruitment-result"]) .story-controls,
+body:has(.story-body-effect-host[data-persistent-dialogue="true"][data-effect="graduation-portal-sequence"]) .story-controls,
+body:has(.story-body-effect-host[data-persistent-dialogue="true"][data-effect="diagnosis-glitch"]) .story-controls{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  z-index:2147483647!important;
+  pointer-events:auto!important;
+}
+body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySectionButton{
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+body:has(.story-body-effect-host[data-persistent-dialogue="true"]) .story-section-panel,
+body:has(.story-body-effect-host[data-persistent-dialogue="true"]) .dialogue-jump-panel,
+body:has(.story-body-effect-host[data-persistent-dialogue="true"]) .story-effect-panel{
+  z-index:2147483647!important;
 }
 </style>
 
