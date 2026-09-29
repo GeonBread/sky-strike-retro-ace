@@ -474,3 +474,13 @@
   justify-content: flex-start !important;
   text-align: right !important;
 }
+
+
+/* PATCH 066: hide only the old host-side Chapter 3 life strip.
+   The actual life shields are now drawn inside the wave iframe at its top-right. */
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudTopBar,
+.chapter3StoryExperience.is-wave-active .chapter3WaveHostHud > :first-child,
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudHp,
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudTopRight {
+  display: none !important;
+}
