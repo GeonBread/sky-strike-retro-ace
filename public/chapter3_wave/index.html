@@ -50,48 +50,54 @@
     display:block;
     flex:none;
   }
-  /* PATCH 073: survival-only attack-disabled guidance. Not a wave-change title. */
+  /* PATCH 090: large centered attack-disabled notice. It finishes before survival patterns begin. */
   .attackDisabledStatus073{
     display:none;
     position:absolute;
     left:50%;
-    top:74px;
-    transform:translateX(-50%);
+    top:48%;
+    transform:translate(-50%,-50%) scale(.94);
     z-index:82;
-    min-width:218px;
-    padding:7px 16px 8px;
-    border:1px solid rgba(255,210,92,.72);
-    border-radius:999px;
-    background:rgba(4,8,16,.84);
-    box-shadow:0 0 0 1px rgba(255,255,255,.05) inset,0 6px 20px rgba(0,0,0,.38),0 0 20px rgba(255,193,61,.16);
+    min-width:min(700px,82%);
+    padding:20px 34px 22px;
+    border:2px solid rgba(255,216,92,.82);
+    border-radius:18px;
+    background:linear-gradient(180deg,rgba(5,9,18,.90),rgba(2,5,12,.84));
+    box-shadow:0 0 0 2px rgba(255,255,255,.05) inset,0 14px 44px rgba(0,0,0,.48),0 0 32px rgba(255,196,55,.16);
     color:#fff2b0;
     text-align:center;
     pointer-events:none;
     backdrop-filter:blur(4px);
+    opacity:0;
   }
   .attackDisabledStatus073.is-active{display:block}
   .attackDisabledStatus073 b{
-    display:inline-block;
-    margin-right:8px;
+    display:block;
+    margin:0 0 8px;
     color:#ffd75f;
-    font-size:15px;
+    font-size:clamp(34px,5.0vw,54px);
+    line-height:1;
     font-weight:950;
-    letter-spacing:.06em;
+    letter-spacing:.045em;
+    text-shadow:0 3px 0 rgba(0,0,0,.55),0 0 18px rgba(255,205,74,.28);
   }
   .attackDisabledStatus073 span{
-    color:rgba(255,255,255,.9);
-    font-size:13px;
-    font-weight:800;
-    letter-spacing:-.01em;
+    display:block;
+    color:rgba(255,255,255,.94);
+    font-size:clamp(20px,2.45vw,30px);
+    line-height:1.18;
+    font-weight:900;
+    letter-spacing:-.015em;
   }
   .attackDisabledStatus073.is-intro{
-    animation:attackDisabledIntro073 1.55s cubic-bezier(.18,.8,.2,1) both;
+    animation:attackDisabledIntro090 3.0s cubic-bezier(.2,.78,.18,1) both;
   }
-  @keyframes attackDisabledIntro073{
-    0%{opacity:0;transform:translateX(-50%) scale(.72);filter:brightness(1)}
-    18%{opacity:1;transform:translateX(-50%) scale(1.12);filter:brightness(1.5)}
-    42%{transform:translateX(-50%) scale(1)}
-    100%{opacity:1;transform:translateX(-50%) scale(1);filter:brightness(1)}
+  @keyframes attackDisabledIntro090{
+    0%{opacity:0;transform:translate(-50%,-46%) scale(.90);filter:brightness(.92)}
+    12%{opacity:1;transform:translate(-50%,-50%) scale(1.035);filter:brightness(1.12)}
+    20%{transform:translate(-50%,-50%) scale(1);filter:brightness(1)}
+    80%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:brightness(1)}
+    100%{opacity:0;transform:translate(-50%,-53%) scale(.985);filter:brightness(.98)}
   }
   @media(max-width:560px){.embeddedLifeShield{width:32px;height:34px}}
 
@@ -488,18 +494,24 @@ const SURVIVAL_SPECIALS=new Set([
  'survivalElectricReposition','survivalCompressedRush'
 ]);
 function isSurvivalSpecial(sp=waves[waveIndex]?.special){return SURVIVAL_SPECIALS.has(sp);}
+let attackDisabledNoticeToken090=0;
 function syncAttackDisabledStatus073(withIntro=false){
  if(!attackDisabledStatus073)return;
  const disabled=isSurvivalSpecial()&&!playerFireEnabled&&!specialState.survivalFinished;
- attackDisabledStatus073.classList.toggle('is-active',disabled);
- if(disabled&&withIntro){
-  attackDisabledStatus073.classList.remove('is-intro');
-  void attackDisabledStatus073.offsetWidth;
-  attackDisabledStatus073.classList.add('is-intro');
-  setTimeout(()=>attackDisabledStatus073?.classList.remove('is-intro'),1600);
- }else if(!disabled){
-  attackDisabledStatus073.classList.remove('is-intro');
+ if(!disabled){
+  attackDisabledStatus073.classList.remove('is-active','is-intro');
+  return;
  }
+ /* Do not keep a small persistent badge. Show one large centered notice only at wave entry. */
+ if(!withIntro)return;
+ const token=++attackDisabledNoticeToken090;
+ attackDisabledStatus073.classList.remove('is-active','is-intro');
+ void attackDisabledStatus073.offsetWidth;
+ attackDisabledStatus073.classList.add('is-active','is-intro');
+ setTimeout(()=>{
+  if(token!==attackDisabledNoticeToken090)return;
+  attackDisabledStatus073.classList.remove('is-active','is-intro');
+ },3020);
 }
 function normalizedCombatView(v){
  const w=clamp(v.w??W,120,W),h=clamp(v.h??H,110,H);
@@ -1287,7 +1299,7 @@ function updateGeoDrone(e,dt){
 // ---------------- Special survival / combat-area transformation system ----------------
 function initSurvivalWave(kind,view,opt={}){
  survivalBeams=[];playerFireEnabled=false;playerBullets=[];movementMode=opt.movementMode||'free';
- specialState={survival:true,kind,phase:'intro',timer:opt.intro??1.75,survivalFinished:false,survivalExiting:false,restoreStarted:false,...opt.state};
+ specialState={survival:true,kind,phase:'intro',timer:Math.max(opt.intro??1.75,3.08),survivalFinished:false,survivalExiting:false,restoreStarted:false,...opt.state};
  animateCombatView(view,opt.viewDuration??1.45);
 }
 function survivalExitVector(e){
@@ -1593,7 +1605,7 @@ function startWave(i,resetRun=false){
  else if(sp==='mineCascade')specialState={seq:[1,2,4,8,16],idx:0,delay:0,started:false};
  else if(sp==='chargerSolo45')specialState={groups:0,timer:.35,totalGroups:15};
  else if(sp==='chargerRushMixed')specialState={groups:0,timer:.35,totalGroups:15,electricSpawned:false};
- else if(sp==='survivalHorizontalRush')initSurvivalWave(sp,{x:LX(70),y:405,w:660,h:155},{movementMode:'xOnly',intro:1.65,viewDuration:1.45});
+ else if(sp==='survivalHorizontalRush')initSurvivalWave(sp,{x:LX(70),y:405,w:660,h:155},{movementMode:'free',intro:3.08,viewDuration:1.45}); // PATCH090: free XY movement; shrinking bounds push the player inward via clampPlayerToCombatView(false).
  else if(sp==='survivalSafeGapRush')initSurvivalWave(sp,{x:LX(185),y:405,w:430,h:140},{movementMode:'xOnly',intro:1.5,viewDuration:1.35});
  else if(sp==='survivalOuterLaser')initSurvivalWave(sp,{x:LX(45),y:80,w:710,h:810},{intro:1.6,viewDuration:1.45});
  else if(sp==='survivalMovingZone')initSurvivalWave(sp,{x:LX(175),y:205,w:450,h:610},{intro:1.7,viewDuration:1.5});
