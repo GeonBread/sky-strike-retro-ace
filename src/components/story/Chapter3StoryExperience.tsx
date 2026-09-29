@@ -573,9 +573,14 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
       {screen === "story" && !ready && <div className="chapter3StoryLoading" aria-live="polite">CHAPTER 3 STORY LOADING</div>}
 
-      {screen !== "selector" && (
-        <button className="chapter3StoryRouteSelect" type="button" onClick={returnToSelector} aria-label="챕터 3 구간 선택으로 돌아가기">구간 선택</button>
-      )}
+      <button
+        className="chapter3StoryRouteSelect"
+        type="button"
+        onClick={returnToSelector}
+        aria-label="챕터 3 구간 선택으로 돌아가기"
+      >
+        구간 선택
+      </button>
 
       <NotificationDialog
         open={waveExitConfirm}
