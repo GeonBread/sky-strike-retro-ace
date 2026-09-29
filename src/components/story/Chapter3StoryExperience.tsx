@@ -572,15 +572,15 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       )}
 
       {waveActive && waveFailed && (
-        <div className="chapter3WaveRetryOverlay" role="presentation">
-          <section className="chapter3WaveRetryDialog" role="dialog" aria-modal="true" aria-label="챕터 3 전투 재도전 확인">
-            <small>WAVE {(failedWaveIndex ?? waveStartIndex) + 1}</small>
+        <div className="chapterGamePauseOverlay chapterStoryPauseOverlay chapter3WaveRetryOverlay" role="presentation">
+          <section className="chapterGamePauseDialog chapterStoryPauseDialog chapter3WaveRetryDialog" role="dialog" aria-modal="true" aria-label="챕터 3 전투 재도전 확인">
+            <small>WAVE FAILED</small>
             <h2>다시 도전하시겠습니까?</h2>
             <p>현재 웨이브의 처음부터 다시 시작합니다.</p>
             {(waveDeathCounts[failedWaveIndex ?? waveStartIndex] ?? 0) >= 3 && <p className="chapter3WaveRetryBoost">반복 실패 보정 · 화력 레벨 5로 재시작</p>}
-            <div className="chapter3WaveRetryActions">
-              <button type="button" className="secondary" onClick={waveOrigin === "selector" ? returnToSelector : onExit}>아니오</button>
-              <button type="button" className="primary" onClick={retryWave}>예</button>
+            <div className="chapterGamePauseActions chapter3WaveRetryActions isConfirm">
+              <button type="button" className="secondary" onClick={waveOrigin === "selector" ? returnToSelector : onExit}>그만하기</button>
+              <button type="button" className="danger" onClick={retryWave}>다시하기</button>
             </div>
           </section>
         </div>
