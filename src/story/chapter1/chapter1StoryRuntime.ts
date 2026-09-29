@@ -130,6 +130,55 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     normalized = normalized.replace(admissionWanderPreview, admissionStaticPreview);
   }
 
+  // 게이트키퍼 최초 등장 이펙트는 story-stage 폭 확장에 의존하지 않고 전체 뷰포트 호스트로 직접 이동시킨다.
+  if (part === 2) {
+    const storyEffectLayerDeclarationHook = `  const storyEffectLayer = document.getElementById('storyEffectLayer');`;
+    const storyEffectLayerViewportSetup = `  const storyEffectLayer = document.getElementById('storyEffectLayer');
+  const storyEffectLayerHome = storyEffectLayer.parentNode;
+  const storyEffectLayerHomeNextSibling = storyEffectLayer.nextSibling;
+  const storyEffectViewportHost = document.body;
+
+  function restoreStoryEffectLayerHome() {
+    storyEffectLayer.classList.remove('is-global-gatekeeper-entrance');
+    if (!storyEffectLayerHome || storyEffectLayer.parentNode === storyEffectLayerHome) return;
+    if (storyEffectLayerHomeNextSibling && storyEffectLayerHomeNextSibling.parentNode === storyEffectLayerHome) {
+      storyEffectLayerHome.insertBefore(storyEffectLayer, storyEffectLayerHomeNextSibling);
+    } else {
+      storyEffectLayerHome.appendChild(storyEffectLayer);
+    }
+  }
+
+  function mountStoryEffectLayerFullscreen() {
+    storyEffectLayer.classList.add('is-global-gatekeeper-entrance');
+    if (storyEffectLayer.parentNode !== storyEffectViewportHost) storyEffectViewportHost.appendChild(storyEffectLayer);
+  }`;
+    if (!normalized.includes(storyEffectLayerDeclarationHook)) {
+      throw new Error('Chapter 1 story effect layer declaration hook was not found.');
+    }
+    normalized = normalized.replace(storyEffectLayerDeclarationHook, storyEffectLayerViewportSetup);
+
+    const hideStoryEffectViewportHook = `    storyEffectLayer.classList.remove('is-visible');
+    storyEffectLabel.textContent = '';`;
+    const hideStoryEffectViewportFix = `    storyEffectLayer.classList.remove('is-visible');
+    storyEffectLabel.textContent = '';
+    restoreStoryEffectLayerHome();`;
+    if (!normalized.includes(hideStoryEffectViewportHook)) {
+      throw new Error('Chapter 1 story effect hide hook was not found.');
+    }
+    normalized = normalized.replace(hideStoryEffectViewportHook, hideStoryEffectViewportFix);
+
+    const showStoryEffectViewportHook = `    const isGatekeeperEntrance = effectId === 'gatekeeper-entrance';
+    storyStage.classList.toggle('is-gatekeeper-entrance-fullscreen', isGatekeeperEntrance);`;
+    const showStoryEffectViewportFix = `    const isGatekeeperEntrance = effectId === 'gatekeeper-entrance';
+    storyStage.classList.remove('is-gatekeeper-entrance-fullscreen');
+    if (isGatekeeperEntrance) mountStoryEffectLayerFullscreen();
+    else restoreStoryEffectLayerHome();`;
+    if (!normalized.includes(showStoryEffectViewportHook)) {
+      throw new Error('Chapter 1 story effect show hook was not found.');
+    }
+    normalized = normalized.replace(showStoryEffectViewportHook, showStoryEffectViewportFix);
+  }
+
   // 장소명은 sceneTitle 변경 전체를 감시하지 않고 실제 장소 이동 연출에서만 호출한다.
   if (part === 1) {
     // 계단 추격 장면의 기존 WebAudio 합성음을 더 묵직한 전투 연출용 사운드로 교체한다.
@@ -486,16 +535,23 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
 
       /* 보스맵 도착 화면은 story-stage의 좌표계나 카메라 애니메이션을 사용하지 않는다.
          document.body에 고정 전체화면 레이어를 직접 붙여 좌우 밀림 가능성을 제거한다. */
-      document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen').forEach(node => node.remove());
+      document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal').forEach(node => node.remove());
       const arrivalOverlay = document.createElement('div');
       arrivalOverlay.className = 'chapter1-boss-map-arrival-fullscreen';
-      arrivalOverlay.style.backgroundImage = 'url(\"' + assetPath('bg_academic_system_corrupted.png') + '\")';
+      arrivalOverlay.style.setProperty('--chapter1-boss-map-arrival-image', 'url(\"' + assetPath('bg_academic_system_corrupted.png') + '\")');
       document.body.appendChild(arrivalOverlay);
 
       corePortalSequenceTimer = window.setTimeout(() => {
         corePortalSequenceTimer = null;
-        arrivalOverlay.remove();
         beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
+
+        /* 전체화면 학사 코어 내부 장면에서 일반 스토리 화면으로 넘어갈 때 검정 페이드로 연결한다. */
+        const dialogueRevealOverlay = document.createElement('div');
+        dialogueRevealOverlay.className = 'chapter1-boss-map-dialogue-reveal';
+        document.body.appendChild(dialogueRevealOverlay);
+        arrivalOverlay.remove();
+        requestAnimationFrame(() => dialogueRevealOverlay.classList.add('is-revealing'));
+        window.setTimeout(() => dialogueRevealOverlay.remove(), 900);
       }, 4000);
     }, 8500);
   }`;
@@ -511,7 +567,7 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   const clearBossArrivalOverlayV2 = `  function clearBossEntrySequence() {
     bossEntrySequenceTimers.forEach(timer => window.clearTimeout(timer));
     bossEntrySequenceTimers = [];
-    document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen').forEach(node => node.remove());`;
+    document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal').forEach(node => node.remove());`;
   if (normalized.includes(clearBossArrivalOverlayHook)) {
     normalized = normalized.replace(clearBossArrivalOverlayHook, clearBossArrivalOverlayV2);
   }
@@ -734,6 +790,45 @@ html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen .gatekeepe
   position: absolute !important;
   inset: 0 !important;
   border-radius: 0 !important;
+}
+
+/* 게이트키퍼 최초 등장 이펙트는 story-stage 밖의 Chapter 1 전체 뷰포트 호스트에서 렌더링한다. */
+html.is-embedded-story .chapter1-story-mount > .story-effect-layer.is-global-gatekeeper-entrance,
+html.is-embedded-story body > .story-effect-layer.is-global-gatekeeper-entrance {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: 100004 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  transition: none !important;
+  pointer-events: none !important;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .gatekeeper-entrance-effect {
+  position: absolute !important;
+  display: block !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: inset 0 0 88px rgba(0,0,0,.82), inset 0 0 170px rgba(110,0,10,.3) !important;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .story-effect-label {
+  display: none !important;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .gatekeeper-portal {
+  left: 50% !important;
+  top: 49% !important;
+  width: min(54vw, 54dvh, 560px) !important;
+  height: min(54vw, 54dvh, 560px) !important;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .gatekeeper-entrance-core {
+  left: 50% !important;
+  top: 52% !important;
+  width: min(64vw, 64dvh, 620px) !important;
 }
 
 /* CH1 코어 영역 이동: 일러스트 없이, 세워진 타원형 포탈 자체가 영롱하게 발광한다. */
@@ -970,21 +1065,62 @@ html.is-embedded-story .chapter1-core-portal-sparks::after { transform: rotate(1
   100% { opacity: .8; transform: translateX(3%) skewY(.8deg) scale(1.06); }
 }
 
-/* 포탈 통과 직후 보스맵 도착 화면: 이동/확대 없이 실제 브라우저 전체화면에 고정한다. */
+/* 포탈 통과 직후 학사 코어 내부 장면: 카메라는 고정하고 검정 페이드로 장면 전환만 추가한다. */
 html.is-embedded-story .chapter1-boss-map-arrival-fullscreen {
   position: fixed !important;
   inset: 0 !important;
   z-index: 100002 !important;
   width: 100vw !important;
   height: 100dvh !important;
+  overflow: hidden !important;
   pointer-events: none !important;
-  background-color: #050506 !important;
-  background-repeat: no-repeat !important;
-  background-position: center center !important;
-  background-size: cover !important;
-  animation: none !important;
+  background: #050506 !important;
   transform: none !important;
   filter: none !important;
+}
+html.is-embedded-story .chapter1-boss-map-arrival-fullscreen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: #050506;
+  background-image: var(--chapter1-boss-map-arrival-image);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  opacity: 0;
+  transform: none;
+  animation: chapter1BossMapArrivalReveal 4s ease-in-out both;
+}
+html.is-embedded-story .chapter1-boss-map-arrival-fullscreen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 1;
+  animation: chapter1BossMapArrivalBlackTransition 4s ease-in-out both;
+}
+html.is-embedded-story .chapter1-boss-map-dialogue-reveal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100003 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  pointer-events: none !important;
+  background: #000 !important;
+  opacity: 1;
+  transition: opacity .8s ease !important;
+}
+html.is-embedded-story .chapter1-boss-map-dialogue-reveal.is-revealing {
+  opacity: 0;
+}
+@keyframes chapter1BossMapArrivalReveal {
+  0%, 7% { opacity: 0; }
+  24%, 100% { opacity: 1; }
+}
+@keyframes chapter1BossMapArrivalBlackTransition {
+  0%, 8% { opacity: 1; }
+  28%, 76% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* 학사 코어 영역 진입 시네마틱은 브라우저 전체 화면을 사용한다. */
@@ -1510,6 +1646,9 @@ export function createChapter1StoryRuntime({
     if (locationOverlayTimer !== null) window.clearTimeout(locationOverlayTimer);
     locationOverlayTimer = null;
     locationOverlay.remove();
+    document.querySelectorAll(
+      ".story-effect-layer.is-global-gatekeeper-entrance, .chapter1-core-portal-overlay, .chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal",
+    ).forEach((element) => element.remove());
     styleElement.remove();
     root.replaceChildren();
     restoreAttributes(document.documentElement, htmlAttributeSnapshot);
