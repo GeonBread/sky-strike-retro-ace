@@ -5771,6 +5771,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   }
 
   function clearPersistentOverlay() {
+    restoreChapter3PersistentFrame079();
     restoreDialogueLayerHome();
     if (typeof state.persistentEffectCleanup === 'function') {
       try { state.persistentEffectCleanup(); } catch (error) { console.error(error); }
@@ -5958,7 +5959,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     actor.classList.add('is-present', isSpeaker ? 'is-speaking' : 'is-inactive');
     if (characterId === 'student_card') actor.classList.add('is-student-card-glow');
 
-    const shouldPlayHobanwooEntrance = characterId === 'hobanwoo' && (!wasPresent || previousCharacterId !== characterId);
+    const shouldPlayHobanwooEntrance = characterId === 'hobanwoo' && !item.forceAbovePersistentEffect && (!wasPresent || previousCharacterId !== characterId);
     if (shouldPlayHobanwooEntrance) {
       actor.classList.add('is-entering');
       actor._enterTimer = window.setTimeout(() => {
@@ -6171,11 +6172,24 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     const actorEl = [...el.stage.querySelectorAll('.actor')]
       .find(actor => actor.dataset.character === actorId && actor.classList.contains('is-present'));
     const actorImage = actorEl?.querySelector('.actor-image');
-    const source = actorImage?.getAttribute('src');
+    const actorCharacter = resolveCharacter(actorId);
+    const directImage = actorEl?.classList.contains('actor-left') ? item.leftImage : item.rightImage;
+    const sidePose = actorEl?.classList.contains('actor-left') ? item.leftPose : item.rightPose;
+    const fallbackPose = sidePose || (actorId === speakerId ? item.pose : null) || 'default';
+    const fallbackSource = resolvePoseImage(actorCharacter, fallbackPose, directImage);
+    const source = actorImage?.getAttribute('src') || (fallbackSource ? assetPath(fallbackSource) : '');
 
-    if (!actorEl || !actorImage || !source) {
+    if (!actorEl || !source) {
       removeGlobalEffectActorOverlay();
       return;
+    }
+    /* Persistent web dialogue must show Hobanwoo on the very first frame, not after the normal entrance fade. */
+    actorEl.classList.remove('is-entering');
+    actorEl.style.setProperty('opacity', '1', 'important');
+    actorEl.style.setProperty('visibility', 'visible', 'important');
+    if (actorImage) {
+      actorImage.style.setProperty('opacity', '1', 'important');
+      actorImage.style.setProperty('visibility', 'visible', 'important');
     }
 
     const isNewOverlay = !globalEffectActorOverlay;
@@ -6201,7 +6215,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     shell.className = `global-effect-actor-shell ${sideClass} ${actorEl.classList.contains('is-speaking') ? 'is-speaking' : 'is-inactive'}`;
     shell.style.setProperty('--character-scale', actorEl.style.getPropertyValue('--character-scale') || '1');
     image.src = source;
-    image.alt = actorImage.alt || actorId;
+    image.alt = actorImage?.alt || actorCharacter?.name || actorId;
 
     if (actorId === 'hobanwoo' && isNewOverlay) {
       window.setTimeout(() => shell.classList.remove('is-entering'), 660);
@@ -6341,6 +6355,53 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     }, interval);
   }
 
+  /* PATCH079: the story runs inside the React iframe. Internal 100vw was therefore only the
+     game/story frame width. During persistent browser-dialogue scenes, expand the iframe itself to
+     the physical browser viewport, then restore it when the persistent scene is finished. */
+  let chapter3PersistentFrameRestore079 = null;
+
+  function setFrameStyle079(frame, property, value) {
+    frame.style.setProperty(property, value, 'important');
+  }
+
+  function forceChapter3PersistentFrameFullscreen079() {
+    const frame = window.frameElement;
+    if (!(frame instanceof HTMLElement)) return;
+    if (!chapter3PersistentFrameRestore079) {
+      const properties = ['position','inset','left','top','right','bottom','width','height','max-width','max-height','margin','transform','z-index','opacity','visibility'];
+      const saved = new Map(properties.map(property => [property, {
+        value: frame.style.getPropertyValue(property),
+        priority: frame.style.getPropertyPriority(property)
+      }]));
+      chapter3PersistentFrameRestore079 = () => {
+        for (const [property, prior] of saved) {
+          if (prior.value) frame.style.setProperty(property, prior.value, prior.priority || '');
+          else frame.style.removeProperty(property);
+        }
+        chapter3PersistentFrameRestore079 = null;
+      };
+    }
+    setFrameStyle079(frame,'position','fixed');
+    setFrameStyle079(frame,'inset','0');
+    setFrameStyle079(frame,'left','0');
+    setFrameStyle079(frame,'top','0');
+    setFrameStyle079(frame,'right','0');
+    setFrameStyle079(frame,'bottom','0');
+    setFrameStyle079(frame,'width','100vw');
+    setFrameStyle079(frame,'height','100dvh');
+    setFrameStyle079(frame,'max-width','none');
+    setFrameStyle079(frame,'max-height','none');
+    setFrameStyle079(frame,'margin','0');
+    setFrameStyle079(frame,'transform','none');
+    setFrameStyle079(frame,'z-index','2147483000');
+    setFrameStyle079(frame,'opacity','1');
+    setFrameStyle079(frame,'visibility','visible');
+  }
+
+  function restoreChapter3PersistentFrame079() {
+    chapter3PersistentFrameRestore079?.();
+  }
+
   const C3_DIALOGUE_FULLSCREEN_WEB_EFFECTS078 = new Set([
     'monthly-schedule',
     'recruitment-result',
@@ -6349,6 +6410,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   ]);
 
   function enforceDialogueFullscreenWeb078() {
+    forceChapter3PersistentFrameFullscreen079();
     const hosts = [...document.querySelectorAll('.story-body-effect-host[data-persistent-dialogue="true"]')];
     const host = hosts.find(node => C3_DIALOGUE_FULLSCREEN_WEB_EFFECTS078.has(String(node.dataset.effect || '')));
     if (!host) return null;
@@ -6433,6 +6495,10 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
       requestAnimationFrame(() => {
         enforceDialogueFullscreenWeb078();
         syncGlobalEffectActorOverlay(item, speakerId);
+        requestAnimationFrame(() => {
+          enforceDialogueFullscreenWeb078();
+          syncGlobalEffectActorOverlay(item, speakerId);
+        });
       });
     });
     typeLine(item);
@@ -13386,6 +13452,52 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   visibility:visible!important;
 }
 .global-effect-actor-overlay{z-index:2147483645!important}
+.dialogue-layer.is-global-dialogue{z-index:2147483646!important}
+</style>
+
+
+
+<style id="chapter3-patch-079-real-browser-fullscreen-dialogue-style">
+/* PATCH079: persistent web dialogue is rendered in an iframe that is itself expanded to the browser viewport. */
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="monthly-schedule"],
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="recruitment-result"],
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="graduation-portal-sequence"],
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="diagnosis-glitch"]{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  transform:none!important;
+  margin:0!important;
+  z-index:2147483000!important;
+  overflow:hidden!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.story-body-effect-host[data-persistent-dialogue="true"] > .ch3-effect,
+.story-body-effect-host[data-persistent-dialogue="true"] > .ch3-effect.c3-native-fullscreen-web{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  transform:none!important;
+  margin:0!important;
+}
+/* Actor on line 1: no entrance transition, no delayed opacity. */
+.global-effect-actor-overlay,
+.global-effect-actor-overlay .global-effect-actor-shell,
+.global-effect-actor-overlay .global-effect-actor-image{
+  visibility:visible!important;
+  opacity:1!important;
+}
+.global-effect-actor-overlay .global-effect-actor-shell{
+  animation:none!important;
+}
+.global-effect-actor-overlay{z-index:2147483645!important;overflow:visible!important}
 .dialogue-layer.is-global-dialogue{z-index:2147483646!important}
 </style>
 
