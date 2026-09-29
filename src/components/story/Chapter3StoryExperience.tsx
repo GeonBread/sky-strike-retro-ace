@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bomb, Shield } from "lucide-react";
-import { NotificationDialog } from "../ui/NotificationDialog";
+import { Shield } from "lucide-react";
+import "../ui/hobanwooOverlayPanels.css";
 import "./chapter3StoryExperience.css";
 
 type Chapter3StoryExperienceProps = {
@@ -87,6 +87,8 @@ const FULLSCREEN_EFFECTS = new Set([
   "purification-collision",
   "purification-explosion",
   "student-card-shutdown",
+  "graduation-day-atmosphere",
+  "graduation-ceremony-background",
 ]);
 
 const STORY_SECTIONS: StorySectionMeta[] = [
@@ -561,9 +563,9 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
             </div>
             <span className="chapter3WavePowerBadge">POWER LV {waveHud.powerLevel}</span>
           </div>
-          <div className="chapter3WaveHudBottomRight">
+          <div className="chapter3WaveHudBottomRight" aria-label={`폭탄 ${waveHud.bombs} / 3`}>
             {[...Array(3)].map((_, i) => (
-              <Bomb key={i} size={19} className={i < waveHud.bombs ? "text-yellow-300 fill-yellow-300" : "text-slate-700 fill-transparent"} />
+              <span key={i} className={`combat-hud-bomb-icon${i < waveHud.bombs ? " is-active" : ""}`} />
             ))}
           </div>
         </div>
@@ -595,24 +597,42 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         구간 선택
       </button>
 
-      <NotificationDialog
-        open={waveExitConfirm}
-        title="스토리를 중단하시겠습니까?"
-        message="현재 진행 중인 챕터 3 전투를 중단하고 메인 화면으로 돌아갑니다."
-        onCancel={() => {
-          setWaveExitConfirm(false);
-          setWavePaused(false);
-          postWaveCommand("set-paused", { paused: false });
-          waveFrameRef.current?.contentWindow?.focus();
-        }}
-        onConfirm={() => {
-          setWaveExitConfirm(false);
-          setWavePaused(false);
-          postWaveCommand("set-paused", { paused: false });
-          if (waveOrigin === "selector") returnToSelector();
-          else onExit?.();
-        }}
-      />
+      {waveExitConfirm && (
+        <div className="chapterGamePauseOverlay chapterStoryPauseOverlay" role="presentation">
+          <section className="chapterGamePauseDialog chapterStoryPauseDialog" role="dialog" aria-modal="true" aria-label="스토리 중단 확인">
+            <small>STORY PAUSED</small>
+            <h2>스토리를 중단하시겠습니까?</h2>
+            <p>진행 기록은 자동 저장됩니다.</p>
+            <div className="chapterGamePauseActions isConfirm">
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  setWaveExitConfirm(false);
+                  setWavePaused(false);
+                  postWaveCommand("set-paused", { paused: false });
+                  waveFrameRef.current?.contentWindow?.focus();
+                }}
+              >
+                계속하기
+              </button>
+              <button
+                type="button"
+                className="danger"
+                onClick={() => {
+                  setWaveExitConfirm(false);
+                  setWavePaused(false);
+                  postWaveCommand("set-paused", { paused: false });
+                  if (waveOrigin === "selector") returnToSelector();
+                  else onExit?.();
+                }}
+              >
+                메인화면
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }
