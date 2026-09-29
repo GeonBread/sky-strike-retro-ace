@@ -6198,7 +6198,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     globalEffectActorOverlay.style.top = `${rect.top}px`;
     globalEffectActorOverlay.style.width = `${rect.width}px`;
     globalEffectActorOverlay.style.height = `${rect.height}px`;
-    shell.className = `global-effect-actor-shell ${sideClass} ${actorEl.classList.contains('is-speaking') ? 'is-speaking' : 'is-inactive'}${actorId === 'hobanwoo' && isNewOverlay ? ' is-entering' : ''}`;
+    shell.className = `global-effect-actor-shell ${sideClass} ${actorEl.classList.contains('is-speaking') ? 'is-speaking' : 'is-inactive'}`;
     shell.style.setProperty('--character-scale', actorEl.style.getPropertyValue('--character-scale') || '1');
     image.src = source;
     image.alt = actorImage.alt || actorId;
@@ -6341,8 +6341,68 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     }, interval);
   }
 
+  const C3_DIALOGUE_FULLSCREEN_WEB_EFFECTS078 = new Set([
+    'monthly-schedule',
+    'recruitment-result',
+    'graduation-portal-sequence',
+    'diagnosis-glitch'
+  ]);
+
+  function enforceDialogueFullscreenWeb078() {
+    const hosts = [...document.querySelectorAll('.story-body-effect-host[data-persistent-dialogue="true"]')];
+    const host = hosts.find(node => C3_DIALOGUE_FULLSCREEN_WEB_EFFECTS078.has(String(node.dataset.effect || '')));
+    if (!host) return null;
+
+    const effectId = String(host.dataset.effect || '');
+    const root = host.querySelector(':scope > .ch3-effect');
+    const forceViewport = node => {
+      if (!node) return;
+      node.style.setProperty('position', 'fixed', 'important');
+      node.style.setProperty('inset', '0', 'important');
+      node.style.setProperty('left', '0', 'important');
+      node.style.setProperty('top', '0', 'important');
+      node.style.setProperty('right', '0', 'important');
+      node.style.setProperty('bottom', '0', 'important');
+      node.style.setProperty('width', '100vw', 'important');
+      node.style.setProperty('height', '100dvh', 'important');
+      node.style.setProperty('max-width', 'none', 'important');
+      node.style.setProperty('max-height', 'none', 'important');
+      node.style.setProperty('margin', '0', 'important');
+      node.style.setProperty('transform', 'none', 'important');
+      node.style.setProperty('opacity', '1', 'important');
+      node.style.setProperty('visibility', 'visible', 'important');
+    };
+
+    forceViewport(host);
+    if (root) {
+      root.classList.add('c3-native-fullscreen-web', 'c3-dialogue-fullscreen-lock078');
+      forceViewport(root);
+    }
+
+    /* The page surface itself fills the root. Browser-frame effects can still reserve their top bar internally. */
+    const surface = root?.querySelector(
+      '.c3-monthly-calendar, .c3-recruit-result, .ch3-portal-sequence, .ch3-portal-glitch'
+    );
+    if (surface) {
+      surface.style.setProperty('left', '0', 'important');
+      surface.style.setProperty('right', '0', 'important');
+      surface.style.setProperty('bottom', '0', 'important');
+      surface.style.setProperty('width', '100%', 'important');
+      surface.style.setProperty('max-width', 'none', 'important');
+      surface.style.setProperty('max-height', 'none', 'important');
+      surface.style.setProperty('margin', '0', 'important');
+      surface.style.setProperty('border-radius', '0', 'important');
+    }
+    if (effectId === 'monthly-schedule' || effectId === 'graduation-portal-sequence' || effectId === 'diagnosis-glitch') {
+      surface?.style.setProperty('top', '0', 'important');
+      surface?.style.setProperty('height', '100%', 'important');
+    }
+    return host;
+  }
+
   function showDialogue(item) {
     cleanupActiveEffect();
+    enforceDialogueFullscreenWeb078();
     const scene = updateScene(item.scene || state.sceneKey || config.defaultScene);
     const speakerId = item.speaker || config.defaultCharacter || 'narrator';
     const speaker = resolveCharacter(speakerId) || resolveCharacter(config.defaultCharacter) || { name: speakerId, side: 'left', accent: '#797977' };
@@ -6364,7 +6424,17 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
 
     const wasClosed = !state.dialogueOpen;
     openDialoguePanel(wasClosed);
+    enforceDialogueFullscreenWeb078();
     elevateDialogueAboveGlobalEffects(item, speakerId);
+    /* First dialogue: actor DOM/image may have been mounted in the same task. Re-sync on the next paint so Hobanwoo is visible immediately, not from line 2. */
+    requestAnimationFrame(() => {
+      enforceDialogueFullscreenWeb078();
+      syncGlobalEffectActorOverlay(item, speakerId);
+      requestAnimationFrame(() => {
+        enforceDialogueFullscreenWeb078();
+        syncGlobalEffectActorOverlay(item, speakerId);
+      });
+    });
     typeLine(item);
     playDialogueImpactShake(item);
     playDialogueSurpriseMotion(item, speakerId);
@@ -13269,6 +13339,55 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   };
 })();
 </script>
+
+
+<style id="chapter3-patch-078-persistent-web-dialogue-lock-style">
+/* PATCH 078 — Calendar / recruitment result / graduation diagnosis stay true fullscreen during dialogue. */
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="monthly-schedule"],
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="recruitment-result"],
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="graduation-portal-sequence"],
+.story-body-effect-host[data-persistent-dialogue="true"][data-effect="diagnosis-glitch"]{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  transform:none!important;
+  opacity:1!important;
+  visibility:visible!important;
+  z-index:2147483000!important;
+  overflow:hidden!important;
+}
+.story-body-effect-host[data-persistent-dialogue="true"] > .ch3-effect.c3-dialogue-fullscreen-lock078{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  transform:none!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+/* First line must show Hobanwoo immediately: no second entrance fade on the body-level overlay. */
+.global-effect-actor-overlay .global-effect-actor-shell.is-entering{
+  animation:none!important;
+  opacity:1!important;
+  translate:0 0!important;
+  scale:1!important;
+}
+.global-effect-actor-overlay,
+.global-effect-actor-overlay .global-effect-actor-shell,
+.global-effect-actor-overlay .global-effect-actor-image{
+  opacity:1!important;
+  visibility:visible!important;
+}
+.global-effect-actor-overlay{z-index:2147483645!important}
+.dialogue-layer.is-global-dialogue{z-index:2147483646!important}
+</style>
 
 </body>
 </html>
