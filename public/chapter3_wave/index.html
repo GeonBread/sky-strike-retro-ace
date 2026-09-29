@@ -331,7 +331,7 @@ const FX_SPRITES={
 const spriteCache={};
 const glowCache=new Map();
 const MAX_GLOW_CACHE=128;
-const USE_SPRITE_SHADOWS=false;
+const USE_SPRITE_SHADOWS=true;
 const MAX_EFFECTS=72;
 const ENEMY_VISUAL_SCALE=1.66;
 const ENEMY_HITBOX_SCALE=1.14;
@@ -2313,24 +2313,59 @@ function drawChargerExhaust(e,x,y,cfg,a){
  ctx.globalAlpha=.75;ctx.fillStyle='#fff6d2';for(let i=0;i<3;i++){const q=((e.t*(2.8+i*.45)+i*.31)%1),px=-8-q*len*.95,py=Math.sin(e.t*33+i*4.1)*w*.34*(1-q);ctx.beginPath();ctx.arc(px,py,Math.max(1.5,3.5*(1-q)),0,Math.PI*2);ctx.fill();}
  ctx.restore();
 }
-function drawChapter1StyleHalo075(x,y,w,h,color,alpha=.30){
+function drawChapter1EnemyAura076(x,y,w,h,color,alpha=1){
+ // Chapter 1 renderer: a soft elliptical gradient close to the sprite, not a flat circular disc.
+ const auraRadius=Math.max(w,h)*.78;
  ctx.save();
+ const gradient=ctx.createRadialGradient(x,y,2,x,y,auraRadius);
+ gradient.addColorStop(0,hexToRgba(color,.26*alpha));
+ gradient.addColorStop(.58,hexToRgba(color,.094*alpha));
+ gradient.addColorStop(1,hexToRgba(color,0));
  ctx.globalCompositeOperation='screen';
- ctx.globalAlpha=alpha*.42;
- ctx.fillStyle=color;
- ctx.beginPath();ctx.ellipse(x,y,w*.60,h*.60,0,0,Math.PI*2);ctx.fill();
- ctx.globalAlpha=alpha*.22;
- ctx.beginPath();ctx.ellipse(x,y,w*.76,h*.76,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=gradient;
+ ctx.beginPath();
+ ctx.ellipse(x,y,w*.72,h*.62,0,0,Math.PI*2);
+ ctx.fill();
  ctx.restore();
 }
-function drawChapter1StyleBulletHalo075(x,y,r,color){
+function drawChapter1CircleBullet076(x,y,r,fill,glow){
+ // Chapter 1 bullets rely on a small shadow attached to the projectile itself.
  ctx.save();
- ctx.globalCompositeOperation='screen';
- ctx.globalAlpha=.32;
- ctx.fillStyle=color;
- ctx.beginPath();ctx.arc(x,y,r*2.35,0,Math.PI*2);ctx.fill();
- ctx.globalAlpha=.16;
- ctx.beginPath();ctx.arc(x,y,r*3.25,0,Math.PI*2);ctx.fill();
+ ctx.shadowColor=glow||fill||'#fff';
+ ctx.shadowBlur=7;
+ ctx.fillStyle=fill||'#fff';
+ ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+ ctx.shadowBlur=0;
+ ctx.fillStyle='rgba(255,255,255,.88)';
+ ctx.beginPath();ctx.arc(x,y,Math.max(1.9,r*.34),0,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
+function drawDeadlineShard076(b){
+ const s=BULLET_VISUAL_SCALE;
+ const a=Math.atan2(b.vy,b.vx)+Math.PI/2;
+ ctx.save();ctx.translate(b.x,b.y);ctx.rotate(a);ctx.lineJoin='round';ctx.lineCap='round';
+ // Short tapered exhaust, kept close to the projectile so it reads as motion rather than a round halo.
+ const tail=ctx.createLinearGradient(0,8*s,0,28*s);
+ tail.addColorStop(0,'rgba(255,112,150,.46)');
+ tail.addColorStop(.46,'rgba(185,88,255,.20)');
+ tail.addColorStop(1,'rgba(185,88,255,0)');
+ ctx.fillStyle=tail;
+ ctx.beginPath();ctx.moveTo(-4.2*s,7*s);ctx.lineTo(0,29*s);ctx.lineTo(4.2*s,7*s);ctx.closePath();ctx.fill();
+ // Thick game-style outer shell.
+ ctx.shadowColor='#ff5368';ctx.shadowBlur=7;
+ ctx.beginPath();
+ ctx.moveTo(0,-16*s);ctx.lineTo(8.5*s,-7*s);ctx.lineTo(9.5*s,3*s);ctx.lineTo(5.5*s,12*s);ctx.lineTo(0,16*s);ctx.lineTo(-5.5*s,12*s);ctx.lineTo(-9.5*s,3*s);ctx.lineTo(-8.5*s,-7*s);ctx.closePath();
+ const shell=ctx.createLinearGradient(0,-16*s,0,16*s);
+ shell.addColorStop(0,'#ff8197');shell.addColorStop(.42,'#ff4568');shell.addColorStop(1,'#9f244b');
+ ctx.fillStyle=shell;ctx.fill();ctx.strokeStyle='#220812';ctx.lineWidth=3.4*s;ctx.stroke();
+ // Faceted inner blade / hot core.
+ ctx.shadowColor='#fff0c0';ctx.shadowBlur=4.5;
+ ctx.beginPath();ctx.moveTo(0,-10.5*s);ctx.lineTo(4.2*s,-3*s);ctx.lineTo(2.6*s,8.5*s);ctx.lineTo(0,11*s);ctx.lineTo(-2.6*s,8.5*s);ctx.lineTo(-4.2*s,-3*s);ctx.closePath();
+ ctx.fillStyle='#ffd8e5';ctx.fill();
+ ctx.beginPath();ctx.moveTo(0,-8*s);ctx.lineTo(0,8*s);ctx.strokeStyle='#fff7d8';ctx.lineWidth=2.2*s;ctx.stroke();
+ // Side notches give it a deliberate mine/deadline projectile silhouette.
+ ctx.shadowBlur=0;ctx.strokeStyle='#ffb1c8';ctx.lineWidth=1.5*s;
+ ctx.beginPath();ctx.moveTo(-6.5*s,1*s);ctx.lineTo(-2.4*s,1*s);ctx.moveTo(2.4*s,1*s);ctx.lineTo(6.5*s,1*s);ctx.stroke();
  ctx.restore();
 }
 function drawEnemy(e){
@@ -2361,16 +2396,12 @@ function drawEnemy(e){
   ctx.restore();
  }
 
- // Always-on identity halo, stronger during attacks.
- let glowAlpha=e.type==='swarm'?.14:.19,glowBoost=1;
- if(e.type==='laser'&&(e.state==='locked'||e.state==='fire')){glowAlpha=.31;glowBoost=1.25;}
- if(e.type==='mine'&&e.state==='arm'&&e.arm<.9){glowAlpha=.36;glowBoost=1.35;}
- if(e.type==='suicide'&&e.state==='seek'){glowAlpha=.27+.08*(.5+.5*Math.sin(e.t*10));glowBoost=1.18;}
- drawChapter1StyleHalo075(drawX,drawY,w,h,glowColor,Math.min(.42,glowAlpha*1.15)*alpha);
- drawSoftGlow(drawX,drawY,w*.48*glowBoost,h*.48*glowBoost,glowColor,Math.min(.32,glowAlpha)*alpha);
+ // Chapter 1 visual treatment: a close elliptical aura plus a small sprite-attached shadow.
+ drawChapter1EnemyAura076(drawX,drawY,w,h,glowColor,alpha);
+ const chapter1EnemyShadow076=9+Math.sin(performance.now()*.004+(e.phase||0))*2;
 
  if(sprite){
-  drawSprite(sprite,drawX,drawY,w,h,angle,alpha,{color:glowColor,blur:16*glowBoost});
+  drawSprite(sprite,drawX,drawY,w,h,angle,alpha,{color:glowColor,blur:chapter1EnemyShadow076});
   drawSpriteFlash(sprite,drawX,drawY,w,h,angle,(e.hitFlash||0)*.62);
  }else{
   ctx.save();ctx.translate(drawX,drawY);ctx.rotate(angle);ctx.globalAlpha=alpha;circle(0,0,e.r,e.color,'#111',3);ctx.restore();
@@ -2459,7 +2490,7 @@ function drawHazards(){
   else {ctx.save();ctx.beginPath();ctx.moveTo(l.a.x,l.a.y);ctx.lineTo(l.b.x,l.b.y);const blink=.25+.55*(.5+.5*Math.sin(waveTime*16));ctx.globalAlpha=blink;ctx.strokeStyle='#93ecff';ctx.lineWidth=2.5;ctx.setLineDash([10,10]);ctx.stroke();ctx.restore();}
  }
  for(const p of tractorPairs){const[a,b]=p;if(a.dead||b.dead)continue;ctx.save();ctx.strokeStyle='rgba(92,232,245,.20)';ctx.lineWidth=21;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.strokeStyle='#6cebf5';ctx.lineWidth=5;ctx.stroke();ctx.restore();}
- for(const b of boomerangs){drawSoftGlow(b.x,b.y,34*BULLET_VISUAL_SCALE,20*BULLET_VISUAL_SCALE,'#ffd996',.26);drawSprite(FX_SPRITES.boomer,b.x,b.y,54*BULLET_VISUAL_SCALE,28*BULLET_VISUAL_SCALE,b.t*7,1,{color:'#ffe2a4',blur:18});}
+ for(const b of boomerangs){drawSprite(FX_SPRITES.boomer,b.x,b.y,54*BULLET_VISUAL_SCALE,28*BULLET_VISUAL_SCALE,b.t*7,1,{color:'#ffe2a4',blur:7});}
  for(const beam of survivalBeams){
   const a=beamPoint(beam.a),b=beamPoint(beam.b);
   if(beam.warn){ctx.save();ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);const blink=.38+.38*(.5+.5*Math.sin(waveTime*17+(beam.phase||0)));ctx.globalAlpha=blink;ctx.strokeStyle=beam.color;ctx.lineWidth=Math.max(2,(beam.width||14)*.18);ctx.setLineDash([9,11]);ctx.lineDashOffset=-waveTime*46;ctx.stroke();ctx.restore();}
@@ -2486,34 +2517,30 @@ function drawPlayer(){
  const drawH=drawW*ratio;
  const t=performance.now(),bob=Math.sin(t*.004)*3.8,shake=Math.sin(t*.012)*1.15;
  if(drawSprite(HOBANWOO_PLAYER_SPRITE,player.x+shake,player.y+bob,drawW,drawH,Math.sin(t*.003)*.02,alpha,{color:'rgba(255,255,255,.75)',blur:10}))return;
- ctx.save();ctx.translate(player.x,player.y);ctx.globalAlpha=alpha;ctx.fillStyle='#f0f5ff';ctx.strokeStyle='#72b7ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,-34);ctx.lineTo(25,25);ctx.lineTo(0,15);ctx.lineTo(-25,25);ctx.closePath();ctx.fill();ctx.stroke();circle(0,3,6,'#72b7ff');ctx.restore();
+ ctx.save();ctx.translate(player.x,player.y);ctx.globalAlpha=alpha;ctx.shadowColor='rgba(255,255,255,.75)';ctx.shadowBlur=10;ctx.fillStyle='#f0f5ff';ctx.strokeStyle='#72b7ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,-34);ctx.lineTo(25,25);ctx.lineTo(0,15);ctx.lineTo(-25,25);ctx.closePath();ctx.fill();ctx.stroke();circle(0,3,6,'#72b7ff');ctx.restore();
 }
 function drawBullets(){
  for(const b of bullets){
   const glow=bulletGlowColor(b);
-  if(b.kind==='splitShard'){drawChapter1StyleBulletHalo075(b.x,b.y,11*BULLET_VISUAL_SCALE,glow);drawSoftGlow(b.x,b.y,22*BULLET_VISUAL_SCALE,22*BULLET_VISUAL_SCALE,glow,.32);drawSprite(FX_SPRITES.split,b.x,b.y,28*BULLET_VISUAL_SCALE,28*BULLET_VISUAL_SCALE,b.t?b.t*6:0,1,{color:glow,blur:20});continue;}
-  if(b.kind==='orb'){drawChapter1StyleBulletHalo075(b.x,b.y,12*BULLET_VISUAL_SCALE,glow);drawSoftGlow(b.x,b.y,25*BULLET_VISUAL_SCALE,25*BULLET_VISUAL_SCALE,glow,.36);drawSprite(FX_SPRITES.orb,b.x,b.y,31*BULLET_VISUAL_SCALE,31*BULLET_VISUAL_SCALE,0,1,{color:glow,blur:22});continue;}
-  if(b.kind==='crystal'){drawChapter1StyleBulletHalo075(b.x,b.y,13*BULLET_VISUAL_SCALE,'#ff765f');drawSoftGlow(b.x,b.y,27*BULLET_VISUAL_SCALE,27*BULLET_VISUAL_SCALE,'#ff765f',.36);drawSprite(FX_SPRITES.crystal,b.x,b.y,35*BULLET_VISUAL_SCALE,35*BULLET_VISUAL_SCALE,b.t?b.t*4:0,1,{color:'#ff765f',blur:22});continue;}
-  if(b.kind==='pod'){drawChapter1StyleBulletHalo075(b.x,b.y,12*BULLET_VISUAL_SCALE,glow);drawSoftGlow(b.x,b.y,24*BULLET_VISUAL_SCALE,29*BULLET_VISUAL_SCALE,glow,.34);drawSprite(FX_SPRITES.pod,b.x,b.y,29*BULLET_VISUAL_SCALE,37*BULLET_VISUAL_SCALE,b.a||0,1,{color:glow,blur:20});continue;}
-  if(b.kind==='hook'){drawChapter1StyleBulletHalo075(b.x,b.y,12*BULLET_VISUAL_SCALE,glow);drawSoftGlow(b.x,b.y,25*BULLET_VISUAL_SCALE,31*BULLET_VISUAL_SCALE,glow,.35);drawSprite(FX_SPRITES.hook,b.x,b.y,31*BULLET_VISUAL_SCALE,39*BULLET_VISUAL_SCALE,0,1,{color:glow,blur:21});continue;}
-  if(b.kind==='paperChip'){drawChapter1StyleBulletHalo075(b.x,b.y,10*BULLET_VISUAL_SCALE,'#ffe0a2');drawSoftGlow(b.x,b.y,22*BULLET_VISUAL_SCALE,14*BULLET_VISUAL_SCALE,'#ffe0a2',.32);drawSprite(FX_SPRITES.boomer,b.x,b.y,31*BULLET_VISUAL_SCALE,16*BULLET_VISUAL_SCALE,(b.t||0)*4,1,{color:'#ffe2a8',blur:18});continue;}
-  if(b.kind==='deadlineShard'){
-   const s=BULLET_VISUAL_SCALE,rot=Math.atan2(b.vy,b.vx)+Math.PI/2;
-   drawChapter1StyleBulletHalo075(b.x,b.y,15*s,'#ff5d86');
-   drawSoftGlow(b.x,b.y,42*s,54*s,'#d96cff',.34);
-   drawSoftGlow(b.x,b.y,28*s,38*s,'#ff4c70',.46);
-   ctx.save();ctx.translate(b.x,b.y);ctx.rotate(rot);ctx.lineJoin='round';ctx.lineCap='round';
-   ctx.shadowColor='rgba(255,76,140,.92)';ctx.shadowBlur=10*s;
-   ctx.beginPath();ctx.moveTo(0,-14*s);ctx.lineTo(8*s,-3*s);ctx.lineTo(6*s,8*s);ctx.lineTo(0,14*s);ctx.lineTo(-6*s,8*s);ctx.lineTo(-8*s,-3*s);ctx.closePath();
-   ctx.fillStyle='#ff4568';ctx.fill();ctx.strokeStyle='#260611';ctx.lineWidth=3.2*s;ctx.stroke();
-   ctx.shadowColor='rgba(255,236,188,.9)';ctx.shadowBlur=5*s;
-   ctx.beginPath();ctx.moveTo(0,-9*s);ctx.lineTo(0,8*s);ctx.strokeStyle='#fff1b9';ctx.lineWidth=2.3*s;ctx.stroke();
-   ctx.beginPath();ctx.moveTo(-3.5*s,-2*s);ctx.lineTo(3.5*s,-2*s);ctx.strokeStyle='#ffb3d0';ctx.lineWidth=1.7*s;ctx.stroke();
-   ctx.restore();continue;
-  }
-  drawChapter1StyleBulletHalo075(b.x,b.y,b.r*BULLET_VISUAL_SCALE,glow);drawSoftGlow(b.x,b.y,b.r*2.65*BULLET_VISUAL_SCALE,b.r*2.65*BULLET_VISUAL_SCALE,glow,.28);circle(b.x,b.y,b.r*BULLET_VISUAL_SCALE,b.color);circle(b.x,b.y,Math.max(1.9,b.r*.34*BULLET_VISUAL_SCALE),'rgba(255,255,255,.88)');
+  if(b.kind==='splitShard'){drawSprite(FX_SPRITES.split,b.x,b.y,28*BULLET_VISUAL_SCALE,28*BULLET_VISUAL_SCALE,b.t?b.t*6:0,1,{color:glow,blur:7});continue;}
+  if(b.kind==='orb'){drawSprite(FX_SPRITES.orb,b.x,b.y,31*BULLET_VISUAL_SCALE,31*BULLET_VISUAL_SCALE,0,1,{color:glow,blur:7});continue;}
+  if(b.kind==='crystal'){drawSprite(FX_SPRITES.crystal,b.x,b.y,35*BULLET_VISUAL_SCALE,35*BULLET_VISUAL_SCALE,b.t?b.t*4:0,1,{color:'#ff765f',blur:7});continue;}
+  if(b.kind==='pod'){drawSprite(FX_SPRITES.pod,b.x,b.y,29*BULLET_VISUAL_SCALE,37*BULLET_VISUAL_SCALE,b.a||0,1,{color:glow,blur:7});continue;}
+  if(b.kind==='hook'){drawSprite(FX_SPRITES.hook,b.x,b.y,31*BULLET_VISUAL_SCALE,39*BULLET_VISUAL_SCALE,0,1,{color:glow,blur:7});continue;}
+  if(b.kind==='paperChip'){drawSprite(FX_SPRITES.boomer,b.x,b.y,31*BULLET_VISUAL_SCALE,16*BULLET_VISUAL_SCALE,(b.t||0)*4,1,{color:'#ffe2a8',blur:7});continue;}
+  if(b.kind==='deadlineShard'){drawDeadlineShard076(b);continue;}
+  drawChapter1CircleBullet076(b.x,b.y,b.r*BULLET_VISUAL_SCALE,b.color,glow);
  }
- for(const b of playerBullets){const path=PLAYER_SHOT_SPRITES[b.sprite??0]||PLAYER_SHOT_SPRITES[0],size=b.visualSize||22,rot=b.kind==='gear'?(performance.now()*.010):b.kind==='atom'?(performance.now()*.004):0,w=b.kind==='formula'?size*2.05:size*1.65,h=b.kind==='formula'?size*1.15:size*1.65;if(!drawSprite(path,b.x,b.y,w,h,rot,1,{color:b.kind==='atom'?'#ffff9b':'#8be9ff',blur:9})){ctx.fillStyle='#d5f2ff';ctx.fillRect(b.x-2.5,b.y-12,5,22);}}
+ // Chapter 1 exact science-shot boxes: gear/atom = 1.7x, formula = 3.8 x 1.85.
+ for(const b of playerBullets){
+  const path=PLAYER_SHOT_SPRITES[b.sprite??0]||PLAYER_SHOT_SPRITES[0],size=b.visualSize||22;
+  const rot=b.kind==='gear'?(performance.now()*.010):b.kind==='atom'?(performance.now()*.004):0;
+  const w=b.kind==='formula'?size*3.8:size*1.7;
+  const h=b.kind==='formula'?size*1.85:size*1.7;
+  if(!drawSprite(path,b.x,b.y,Math.max(9,w),Math.max(9,h),rot,1,{color:b.kind==='atom'?'#ffff9b':'#8be9ff',blur:9})){
+   ctx.save();ctx.shadowColor='#8be9ff';ctx.shadowBlur=9;ctx.fillStyle='#d5f2ff';ctx.fillRect(b.x-3,b.y-14,6,24);ctx.restore();
+  }
+ }
 }
 function drawPowerUps(){
  for(const p of powerups){
