@@ -303,6 +303,58 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     if (normalized.includes(locationTransitionHook)) {
       normalized = normalized.replace(locationTransitionHook, locationTransitionWithTitle);
     }
+
+    // 테스트 장면을 선택해도 해당 장면만 재생하고 메뉴로 돌아가지 않는다.
+    // 선택한 지점부터 Part 1의 남은 실제 스토리 세그먼트를 이어 붙여 Part 2까지 자연스럽게 진행한다.
+    const part1DebugPreviewHook = `    preview: playSelectedPreview
+  };`;
+    const part1FlowPreviewHook = `    preview: playSelectedPreview,
+    resumeFlowPreview: previewId => {
+      if (previewId === 'full-flow') {
+        restartFlow();
+        return;
+      }
+
+      const orderedFlowSegments = [
+        ['prologue-dialogue', 'prologue'],
+        ['opening-credits-cinematic', 'openingCredits'],
+        ['entrance-dialogue', 'entrance'],
+        ['notice-dialogue', 'notice'],
+        ['login-dialogue', 'login'],
+        ['room-dialogue', 'room'],
+        ['attendance-dialogue', 'attendance'],
+        ['attendance-escape-dialogue', 'attendanceEscape'],
+        ['first-purification-dialogue', 'firstPurification'],
+        ['decision-dialogue', 'decision']
+      ];
+      const startIndex = orderedFlowSegments.findIndex(([id]) => id === previewId);
+
+      if (startIndex >= 0 || previewId === 'first-purification-cinematic') {
+        unlockDialogueAudio();
+        clearFlowTimers();
+        hideSceneSelector();
+        activePreviewId = null;
+        endPanel.hidden = true;
+        resetGameState();
+        gameLayer.hidden = true;
+        storyStage.classList.remove('is-game-mode');
+
+        const selectedSegments = previewId === 'first-purification-cinematic'
+          ? ['firstPurificationCinematic', 'firstPurification', 'decision']
+          : orderedFlowSegments.slice(startIndex).map(([, segmentId]) => segmentId);
+        storySegments.__selectedFlowContinuation = selectedSegments.flatMap(segmentId => storySegments[segmentId] || []);
+        beginStory('__selectedFlowContinuation', 'finish', { forceFullScene: true });
+        return;
+      }
+
+      playSelectedPreview(previewId);
+      activePreviewId = null;
+    }
+  };`;
+    if (!normalized.includes(part1DebugPreviewHook)) {
+      throw new Error('Chapter 1 Part 1 preview debug hook was not found.');
+    }
+    normalized = normalized.replace(part1DebugPreviewHook, part1FlowPreviewHook);
     return normalized;
   }
 
@@ -315,10 +367,13 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   const flowPreviewHook = `    preview: playSelectedPreview,
     resumeFlowPreview: previewId => {
       playSelectedPreview(previewId);
-      if (previewId === 'chapter-end-dialogue') {
+      activePreviewId = null;
+
+      if (previewId === 'boss-dialogue') {
+        storyCompletionAction = 'startBossBattle';
+      } else if (previewId === 'chapter-end-dialogue') {
         storyCompletionAction = 'finish';
       }
-      activePreviewId = null;
     }
   };`;
 
@@ -1528,6 +1583,15 @@ html.is-embedded-story #locationTransition {
   0%, 13% { opacity: 0; transform: translate(-50%, -50%) scale(.9); }
   23%, 82% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -53%) scale(1.035); }
+}
+
+/* 첫 정화 조각 흡수: 학생증 뒤의 방사형(repeating-conic) 광선은 제거하고
+   기존 aura/glint/drop-shadow의 부드러운 발광만 유지한다. */
+html.is-embedded-story [data-effect="first-purification-absorb"] .purify-card-rays {
+  display: none !important;
+  opacity: 0 !important;
+  animation: none !important;
+  background: none !important;
 }
 
 /* 학사 시스템 비상 통제 전환은 스토리 프레임에 갇히지 않고 브라우저 전체를 덮는다. */
