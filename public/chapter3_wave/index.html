@@ -45,8 +45,8 @@
   }
   body.embedded .embeddedLifeHud{display:flex}
   .embeddedLifeShield{
-    width:27px;
-    height:31px;
+    width:28px;
+    height:32px;
     display:block;
     flex:none;
   }
@@ -118,13 +118,11 @@ const norm=(x,y)=>{const d=Math.hypot(x,y)||1;return{x:x/d,y:y/d}};
 const angleDiff=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
 
 const lifeShieldSvg066 = active => `
-  <svg class="embeddedLifeShield" viewBox="0 0 32 36" aria-hidden="true">
-    <path d="M16 1.6 29.5 6.9 27.3 24.1 16 34.4 4.7 24.1 2.5 6.9Z"
-      fill="#050b14"/>
-    <path d="M16 4.8 26.7 9 24.9 22.5 16 30.4 7.1 22.5 5.3 9Z"
-      fill="${active ? '#ff2d46' : '#343a46'}"/>
-    <path d="M7.2 9.7 16 6.2 24.8 9.7 24.2 14.3H7.8Z"
-      fill="${active ? '#ff4359' : '#414854'}" opacity=".9"/>
+  <svg class="embeddedLifeShield" viewBox="0 0 28 32" aria-hidden="true" shape-rendering="crispEdges">
+    <!-- Chapter 1 life shield silhouette: black shell + faceted red/gray core. -->
+    <path d="M10 0H18L25 4L28 8L26 23L14 32L2 23L0 8L3 4Z" fill="#01050b"/>
+    <path d="M10 4H18L24 7L25 9L23 21L14 28L5 21L3 9L4 7Z" fill="${active ? '#d60020' : '#34383f'}"/>
+    <path d="M10 4H18L24 7L25 9L24 16H4L3 9L4 7Z" fill="${active ? '#ff414d' : '#3d4249'}"/>
   </svg>`;
 let lastLifeHp066=-1,lastLifeMax066=-1;
 function renderEmbeddedLifeHud066(){
