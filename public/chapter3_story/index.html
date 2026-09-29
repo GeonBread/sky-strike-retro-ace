@@ -6250,6 +6250,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     }
 
     shell.className = `global-effect-actor-shell is-${side} ${isSpeaking ? 'is-speaking' : 'is-inactive'}`;
+    shell.dataset.character = actorId;
     shell.style.setProperty('--character-scale', actorEl?.style.getPropertyValue('--character-scale') || String(item.actorScale || actorCharacter?.scale || 1));
     image.src = source;
     image.alt = actorImage?.alt || actorCharacter?.alt || actorCharacter?.name || actorId;
@@ -13690,6 +13691,82 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) .story-sectio
 body:has(.story-body-effect-host[data-persistent-dialogue="true"]) .dialogue-jump-panel,
 body:has(.story-body-effect-host[data-persistent-dialogue="true"]) .story-effect-panel{
   z-index:2147483647!important;
+}
+</style>
+
+
+<style id="chapter3-patch-082-normal-actor-size-scene-button">
+/* PATCH082: persistent fullscreen browser stays fullscreen, but Hobanwoo uses the exact
+   geometry used by the normal Chapter 3 story actor instead of a custom fullscreen size. */
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-shell[data-character="hobanwoo"]{
+  position:absolute!important;
+  bottom:22%!important;
+  width:clamp(190px,42%,340px)!important;
+  height:64%!important;
+  opacity:1!important;
+  visibility:visible!important;
+  filter:none!important;
+  animation:none!important;
+  transform-origin:right bottom!important;
+}
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-shell[data-character="hobanwoo"].is-right.is-speaking{
+  right:1.5%!important;
+  left:auto!important;
+  transform:translateX(-8%) scale(1)!important;
+}
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-shell[data-character="hobanwoo"].is-right.is-inactive{
+  right:1.5%!important;
+  left:auto!important;
+  transform:translateX(29%) scale(1)!important;
+}
+.global-effect-actor-overlay.is-persistent-web-dialogue080.is-game-geometry081 .global-effect-actor-shell[data-character="hobanwoo"] .global-effect-actor-image{
+  position:absolute!important;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:0!important;
+  width:auto!important;
+  height:58%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  translate:-50% 0!important;
+  transform:scaleX(var(--character-flip,1)) scale(1)!important;
+  transform-origin:center bottom!important;
+  opacity:1!important;
+  visibility:visible!important;
+  animation:none!important;
+  filter:drop-shadow(0 22px 28px rgba(0,0,0,.58))!important;
+}
+
+/* The actual existing scene-selection button stays accessible during fullscreen web dialogue.
+   Pull the button itself out of the fading controls bar and pin it above actor/dialogue/effect. */
+body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySectionButton{
+  position:fixed!important;
+  top:14px!important;
+  right:16px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:2147483647!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:92px!important;
+  padding:9px 14px!important;
+  margin:0!important;
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+  border:1px solid rgba(191,124,38,.86)!important;
+  border-radius:8px!important;
+  background:rgba(53,31,7,.94)!important;
+  color:#fff!important;
+  font:900 13px/1 "Noto Sans KR",sans-serif!important;
+  box-shadow:0 6px 20px rgba(0,0,0,.38)!important;
+}
+body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySectionButton:hover{
+  background:rgba(86,48,8,.98)!important;
 }
 </style>
 
