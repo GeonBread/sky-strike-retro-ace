@@ -504,8 +504,7 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   }
   normalized = normalized.replace(corePortalEntryHook, corePortalEntryV26);
 
-  // Fullscreen boss appearance is optional: if a source variant does not contain the exact hook,
-  // never abort Chapter 1 startup. This prevents the entire story from rendering blank.
+  // 보스맵 도착용 body 고정 레이어가 흐름 중단 시 남지 않도록 정리한다.
   const clearBossArrivalOverlayHook = `  function clearBossEntrySequence() {
     bossEntrySequenceTimers.forEach(timer => window.clearTimeout(timer));
     bossEntrySequenceTimers = [];`;
@@ -517,29 +516,12 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     normalized = normalized.replace(clearBossArrivalOverlayHook, clearBossArrivalOverlayV2);
   }
 
-  const bossAppearanceStartHook = `  function startBossAppearance() {
-    flowMode = 'boss-cinematic';
-    document.body.dataset.flowMode = 'game';
-    storyStage.classList.add('is-game-mode');`;
-  const bossAppearanceStartFullscreen = `  function startBossAppearance() {
-    flowMode = 'boss-cinematic';
-    document.body.dataset.flowMode = 'game';
-    storyStage.classList.add('is-game-mode', 'is-boss-appearance-fullscreen');`;
-  if (normalized.includes(bossAppearanceStartHook)) {
-    normalized = normalized.replace(bossAppearanceStartHook, bossAppearanceStartFullscreen);
-  }
-  const bossAppearanceEndHook = `      game.bossAppearanceActive = false;
-      gameLayer.classList.remove('is-boss-arriving');`;
-  const bossAppearanceEndFullscreen = `      game.bossAppearanceActive = false;
-      gameLayer.classList.remove('is-boss-arriving');
-      storyStage.classList.remove('is-boss-appearance-fullscreen');`;
-  if (normalized.includes(bossAppearanceEndHook)) {
-    normalized = normalized.replace(bossAppearanceEndHook, bossAppearanceEndFullscreen);
-  }
-  const clearFlowFullscreenHook = `    gameLayer.classList.remove('is-energy-complete', 'is-boss-arriving');`;
-  if (normalized.includes(clearFlowFullscreenHook)) {
-    normalized = normalized.replace(clearFlowFullscreenHook, `${clearFlowFullscreenHook}
-    storyStage.classList.remove('is-core-portal-fullscreen', 'is-boss-appearance-fullscreen');`);
+  // 실제 전투용 startBossAppearance는 원래 게임 프레임 크기를 유지한다.
+  // 전체화면은 bossIntro 안의 gatekeeper-entrance 스토리 연출에만 적용한다.
+  const clearPortalFullscreenHook = `    gameLayer.classList.remove('is-energy-complete', 'is-boss-arriving');`;
+  if (normalized.includes(clearPortalFullscreenHook)) {
+    normalized = normalized.replace(clearPortalFullscreenHook, `${clearPortalFullscreenHook}
+    storyStage.classList.remove('is-core-portal-fullscreen');`);
   }
 
   return normalized;
@@ -700,9 +682,8 @@ html.is-embedded-story .continue-indicator {
   font-size: 22px !important;
 }
 
-/* 포탈 진입/보스 등장 동안만 브라우저 전체 화면을 사용한다. */
-html.is-embedded-story .story-stage.is-core-portal-fullscreen,
-html.is-embedded-story .story-stage.is-boss-appearance-fullscreen {
+/* 코어 포탈 진입 동안만 포탈용 스토리 스테이지를 브라우저 전체 화면으로 확장한다. */
+html.is-embedded-story .story-stage.is-core-portal-fullscreen {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
@@ -714,11 +695,45 @@ html.is-embedded-story .story-stage.is-boss-appearance-fullscreen {
   box-shadow: none !important;
   z-index: 100000 !important;
 }
-html.is-embedded-story .story-stage.is-core-portal-fullscreen .chapter1-core-portal-overlay,
-html.is-embedded-story .story-stage.is-boss-appearance-fullscreen .game-layer,
-html.is-embedded-story .story-stage.is-boss-appearance-fullscreen #gameCanvas {
+html.is-embedded-story .story-stage.is-core-portal-fullscreen .chapter1-core-portal-overlay {
   width: 100% !important;
   height: 100% !important;
+}
+
+/* bossIntro에서 게이트키퍼가 처음 실체화하는 6.5초 스토리 연출만 실제 브라우저 전체화면으로 표시한다.
+   전투용 startBossAppearance/GameCanvas에는 이 규칙을 적용하지 않는다. */
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  z-index: 100000 !important;
+}
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen .background-stack,
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen .scene-background,
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen .story-effect-layer,
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen .gatekeeper-entrance-effect {
+  width: 100% !important;
+  height: 100% !important;
+}
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen.is-cinematic-effect .story-effect-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 100001 !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen .gatekeeper-entrance-effect {
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 0 !important;
 }
 
 /* CH1 코어 영역 이동: 일러스트 없이, 세워진 타원형 포탈 자체가 영롱하게 발광한다. */
