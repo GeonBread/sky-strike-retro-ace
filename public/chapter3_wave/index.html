@@ -82,6 +82,63 @@ const SINGLE_WAVE=QUERY.get('single')==='1';
 const INITIAL_WAVE_INDEX=Math.max(0,Math.min(999,Number.parseInt(QUERY.get('start')||'0',10)||0));
 const INITIAL_POWER_LEVEL=Math.max(1,Math.min(5,Number.parseInt(QUERY.get('power')||'1',10)||1));
 if(EMBEDDED){document.body.classList.add('embedded');hudRight.style.display='none';}
+
+/* PATCH 065: move the EXISTING host life/shield group itself to the Chapter 1 top-right position.
+   Previous patches only changed stylesheet layout; the live React HUD could still re-render on the left.
+   Because the embedded wave is same-origin, position the real DOM node with inline !important styles
+   using the actual game-frame rectangle. This does not redraw or restyle the shield icons. */
+function installEmbeddedLifeHudTopRight065(){
+ if(!EMBEDDED || !window.parent || window.parent===window) return;
+ try{
+  const pdoc=window.parent.document;
+  let raf=0;
+  const apply=()=>{
+   raf=0;
+   const host=pdoc.querySelector('.chapter3WaveHostHud');
+   const topBar=pdoc.querySelector('.chapter3WaveHudTopBar');
+   const frame=pdoc.querySelector('.chapter3WaveFrame');
+   if(!host || !frame) return;
+
+   /* Prefer the explicit HP group. Fallback to the first visible top-bar group used by the host HUD. */
+   let hp=host.querySelector('.chapter3WaveHudHp') || pdoc.querySelector('.chapter3WaveHudHp');
+   if(!hp && topBar){
+    hp=[...topBar.children].find(el=>{
+     const cs=window.parent.getComputedStyle(el);
+     return cs.display!=='none' && cs.visibility!=='hidden';
+    }) || topBar.firstElementChild;
+   }
+   if(!hp) return;
+
+   const rect=frame.getBoundingClientRect();
+   const hpRect=hp.getBoundingClientRect();
+   const width=Math.max(1,hpRect.width || hp.offsetWidth || 96);
+   const top=Math.round(rect.top + 16);
+   const left=Math.round(rect.right - 32 - width);
+
+   hp.style.setProperty('position','fixed','important');
+   hp.style.setProperty('top',`${top}px`,'important');
+   hp.style.setProperty('left',`${left}px`,'important');
+   hp.style.setProperty('right','auto','important');
+   hp.style.setProperty('bottom','auto','important');
+   hp.style.setProperty('margin','0','important');
+   hp.style.setProperty('transform','none','important');
+   hp.style.setProperty('z-index','999','important');
+   hp.style.setProperty('display','flex','important');
+   hp.style.setProperty('flex-direction','row','important');
+   hp.style.setProperty('align-items','center','important');
+   hp.style.setProperty('justify-content','flex-start','important');
+  };
+  const schedule=()=>{if(!raf)raf=window.parent.requestAnimationFrame(apply);};
+  apply();
+  const observer=new window.parent.MutationObserver(schedule);
+  observer.observe(pdoc.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+  window.parent.addEventListener('resize',schedule,{passive:true});
+  window.addEventListener('beforeunload',()=>{observer.disconnect();if(raf)window.parent.cancelAnimationFrame(raf);},{once:true});
+  /* Cover the first few React HUD state renders immediately after the iframe becomes ready. */
+  [0,60,160,320,650,1200].forEach(ms=>setTimeout(schedule,ms));
+ }catch{}
+}
+if(EMBEDDED) setTimeout(installEmbeddedLifeHudTopRight065,0);
 const WAVE_CHANNEL='sky-strike-chapter3-wave';
 function emitWave(type,detail={}){try{if(window.parent&&window.parent!==window)window.parent.postMessage({channel:WAVE_CHANNEL,type,detail},location.origin);}catch{}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
