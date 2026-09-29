@@ -123,9 +123,9 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   normalized = normalized.replace(debugSetKillsHook, debugResumeCheckpointHook);
 
   // 프롤로그 입학식 장면은 두리번거리는 wander 카메라를 사용하지 않는다.
-  // 3초 동안 원본 그림 전체가 잘리지 않도록 정지된 contain 프리뷰로 보여준 뒤 대사를 시작한다.
+  // 검은 화면을 잠깐 유지한 뒤 약 1.4초간 페이드 인하고, 완전히 나타난 원본 그림을 약 3초간 정지 표시한다.
   const admissionWanderPreview = `      effectOnly: true, effect: 'scene-preview', previewStyle: 'wander', effectDuration: 3000, scene: { ...admissionDayScene }`;
-  const admissionStaticPreview = `      effectOnly: true, effect: 'scene-preview', previewStyle: 'admission-hold-fit', effectDuration: 3000, scene: { ...admissionDayScene }`;
+  const admissionStaticPreview = `      effectOnly: true, effect: 'scene-preview', previewStyle: 'admission-hold-fit', effectDuration: 4650, scene: { ...admissionDayScene }`;
   if (normalized.includes(admissionWanderPreview)) {
     normalized = normalized.replace(admissionWanderPreview, admissionStaticPreview);
   }
@@ -700,7 +700,11 @@ html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) {
   max-height: 100dvh !important;
   aspect-ratio: 24 / 25 !important;
 }
-/* 입학식은 카메라 이동 없이, 원본 그림 전체가 보이는 정지 화면을 3초간 사용한다. */
+/* 입학식은 검은 화면에서 천천히 드러난 뒤 카메라 이동 없이 정지한다. */
+@keyframes chapter1AdmissionIllustrationFadeIn {
+  0%, 5.4% { opacity: 0; }
+  35.5%, 100% { opacity: 1; }
+}
 html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"] {
   position: fixed !important;
   inset: 0 !important;
@@ -724,7 +728,7 @@ html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admissi
   background-size: contain !important;
   background-repeat: no-repeat !important;
   background-position: center center !important;
-  animation: none !important;
+  animation: chapter1AdmissionIllustrationFadeIn 4.65s cubic-bezier(.22,.61,.36,1) both !important;
   transform: none !important;
   filter: none !important;
 }
