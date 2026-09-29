@@ -478,17 +478,23 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     corePortalSequenceTimer = window.setTimeout(() => {
       currentSceneId = '';
       updateScene(bossInteriorPreviewScene, { silent: true });
-      window.__CHAPTER1_SHOW_LOCATION_TITLE__?.('학사 코어 영역');
       portal.classList.remove('is-opening', 'is-entering', 'is-traveling');
       portal.remove();
       corePortalOverlay = null;
       storyStage.classList.remove('is-core-portal-fullscreen');
+      setBossEntryStageClass('');
 
-      /* 포탈 도착 직후 대사를 열지 않고, 학사 코어 내부를 카메라 이동 없이 4초간 전체 화면으로 정지 표시한다. */
-      setBossEntryStageClass('is-entry-interior-tour');
+      /* 보스맵 도착 화면은 story-stage의 좌표계나 카메라 애니메이션을 사용하지 않는다.
+         document.body에 고정 전체화면 레이어를 직접 붙여 좌우 밀림 가능성을 제거한다. */
+      document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen').forEach(node => node.remove());
+      const arrivalOverlay = document.createElement('div');
+      arrivalOverlay.className = 'chapter1-boss-map-arrival-fullscreen';
+      arrivalOverlay.style.backgroundImage = 'url(\"' + assetPath('bg_academic_system_corrupted.png') + '\")';
+      document.body.appendChild(arrivalOverlay);
+
       corePortalSequenceTimer = window.setTimeout(() => {
         corePortalSequenceTimer = null;
-        setBossEntryStageClass('');
+        arrivalOverlay.remove();
         beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
       }, 4000);
     }, 8500);
@@ -500,6 +506,17 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
 
   // Fullscreen boss appearance is optional: if a source variant does not contain the exact hook,
   // never abort Chapter 1 startup. This prevents the entire story from rendering blank.
+  const clearBossArrivalOverlayHook = `  function clearBossEntrySequence() {
+    bossEntrySequenceTimers.forEach(timer => window.clearTimeout(timer));
+    bossEntrySequenceTimers = [];`;
+  const clearBossArrivalOverlayV2 = `  function clearBossEntrySequence() {
+    bossEntrySequenceTimers.forEach(timer => window.clearTimeout(timer));
+    bossEntrySequenceTimers = [];
+    document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen').forEach(node => node.remove());`;
+  if (normalized.includes(clearBossArrivalOverlayHook)) {
+    normalized = normalized.replace(clearBossArrivalOverlayHook, clearBossArrivalOverlayV2);
+  }
+
   const bossAppearanceStartHook = `  function startBossAppearance() {
     flowMode = 'boss-cinematic';
     document.body.dataset.flowMode = 'game';
@@ -936,6 +953,23 @@ html.is-embedded-story .chapter1-core-portal-sparks::after { transform: rotate(1
 @keyframes chapter1CorePortalSurfaceShimmer {
   0% { opacity: .34; transform: translateX(-3%) skewY(-.8deg) scale(1.02); }
   100% { opacity: .8; transform: translateX(3%) skewY(.8deg) scale(1.06); }
+}
+
+/* 포탈 통과 직후 보스맵 도착 화면: 이동/확대 없이 실제 브라우저 전체화면에 고정한다. */
+html.is-embedded-story .chapter1-boss-map-arrival-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100002 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  pointer-events: none !important;
+  background-color: #050506 !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 /* 학사 코어 영역 진입 시네마틱은 브라우저 전체 화면을 사용한다. */

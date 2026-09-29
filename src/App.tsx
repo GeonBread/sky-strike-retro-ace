@@ -550,16 +550,29 @@ function GameCanvas({
     ? stage >= 4 ? 4200 : bossPhase3Active ? 3200 : bossPhase2Active ? 2400 : 1500
     : stage >= 4 ? 12000 : bossPhase3Active ? 9000 : bossPhase2Active ? 6000 : 4000;
   const bossLabel = chapter2BossOnly ? "CHAPTER 2 BOSS" : stage >= 4 ? "CHAPTER 4 BOSS" : bossPhase3Active ? "CHAPTER 3 BOSS" : bossPhase2Active ? "CHAPTER 2 BOSS" : "CHAPTER 1 BOSS";
+  const chapter1BossIntroFullscreen = chapter1BossOnly && chapter1BossIntroActive;
   const containerClassName = isStoryCombatCanvas
     ? "relative mx-auto overflow-hidden bg-slate-950 shadow-2xl flex flex-col"
     : "relative w-full h-full max-w-[840px] mx-auto bg-slate-900 border-2 border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col";
   const containerStyle: React.CSSProperties | undefined = isStoryCombatCanvas
-    ? {
-        // 보스 등장·HP 충전 연출까지 포함해 스토리 전투는 항상 동일한 24:25 게임 프레임 안에서 표시한다.
-        width: "min(96dvh, 100vw)",
-        height: "min(100dvh, 104.167vw)",
-        aspectRatio: "24 / 25",
-      }
+    ? chapter1BossIntroFullscreen
+      ? {
+          // 실제 통합 Chapter 1 보스 등장 연출만 브라우저 전체화면으로 표시한다.
+          // 등장 연출이 끝나면 기존 24:25 전투 프레임으로 돌아간다.
+          position: "fixed",
+          inset: 0,
+          zIndex: 100,
+          width: "100vw",
+          maxWidth: "none",
+          height: "100dvh",
+          maxHeight: "none",
+          aspectRatio: "auto",
+        }
+      : {
+          width: "min(96dvh, 100vw)",
+          height: "min(100dvh, 104.167vw)",
+          aspectRatio: "24 / 25",
+        }
     : undefined;
 
   return (
