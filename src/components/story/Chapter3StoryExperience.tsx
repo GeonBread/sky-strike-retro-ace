@@ -200,6 +200,8 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const [waveActive, setWaveActive] = useState(false);
   const [waveReady, setWaveReady] = useState(false);
   const [waveFailed, setWaveFailed] = useState(false);
+  const [waveRetryPromptVisible, setWaveRetryPromptVisible] = useState(false);
+  const waveRetryPromptTimerRef = useRef<number | null>(null);
   const [waveRunKey, setWaveRunKey] = useState(0);
   const [waveStartIndex, setWaveStartIndex] = useState(0);
   const [waveSingle, setWaveSingle] = useState(false);
@@ -210,6 +212,13 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const [waveExitConfirm, setWaveExitConfirm] = useState(false);
   const [wavePaused, setWavePaused] = useState(false);
   const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: 0, totalWaves: WAVES.length, enemies: 0 });
+
+  useEffect(() => () => {
+    if (waveRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(waveRetryPromptTimerRef.current);
+      waveRetryPromptTimerRef.current = null;
+    }
+  }, []);
 
   const frameSrc = useMemo(
     () => `/chapter3_story/index.html?hostSelector=1&run=${storyLaunchSerial}`,
@@ -232,6 +241,13 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     );
   };
 
+  const clearWaveRetryPromptTimer = () => {
+    if (waveRetryPromptTimerRef.current !== null) {
+      window.clearTimeout(waveRetryPromptTimerRef.current);
+      waveRetryPromptTimerRef.current = null;
+    }
+  };
+
   const returnToSelector = () => {
     /* PATCH086: the Chapter 3 story iframe may have been promoted to a browser-wide
        fixed layer by the persistent web-dialogue cinematic. Clear those inline
@@ -247,8 +263,10 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     }
 
     setFullscreenEffect(null);
+    clearWaveRetryPromptTimer();
     setWaveActive(false);
     setWaveFailed(false);
+    setWaveRetryPromptVisible(false);
     setWaveReady(false);
     setFailedWaveIndex(null);
     setWaveExitConfirm(false);
@@ -258,8 +276,10 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
   const prepareStoryLaunch = (launch: StoryLaunch, testJump = true) => {
     setFullscreenEffect(null);
+    clearWaveRetryPromptTimer();
     setWaveActive(false);
     setWaveFailed(false);
+    setWaveRetryPromptVisible(false);
     setWaveReady(false);
     setFailedWaveIndex(null);
     setWaveExitConfirm(false);
@@ -278,7 +298,9 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const launchWave = (index: number, single: boolean, origin: WaveOrigin = "selector") => {
     setFullscreenEffect(null);
     setWaveOrigin(origin);
+    clearWaveRetryPromptTimer();
     setWaveFailed(false);
+    setWaveRetryPromptVisible(false);
     setWaveReady(false);
     setWaveStartIndex(index);
     setWaveSingle(single);
@@ -402,11 +424,21 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
             ...counts,
             [failedWave]: (counts[failedWave] ?? 0) + 1,
           }));
+          clearWaveRetryPromptTimer();
+          setWaveRetryPromptVisible(false);
           setWaveFailed(true);
+          // Chapter 1 exact flow: fade the combat screen to full black for 1.35 s,
+          // then reveal the retry prompt only after the blackout has completed.
+          waveRetryPromptTimerRef.current = window.setTimeout(() => {
+            waveRetryPromptTimerRef.current = null;
+            setWaveRetryPromptVisible(true);
+          }, 1350);
           return;
         }
 
         if (message.type === "wave-complete") {
+          clearWaveRetryPromptTimer();
+          setWaveRetryPromptVisible(false);
           setWaveFailed(false);
           setWaveExitConfirm(false);
           setWavePaused(false);
@@ -435,8 +467,10 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   }, [onComplete, onExit, storyIsTestJump, storyLaunch, waveOrigin, waveStartIndex]);
 
   const retryWave = () => {
+    clearWaveRetryPromptTimer();
     if (failedWaveIndex !== null) setWaveStartIndex(failedWaveIndex);
     setFailedWaveIndex(null);
+    setWaveRetryPromptVisible(false);
     setWaveFailed(false);
     setWaveReady(false);
     setWaveRunKey((key) => key + 1);
@@ -572,17 +606,21 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       )}
 
       {waveActive && waveFailed && (
-        <div className="chapterGamePauseOverlay chapterStoryPauseOverlay chapter3WaveRetryOverlay" role="presentation">
-          <section className="chapterGamePauseDialog chapterStoryPauseDialog chapter3WaveRetryDialog" role="dialog" aria-modal="true" aria-label="챕터 3 전투 재도전 확인">
-            <small>WAVE FAILED</small>
-            <h2>다시 도전하시겠습니까?</h2>
-            <p>현재 웨이브의 처음부터 다시 시작합니다.</p>
-            {(waveDeathCounts[failedWaveIndex ?? waveStartIndex] ?? 0) >= 3 && <p className="chapter3WaveRetryBoost">반복 실패 보정 · 화력 레벨 5로 재시작</p>}
-            <div className="chapterGamePauseActions chapter3WaveRetryActions isConfirm">
-              <button type="button" className="secondary" onClick={waveOrigin === "selector" ? returnToSelector : onExit}>그만하기</button>
-              <button type="button" className="danger" onClick={retryWave}>다시하기</button>
+        <div className="chapter1-combat-death-overlay chapter3WaveDeathOverlay" role="presentation">
+          {waveRetryPromptVisible && (
+            <div className="chapterGamePauseOverlay chapterCombatRetryOverlay chapter3WaveRetryOverlay">
+              <section className="chapterGamePauseDialog chapter3WaveRetryDialog" role="dialog" aria-modal="true" aria-label="챕터 3 전투 재도전 확인">
+                <small>WAVE {String((failedWaveIndex ?? waveStartIndex) + 1).padStart(2, "0")}</small>
+                <h2>다시 도전하시겠습니까?</h2>
+                <p>현재 웨이브의 처음부터 다시 시작합니다.</p>
+                {(waveDeathCounts[failedWaveIndex ?? waveStartIndex] ?? 0) >= 3 && <p className="chapter3WaveRetryBoost">반복 실패 보정 · 화력 레벨 5로 재시작</p>}
+                <div className="chapterGamePauseActions chapter3WaveRetryActions isConfirm">
+                  <button type="button" className="secondary" onClick={waveOrigin === "selector" ? returnToSelector : onExit}>아니오</button>
+                  <button type="button" className="primary" onClick={retryWave}>예</button>
+                </div>
+              </section>
             </div>
-          </section>
+          )}
         </div>
       )}
 

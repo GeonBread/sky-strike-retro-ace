@@ -594,3 +594,29 @@
 .chapter3WaveRetryDialog h2{
   white-space:nowrap;
 }
+
+
+/* PATCH 092: Chapter 1 exact all-lives-lost blackout timing before retry prompt. */
+.chapter3StoryExperience > .chapter3WaveDeathOverlay.chapter1-combat-death-overlay{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:2147483645 !important;
+  display:grid !important;
+  place-items:center !important;
+  padding:22px !important;
+  background:rgba(0,0,0,0);
+  animation:chapter1CombatDeathFade 1.35s ease-in forwards !important;
+  pointer-events:auto !important;
+}
+.chapter3WaveDeathOverlay > .chapter3WaveRetryOverlay.chapterGamePauseOverlay{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:2 !important;
+  display:grid !important;
+  place-items:center !important;
+  pointer-events:auto !important;
+}
+@keyframes chapter1CombatDeathFade{
+  0%{background:rgba(0,0,0,0)}
+  100%{background:rgba(0,0,0,1)}
+}
