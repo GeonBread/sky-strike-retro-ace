@@ -50,6 +50,49 @@
     display:block;
     flex:none;
   }
+  /* PATCH 073: survival-only attack-disabled guidance. Not a wave-change title. */
+  .attackDisabledStatus073{
+    display:none;
+    position:absolute;
+    left:50%;
+    top:74px;
+    transform:translateX(-50%);
+    z-index:82;
+    min-width:218px;
+    padding:7px 16px 8px;
+    border:1px solid rgba(255,210,92,.72);
+    border-radius:999px;
+    background:rgba(4,8,16,.84);
+    box-shadow:0 0 0 1px rgba(255,255,255,.05) inset,0 6px 20px rgba(0,0,0,.38),0 0 20px rgba(255,193,61,.16);
+    color:#fff2b0;
+    text-align:center;
+    pointer-events:none;
+    backdrop-filter:blur(4px);
+  }
+  .attackDisabledStatus073.is-active{display:block}
+  .attackDisabledStatus073 b{
+    display:inline-block;
+    margin-right:8px;
+    color:#ffd75f;
+    font-size:15px;
+    font-weight:950;
+    letter-spacing:.06em;
+  }
+  .attackDisabledStatus073 span{
+    color:rgba(255,255,255,.9);
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:-.01em;
+  }
+  .attackDisabledStatus073.is-intro{
+    animation:attackDisabledIntro073 1.55s cubic-bezier(.18,.8,.2,1) both;
+  }
+  @keyframes attackDisabledIntro073{
+    0%{opacity:0;transform:translateX(-50%) scale(.72);filter:brightness(1)}
+    18%{opacity:1;transform:translateX(-50%) scale(1.12);filter:brightness(1.5)}
+    42%{transform:translateX(-50%) scale(1)}
+    100%{opacity:1;transform:translateX(-50%) scale(1);filter:brightness(1)}
+  }
   @media(max-width:560px){.embeddedLifeShield{width:32px;height:34px}}
 
   /* PATCH 070: Chapter 1 exact 100% purification overlay copied into Chapter 3 wave. */
@@ -144,6 +187,7 @@
   <div class="gameWrap">
     <canvas id="game" width="922" height="960"></canvas>
     <div class="embeddedLifeHud" id="embeddedLifeHud" aria-label="호반우 목숨"></div>
+    <div class="attackDisabledStatus073" id="attackDisabledStatus073" aria-live="polite"><b>공격 불가</b><span>회피에 집중하세요</span></div>
     <div class="chapter1-wave-purification-overlay070" id="chapter1PurificationOverlay070" aria-label="정화 에너지 100% 연출">
       <div class="chapter1-wave-purification-flash070"></div>
       <div class="chapter1-wave-purification-ring070 ring-a"></div>
@@ -186,6 +230,7 @@
 const cvs=document.getElementById('game'), ctx=cvs.getContext('2d');
 const hudLeft=document.getElementById('hudLeft'), hudRight=document.getElementById('hudRight');
 const embeddedLifeHud=document.getElementById('embeddedLifeHud');
+const attackDisabledStatus073=document.getElementById('attackDisabledStatus073');
 const chapter1PurificationOverlay070=document.getElementById('chapter1PurificationOverlay070');
 const notice=document.getElementById('notice'), noticeTitle=document.getElementById('noticeTitle'), noticeDesc=document.getElementById('noticeDesc');
 const restartBtn=document.getElementById('restartBtn'), invBtn=document.getElementById('invBtn'), autoBtn=document.getElementById('autoBtn');
@@ -443,6 +488,19 @@ const SURVIVAL_SPECIALS=new Set([
  'survivalElectricReposition','survivalCompressedRush'
 ]);
 function isSurvivalSpecial(sp=waves[waveIndex]?.special){return SURVIVAL_SPECIALS.has(sp);}
+function syncAttackDisabledStatus073(withIntro=false){
+ if(!attackDisabledStatus073)return;
+ const disabled=isSurvivalSpecial()&&!playerFireEnabled&&!specialState.survivalFinished;
+ attackDisabledStatus073.classList.toggle('is-active',disabled);
+ if(disabled&&withIntro){
+  attackDisabledStatus073.classList.remove('is-intro');
+  void attackDisabledStatus073.offsetWidth;
+  attackDisabledStatus073.classList.add('is-intro');
+  setTimeout(()=>attackDisabledStatus073?.classList.remove('is-intro'),1600);
+ }else if(!disabled){
+  attackDisabledStatus073.classList.remove('is-intro');
+ }
+}
 function normalizedCombatView(v){
  const w=clamp(v.w??W,120,W),h=clamp(v.h??H,110,H);
  return {x:clamp(v.x??(W-w)/2,0,W-w),y:clamp(v.y??(H-h)/2,0,H-h),w,h};
@@ -496,7 +554,7 @@ function spawnChapter2EnemyDeath072(e){
  const speed=isSmall?190:260;
  for(let i=0;i<count;i++)addChapter2DeathParticle072(e.x,e.y,color,speed);
  addEffect({kind:'ch2DeathPulse072',x:e.x,y:e.y,life:.48,r:e.r*.75,color,alpha:1});
- chapter2DeathShake072=Math.max(chapter2DeathShake072,isSmall?5:9);
+ chapter2DeathShake072=Math.max(chapter2DeathShake072,isSmall?1.25:2.6);
 }
 function spawnChapter1LikeEnemyHit(x,y){
  addEffect({kind:'ch1HitVanish',x,y,t:0,life:.2785,color:'#76e8ff',size:7,strength:.55});
@@ -1247,7 +1305,7 @@ function beginSurvivalExit(){
 function finishSurvivalExit(dt){
  const left=enemies.some(e=>e.survivalHazard&&!e.dead);
  if(!left&&!specialState.restoreStarted){specialState.restoreStarted=true;movementMode='free';animateCombatView(FULL_COMBAT_VIEW,1.15);}
- if(specialState.restoreStarted){clampPlayerToCombatView(false);if(combatViewNear(FULL_COMBAT_VIEW)&&bullets.length===0){playerFireEnabled=true;specialState.survivalFinished=true;}}
+ if(specialState.restoreStarted){clampPlayerToCombatView(false);if(combatViewNear(FULL_COMBAT_VIEW)&&bullets.length===0){playerFireEnabled=true;specialState.survivalFinished=true;syncAttackDisabledStatus073(false);}}
 }
 function updateSurvivalEnemy(e,dt){
  if(specialState.survivalExiting||e.state==='survivalExit'){
@@ -1544,6 +1602,7 @@ function startWave(i,resetRun=false){
  else if(sp==='grandFinaleMixed')initGrandFinaleMixed();
  else if(sp==='finale')spawnType('drone',5);
  else w.spawns.forEach(([t,c])=>spawnType(t,c));
+ syncAttackDisabledStatus073(isSurvivalSpecial(sp));
  renderWaveButtons();
 }
 
@@ -2170,7 +2229,7 @@ function update(dt){
   }
  }
  effects=effects.filter(f=>f.t<f.life);
- chapter2DeathShake072*=Math.pow(.03,dt);
+ chapter2DeathShake072*=Math.pow(.008,dt);
  if(finalPurification.active)return;
  if(!gameOver&&isWaveDone()){
   waveClearTimer+=dt;
@@ -2593,7 +2652,7 @@ function drawChapter1PurificationHud069(){
 }
 
 function drawFinalPurification(){}
-function render(){ctx.save();if(chapter2DeathShake072>.2)ctx.translate(rand(-chapter2DeathShake072,chapter2DeathShake072),rand(-chapter2DeathShake072,chapter2DeathShake072));drawBG();drawHazards();for(const e of enemies)drawEnemy(e);drawBullets();drawPowerUps();drawCombatFrame();drawPlayer();drawFinalPurification();drawEffects();drawBomb();ctx.restore();drawChapter1PurificationHud069();
+function render(){syncAttackDisabledStatus073(false);ctx.save();if(chapter2DeathShake072>.2)ctx.translate(rand(-chapter2DeathShake072,chapter2DeathShake072),rand(-chapter2DeathShake072,chapter2DeathShake072));drawBG();drawHazards();for(const e of enemies)drawEnemy(e);drawBullets();drawPowerUps();drawCombatFrame();drawPlayer();drawFinalPurification();drawEffects();drawBomb();ctx.restore();drawChapter1PurificationHud069();
  renderEmbeddedLifeHud066();
  const hearts=Array.from({length:player.maxHp},(_,i)=>i<player.hp?'♥':'♡').join(' '),bombs=Array.from({length:3},(_,i)=>i<player.bombs?'◆':'◇').join(' ');
  hudLeft.innerHTML=`<b>${waves[waveIndex].title}</b><br>${EMBEDDED?`WAVE ${waveIndex+1} / ${waves.length}`:waves[waveIndex].desc}`;
