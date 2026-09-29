@@ -231,6 +231,19 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   };
 
   const returnToSelector = () => {
+    /* PATCH086: the Chapter 3 story iframe may have been promoted to a browser-wide
+       fixed layer by the persistent web-dialogue cinematic. Clear those inline
+       !important styles synchronously before opening the selector, otherwise the
+       selector is rendered but remains visually buried behind the iframe. */
+    const storyFrame = frameRef.current;
+    if (storyFrame) {
+      [
+        "position", "inset", "left", "top", "right", "bottom",
+        "width", "height", "min-width", "min-height", "max-width", "max-height",
+        "margin", "transform", "z-index", "opacity", "visibility", "display", "aspect-ratio"
+      ].forEach((property) => storyFrame.style.removeProperty(property));
+    }
+
     setFullscreenEffect(null);
     setWaveActive(false);
     setWaveFailed(false);

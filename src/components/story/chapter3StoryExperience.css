@@ -84,10 +84,10 @@
 }
 
 .chapter3DetailSelector {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: grid;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
+  display: grid !important;
   place-items: center;
   padding: 22px;
   font-family: "Noto Sans KR", system-ui, sans-serif;
@@ -490,4 +490,21 @@
 .chapter3StoryExperience.is-wave-active .chapter3WaveHudHp,
 .chapter3StoryExperience.is-wave-active .chapter3WaveHudTopRight {
   display: none !important;
+}
+
+
+/* PATCH086: selector must remain above every Chapter 3 cinematic/runtime layer. */
+.chapter3DetailSelector {
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  isolation: isolate;
+}
+.chapter3DetailSelectorBackdrop {
+  z-index: 0 !important;
+  pointer-events: auto !important;
+}
+.chapter3DetailSelectorPanel {
+  z-index: 1 !important;
+  pointer-events: auto !important;
 }
