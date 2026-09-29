@@ -539,6 +539,19 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       const arrivalOverlay = document.createElement('div');
       arrivalOverlay.className = 'chapter1-boss-map-arrival-fullscreen';
       arrivalOverlay.style.setProperty('--chapter1-boss-map-arrival-image', 'url(\"' + assetPath('bg_academic_system_corrupted.png') + '\")');
+
+      /* Chapter 3 코어 진입처럼 배경이 처음 공개되는 장면 전환 안에서 장소명을 함께 보여준다.
+         별도의 카메라 이동은 추가하지 않고 기존 4초 정지 화면 위에서 타이틀만 페이드 인/아웃한다. */
+      const arrivalTitle = document.createElement('div');
+      arrivalTitle.className = 'chapter1-boss-map-arrival-title';
+      const arrivalTitleKicker = document.createElement('small');
+      arrivalTitleKicker.textContent = 'LOCATION';
+      const arrivalTitleName = document.createElement('strong');
+      arrivalTitleName.textContent = bossInteriorPreviewScene.title || '학사 코어 영역';
+      const arrivalTitleSubtitle = document.createElement('span');
+      arrivalTitleSubtitle.textContent = bossInteriorPreviewScene.subtitle || '핵심 오염원 구역';
+      arrivalTitle.append(arrivalTitleKicker, arrivalTitleName, arrivalTitleSubtitle);
+      arrivalOverlay.appendChild(arrivalTitle);
       document.body.appendChild(arrivalOverlay);
 
       corePortalSequenceTimer = window.setTimeout(() => {
@@ -831,6 +844,97 @@ html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .gateke
   width: min(64vw, 64dvh, 620px) !important;
 }
 
+/* Chapter 3 디그리온 등장 타이틀의 3단 구성을 Chapter 1 색상/명칭으로 이식한다. */
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title {
+  position: absolute !important;
+  z-index: 30 !important;
+  left: 50% !important;
+  top: 4.8% !important;
+  width: min(88vw, 980px) !important;
+  padding: 12px 26px 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  transform: translate(-50%, -18px) scale(.97);
+  opacity: 0;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(20,0,3,.88), rgba(20,0,3,.42), transparent);
+  border-radius: 20px;
+  text-shadow: 0 4px 26px rgba(0,0,0,.95), 0 0 28px rgba(230,0,0,.45);
+  pointer-events: none;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title::before,
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: min(700px, 72vw);
+  height: 2px;
+  transform: translateX(-50%) scaleX(.1);
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(230,0,0,.82), #fff1c2, rgba(191,124,38,.9), transparent);
+  box-shadow: 0 0 18px rgba(230,0,0,.58), 0 0 30px rgba(191,124,38,.3);
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title::before { top: 2px; }
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title::after { bottom: 2px; }
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title-kicker {
+  font-size: clamp(11px, .85vw, 15px);
+  line-height: 1.15;
+  letter-spacing: .38em;
+  font-weight: 1000;
+  color: #ffc3c8;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title-rank {
+  font-size: clamp(18px, 1.55vw, 28px);
+  line-height: 1.12;
+  letter-spacing: .12em;
+  font-weight: 900;
+  color: #fff3e0;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title-name {
+  font-family: "Noto Sans KR", system-ui, sans-serif;
+  font-size: clamp(38px, 4.8vw, 76px);
+  line-height: 1.02;
+  letter-spacing: .045em;
+  font-weight: 1000;
+  white-space: nowrap;
+  background: linear-gradient(180deg, #fff 0%, #ffe4e4 34%, #ff5757 68%, #ffd983 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px rgba(230,0,0,.35));
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance.is-visible .chapter1-gatekeeper-boss-title {
+  animation: chapter1GatekeeperBossTitleReveal 6.5s cubic-bezier(.2,.82,.2,1) both;
+}
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance.is-visible .chapter1-gatekeeper-boss-title::before,
+html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance.is-visible .chapter1-gatekeeper-boss-title::after {
+  animation: chapter1GatekeeperBossTitleLineReveal 6.5s ease both;
+}
+@keyframes chapter1GatekeeperBossTitleReveal {
+  0%, 62% { opacity: 0; transform: translate(-50%, -18px) scale(.97); filter: blur(5px); }
+  70%, 94% { opacity: 1; transform: translate(-50%, 0) scale(1); filter: none; }
+  100% { opacity: .92; transform: translate(-50%, 0) scale(1); filter: none; }
+}
+@keyframes chapter1GatekeeperBossTitleLineReveal {
+  0%, 64% { opacity: 0; transform: translateX(-50%) scaleX(.1); }
+  74%, 100% { opacity: 1; transform: translateX(-50%) scaleX(1); }
+}
+@media (max-width: 900px), (max-height: 720px) {
+  html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title {
+    top: 2.7% !important;
+    width: min(92vw, 760px) !important;
+    padding: 8px 14px 10px !important;
+    gap: 4px !important;
+  }
+  html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title-kicker { font-size: 10px; }
+  html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title-rank { font-size: 15px; }
+  html.is-embedded-story .story-effect-layer.is-global-gatekeeper-entrance .chapter1-gatekeeper-boss-title-name { font-size: clamp(28px, 5vw, 48px); }
+}
+
 /* CH1 코어 영역 이동: 일러스트 없이, 세워진 타원형 포탈 자체가 영롱하게 발광한다. */
 html.is-embedded-story .chapter1-core-portal-overlay {
   position: fixed !important;
@@ -1095,9 +1199,70 @@ html.is-embedded-story .chapter1-boss-map-arrival-fullscreen::after {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 2;
   background: #000;
   opacity: 1;
   animation: chapter1BossMapArrivalBlackTransition 4s ease-in-out both;
+}
+html.is-embedded-story .chapter1-boss-map-arrival-title {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  width: min(88vw, 1040px);
+  min-height: 190px;
+  padding: 24px 30px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transform: translate(-50%, -46%) scale(.96);
+  opacity: 0;
+  text-align: center;
+  color: #fff;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.72), rgba(0,0,0,.24) 56%, transparent 78%);
+  text-shadow: 0 5px 28px rgba(0,0,0,.92);
+  animation: chapter1BossMapArrivalTitle 4s cubic-bezier(.2,.82,.2,1) both;
+}
+html.is-embedded-story .chapter1-boss-map-arrival-title::before,
+html.is-embedded-story .chapter1-boss-map-arrival-title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: min(740px, 76vw);
+  height: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(191,124,38,.86), #fff2c7, rgba(230,0,0,.72), transparent);
+  box-shadow: 0 0 18px rgba(191,124,38,.5);
+}
+html.is-embedded-story .chapter1-boss-map-arrival-title::before { top: 12px; }
+html.is-embedded-story .chapter1-boss-map-arrival-title::after { bottom: 12px; }
+html.is-embedded-story .chapter1-boss-map-arrival-title small {
+  font-size: clamp(11px, 1vw, 15px);
+  letter-spacing: .42em;
+  font-weight: 1000;
+  color: #d9b56b;
+}
+html.is-embedded-story .chapter1-boss-map-arrival-title strong {
+  font-family: "Noto Sans KR", system-ui, sans-serif;
+  font-size: clamp(40px, 5.4vw, 82px);
+  line-height: 1.08;
+  letter-spacing: -.025em;
+  font-weight: 1000;
+  color: #fff;
+  text-shadow: 0 5px 28px rgba(0,0,0,.92), 0 0 30px rgba(191,124,38,.34);
+}
+html.is-embedded-story .chapter1-boss-map-arrival-title span {
+  font-size: clamp(11px, .95vw, 16px);
+  letter-spacing: .18em;
+  font-weight: 800;
+  color: rgba(255,239,205,.8);
+}
+@keyframes chapter1BossMapArrivalTitle {
+  0%, 18% { opacity: 0; transform: translate(-50%, -46%) scale(.96); filter: blur(5px); }
+  32%, 70% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: none; }
+  88%, 100% { opacity: 0; transform: translate(-50%, -53%) scale(1.02); filter: blur(2px); }
 }
 html.is-embedded-story .chapter1-boss-map-dialogue-reveal {
   position: fixed !important;
@@ -1492,6 +1657,32 @@ export function createChapter1StoryRuntime({
   styleElement.textContent = normalizeStoryStyles(storyDocument.styles);
   document.head.appendChild(styleElement);
   root.innerHTML = normalizeStoryMarkup(storyDocument.markup);
+
+  // Chapter 3의 보스 등장 타이틀 구조를 참고해 Chapter 1 최초 보스 등장에도 이름 연출을 추가한다.
+  // 실제 전투 HUD가 아니라 storyEffectLayer 안의 gatekeeper-entrance 시네마틱에만 붙인다.
+  if (part === 2) {
+    const gatekeeperEntrance = root.querySelector<HTMLElement>(".gatekeeper-entrance-effect");
+    if (gatekeeperEntrance && !gatekeeperEntrance.querySelector(".chapter1-gatekeeper-boss-title")) {
+      const bossTitle = document.createElement("div");
+      bossTitle.className = "chapter1-gatekeeper-boss-title";
+      bossTitle.setAttribute("aria-hidden", "true");
+
+      const kicker = document.createElement("div");
+      kicker.className = "chapter1-gatekeeper-boss-title-kicker";
+      kicker.textContent = "CHAPTER 1 · BOSS";
+
+      const rank = document.createElement("div");
+      rank.className = "chapter1-gatekeeper-boss-title-rank";
+      rank.textContent = "학사 코어 핵심 오염원";
+
+      const name = document.createElement("div");
+      name.className = "chapter1-gatekeeper-boss-title-name";
+      name.textContent = "수강신청 게이트키퍼";
+
+      bossTitle.append(kicker, rank, name);
+      gatekeeperEntrance.appendChild(bossTitle);
+    }
+  }
 
   const locationTitles = new Set([
     "경북대학교 중앙광장",
