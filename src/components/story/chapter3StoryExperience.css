@@ -442,3 +442,35 @@
   gap: 4px !important;
   margin: 0 !important;
 }
+
+/* v64: Chapter 3 wave life HUD ONLY — keep Chapter 1 shield design, move it to the exact top-right side. */
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudTopBar {
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-end !important;
+  padding: 16px 32px 0 20px !important;
+  pointer-events: none !important;
+}
+
+/* The life/shield group is the first visible HUD group in the Chapter 3 wave host.
+   Push that existing Chapter 1-style group to the right; do not redraw or restyle it. */
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudTopBar > :first-child {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  align-self: flex-end !important;
+}
+
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudTopBar .chapter3WaveHudHp,
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudTopBar .chapter3WaveHudTopRight,
+.chapter3StoryExperience.is-wave-active .chapter3WaveHudTopBar .chapter3WaveHudRightColumn {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  text-align: right !important;
+}
