@@ -3691,7 +3691,7 @@ window.STORY_DATA = {
       C3D.line("student_card", "방치할 경우 학생들의 졸업 기록까지 영향을 받을 수 있습니다.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {left:"student_card",right:"hobanwoo"}),
       C3D.line("hobanwoo", "그럼 더더욱 해야지.", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"brave",left:"student_card"}),
       C3D.line("hobanwoo", "난 졸업할 거야. 빨리 가자!", "campus_night_promenade", "학생증 재활성화와 마지막 두 별", {right:"hobanwoo",pose:"combat",left:"student_card"}),
-      C3D.fx("combat-transition", "combat_zone", 3220, {chapter:"CHAPTER 3",title:"전투 개시",subtitle:"졸업 오염 파편 정화 · PURIFICATION"}),
+      C3D.fx("combat-transition", "combat_zone", 3220, {chapter:"CHAPTER 3",title:"전투 개시",subtitle:"졸업 오염 파편 정화 · STORY → SHOOTING"}),
 
       C3D.sec("장면 15. 일반 몬스터 웨이브", "combat_zone"),
       C3D.fx("battle-running", "combat_zone", 86400000, {title:"일반 몬스터 웨이브",subtitle:"챕터 3 일반 오염 파편 정화"}),
@@ -13142,6 +13142,133 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   animation:none!important;
 }
 </style>
+
+
+
+<style id="chapter3-patch-071-ch1-wave-entry-transition-style">
+/* PATCH 071 — Chapter 1 initial wave transition copied into Chapter 3.
+   Exact Chapter 1 geometry/timing; only the copy is Chapter 3-specific. */
+.story-body-effect-host[data-effect="combat-transition"]{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  z-index:2147483600!important;
+  background:transparent!important;
+  pointer-events:none!important;
+}
+.story-body-effect-host[data-effect="combat-transition"] > .ch3-effect{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  overflow:hidden!important;
+}
+.ch3-wave-entry071{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  z-index:1;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  visibility:visible;
+  pointer-events:none;
+  background:transparent;
+  font-family:"Noto Sans KR","Courier New",monospace;
+}
+.ch3-wave-entry071 .battle-red-shutter071{
+  position:absolute;
+  inset:0;
+  background:#e60000;
+  transform:scaleY(0);
+  transform-origin:center;
+  animation:battleShutter071 3.2s cubic-bezier(.75,0,.25,1) forwards;
+}
+.ch3-wave-entry071 .battle-transition-cross071{
+  position:absolute;
+  width:170vmax;
+  height:4px;
+  background:#fff;
+  transform:rotate(-18deg) scaleX(0);
+  box-shadow:0 0 30px #fff;
+  animation:battleSlash071 .72s .34s ease-out forwards;
+}
+.ch3-wave-entry071 .battle-transition-title071{
+  position:relative;
+  z-index:2;
+  opacity:0;
+  transform:scale(.78);
+  text-align:center;
+  text-shadow:0 8px 0 rgba(0,0,0,.32);
+  animation:battleTitleReveal071 2.5s .48s ease forwards;
+}
+.ch3-wave-entry071 .battle-transition-title071 small{
+  display:block;
+  color:#fff;
+  font-size:clamp(12px,1.5vw,18px);
+  font-weight:1000;
+  letter-spacing:.42em;
+}
+.ch3-wave-entry071 .battle-transition-title071 strong{
+  display:block;
+  color:#fff;
+  font-size:clamp(56px,10vw,150px);
+  font-style:italic;
+  font-weight:1000;
+  letter-spacing:-.05em;
+}
+.ch3-wave-entry071 .battle-transition-title071 span{
+  display:block;
+  margin-top:8px;
+  color:#ffe0a8;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.2em;
+}
+@keyframes battleShutter071{
+  0%{transform:scaleY(0)}
+  18%,82%{transform:scaleY(1)}
+  100%{transform:scaleY(0)}
+}
+@keyframes battleSlash071{
+  to{transform:rotate(-18deg) scaleX(1)}
+}
+@keyframes battleTitleReveal071{
+  0%{opacity:0;transform:scale(.78)}
+  10%,84%{opacity:1;transform:scale(1.08)}
+  100%{opacity:0;transform:scale(1.18)}
+}
+</style>
+
+<script id="chapter3-patch-071-ch1-wave-entry-transition-script">
+(() => {
+  /* Last definition wins: this is the Chapter 1 initial battle transition,
+     rendered fullscreen for Chapter 3. */
+  window.STORY_CUSTOM_EFFECTS['combat-transition'] = ({ layer, item, api }) => {
+    api?.setMode?.('game');
+    return c3Mount(layer, `
+      <div class="ch3-wave-entry071" aria-label="챕터 3 전투 개시">
+        <div class="battle-red-shutter071"></div>
+        <div class="battle-transition-cross071"></div>
+        <div class="battle-transition-title071">
+          <small>${c3Esc(item.chapter || 'CHAPTER 3')}</small>
+          <strong>${c3Esc(item.title || '전투 개시')}</strong>
+          <span>${c3Esc(item.subtitle || '졸업 오염 파편 정화 · STORY → SHOOTING')}</span>
+        </div>
+      </div>`);
+  };
+})();
+</script>
 
 </body>
 </html>
