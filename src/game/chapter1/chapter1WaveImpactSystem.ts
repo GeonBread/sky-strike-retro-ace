@@ -1,6 +1,7 @@
 import { sfx } from "../AudioSystem";
 import type {
   Chapter1WaveImpactParticle,
+  Chapter1WavePulseEffect,
   Chapter1WaveVanishEffect,
   Chapter1WaveRuntime,
 } from "./chapter1WaveTypes";
@@ -70,6 +71,30 @@ export function spawnChapter1WaveVanishEffectSystem(
 
 export function spawnChapter1PlayerBulletVanishSystem(engine: any, x: number, y: number): void {
   spawnChapter1WaveVanishEffectSystem(engine, x, y, "#76e8ff", 7, 0.55);
+}
+
+/**
+ * Chapter 2 일반 몬스터 사망 시 사용하는 pulse 효과를 Chapter 1 웨이브 좌표계에 맞춰 재현합니다.
+ * - 수명: 0.48초
+ * - 시작 반지름: 몬스터 크기에 비례
+ * - 확장 속도: 90 px/s
+ */
+export function spawnChapter1EnemyDeathPulseSystem(
+  engine: any,
+  x: number,
+  y: number,
+  color: string,
+  radius: number,
+): void {
+  const runtime = runtimeOf(engine);
+  runtime.pulseEffects.push({
+    x,
+    y,
+    color,
+    radius,
+    age: 0,
+    life: 0.48,
+  });
 }
 
 export function spawnChapter1EnemyHitEffectSystem(
@@ -155,6 +180,9 @@ export function updateChapter1WaveImpactEffectsSystem(engine: any, dt: number): 
 
   for (const effect of runtime.vanishEffects) effect.age += dt;
   runtime.vanishEffects = runtime.vanishEffects.filter((effect) => effect.age < effect.life);
+
+  for (const effect of runtime.pulseEffects) effect.age += dt;
+  runtime.pulseEffects = runtime.pulseEffects.filter((effect) => effect.age < effect.life);
 }
 
 export function renderChapter1WaveImpactEffectsSystem(engine: any): void {
@@ -184,6 +212,22 @@ export function renderChapter1WaveImpactEffectsSystem(engine: any): void {
       ctx.lineTo(Math.cos(angle) * size * 0.72, Math.sin(angle) * size * 0.72);
       ctx.stroke();
     }
+    ctx.restore();
+  }
+
+  for (const effect of runtime.pulseEffects as Chapter1WavePulseEffect[]) {
+    const progress = Math.max(0, Math.min(1, effect.age / effect.life));
+    const alpha = 1 - progress;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.globalCompositeOperation = "screen";
+    ctx.strokeStyle = effect.color;
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 8 * alpha;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, effect.radius + effect.age * 90, 0, TAU);
+    ctx.stroke();
     ctx.restore();
   }
 

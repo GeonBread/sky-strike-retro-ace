@@ -17,6 +17,7 @@ import {
   getChapter1EnemyVisualScale,
 } from "./chapter1WaveVisualTuning";
 import {
+  spawnChapter1EnemyDeathPulseSystem,
   spawnChapter1ScheduleSlamEffectSystem,
   updateChapter1WaveImpactEffectsSystem,
 } from "./chapter1WaveImpactSystem";
@@ -26,6 +27,18 @@ const BASE_HEIGHT = 960;
 const TAU = Math.PI * 2;
 // 이전 통합 과정에서 일반 몬스터 체력을 1.3배로 올렸던 값을 원래 기준치로 되돌린다.
 const CHAPTER1_ENEMY_HP_SCALE = 1.0;
+const CHAPTER1_ENEMY_DEATH_COLORS = [
+  "#ff514d",
+  "#ffd02f",
+  "#ff8a35",
+  "#6ddd74",
+  "#9c67ff",
+  "#a9df3f",
+  "#ff4e54",
+  "#ffc42d",
+  "#ff4b9a",
+  "#4ec9ff",
+] as const;
 
 type Chapter1WaveEngine = any;
 
@@ -487,6 +500,7 @@ function clearChapter1CombatObjects(engine: Chapter1WaveEngine): void {
   runtime.deferred = [];
   runtime.impactParticles = [];
   runtime.vanishEffects = [];
+  runtime.pulseEffects = [];
 }
 
 function startWave(engine: Chapter1WaveEngine, index: number, skipClear = false): void {
@@ -883,8 +897,22 @@ export function deactivateChapter1EnemySystem(engine: Chapter1WaveEngine, enemy:
   if (!isChapter1EnemyType(enemy.type)) return;
   if (enemy.chapter1?.index === 6) cancelChapter1ScheduleWarningsSystem(engine, enemy);
   if (engine.chapter1Wave?.enabled && !engine.bossActive && !engine.chapter1Boss?.active) {
-    // The shared renderer applies +/- intensity / 2; 10 matches Chapter 2's local +/- 5 death shake.
-    engine.screenShakeIntensity = Math.max(engine.screenShakeIntensity || 0, 10);
+    const state = enemy.chapter1;
+    const centerX = enemy.x + enemy.width / 2;
+    const centerY = enemy.y + enemy.height / 2;
+    const color = CHAPTER1_ENEMY_DEATH_COLORS[state?.index ?? 0] ?? "#ffffff";
+
+    // Chapter 2 death feedback: the existing Chapter 1 debris burst is kept, and the missing expanding pulse is added.
+    spawnChapter1EnemyDeathPulseSystem(
+      engine,
+      centerX,
+      centerY,
+      color,
+      Math.max(enemy.width, enemy.height) * 0.375,
+    );
+
+    // Keep only a light death bump. The shared renderer applies +/- intensity / 2, so 6 is about +/- 3 px.
+    engine.screenShakeIntensity = Math.max(engine.screenShakeIntensity || 0, 6);
   }
 }
 

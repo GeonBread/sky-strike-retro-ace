@@ -164,6 +164,15 @@ export interface Chapter1WaveVanishEffect {
   life: number;
 }
 
+export interface Chapter1WavePulseEffect {
+  x: number;
+  y: number;
+  color: string;
+  radius: number;
+  age: number;
+  life: number;
+}
+
 export interface Chapter1DeferredAction {
   time: number;
   run: () => void;
@@ -195,6 +204,7 @@ export interface Chapter1WaveRuntime {
   deferred: Chapter1DeferredAction[];
   impactParticles: Chapter1WaveImpactParticle[];
   vanishEffects: Chapter1WaveVanishEffect[];
+  pulseEffects: Chapter1WavePulseEffect[];
 }
 
 export function createChapter1WaveRuntime(): Chapter1WaveRuntime {
@@ -218,5 +228,6 @@ export function createChapter1WaveRuntime(): Chapter1WaveRuntime {
     deferred: [],
     impactParticles: [],
     vanishEffects: [],
+    pulseEffects: [],
   };
 }
