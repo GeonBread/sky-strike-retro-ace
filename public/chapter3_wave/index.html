@@ -2427,7 +2427,6 @@ function drawEnemy(e){
   const p=clamp(e.shiftPulse/.42,0,1);ctx.save();ctx.globalAlpha=.22*p;ctx.strokeStyle='#fff0bd';ctx.lineWidth=3;ctx.beginPath();ctx.arc(drawX,drawY,w*.48+(1-p)*8,0,Math.PI*2);ctx.stroke();ctx.restore();
  }
 
- if(e.attackable!==false&&e.hp<e.maxHp){ctx.fillStyle='rgba(0,0,0,.58)';ctx.fillRect(drawX-e.r,drawY-e.r-13,e.r*2,5);ctx.fillStyle='#8ff0a4';ctx.fillRect(drawX-e.r,drawY-e.r-13,e.r*2*(e.hp/e.maxHp),5);}
 
  // Existing gameplay telegraphs remain outside the sprite art so they stay legible on real maps.
  if(e.type==='laser'&&(e.state==='track'||e.state==='locked')){const a=e.lockA;ctx.save();ctx.strokeStyle=e.state==='locked'?'rgba(255,80,90,.95)':'rgba(255,130,130,.45)';ctx.lineWidth=e.state==='locked'?3.5:1.8;ctx.setLineDash(e.state==='track'?[8,10]:[]);ctx.beginPath();ctx.moveTo(drawX,drawY);ctx.lineTo(drawX+Math.cos(a)*1200,drawY+Math.sin(a)*1200);ctx.stroke();ctx.restore();}
