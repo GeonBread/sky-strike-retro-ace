@@ -51,6 +51,91 @@
     flex:none;
   }
   @media(max-width:560px){.embeddedLifeShield{width:32px;height:34px}}
+
+  /* PATCH 070: Chapter 1 exact 100% purification overlay copied into Chapter 3 wave. */
+  .chapter1-wave-purification-overlay070{
+    display:none;
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:min(96dvh,100vw);
+    height:min(100dvh,104.167vw);
+    aspect-ratio:24 / 25;
+    transform:translate(-50%,-50%);
+    z-index:70;
+    overflow:hidden;
+    pointer-events:none;
+    background:radial-gradient(circle at var(--purification-center-x,50%) var(--purification-center-y,88%),rgba(255,226,112,.1),transparent 42%);
+  }
+  .chapter1-wave-purification-overlay070.is-active{
+    display:block;
+    animation:chapter1-purification-overlay-fade070 3.2s ease both;
+  }
+  .chapter1-wave-purification-flash070{
+    position:absolute;
+    inset:0;
+    background:#fff8cf;
+    mix-blend-mode:screen;
+  }
+  .chapter1-wave-purification-overlay070.is-active .chapter1-wave-purification-flash070{
+    animation:chapter1-purification-flash070 3.2s ease-out both;
+  }
+  .chapter1-wave-purification-ring070,
+  .chapter1-wave-purification-core070{
+    position:absolute;
+    left:var(--purification-center-x,50%);
+    top:var(--purification-center-y,88%);
+    border-radius:999px;
+    transform:translate(-50%,-50%);
+  }
+  .chapter1-wave-purification-ring070{
+    width:90px;
+    height:90px;
+    border:5px solid rgba(255,231,132,.95);
+    box-shadow:0 0 24px #fff3a8,inset 0 0 20px rgba(255,243,168,.8);
+  }
+  .chapter1-wave-purification-overlay070.is-active .chapter1-wave-purification-ring070.ring-a{
+    animation:chapter1-purification-ring-a070 2.5s cubic-bezier(.12,.74,.18,1) both;
+  }
+  .chapter1-wave-purification-overlay070.is-active .chapter1-wave-purification-ring070.ring-b{
+    animation:chapter1-purification-ring-b070 2.8s .18s cubic-bezier(.12,.74,.18,1) both;
+  }
+  .chapter1-wave-purification-core070{
+    width:44px;
+    height:44px;
+    background:radial-gradient(circle,#fff 0 22%,#fff1a5 42%,rgba(255,190,51,.12) 76%);
+    box-shadow:0 0 36px 14px rgba(255,222,93,.9),0 0 110px 46px rgba(255,187,43,.42);
+  }
+  .chapter1-wave-purification-overlay070.is-active .chapter1-wave-purification-core070{
+    animation:chapter1-purification-core070 3.2s ease-out both;
+  }
+  @keyframes chapter1-purification-ring-a070{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.25)}
+    18%{opacity:1}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(11)}
+  }
+  @keyframes chapter1-purification-ring-b070{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+    22%{opacity:.9}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(8)}
+  }
+  @keyframes chapter1-purification-flash070{
+    0%,10%{opacity:0}
+    18%{opacity:.82}
+    34%{opacity:.16}
+    58%{opacity:.42}
+    100%{opacity:0}
+  }
+  @keyframes chapter1-purification-core070{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.4)}
+    70%{opacity:.9;transform:translate(-50%,-50%) scale(2.2)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(4.2)}
+  }
+  @keyframes chapter1-purification-overlay-fade070{
+    0%,82%{opacity:1}
+    100%{opacity:0}
+  }
   @media(max-width:1170px){.app{grid-template-columns:1fr;max-width:942px;margin:auto}.panel{max-height:none} }
 </style>
 </head>
@@ -59,6 +144,12 @@
   <div class="gameWrap">
     <canvas id="game" width="922" height="960"></canvas>
     <div class="embeddedLifeHud" id="embeddedLifeHud" aria-label="호반우 목숨"></div>
+    <div class="chapter1-wave-purification-overlay070" id="chapter1PurificationOverlay070" aria-label="정화 에너지 100% 연출">
+      <div class="chapter1-wave-purification-flash070"></div>
+      <div class="chapter1-wave-purification-ring070 ring-a"></div>
+      <div class="chapter1-wave-purification-ring070 ring-b"></div>
+      <div class="chapter1-wave-purification-core070"></div>
+    </div>
     <div class="topOverlay">
       <div class="hudBox" id="hudLeft"></div>
       <div class="hudBox" id="hudRight"></div>
@@ -95,6 +186,7 @@
 const cvs=document.getElementById('game'), ctx=cvs.getContext('2d');
 const hudLeft=document.getElementById('hudLeft'), hudRight=document.getElementById('hudRight');
 const embeddedLifeHud=document.getElementById('embeddedLifeHud');
+const chapter1PurificationOverlay070=document.getElementById('chapter1PurificationOverlay070');
 const notice=document.getElementById('notice'), noticeTitle=document.getElementById('noticeTitle'), noticeDesc=document.getElementById('noticeDesc');
 const restartBtn=document.getElementById('restartBtn'), invBtn=document.getElementById('invBtn'), autoBtn=document.getElementById('autoBtn');
 const prevBtn=document.getElementById('prevBtn'), nextBtn=document.getElementById('nextBtn'), clearBtn=document.getElementById('clearBtn');
@@ -198,7 +290,7 @@ const USE_SPRITE_SHADOWS=false;
 const MAX_EFFECTS=72;
 const ENEMY_VISUAL_SCALE=1.30;
 const ENEMY_HITBOX_SCALE=1.14;
-const BULLET_VISUAL_SCALE=1.30;
+const BULLET_VISUAL_SCALE=1.55;
 const BULLET_KIND_BY_ENEMY={drone:'orb',swarm:'pod',snake:'paperChip',splitter:'splitShard',tractor:'hook'};
 function preloadSprite(path){
  if(!path)return null;
@@ -338,7 +430,7 @@ let enemies=[], bullets=[], playerBullets=[], effects=[], links=[], tractorPairs
 const keys={};
 const player={x:W/2,y:820,r:5,bodyHalf:24,speed:415,hp:3,maxHp:3,bombs:3,powerLevel:INITIAL_POWER_LEVEL,hitTimer:0,fire:0,drag:false,dead:false,respawnTimer:0};
 let bombActive=false,bombRadius=0,bombOriginX=W/2,bombOriginY=H-140,bombMaxRadius=Math.hypot(W,H)+80,waveRunCompleteSent=false,waveFailureSent=false,gameOver=false,mapScroll=0;
-let finalPurification={active:false,t:0,originX:W/2,originY:H-140,sent:false};
+let finalPurification={active:false,t:0,originX:W/2,originY:H-140,sent:false,hidden:false,overlayDone:false};
 
 const FULL_COMBAT_VIEW={x:0,y:0,w:W,h:H};
 let combatView={...FULL_COMBAT_VIEW};
@@ -1372,9 +1464,9 @@ function updateSurvivalWave(dt){
  updateSurvivalBeamDamage();
 }
 
-function resetPlayerRun(){player.x=W/2;player.y=H-140;player.hp=player.maxHp;player.bombs=3;player.powerLevel=INITIAL_POWER_LEVEL;player.hitTimer=0;player.fire=0;player.drag=false;player.dead=false;player.respawnTimer=0;bombActive=false;bombRadius=0;bombOriginX=W/2;bombOriginY=H-140;bombMaxRadius=Math.hypot(W,H)+80;gameOver=false;waveFailureSent=false;waveRunCompleteSent=false;finalPurification={active:false,t:0,originX:W/2,originY:H-140,sent:false};}
+function resetPlayerRun(){player.x=W/2;player.y=H-140;player.hp=player.maxHp;player.bombs=3;player.powerLevel=INITIAL_POWER_LEVEL;player.hitTimer=0;player.fire=0;player.drag=false;player.dead=false;player.respawnTimer=0;bombActive=false;bombRadius=0;bombOriginX=W/2;bombOriginY=H-140;bombMaxRadius=Math.hypot(W,H)+80;gameOver=false;waveFailureSent=false;waveRunCompleteSent=false;finalPurification={active:false,t:0,originX:W/2,originY:H-140,sent:false,hidden:false,overlayDone:false};if(chapter1PurificationOverlay070){chapter1PurificationOverlay070.classList.remove('is-active');chapter1PurificationOverlay070.style.display='none';}}
 function startWave(i,resetRun=false){
- waveIndex=clamp(i,0,waves.length-1);enemies=[];bullets=[];playerBullets=[];effects=[];links=[];tractorPairs=[];boomerangs=[];survivalBeams=[];powerups=[];snakeState=null;waveTime=0;waveClearTimer=0;finalePhase=0;finaleNext=1;specialState={};purificationWaveProgress069=0;movementMode='free';playerFireEnabled=true;finalPurification={active:false,t:0,originX:player.x,originY:player.y,sent:false};setCombatViewImmediate(FULL_COMBAT_VIEW);if(resetRun)resetPlayerRun();else clampPlayerToCombatView(false);
+ waveIndex=clamp(i,0,waves.length-1);enemies=[];bullets=[];playerBullets=[];effects=[];links=[];tractorPairs=[];boomerangs=[];survivalBeams=[];powerups=[];snakeState=null;waveTime=0;waveClearTimer=0;finalePhase=0;finaleNext=1;specialState={};purificationWaveProgress069=0;movementMode='free';playerFireEnabled=true;finalPurification={active:false,t:0,originX:player.x,originY:player.y,sent:false,hidden:false,overlayDone:false};if(chapter1PurificationOverlay070){chapter1PurificationOverlay070.classList.remove('is-active');chapter1PurificationOverlay070.style.display='none';}setCombatViewImmediate(FULL_COMBAT_VIEW);if(resetRun)resetPlayerRun();else clampPlayerToCombatView(false);
  const w=waves[waveIndex],sp=w.special;
  if(sp==='droneBasic')spawnDroneBasic();
  else if(sp==='droneSides')spawnDroneSides();
@@ -1897,7 +1989,7 @@ function updateSmartBomb(dt){
 function updateBullets(dt){for(const b of bullets){b.t=(b.t||0)+dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(!player.dead&&Math.hypot(player.x-b.x,player.y-b.y)<player.r+b.r)damagePlayer();}bullets=bullets.filter(b=>b.life>0&&b.x>-80&&b.x<W+80&&b.y>-80&&b.y<H+80);
  for(const b of playerBullets){b.x+=(b.vx||0)*dt;b.y+=b.vy*dt;b.life-=dt;for(const e of enemies){if(e.dead||e.attackable===false)continue;if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+b.r){e.hp-=b.damage??18;e.hitFlash=1;e.hurtPulse=.22;b.life=0;spawnChapter1LikeEnemyHit(b.x,b.y);if(e.hp<=0)killEnemy(e,true);break;}}}playerBullets=playerBullets.filter(b=>b.life>0&&b.y>-40&&b.x>-40&&b.x<W+40);
 }
-function damagePlayer(force=false){if(gameOver||player.dead)return;if(invincible&&!force)return;if(player.hitTimer>0&&!force)return;player.hp--;player.dead=true;player.respawnTimer=.55;player.drag=false;addEffect({kind:'ring',x:player.x,y:player.y,life:.45,color:'#ffffff'});if(player.hp<=0&&EMBEDDED){/* failure is emitted after the short death beat */}}
+function damagePlayer(force=false){if(gameOver||player.dead)return;if(invincible&&!force)return;if(player.hitTimer>0&&!force)return;player.hp--;if(player.powerLevel>1)player.powerLevel--;player.dead=true;player.respawnTimer=.55;player.drag=false;addEffect({kind:'ring',x:player.x,y:player.y,life:.45,color:'#ffffff'});if(player.hp<=0&&EMBEDDED){/* failure is emitted after the short death beat */}}
 function updateSpecialWave(dt){
  const special=waves[waveIndex].special;
  if(isSurvivalSpecial(special)){updateSurvivalWave(dt);return;}
@@ -1965,23 +2057,67 @@ function isWaveDone(){
  return enemies.length===0&&bullets.length===0&&boomerangs.length===0;
 }
 
+function showChapter1PurificationOverlay070(){
+ if(!chapter1PurificationOverlay070)return;
+ chapter1PurificationOverlay070.style.setProperty('--purification-center-x',`${(finalPurification.originX/W*100).toFixed(3)}%`);
+ chapter1PurificationOverlay070.style.setProperty('--purification-center-y',`${(finalPurification.originY/H*100).toFixed(3)}%`);
+ chapter1PurificationOverlay070.classList.remove('is-active');
+ chapter1PurificationOverlay070.style.display='none';
+ void chapter1PurificationOverlay070.offsetWidth;
+ chapter1PurificationOverlay070.style.display='block';
+ void chapter1PurificationOverlay070.offsetWidth;
+ chapter1PurificationOverlay070.classList.add('is-active');
+}
+function hideChapter1PurificationOverlay070(){
+ if(!chapter1PurificationOverlay070)return;
+ chapter1PurificationOverlay070.classList.remove('is-active');
+ chapter1PurificationOverlay070.style.display='none';
+}
+function chapter1ExitTargetY070(){
+ const img=preloadSprite(HOBANWOO_PLAYER_SPRITE);
+ const drawW=48*2.85;
+ const ratio=img&&img.complete&&img.naturalWidth>0?img.naturalHeight/img.naturalWidth:1.18;
+ const drawH=drawW*ratio;
+ return -drawH/2-90;
+}
 function beginFinalPurification(){
  if(finalPurification.active)return;
- finalPurification={active:true,t:0,originX:player.x,originY:player.y,sent:false};
+ finalPurification={active:true,t:0,originX:player.x,originY:player.y,sent:false,hidden:false,overlayDone:false};
  playerFireEnabled=false;player.drag=false;bullets=[];playerBullets=[];boomerangs=[];survivalBeams=[];powerups=[];
  for(const key of Object.keys(keys))keys[key]=false;
+ showChapter1PurificationOverlay070();
 }
 function updateFinalPurification(dt){
  if(!finalPurification.active)return;
  finalPurification.t+=dt;
+ const effectDuration=3.3;
+ const riseDuration=1.25;
+ const storyHandoffDelay=.25;
  const t=finalPurification.t;
- if(t<1.08){player.x=finalPurification.originX;player.y=finalPurification.originY;}
- else{
-  const q=t-1.08;
+
+ /* Chapter 1 order: play the complete 100% purification wave first, with Hobanwoo held still. */
+ if(t<effectDuration){
   player.x=finalPurification.originX;
-  player.y-=Math.min(1080,520+q*430)*dt;
+  player.y=finalPurification.originY;
+  return;
  }
- if(t>=2.95&&!finalPurification.sent){
+
+ if(!finalPurification.overlayDone){
+  finalPurification.overlayDone=true;
+  hideChapter1PurificationOverlay070();
+ }
+
+ /* Chapter 1 exact exit motion: 1.25 s smoothstep rise after the purification effect has fully finished. */
+ const rawProgress=(t-effectDuration)/riseDuration;
+ const progress=clamp(rawProgress,0,1);
+ const eased=progress*progress*(3-2*progress);
+ const targetY=chapter1ExitTargetY070();
+ player.x=finalPurification.originX;
+ player.y=finalPurification.originY+(targetY-finalPurification.originY)*eased;
+ if(progress>=1)finalPurification.hidden=true;
+
+ /* Chapter 1 parent waits another 0.25 s after the 1.25 s rise before leaving the wave scene. */
+ if(t>=effectDuration+riseDuration+storyHandoffDelay&&!finalPurification.sent){
   finalPurification.sent=true;waveRunCompleteSent=true;
   emitWave('wave-complete',{waveIndex,totalWaves:waves.length,single:SINGLE_WAVE,purificationExit:true});
  }
@@ -2226,7 +2362,7 @@ function drawCombatFrame(){
  ctx.restore();
 }
 function drawPlayer(){
- if(player.dead)return;
+ if(player.dead||finalPurification.hidden)return;
  const alpha=player.hitTimer>0&&Math.floor(player.hitTimer*12)%2===0?.35:1;
  const img=preloadSprite(HOBANWOO_PLAYER_SPRITE);
  const drawW=48*2.85;
@@ -2250,7 +2386,62 @@ function drawBullets(){
  }
  for(const b of playerBullets){const path=PLAYER_SHOT_SPRITES[b.sprite??0]||PLAYER_SHOT_SPRITES[0],size=b.visualSize||22,rot=b.kind==='gear'?(performance.now()*.010):b.kind==='atom'?(performance.now()*.004):0,w=b.kind==='formula'?size*2.05:size*1.65,h=b.kind==='formula'?size*1.15:size*1.65;if(!drawSprite(path,b.x,b.y,w,h,rot,1,{color:b.kind==='atom'?'#ffff9b':'#8be9ff',blur:9})){ctx.fillStyle='#d5f2ff';ctx.fillRect(b.x-2.5,b.y-12,5,22);}}
 }
-function drawPowerUps(){for(const p of powerups){ctx.save();ctx.translate(p.x,p.y);const pulse=1+.08*Math.sin(p.t*7);ctx.scale(pulse,pulse);ctx.shadowBlur=14;ctx.shadowColor=p.type==='power'?'#38bdf8':'#4ade80';ctx.fillStyle=p.type==='power'?'#075985':'#166534';ctx.strokeStyle=p.type==='power'?'#7dd3fc':'#86efac';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='900 16px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.type==='power'?'P':'+',0,1);ctx.restore();}}
+function drawPowerUps(){
+ for(const p of powerups){
+  const cx=p.x,cy=p.y;
+  const pulse=1+Math.sin(performance.now()*.01+cx)*.055;
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.scale(pulse,pulse);
+  ctx.lineJoin='round';
+  ctx.lineCap='round';
+  ctx.shadowColor='rgba(255,255,255,0.3)';
+  ctx.shadowBlur=9;
+
+  if(p.type==='power'){
+   ctx.fillStyle='#f7c948';
+   ctx.strokeStyle='#07090d';
+   ctx.lineWidth=5;
+   ctx.beginPath();
+   ctx.moveTo(0,-20);
+   ctx.lineTo(20,0);
+   ctx.lineTo(0,20);
+   ctx.lineTo(-20,0);
+   ctx.closePath();
+   ctx.fill();
+   ctx.stroke();
+   ctx.fillStyle='#ef3f45';
+   ctx.strokeStyle='#07090d';
+   ctx.lineWidth=4;
+   ctx.font='900 22px Arial, sans-serif';
+   ctx.textAlign='center';
+   ctx.textBaseline='middle';
+   ctx.strokeText('P',0,1);
+   ctx.fillText('P',0,1);
+  }else if(p.type==='heal'){
+   ctx.fillStyle='#3bc779';
+   ctx.strokeStyle='#07090d';
+   ctx.lineWidth=5;
+   ctx.beginPath();
+   ctx.roundRect(-19,-19,38,38,9);
+   ctx.fill();
+   ctx.stroke();
+   ctx.strokeStyle='#07090d';
+   ctx.lineWidth=10;
+   ctx.beginPath();
+   ctx.moveTo(0,-11);ctx.lineTo(0,11);
+   ctx.moveTo(-11,0);ctx.lineTo(11,0);
+   ctx.stroke();
+   ctx.strokeStyle='#fff';
+   ctx.lineWidth=5;
+   ctx.beginPath();
+   ctx.moveTo(0,-11);ctx.lineTo(0,11);
+   ctx.moveTo(-11,0);ctx.lineTo(11,0);
+   ctx.stroke();
+  }
+  ctx.restore();
+ }
+}
 function drawBomb(){
  if(!bombActive)return;
  const progress=Math.max(0,Math.min(1,bombRadius/Math.max(1,bombMaxRadius)));
@@ -2367,22 +2558,7 @@ function drawChapter1PurificationHud069(){
  ctx.restore();
 }
 
-function drawFinalPurification(){
- if(!finalPurification.active)return;
- const t=finalPurification.t,cx=finalPurification.originX,cy=finalPurification.originY;
- ctx.save();ctx.globalCompositeOperation='screen';
- if(t<1.35){
-  const glow=clamp(1-t/1.35,0,1),g=ctx.createRadialGradient(cx,cy,0,cx,cy,145+95*(1-glow));
-  g.addColorStop(0,`rgba(255,255,235,${.78*glow})`);g.addColorStop(.18,`rgba(255,233,112,${.58*glow})`);g.addColorStop(.48,`rgba(255,205,63,${.22*glow})`);g.addColorStop(1,'rgba(255,220,90,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,250,0,Math.PI*2);ctx.fill();
-  for(const delay of [0,.16,.32]){const q=clamp((t-delay)/.9,0,1);if(q<=0||q>=1)continue;ctx.globalAlpha=(1-q)*.92;ctx.strokeStyle=delay===0?'#fff3a4':'#ffd84a';ctx.lineWidth=4.5*(1-q)+1.3;ctx.shadowColor='#ffd84a';ctx.shadowBlur=18;ctx.beginPath();ctx.arc(cx,cy,18+430*q,0,Math.PI*2);ctx.stroke();}
-  if(t<.42){ctx.globalAlpha=(1-t/.42)*.22;ctx.fillStyle='#fffbe7';ctx.fillRect(0,0,W,H);}
- }
- if(t>1.0){
-  const q=clamp((t-1.0)/1.7,0,1),trailTop=Math.min(cy,player.y+18),trailBottom=cy+80;const grad=ctx.createLinearGradient(player.x,trailTop,player.x,trailBottom);grad.addColorStop(0,'rgba(255,250,218,.72)');grad.addColorStop(.28,'rgba(255,222,91,.34)');grad.addColorStop(1,'rgba(255,222,91,0)');ctx.globalAlpha=(1-q)*.85+.12;ctx.strokeStyle=grad;ctx.lineWidth=18-10*q;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(player.x,trailTop);ctx.lineTo(player.x,trailBottom);ctx.stroke();
-  for(let i=0;i<12;i++){const phase=(t*1.8+i*.173)%1,px=player.x+Math.sin(i*2.37)*24*(1-phase),py=player.y+42+phase*110;ctx.globalAlpha=(1-phase)*.7;ctx.fillStyle=i%3===0?'#fff8c8':'#ffd84a';ctx.beginPath();ctx.arc(px,py,1.8+(i%3)*.7,0,Math.PI*2);ctx.fill();}
- }
- ctx.restore();
-}
+function drawFinalPurification(){}
 function render(){drawBG();drawHazards();for(const e of enemies)drawEnemy(e);drawBullets();drawPowerUps();drawCombatFrame();drawPlayer();drawFinalPurification();drawEffects();drawBomb();drawChapter1PurificationHud069();
  renderEmbeddedLifeHud066();
  const hearts=Array.from({length:player.maxHp},(_,i)=>i<player.hp?'♥':'♡').join(' '),bombs=Array.from({length:3},(_,i)=>i<player.bombs?'◆':'◇').join(' ');
