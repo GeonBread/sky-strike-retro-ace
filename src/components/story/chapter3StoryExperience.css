@@ -508,3 +508,26 @@
   z-index: 1 !important;
   pointer-events: auto !important;
 }
+
+
+/* PATCH 088: restore the original Chapter 3 bomb HUD exactly where it was before later HUD patches.
+   Keep the existing Lucide bomb icons/colors; only restore their original layout. */
+.chapter3WaveHudBottomRight{
+  position:absolute!important;
+  right:16px!important;
+  bottom:16px!important;
+  left:auto!important;
+  top:auto!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  margin:0!important;
+  transform:none!important;
+  filter:drop-shadow(0 1px 4px rgba(0,0,0,.72))!important;
+  pointer-events:none!important;
+}
+.chapter3WaveHudBottomRight svg{
+  width:19px!important;
+  height:19px!important;
+  flex:none!important;
+}
