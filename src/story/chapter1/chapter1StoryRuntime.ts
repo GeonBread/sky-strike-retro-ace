@@ -304,76 +304,65 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       normalized = normalized.replace(locationTransitionHook, locationTransitionWithTitle);
     }
 
-    // 출석탄 직후 첫 정화 시네마틱은 기존 단순 학생증 컷 대신,
-    // 문서 내부 통합형 연출(attendance-first-purification)로 교체한다.
-    // 최신 Test 이동/연속 진행 로직을 유지한 상태에서 이 연출만 교체한다.
-    const firstPurificationEffectHook = `      effect: 'attendance-student-card-purification',
+    // 출석탄 발사와 학생증의 기존 등장/발광은 그대로 유지하고,
+    // 학생증 발광 이후에만 에너지 응축 -> 정화 빔 -> 드론 피격 -> 정화 조각 변환을 추가한다.
+    // 기존 effect id를 유지하므로 출석탄 시네마틱과의 연결과 전체화면 처리도 그대로 보존된다.
+    const firstPurificationDurationHook = `      effect: 'attendance-student-card-purification',
       effectDuration: 9600,`;
-    const firstPurificationEffectUpgrade = `      effect: 'attendance-first-purification',
-      effectDuration: 10400,`;
-    if (!normalized.includes(firstPurificationEffectHook)) {
-      throw new Error('Chapter 1 first purification cinematic hook was not found.');
+    const firstPurificationDurationUpgrade = `      effect: 'attendance-student-card-purification',
+      effectDuration: 11800,`;
+    if (!normalized.includes(firstPurificationDurationHook)) {
+      throw new Error('Chapter 1 first purification duration hook was not found.');
     }
-    while (normalized.includes(firstPurificationEffectHook)) {
-      normalized = normalized.replace(firstPurificationEffectHook, firstPurificationEffectUpgrade);
+    while (normalized.includes(firstPurificationDurationHook)) {
+      normalized = normalized.replace(firstPurificationDurationHook, firstPurificationDurationUpgrade);
     }
 
-    // 통합 첫 정화 시네마틱을 뷰포트 전체에서 재생한다.
-    const viewportCinematicEffectsHook = `  const viewportCinematicEffects = new Set([
-    'attendance-drone-charge',
-    'attendance-stamp-flight-blackout',
-    'attendance-student-card-purification',
-    'first-purification-absorb'
-  ]);`;
-    const viewportCinematicEffectsUpgrade = `  const viewportCinematicEffects = new Set([
-    'attendance-drone-charge',
-    'attendance-stamp-flight-blackout',
-    'attendance-first-purification',
-    'attendance-student-card-purification',
-    'first-purification-absorb'
-  ]);`;
-    if (!normalized.includes(viewportCinematicEffectsHook)) {
-      throw new Error('Chapter 1 first purification viewport effect hook was not found.');
-    }
-    normalized = normalized.replace(viewportCinematicEffectsHook, viewportCinematicEffectsUpgrade);
-
-    // 학생증 각성 → 에너지 응축 → 정화 폭발에 맞춘 전용 사운드 레이어.
-    const firstPurificationSoundAnchor = `    if (effectId === 'attendance-student-card-purification') {`;
-    const firstPurificationSoundUpgrade = `    if (effectId === 'attendance-first-purification') {
-      synthTone({ frequency: 118, endFrequency: 196, duration: 1.45, gain: .042, type: 'sine', filterFrequency: 720, attack: .03, release: .24 });
-      synthNoise({ duration: 1.12, gain: .026, filterType: 'bandpass', frequency: 640, endFrequency: 2200, q: .95, attack: .04, release: .28 });
-      [540, 820, 1100, 1390].forEach((delay, index) => {
+    // 학생증 발광 뒤 에너지가 압축되고, 빔 발사/드론 피격/정화 조각 생성 타이밍에 맞춰
+    // 저역 충전음 -> 고역 응축음 -> 발사 충격 -> 1초 지속 빔 -> 정화 잔향을 순서대로 쌓는다.
+    const firstPurificationSoundHook = `    if (effectId === 'attendance-student-card-purification') {
+      return;
+    }`;
+    const firstPurificationSoundUpgrade = `    if (effectId === 'attendance-student-card-purification') {
+      synthTone({ frequency: 82, endFrequency: 118, duration: 4.8, gain: .045, type: 'sine', filterFrequency: 520, attack: .12, release: .42 });
+      synthTone({ frequency: 164, endFrequency: 330, duration: 4.9, gain: .023, type: 'triangle', filterFrequency: 1250, attack: .12, release: .32 });
+      [1180, 1680, 2150, 2580, 2980, 3340, 3670, 3970, 4240, 4480, 4700].forEach((delay, index) => {
         scheduleCinematicSound(() => {
-          const base = 510 + index * 90;
-          synthTone({ frequency: base, endFrequency: base * 1.26, duration: .20, gain: .018 + index * .004, type: 'triangle', filterFrequency: 2600, attack: .003, release: .12 });
-          synthNoise({ duration: .11, gain: .012 + index * .003, filterType: 'highpass', frequency: 1800 + index * 260, endFrequency: 4200, q: .7, attack: .002, release: .08 });
+          const base = 420 + index * 54;
+          synthTone({ frequency: base, endFrequency: base * 1.22, duration: .13, gain: .013 + index * .0017, type: 'triangle', filterFrequency: 2900, attack: .002, release: .09 });
+          synthNoise({ duration: .08, gain: .009 + index * .0011, filterType: 'highpass', frequency: 1500 + index * 130, endFrequency: 4600, q: .65, attack: .001, release: .055 });
         }, delay);
       });
       scheduleCinematicSound(() => {
-        synthTone({ frequency: 212, endFrequency: 420, duration: .82, gain: .052, type: 'sawtooth', filterFrequency: 1500, attack: .01, release: .24 });
-        synthTone({ frequency: 424, endFrequency: 848, duration: .64, gain: .026, type: 'triangle', filterFrequency: 2500, attack: .01, release: .18 });
-      }, 1880);
-      [2240, 2480, 2700, 2910, 3110].forEach((delay, index) => {
-        scheduleCinematicSound(() => synthTone({ frequency: 640 + index * 88, endFrequency: 760 + index * 120, duration: .12, gain: .015 + index * .003, type: 'sine', filterFrequency: 2800, attack: .001, release: .09 }), delay);
-      });
+        synthTone({ frequency: 210, endFrequency: 680, duration: 1.18, gain: .06, type: 'sawtooth', filterFrequency: 1800, attack: .006, release: .18 });
+        synthTone({ frequency: 620, endFrequency: 1280, duration: .86, gain: .028, type: 'triangle', filterFrequency: 3300, attack: .004, release: .14 });
+        synthNoise({ duration: .92, gain: .045, filterType: 'bandpass', frequency: 760, endFrequency: 4200, q: .86, attack: .004, release: .22 });
+      }, 4550);
       scheduleCinematicSound(() => {
-        synthNoise({ duration: .28, gain: .082, filterType: 'bandpass', frequency: 920, endFrequency: 4600, q: .72, attack: .002, release: .18 });
-        synthTone({ frequency: 1320, endFrequency: 260, duration: .34, gain: .06, type: 'sawtooth', filterFrequency: 2400, attack: .002, release: .16 });
-      }, 3360);
+        synthTone({ frequency: 64, endFrequency: 30, duration: .86, gain: .19, type: 'sine', filterFrequency: 360, attack: .001, release: .48 });
+        synthTone({ frequency: 1240, endFrequency: 190, duration: .42, gain: .075, type: 'sawtooth', filterFrequency: 2800, attack: .001, release: .18 });
+        synthNoise({ duration: .38, gain: .15, filterType: 'bandpass', frequency: 1900, endFrequency: 180, q: .54, attack: .001, release: .22 });
+        synthNoise({ duration: .16, gain: .085, filterType: 'highpass', frequency: 2600, endFrequency: 6200, q: .5, attack: .001, release: .1 });
+      }, 5850);
       scheduleCinematicSound(() => {
-        synthTone({ frequency: 90, endFrequency: 44, duration: 1.1, gain: .11, type: 'sine', filterFrequency: 360, attack: .002, release: .62 });
-        synthTone({ frequency: 182, endFrequency: 68, duration: .72, gain: .05, type: 'triangle', filterFrequency: 760, attack: .002, release: .32 });
-        synthNoise({ duration: .56, gain: .11, filterType: 'bandpass', frequency: 1400, endFrequency: 320, q: .62, attack: .002, release: .32 });
-      }, 6900);
-      scheduleCinematicSound(() => synthTone({ frequency: 540, endFrequency: 188, duration: .92, gain: .016, type: 'sine', filterFrequency: 1200, attack: .01, release: .58 }), 7620);
+        synthTone({ frequency: 520, endFrequency: 430, duration: 1.18, gain: .035, type: 'sawtooth', filterFrequency: 1900, attack: .004, release: .22 });
+        synthNoise({ duration: 1.16, gain: .055, filterType: 'bandpass', frequency: 1250, endFrequency: 2450, q: .7, attack: .004, release: .18 });
+      }, 5960);
+      scheduleCinematicSound(() => {
+        synthTone({ frequency: 940, endFrequency: 248, duration: .58, gain: .042, type: 'triangle', filterFrequency: 1800, attack: .002, release: .3 });
+        synthTone({ frequency: 118, endFrequency: 62, duration: .72, gain: .09, type: 'sine', filterFrequency: 420, attack: .002, release: .42 });
+        synthNoise({ duration: .46, gain: .06, filterType: 'lowpass', frequency: 1100, endFrequency: 92, q: .4, attack: .002, release: .3 });
+      }, 7160);
+      scheduleCinematicSound(() => {
+        synthTone({ frequency: 690, endFrequency: 420, duration: 1.8, gain: .019, type: 'sine', filterFrequency: 1500, attack: .02, release: .82 });
+        synthTone({ frequency: 1035, endFrequency: 620, duration: 1.35, gain: .012, type: 'triangle', filterFrequency: 2300, attack: .03, release: .72 });
+      }, 7900);
       return;
-    }
-
-    if (effectId === 'attendance-student-card-purification') {`;
-    if (!normalized.includes(firstPurificationSoundAnchor)) {
+    }`;
+    if (!normalized.includes(firstPurificationSoundHook)) {
       throw new Error('Chapter 1 first purification sound hook was not found.');
     }
-    normalized = normalized.replace(firstPurificationSoundAnchor, firstPurificationSoundUpgrade);
+    normalized = normalized.replace(firstPurificationSoundHook, firstPurificationSoundUpgrade);
 
     // 테스트 장면을 선택해도 해당 장면만 재생하고 메뉴로 돌아가지 않는다.
     // 선택한 지점부터 Part 1의 남은 실제 스토리 세그먼트를 이어 붙여 Part 2까지 자연스럽게 진행한다.
@@ -1669,6 +1658,448 @@ html.is-embedded-story [data-effect="first-purification-absorb"] .purify-card-ra
   background: none !important;
 }
 
+
+/* 출석탄 -> 첫 정화 후반부 리워크.
+   기존 출석탄 비행과 학생증 등장/발광은 유지하고, 이후 에너지 응축 -> 빔 -> 드론 피격 -> 조각 변환만 강화한다. */
+html.is-embedded-story [data-effect="attendance-student-card-purification"] {
+  isolation: isolate !important;
+  background: #000 !important;
+  animation: chapter1PurifyBeamScreenShake 11.8s linear both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-card {
+  animation: chapter1PurifyCardPresence 11.8s cubic-bezier(.18,.82,.2,1) both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-card img {
+  animation: chapter1PurifyCardChargeGlow 11.8s ease-in-out both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-card-rays {
+  background:
+    radial-gradient(circle, rgba(255,252,222,.96) 0 12%, rgba(255,240,171,.28) 26%, rgba(255,210,86,.1) 48%, transparent 69%),
+    radial-gradient(circle, transparent 0 48%, rgba(255,246,198,.5) 58%, transparent 73%) !important;
+  animation: chapter1PurifyCardAura 11.8s ease-in-out both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-yellow {
+  animation: chapter1PurifyAmbientGold 11.8s ease-in-out both !important;
+}
+
+html.is-embedded-story .chapter1-purify-cinematic-vignette {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 49%, rgba(255,223,92,.07) 0 12%, transparent 42%),
+    radial-gradient(circle at 50% 49%, transparent 0 28%, rgba(0,0,0,.26) 64%, rgba(0,0,0,.78) 100%);
+  animation: chapter1PurifyVignette 11.8s ease both;
+}
+html.is-embedded-story .chapter1-purify-charge-field {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  top: 49%;
+  width: min(34vw, 430px);
+  aspect-ratio: 1;
+  transform: translate(-50%,-50%) scale(.72);
+  opacity: 0;
+  pointer-events: none;
+  animation: chapter1PurifyChargeField 11.8s cubic-bezier(.16,.86,.2,1) both;
+}
+html.is-embedded-story .chapter1-purify-charge-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42%;
+  aspect-ratio: 1;
+  transform: translate(-50%,-50%) scale(.34);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255,255,255,1) 0 10%,
+    rgba(255,251,216,.98) 14% 24%,
+    rgba(255,229,119,.76) 34%,
+    rgba(255,198,38,.28) 56%,
+    transparent 76%);
+  box-shadow:
+    0 0 24px rgba(255,255,229,.94),
+    0 0 58px rgba(255,223,99,.82),
+    0 0 120px rgba(255,181,18,.38);
+  filter: blur(2px);
+  animation: chapter1PurifyChargeCore 11.8s cubic-bezier(.18,.86,.2,1) both;
+}
+html.is-embedded-story .chapter1-purify-charge-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  border-style: solid;
+  transform: translate(-50%,-50%) scale(.76);
+  opacity: 0;
+}
+html.is-embedded-story .chapter1-purify-charge-ring.ring-a {
+  width: 54%;
+  aspect-ratio: 1;
+  border-width: 3px;
+  border-color: rgba(255,246,190,.9);
+  box-shadow: 0 0 18px rgba(255,230,126,.76), inset 0 0 18px rgba(255,230,126,.35);
+  animation: chapter1PurifyRingA 11.8s ease-in-out both;
+}
+html.is-embedded-story .chapter1-purify-charge-ring.ring-b {
+  width: 76%;
+  aspect-ratio: 1;
+  border-width: 2px;
+  border-color: rgba(255,208,73,.58);
+  border-style: dashed;
+  box-shadow: 0 0 24px rgba(255,194,46,.42);
+  animation: chapter1PurifyRingB 11.8s linear both;
+}
+html.is-embedded-story .chapter1-purify-charge-ring.ring-c {
+  width: 94%;
+  aspect-ratio: 1;
+  border-width: 1px;
+  border-color: rgba(255,240,174,.28);
+  box-shadow: 0 0 34px rgba(255,216,94,.22);
+  animation: chapter1PurifyRingC 11.8s linear both;
+}
+html.is-embedded-story .chapter1-purify-charge-particles {
+  position: absolute;
+  inset: 0;
+}
+html.is-embedded-story .chapter1-purify-charge-particles i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--purify-particle-size, 7px);
+  height: var(--purify-particle-size, 7px);
+  margin-left: calc(var(--purify-particle-size, 7px) / -2);
+  margin-top: calc(var(--purify-particle-size, 7px) / -2);
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(circle, #fff 0 22%, #fff2b0 38%, #ffd04b 68%, rgba(255,196,30,0) 76%);
+  box-shadow: 0 0 10px rgba(255,247,202,.96), 0 0 22px rgba(255,206,65,.76);
+  transform: rotate(var(--purify-particle-angle)) translateX(var(--purify-particle-radius));
+  animation: chapter1PurifyParticleConverge 2.65s cubic-bezier(.16,.86,.2,1) both;
+  animation-delay: calc(3.12s + var(--purify-particle-delay));
+}
+
+/* 기존 wave 노드를 정화 빔 본체로 사용한다. 카드 오른쪽에서 왼쪽 드론 중심으로 폭발적으로 뻗는다. */
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-wave {
+  z-index: 11 !important;
+  left: 25.8% !important;
+  top: 43.2% !important;
+  width: 25.2% !important;
+  height: 12.2% !important;
+  opacity: 0;
+  transform-origin: right center !important;
+  filter:
+    drop-shadow(0 0 12px rgba(255,255,255,1))
+    drop-shadow(0 0 32px rgba(255,236,145,.98))
+    drop-shadow(0 0 70px rgba(255,192,38,.76)) !important;
+  animation: chapter1PurifyBeam 11.8s cubic-bezier(.08,.88,.16,1) both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-wave::before {
+  inset: 0 !important;
+  clip-path: polygon(100% 42%, 7% 2%, 0 50%, 7% 98%, 100% 58%) !important;
+  background: linear-gradient(90deg,
+    rgba(255,244,174,.18) 0%,
+    rgba(255,232,111,.92) 18%,
+    rgba(255,251,217,1) 58%,
+    #fff 86%,
+    rgba(255,255,255,.96) 100%) !important;
+  filter: blur(1px);
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-wave::after {
+  inset: 34% 0 34% 1% !important;
+  clip-path: polygon(100% 36%, 4% 0, 0 50%, 4% 100%, 100% 64%) !important;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,.28) 0%,
+    rgba(255,255,244,1) 24%,
+    #fff 70%,
+    rgba(255,255,255,1) 100%) !important;
+  filter: blur(1.5px) brightness(1.25) !important;
+}
+html.is-embedded-story .chapter1-purify-beam-impact {
+  position: absolute;
+  z-index: 16;
+  left: 27%;
+  top: 49%;
+  width: min(25vw, 300px);
+  aspect-ratio: 1;
+  transform: translate(-50%,-50%);
+  opacity: 0;
+  pointer-events: none;
+  animation: chapter1PurifyBeamImpactLife 11.8s ease both;
+}
+html.is-embedded-story .chapter1-purify-beam-impact-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42%;
+  aspect-ratio: 1;
+  transform: translate(-50%,-50%) scale(.24);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 12%, #fff9d2 22%, #ffdd68 46%, rgba(255,190,29,.3) 64%, transparent 78%);
+  box-shadow: 0 0 28px #fff, 0 0 62px rgba(255,225,107,.94), 0 0 116px rgba(255,181,26,.65);
+  animation: chapter1PurifyImpactCore 11.8s ease-out both;
+}
+html.is-embedded-story .chapter1-purify-beam-impact-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%,-50%) scale(.18);
+  opacity: 0;
+}
+html.is-embedded-story .chapter1-purify-beam-impact-ring.ring-a {
+  width: 62%;
+  border: 4px solid rgba(255,244,177,.9);
+  box-shadow: 0 0 22px rgba(255,230,121,.82), inset 0 0 16px rgba(255,244,190,.48);
+  animation: chapter1PurifyImpactRingA 11.8s ease-out both;
+}
+html.is-embedded-story .chapter1-purify-beam-impact-ring.ring-b {
+  width: 88%;
+  border: 2px solid rgba(255,205,68,.52);
+  box-shadow: 0 0 38px rgba(255,194,40,.44);
+  animation: chapter1PurifyImpactRingB 11.8s ease-out both;
+}
+html.is-embedded-story .chapter1-purify-launch-flash {
+  position: absolute;
+  z-index: 60;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 49% 49%, #fff 0 7%, #fff8ce 16%, rgba(255,222,95,.78) 34%, rgba(255,190,31,.18) 58%, transparent 76%);
+  mix-blend-mode: screen;
+  animation: chapter1PurifyLaunchFlash 11.8s ease-out both;
+}
+
+/* 드론은 빔이 먼저 터진 뒤 등장하고 약 1초간 정면 피격 상태를 유지한다. */
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-drone {
+  left: 27% !important;
+  top: 49% !important;
+  width: min(30%, 300px) !important;
+  height: 45% !important;
+  animation: chapter1PurifyDroneBeamHit 11.8s cubic-bezier(.18,.82,.2,1) both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-ring {
+  animation: chapter1PurifyConversionRing 11.8s ease-out both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-burst {
+  animation: chapter1PurifyConversionBurst 11.8s ease-out both !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-fragment {
+  width: 48px !important;
+  height: 48px !important;
+  left: calc(27% - 24px) !important;
+  top: calc(49% - 24px) !important;
+  filter:
+    brightness(1.25)
+    saturate(1.18)
+    drop-shadow(0 0 8px rgba(255,255,238,1))
+    drop-shadow(0 0 20px rgba(255,232,124,.98))
+    drop-shadow(0 0 46px rgba(255,193,31,.92))
+    drop-shadow(0 0 86px rgba(255,154,0,.48));
+  animation:
+    chapter1PurifyFragmentBirth 11.8s cubic-bezier(.18,.86,.2,1) both,
+    chapter1PurifyFragmentGlow 1.05s 8.35s ease-in-out infinite alternate !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-fragment::before {
+  display: none !important;
+}
+
+@keyframes chapter1PurifyCardPresence {
+  0%,4% { opacity:0; transform:translate(-50%,-50%) scale(.76); }
+  8.2% { opacity:1; transform:translate(-50%,-50%) scale(1.04); }
+  14.7%,22.8% { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  27.6% { opacity:1; transform:translate(-50%,-50%) scale(1.03); }
+  35% { opacity:1; transform:translate(-50%,-50%) scale(1.02); }
+  44% { opacity:1; transform:translate(-50%,-50%) scale(1.065); }
+  49.5% { opacity:1; transform:translate(-50%,-50%) scale(1.11); }
+  52% { opacity:1; transform:translate(-50%,-50%) scale(1.035); }
+  63% { opacity:.92; transform:translate(-50%,-50%) scale(1.02); }
+  72%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.05); }
+}
+@keyframes chapter1PurifyCardChargeGlow {
+  0%,35.8% { filter:drop-shadow(0 24px 30px rgba(0,0,0,.78)) drop-shadow(0 0 18px rgba(255,224,112,.52)) drop-shadow(0 0 48px rgba(255,214,70,.24)); }
+  40% { filter:drop-shadow(0 16px 24px rgba(0,0,0,.62)) drop-shadow(0 0 28px rgba(255,239,164,.78)) drop-shadow(0 0 68px rgba(255,209,60,.5)); }
+  46% { filter:brightness(1.08) drop-shadow(0 0 36px rgba(255,249,211,.94)) drop-shadow(0 0 88px rgba(255,207,53,.76)); }
+  49.5% { filter:brightness(1.2) drop-shadow(0 0 44px rgba(255,253,227,1)) drop-shadow(0 0 108px rgba(255,211,65,.94)) drop-shadow(0 0 158px rgba(255,171,0,.42)); }
+  50.8% { filter:brightness(1.55) drop-shadow(0 0 52px #fff) drop-shadow(0 0 118px rgba(255,218,86,1)); }
+  56%,100% { filter:brightness(1.08) drop-shadow(0 0 28px rgba(255,244,180,.88)) drop-shadow(0 0 70px rgba(255,205,48,.64)); }
+}
+@keyframes chapter1PurifyCardAura {
+  0%,6.5% { opacity:0; transform:scale(.7); }
+  13% { opacity:.36; }
+  22.8% { opacity:.86; transform:scale(1.06); }
+  29.3% { opacity:.24; transform:scale(1.24); }
+  35.8% { opacity:0; transform:scale(1.4); }
+  100% { opacity:0; transform:scale(1.4); }
+}
+@keyframes chapter1PurifyAmbientGold {
+  0%,6.5% { opacity:0; transform:translate(-50%,-50%) scale(.84); }
+  11.4% { opacity:.35; }
+  19.5% { opacity:.78; }
+  26% { opacity:.98; transform:translate(-50%,-50%) scale(1); }
+  32.5% { opacity:.18; transform:translate(-50%,-50%) scale(1.04); }
+  37.4% { opacity:0; transform:translate(-50%,-50%) scale(1.08); }
+  43% { opacity:.28; transform:translate(-50%,-50%) scale(1.12); }
+  49.5% { opacity:.76; transform:translate(-50%,-50%) scale(1.24); }
+  52% { opacity:.24; transform:translate(-50%,-50%) scale(1.4); }
+  64%,100% { opacity:0; }
+}
+@keyframes chapter1PurifyVignette {
+  0%,24% { opacity:0; }
+  34% { opacity:.32; }
+  48% { opacity:.88; }
+  50.5% { opacity:.18; }
+  56% { opacity:.42; }
+  70%,100% { opacity:.12; }
+}
+@keyframes chapter1PurifyChargeField {
+  0%,25% { opacity:0; transform:translate(-50%,-50%) scale(.72); }
+  31% { opacity:.44; transform:translate(-50%,-50%) scale(.86); }
+  40% { opacity:.88; transform:translate(-50%,-50%) scale(1); }
+  48.5% { opacity:1; transform:translate(-50%,-50%) scale(1.08); }
+  50.4% { opacity:1; transform:translate(-50%,-50%) scale(.78); }
+  52.2%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.32); }
+}
+@keyframes chapter1PurifyChargeCore {
+  0%,27% { opacity:0; transform:translate(-50%,-50%) scale(.28); }
+  34% { opacity:.52; transform:translate(-50%,-50%) scale(.48); }
+  42% { opacity:.86; transform:translate(-50%,-50%) scale(.72); }
+  47.5% { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  49.8% { opacity:1; transform:translate(-50%,-50%) scale(1.18); }
+  50.5% { opacity:1; transform:translate(-50%,-50%) scale(.3); }
+  52%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.65); }
+}
+@keyframes chapter1PurifyRingA {
+  0%,28% { opacity:0; transform:translate(-50%,-50%) scale(.72); }
+  36% { opacity:.68; transform:translate(-50%,-50%) scale(.92); }
+  49.5% { opacity:1; transform:translate(-50%,-50%) scale(1.16); }
+  51.5% { opacity:0; transform:translate(-50%,-50%) scale(1.6); }
+  100% { opacity:0; }
+}
+@keyframes chapter1PurifyRingB {
+  0%,28% { opacity:0; transform:translate(-50%,-50%) scale(.82) rotate(0deg); }
+  34% { opacity:.48; }
+  49.5% { opacity:.86; transform:translate(-50%,-50%) scale(1.03) rotate(320deg); }
+  51.5% { opacity:0; transform:translate(-50%,-50%) scale(1.45) rotate(390deg); }
+  100% { opacity:0; }
+}
+@keyframes chapter1PurifyRingC {
+  0%,31% { opacity:0; transform:translate(-50%,-50%) scale(.78) rotate(0deg); }
+  38% { opacity:.34; }
+  49.5% { opacity:.64; transform:translate(-50%,-50%) scale(1) rotate(-250deg); }
+  51.5% { opacity:0; transform:translate(-50%,-50%) scale(1.34) rotate(-310deg); }
+  100% { opacity:0; }
+}
+@keyframes chapter1PurifyParticleConverge {
+  0% { opacity:0; transform:rotate(var(--purify-particle-angle)) translateX(var(--purify-particle-radius)) scale(.35); }
+  16% { opacity:.88; }
+  74% { opacity:1; }
+  100% { opacity:0; transform:rotate(calc(var(--purify-particle-angle) + 105deg)) translateX(7px) scale(.15); }
+}
+@keyframes chapter1PurifyBeam {
+  0%,49.3% { opacity:0; transform:scaleX(.025) scaleY(.35); }
+  50.1% { opacity:1; transform:scaleX(.16) scaleY(.72); }
+  51.6% { opacity:1; transform:scaleX(1.04) scaleY(1.24); }
+  54% { opacity:1; transform:scaleX(1) scaleY(1); }
+  59.6% { opacity:1; transform:scaleX(1.04) scaleY(1.08); }
+  61.4% { opacity:.55; transform:scaleX(1.08) scaleY(.8); }
+  63%,100% { opacity:0; transform:scaleX(1.1) scaleY(.3); }
+}
+@keyframes chapter1PurifyBeamImpactLife {
+  0%,50% { opacity:0; }
+  52% { opacity:1; }
+  59.8% { opacity:1; }
+  62.2%,100% { opacity:0; }
+}
+@keyframes chapter1PurifyImpactCore {
+  0%,50% { opacity:0; transform:translate(-50%,-50%) scale(.18); }
+  52% { opacity:.92; transform:translate(-50%,-50%) scale(.74); }
+  55% { opacity:1; transform:translate(-50%,-50%) scale(1.03); }
+  59.5% { opacity:.92; transform:translate(-50%,-50%) scale(.9); }
+  62%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.28); }
+}
+@keyframes chapter1PurifyImpactRingA {
+  0%,50.5% { opacity:0; transform:translate(-50%,-50%) scale(.22); }
+  53% { opacity:.9; transform:translate(-50%,-50%) scale(.78); }
+  59% { opacity:.38; transform:translate(-50%,-50%) scale(1.3); }
+  62%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.58); }
+}
+@keyframes chapter1PurifyImpactRingB {
+  0%,51.5% { opacity:0; transform:translate(-50%,-50%) scale(.3); }
+  54% { opacity:.58; transform:translate(-50%,-50%) scale(.88); }
+  60% { opacity:.24; transform:translate(-50%,-50%) scale(1.42); }
+  63%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.8); }
+}
+@keyframes chapter1PurifyLaunchFlash {
+  0%,49.3% { opacity:0; }
+  50.1% { opacity:.88; }
+  51% { opacity:.28; }
+  52.5%,100% { opacity:0; }
+}
+@keyframes chapter1PurifyBeamScreenShake {
+  0%,49.5%,57%,100% { transform:translate3d(0,0,0) rotate(0deg); }
+  50.2% { transform:translate3d(-12px,5px,0) rotate(-.35deg); }
+  50.8% { transform:translate3d(14px,-6px,0) rotate(.4deg); }
+  51.5% { transform:translate3d(-11px,-4px,0) rotate(-.32deg); }
+  52.2% { transform:translate3d(11px,5px,0) rotate(.28deg); }
+  53% { transform:translate3d(-8px,3px,0) rotate(-.2deg); }
+  54% { transform:translate3d(7px,-3px,0) rotate(.16deg); }
+  55.2% { transform:translate3d(-4px,2px,0) rotate(-.1deg); }
+  56.2% { transform:translate3d(3px,-1px,0) rotate(.06deg); }
+}
+@keyframes chapter1PurifyDroneBeamHit {
+  0%,50.4% { opacity:0; transform:translate(-50%,-50%) scale(.78); filter:blur(8px) brightness(.55); }
+  52% { opacity:1; transform:translate(-50%,-50%) scale(1); filter:blur(0) brightness(1.08) drop-shadow(0 0 20px rgba(255,224,112,.45)); }
+  53.2% { transform:translate(calc(-50% - 4px),calc(-50% + 2px)) scale(1.01) rotate(-1.4deg); }
+  54.4% { transform:translate(calc(-50% + 5px),calc(-50% - 2px)) scale(1.015) rotate(1.5deg); }
+  55.6% { transform:translate(calc(-50% - 5px),calc(-50% + 3px)) scale(1.02) rotate(-1.5deg); }
+  56.8% { transform:translate(calc(-50% + 4px),calc(-50% - 3px)) scale(1.025) rotate(1.4deg); }
+  58% { transform:translate(calc(-50% - 3px),calc(-50% + 2px)) scale(1.03) rotate(-1deg); filter:brightness(1.32) saturate(.72) drop-shadow(0 0 30px rgba(255,229,128,.72)); }
+  60.2% { opacity:1; transform:translate(-50%,-50%) scale(1.06); filter:brightness(1.8) saturate(.3) drop-shadow(0 0 44px rgba(255,239,164,.92)); }
+  63% { opacity:1; transform:translate(-50%,-50%) scale(1.1); filter:brightness(2.55) saturate(0) blur(1px) drop-shadow(0 0 58px rgba(255,247,190,1)); }
+  67% { opacity:.54; transform:translate(-50%,-50%) scale(.82); filter:brightness(3.2) saturate(0) blur(7px); }
+  70.5% { opacity:0; transform:translate(-50%,-50%) scale(.42); filter:brightness(3.4) saturate(0) blur(15px); }
+  100% { opacity:0; }
+}
+@keyframes chapter1PurifyConversionRing {
+  0%,62% { opacity:0; transform:translate(-50%,-50%) scale(.2); }
+  65% { opacity:.96; transform:translate(-50%,-50%) scale(.82); }
+  71% { opacity:.42; transform:translate(-50%,-50%) scale(1.38); }
+  75%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.7); }
+}
+@keyframes chapter1PurifyConversionBurst {
+  0%,64% { opacity:0; transform:translate(-50%,-50%) scale(.12); }
+  67% { opacity:1; transform:translate(-50%,-50%) scale(.86); }
+  71% { opacity:.92; transform:translate(-50%,-50%) scale(1.16); }
+  76%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.72); }
+}
+@keyframes chapter1PurifyFragmentBirth {
+  0%,68% { opacity:0; transform:translateY(14px) rotate(0deg) scale(.15); }
+  71.5% { opacity:1; transform:translateY(0) rotate(9deg) scale(1.16); }
+  75% { opacity:1; transform:translateY(-6px) rotate(15deg) scale(.96); }
+  82%,100% { opacity:1; transform:translateY(-10px) rotate(12deg) scale(1); }
+}
+@keyframes chapter1PurifyFragmentGlow {
+  0% {
+    filter:
+      brightness(1.16) saturate(1.12)
+      drop-shadow(0 0 8px rgba(255,255,238,.96))
+      drop-shadow(0 0 20px rgba(255,232,124,.9))
+      drop-shadow(0 0 42px rgba(255,193,31,.78));
+  }
+  100% {
+    filter:
+      brightness(1.48) saturate(1.26)
+      drop-shadow(0 0 12px #fff)
+      drop-shadow(0 0 31px rgba(255,238,144,1))
+      drop-shadow(0 0 64px rgba(255,188,18,.98))
+      drop-shadow(0 0 104px rgba(255,142,0,.58));
+  }
+}
+
 /* 학사 시스템 비상 통제 전환은 스토리 프레임에 갇히지 않고 브라우저 전체를 덮는다. */
 html.is-embedded-story .battle-transition {
   position: fixed !important;
@@ -1796,6 +2227,61 @@ export function createChapter1StoryRuntime({
   styleElement.textContent = normalizeStoryStyles(storyDocument.styles);
   document.head.appendChild(styleElement);
   root.innerHTML = normalizeStoryMarkup(storyDocument.markup);
+
+  // Part 1 첫 정화 후반부 전용 레이어. 기존 출석탄/학생증 마크업은 그대로 두고
+  // 에너지 응축, 정화 빔, 충돌 코어, 화면 플래시만 보강한다.
+  if (part === 1) {
+    const firstPurificationEffect = root.querySelector<HTMLElement>('[data-effect="attendance-student-card-purification"]');
+    if (firstPurificationEffect && !firstPurificationEffect.querySelector('.chapter1-purify-charge-field')) {
+      const chargeField = document.createElement('div');
+      chargeField.className = 'chapter1-purify-charge-field';
+      chargeField.setAttribute('aria-hidden', 'true');
+
+      const chargeCore = document.createElement('div');
+      chargeCore.className = 'chapter1-purify-charge-core';
+      const chargeRingA = document.createElement('div');
+      chargeRingA.className = 'chapter1-purify-charge-ring ring-a';
+      const chargeRingB = document.createElement('div');
+      chargeRingB.className = 'chapter1-purify-charge-ring ring-b';
+      const chargeRingC = document.createElement('div');
+      chargeRingC.className = 'chapter1-purify-charge-ring ring-c';
+      const chargeParticles = document.createElement('div');
+      chargeParticles.className = 'chapter1-purify-charge-particles';
+
+      const particleAngles = [-164, -139, -116, -92, -68, -43, -18, 6, 31, 55, 79, 104, 129, 153, 177, 202, 227, 252];
+      particleAngles.forEach((angle, index) => {
+        const particle = document.createElement('i');
+        particle.style.setProperty('--purify-particle-angle', `${angle}deg`);
+        particle.style.setProperty('--purify-particle-radius', `${116 + (index % 5) * 24}px`);
+        particle.style.setProperty('--purify-particle-delay', `${(index % 7) * 0.075}s`);
+        particle.style.setProperty('--purify-particle-size', `${5 + (index % 4) * 2}px`);
+        chargeParticles.appendChild(particle);
+      });
+
+      chargeField.append(chargeCore, chargeRingA, chargeRingB, chargeRingC, chargeParticles);
+
+      const beamImpact = document.createElement('div');
+      beamImpact.className = 'chapter1-purify-beam-impact';
+      beamImpact.setAttribute('aria-hidden', 'true');
+      const impactCore = document.createElement('div');
+      impactCore.className = 'chapter1-purify-beam-impact-core';
+      const impactRingA = document.createElement('div');
+      impactRingA.className = 'chapter1-purify-beam-impact-ring ring-a';
+      const impactRingB = document.createElement('div');
+      impactRingB.className = 'chapter1-purify-beam-impact-ring ring-b';
+      beamImpact.append(impactCore, impactRingA, impactRingB);
+
+      const launchFlash = document.createElement('div');
+      launchFlash.className = 'chapter1-purify-launch-flash';
+      launchFlash.setAttribute('aria-hidden', 'true');
+
+      const cinematicVignette = document.createElement('div');
+      cinematicVignette.className = 'chapter1-purify-cinematic-vignette';
+      cinematicVignette.setAttribute('aria-hidden', 'true');
+
+      firstPurificationEffect.append(cinematicVignette, chargeField, beamImpact, launchFlash);
+    }
+  }
 
   // Chapter 3의 보스 등장 타이틀 구조를 참고해 Chapter 1 최초 보스 등장에도 이름 연출을 추가한다.
   // 실제 전투 HUD가 아니라 storyEffectLayer 안의 gatekeeper-entrance 시네마틱에만 붙인다.
