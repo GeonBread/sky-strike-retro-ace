@@ -368,6 +368,24 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     }
     normalized = normalized.replace(firstPurificationSoundHook, firstPurificationSoundUpgrade);
 
+    // Chapter 3 정화 시네마틱처럼 빔 발사 중에는 부드러운 장주기 흔들림이 아니라
+    // 0.075초 단위의 날카로운 전체화면 흔들림을 별도 클래스로 켰다가 끈다.
+    const firstPurificationEffectClassHook = `    playCinematicEffectSound(effectId);
+    storyStage.classList.toggle('is-dialogue-blackout', effectId === 'attendance-black-hold');`;
+    const firstPurificationEffectClassUpgrade = `    if (effectId === 'attendance-student-card-purification') {
+      target.classList.remove('is-first-purify-firing', 'is-first-purify-drone-impact');
+      window.setTimeout(() => target.classList.add('is-first-purify-firing'), 5560);
+      window.setTimeout(() => target.classList.remove('is-first-purify-firing'), 8620);
+      window.setTimeout(() => target.classList.add('is-first-purify-drone-impact'), 10120);
+      window.setTimeout(() => target.classList.remove('is-first-purify-drone-impact'), 11120);
+    }
+    playCinematicEffectSound(effectId);
+    storyStage.classList.toggle('is-dialogue-blackout', effectId === 'attendance-black-hold');`;
+    if (!normalized.includes(firstPurificationEffectClassHook)) {
+      throw new Error('Chapter 1 first purification effect class hook was not found.');
+    }
+    normalized = normalized.replace(firstPurificationEffectClassHook, firstPurificationEffectClassUpgrade);
+
     // 테스트 장면을 선택해도 해당 장면만 재생하고 메뉴로 돌아가지 않는다.
     // 선택한 지점부터 Part 1의 남은 실제 스토리 세그먼트를 이어 붙여 Part 2까지 자연스럽게 진행한다.
     const part1DebugPreviewHook = `    preview: playSelectedPreview
@@ -1663,598 +1681,244 @@ html.is-embedded-story [data-effect="first-purification-absorb"] .purify-card-ra
 }
 
 
-/* 출석탄 -> 첫 정화 후반부 리워크.
-   기존 출석탄 비행과 학생증 등장/발광은 유지하고,
-   학생증 에너지 응축(약 3초) -> 좌측으로 거대한 빔 발사(약 3초, 학생증 우측 밀림) ->
-   드론 단독 샷 + 우측에서 날아오는 정화 빔 관통 -> 정화 조각 변환으로 재구성한다. */
+/* 출석탄 -> 첫 정화 후반부 리워크 V3.
+   Chapter 3 최종 정화/디그리온 몸체 파괴의 시각 문법을 가져오되,
+   1) 학생증 위에 실제 정화 에너지 덩어리 생성
+   2) 3초간 파장/입자가 수렴하며 덩어리가 맥동·성장
+   3) 일정 굵기 원통형 빔을 왼쪽으로 3초 발사 + 학생증 반동 + 날카로운 화면 흔들림
+   4) 드론 단독 샷 -> 우측에서 같은 원통형 빔 관통 -> 백색화/파편/파동 -> 발광 조각 잔류 순으로 구성한다. */
 html.is-embedded-story [data-effect="attendance-student-card-purification"] {
-  isolation: isolate !important;
-  background: #000 !important;
-  animation: chapter1PurifyBeamScreenShake 13.8s steps(1, end) both !important;
+  isolation:isolate !important;
+  background:#020205 !important;
+  overflow:hidden !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"].is-first-purify-firing {
+  animation:chapter1PurifySharpShake .075s steps(1,end) infinite !important;
+}
+html.is-embedded-story [data-effect="attendance-student-card-purification"].is-first-purify-drone-impact {
+  animation:chapter1PurifyImpactShake .068s steps(1,end) infinite !important;
 }
 html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-card {
-  animation: chapter1PurifyCardPresence 13.8s linear both !important;
+  overflow:visible !important;
+  animation:chapter1PurifyCardPresence 13.8s linear both !important;
 }
 html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-card img {
-  animation: chapter1PurifyCardChargeGlow 13.8s linear both !important;
+  position:relative;
+  z-index:2;
+  animation:chapter1PurifyCardChargeGlow 13.8s linear both !important;
 }
 html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-card-rays {
+  z-index:1;
   background:
-    radial-gradient(circle, rgba(255,252,222,.96) 0 12%, rgba(255,240,171,.28) 26%, rgba(255,210,86,.1) 48%, transparent 69%),
-    radial-gradient(circle, transparent 0 48%, rgba(255,246,198,.5) 58%, transparent 73%) !important;
-  animation: chapter1PurifyCardAura 13.8s linear both !important;
+    radial-gradient(circle,rgba(255,253,226,.92) 0 9%,rgba(255,237,154,.26) 28%,rgba(255,203,56,.08) 51%,transparent 72%),
+    radial-gradient(circle,transparent 0 47%,rgba(255,243,189,.42) 58%,transparent 72%) !important;
+  animation:chapter1PurifyCardAura 13.8s linear both !important;
 }
 html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-yellow {
-  animation: chapter1PurifyAmbientGold 13.8s linear both !important;
+  animation:chapter1PurifyAmbientGold 13.8s linear both !important;
+}
+
+/* 학생증 바로 위에 생성되는 핵심 정화 에너지 덩어리. */
+html.is-embedded-story .chapter1-purify-card-orb {
+  position:absolute;
+  z-index:8;
+  left:50%;
+  top:50%;
+  width:min(17vmin,190px);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%) scale(.08);
+  opacity:0;
+  pointer-events:none;
+  animation:chapter1PurifyOrbTimeline 13.8s linear both;
+}
+html.is-embedded-story .chapter1-purify-card-orb .orb-aura {
+  position:absolute;
+  inset:-115%;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,242,.55) 0 4%,rgba(255,232,120,.35) 15%,rgba(255,191,28,.15) 36%,transparent 67%);
+  filter:blur(18px);
+  animation:chapter1PurifyOrbAura .62s ease-in-out infinite alternate;
+}
+html.is-embedded-story .chapter1-purify-card-orb .orb-shell {
+  position:absolute;
+  inset:13%;
+  border-radius:44% 56% 51% 49% / 53% 43% 57% 47%;
+  background:
+    radial-gradient(circle at 39% 33%,#fff 0 3%,rgba(255,255,255,.72) 4%,transparent 10%),
+    radial-gradient(circle at 50% 48%,#fffce3 0 9%,#ffe875 18%,#ffc932 38%,#ed9811 61%,rgba(113,48,0,.88) 79%);
+  box-shadow:
+    inset 0 0 22px rgba(255,255,255,.5),
+    0 0 20px #fff,
+    0 0 52px rgba(255,225,98,.98),
+    0 0 112px rgba(255,174,18,.82),
+    0 0 190px rgba(255,130,0,.36);
+  animation:chapter1PurifyOrbBlob .38s ease-in-out infinite alternate;
+}
+html.is-embedded-story .chapter1-purify-card-orb .orb-shell::before,
+html.is-embedded-story .chapter1-purify-card-orb .orb-shell::after {
+  content:"";
+  position:absolute;
+  left:50%;top:50%;
+  border-radius:50%;
+  transform:translate(-50%,-50%) rotate(18deg) scaleY(.68);
+  pointer-events:none;
+}
+html.is-embedded-story .chapter1-purify-card-orb .orb-shell::before {
+  width:164%;height:164%;
+  border:2px solid rgba(255,238,159,.72);
+  box-shadow:0 0 20px rgba(255,222,94,.62),inset 0 0 18px rgba(255,230,125,.2);
+  animation:chapter1PurifyOrbOrbit .84s linear infinite;
+}
+html.is-embedded-story .chapter1-purify-card-orb .orb-shell::after {
+  width:214%;height:108%;
+  border:1px solid rgba(255,195,37,.42);
+  transform:translate(-50%,-50%) rotate(-37deg) scaleY(.7);
+  animation:chapter1PurifyOrbOrbitReverse 1.18s linear infinite;
+}
+html.is-embedded-story .chapter1-purify-card-orb .orb-core {
+  position:absolute;
+  z-index:2;
+  left:50%;top:50%;
+  width:24%;aspect-ratio:1;
+  transform:translate(-50%,-50%) rotate(45deg);
+  background:linear-gradient(135deg,#fff 0 28%,#fff2a1 29% 52%,#ffd03b 53% 76%,#ed9210 77%);
+  box-shadow:0 0 14px #fff,0 0 38px #ffe064,0 0 74px rgba(255,177,19,.9);
+  animation:chapter1PurifyOrbCore .24s ease-in-out infinite alternate;
 }
 
 html.is-embedded-story .chapter1-purify-cinematic-vignette {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
+  position:absolute;z-index:3;inset:0;pointer-events:none;opacity:0;
   background:
-    radial-gradient(circle at 50% 49%, rgba(255,223,92,.08) 0 14%, transparent 44%),
-    radial-gradient(circle at 50% 49%, transparent 0 28%, rgba(0,0,0,.24) 62%, rgba(0,0,0,.8) 100%);
-  animation: chapter1PurifyVignette 13.8s linear both;
+    radial-gradient(circle at 50% 49%,rgba(255,223,92,.075) 0 13%,transparent 43%),
+    radial-gradient(circle at 50% 49%,transparent 0 28%,rgba(0,0,0,.28) 60%,rgba(0,0,0,.84) 100%);
+  animation:chapter1PurifyVignette 13.8s linear both;
 }
 html.is-embedded-story .chapter1-purify-charge-field {
-  position: absolute;
-  z-index: 7;
-  left: 50%;
-  top: 49%;
-  width: min(34vw, 430px);
-  aspect-ratio: 1;
-  transform: translate(-50%,-50%) scale(.72);
-  opacity: 0;
-  pointer-events: none;
-  animation: chapter1PurifyChargeField 13.8s linear both;
+  position:absolute;z-index:7;left:50%;top:49%;width:min(46vw,600px);aspect-ratio:1;
+  transform:translate(-50%,-50%);opacity:0;pointer-events:none;
+  animation:chapter1PurifyChargeField 13.8s linear both;
 }
 html.is-embedded-story .chapter1-purify-energy-wave {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  border-radius: 50%;
-  transform: translate(-50%,-50%) scale(.3);
-  opacity: 0;
-  border: 1px solid rgba(255,232,138,.7);
-  box-shadow: 0 0 18px rgba(255,227,111,.48), inset 0 0 22px rgba(255,232,141,.16);
-  background: radial-gradient(circle, rgba(255,231,120,.08) 0 55%, rgba(255,245,202,.24) 66%, rgba(255,224,104,.06) 76%, transparent 84%);
+  position:absolute;left:50%;top:50%;border-radius:50%;opacity:.0;
+  transform:translate(-50%,-50%) scale(1.65);
+  border:2px solid rgba(255,231,139,.7);
+  box-shadow:0 0 20px rgba(255,221,91,.52),inset 0 0 25px rgba(255,232,141,.13);
+  background:radial-gradient(circle,transparent 0 64%,rgba(255,236,158,.12) 70%,transparent 82%);
 }
-html.is-embedded-story .chapter1-purify-energy-wave.wave-a {
-  width: 56%;
-  aspect-ratio: 1;
-  animation: chapter1PurifyEnergyWaveA 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-energy-wave.wave-b {
-  width: 78%;
-  aspect-ratio: 1;
-  animation: chapter1PurifyEnergyWaveB 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-energy-wave.wave-c {
-  width: 98%;
-  aspect-ratio: 1;
-  animation: chapter1PurifyEnergyWaveC 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-charge-core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 44%;
-  aspect-ratio: 1;
-  transform: translate(-50%,-50%) scale(.34);
-  border-radius: 50%;
-  background: radial-gradient(circle,
-    rgba(255,255,255,1) 0 10%,
-    rgba(255,251,216,.98) 16% 24%,
-    rgba(255,229,119,.84) 34%,
-    rgba(255,198,38,.34) 58%,
-    transparent 78%);
-  box-shadow:
-    0 0 24px rgba(255,255,229,.94),
-    0 0 58px rgba(255,223,99,.82),
-    0 0 120px rgba(255,181,18,.38);
-  filter: blur(1.6px);
-  animation: chapter1PurifyChargeCore 13.8s linear both;
-}
+html.is-embedded-story .chapter1-purify-energy-wave.wave-a{width:54%;aspect-ratio:1;animation:chapter1PurifyWaveConverge 1.05s ease-in infinite}
+html.is-embedded-story .chapter1-purify-energy-wave.wave-b{width:76%;aspect-ratio:1;animation:chapter1PurifyWaveConverge 1.22s .18s ease-in infinite}
+html.is-embedded-story .chapter1-purify-energy-wave.wave-c{width:98%;aspect-ratio:1;animation:chapter1PurifyWaveConverge 1.38s .35s ease-in infinite}
 html.is-embedded-story .chapter1-purify-charge-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  border-radius: 50%;
-  border-style: solid;
-  transform: translate(-50%,-50%) scale(.76);
-  opacity: 0;
+  position:absolute;left:50%;top:50%;border-radius:50%;border-style:solid;transform:translate(-50%,-50%);opacity:0;
 }
-html.is-embedded-story .chapter1-purify-charge-ring.ring-a {
-  width: 54%;
-  aspect-ratio: 1;
-  border-width: 3px;
-  border-color: rgba(255,246,190,.9);
-  box-shadow: 0 0 18px rgba(255,230,126,.76), inset 0 0 18px rgba(255,230,126,.35);
-  animation: chapter1PurifyRingA 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-charge-ring.ring-b {
-  width: 76%;
-  aspect-ratio: 1;
-  border-width: 2px;
-  border-color: rgba(255,208,73,.58);
-  border-style: dashed;
-  box-shadow: 0 0 24px rgba(255,194,46,.42);
-  animation: chapter1PurifyRingB 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-charge-ring.ring-c {
-  width: 94%;
-  aspect-ratio: 1;
-  border-width: 1px;
-  border-color: rgba(255,240,174,.28);
-  box-shadow: 0 0 34px rgba(255,216,94,.22);
-  animation: chapter1PurifyRingC 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-charge-particles {
-  position: absolute;
-  inset: 0;
-}
-html.is-embedded-story .chapter1-purify-charge-particles i {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--purify-particle-size, 7px);
-  height: var(--purify-particle-size, 7px);
-  margin-left: calc(var(--purify-particle-size, 7px) / -2);
-  margin-top: calc(var(--purify-particle-size, 7px) / -2);
-  border-radius: 50%;
-  opacity: 0;
-  background: radial-gradient(circle, #fff 0 22%, #fff2b0 38%, #ffd04b 68%, rgba(255,196,30,0) 76%);
-  box-shadow: 0 0 10px rgba(255,247,202,.96), 0 0 22px rgba(255,206,65,.76);
-  transform: rotate(var(--purify-particle-angle)) translateX(var(--purify-particle-radius));
-  animation: chapter1PurifyParticleConverge 3s linear both;
-  animation-delay: calc(2.4s + var(--purify-particle-delay));
+html.is-embedded-story .chapter1-purify-charge-ring.ring-a{width:46%;aspect-ratio:1;border-width:2px;border-color:rgba(255,247,194,.78);box-shadow:0 0 18px rgba(255,231,130,.62);animation:chapter1PurifyRingSpin 1s linear infinite}
+html.is-embedded-story .chapter1-purify-charge-ring.ring-b{width:66%;aspect-ratio:1;border-width:2px;border-style:dashed;border-color:rgba(255,207,66,.48);animation:chapter1PurifyRingSpinReverse 1.35s linear infinite}
+html.is-embedded-story .chapter1-purify-charge-ring.ring-c{width:84%;height:42%;border-width:1px;border-color:rgba(255,239,163,.28);transform:translate(-50%,-50%) rotate(-31deg);animation:chapter1PurifyEllipseSpin 1.7s linear infinite}
+html.is-embedded-story .chapter1-purify-charge-core{display:none !important}
+html.is-embedded-story .chapter1-purify-charge-particles{position:absolute;inset:0}
+html.is-embedded-story .chapter1-purify-charge-particles i{
+  position:absolute;left:50%;top:50%;width:var(--purify-particle-size,7px);height:var(--purify-particle-size,7px);
+  margin-left:calc(var(--purify-particle-size,7px)/-2);margin-top:calc(var(--purify-particle-size,7px)/-2);
+  border-radius:50%;opacity:0;
+  background:radial-gradient(circle,#fff 0 24%,#fff0a1 38%,#ffc92b 68%,rgba(255,185,14,0) 78%);
+  box-shadow:0 0 10px #fff,0 0 22px rgba(255,204,51,.82);
+  transform:rotate(var(--purify-particle-angle)) translateX(var(--purify-particle-radius));
+  animation:chapter1PurifyParticleConverge 1.24s var(--purify-particle-delay) ease-in infinite;
 }
 
-/* 1차 정화 빔: 학생증에서 화면 왼쪽으로 굵게 발사된다. */
+/* 빔 뒤쪽의 속도선. 방사형 광선이 아니라 수평 흐름으로만 사용한다. */
+html.is-embedded-story .chapter1-purify-beam-streaks{position:absolute;z-index:4;inset:0;overflow:hidden;pointer-events:none;opacity:0}
+html.is-embedded-story .chapter1-purify-beam-streaks i{position:absolute;left:100%;top:var(--purify-streak-y);width:var(--purify-streak-w);height:var(--purify-streak-h);border-radius:999px;background:linear-gradient(90deg,transparent,rgba(255,242,173,.78),#fff,rgba(255,205,54,.18));filter:blur(var(--purify-streak-blur));opacity:.7}
+html.is-embedded-story [data-effect="attendance-student-card-purification"].is-first-purify-firing .chapter1-purify-beam-streaks{opacity:1}
+html.is-embedded-story [data-effect="attendance-student-card-purification"].is-first-purify-firing .chapter1-purify-beam-streaks i{animation:chapter1PurifyStreakRush .22s var(--purify-streak-delay) linear infinite}
+
+/* 1차 정화 빔: 끝까지 같은 두께의 원통형 기둥. */
 html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-wave {
-  z-index: 11 !important;
-  left: 0 !important;
-  top: 42.8% !important;
-  width: 54.5% !important;
-  height: 15% !important;
-  opacity: 0;
-  transform-origin: right center !important;
-  filter:
-    drop-shadow(0 0 14px rgba(255,255,255,1))
-    drop-shadow(0 0 34px rgba(255,236,145,.98))
-    drop-shadow(0 0 82px rgba(255,192,38,.8)) !important;
-  animation: chapter1PurifyBeam 13.8s linear both !important;
+  z-index:12 !important;left:-3% !important;top:42.2% !important;width:58.5% !important;height:14.6% !important;
+  opacity:0;border-radius:999px !important;transform-origin:right center !important;overflow:visible !important;
+  background:linear-gradient(180deg,rgba(255,181,21,.12) 0%,rgba(255,216,74,.72) 10%,rgba(255,247,190,.98) 25%,#fff 43% 57%,rgba(255,246,184,.98) 75%,rgba(255,211,60,.7) 90%,rgba(255,173,12,.12) 100%) !important;
+  box-shadow:0 0 18px #fff,0 0 42px rgba(255,236,143,.98),0 0 96px rgba(255,199,49,.84),0 0 170px rgba(255,143,0,.34) !important;
+  filter:none !important;
+  animation:chapter1PurifyBeam 13.8s linear both !important;
 }
 html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-wave::before {
-  inset: 0 !important;
-  clip-path: polygon(100% 38%, 12% 0, 0 50%, 12% 100%, 100% 62%) !important;
-  background: linear-gradient(90deg,
-    rgba(255,255,255,.98) 0%,
-    rgba(255,248,198,1) 16%,
-    rgba(255,235,123,.98) 46%,
-    rgba(255,210,68,.78) 76%,
-    rgba(255,194,38,.38) 100%) !important;
-  filter: blur(.6px);
+  content:"";position:absolute;inset:25% 0;border-radius:999px !important;clip-path:none !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.82),#fff 34% 66%,rgba(255,255,255,.82)) !important;
+  box-shadow:0 0 18px #fff,0 0 38px rgba(255,245,193,.95);filter:none !important;
 }
 html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-wave::after {
-  inset: 34% 0 34% 3% !important;
-  clip-path: polygon(100% 34%, 8% 0, 0 50%, 8% 100%, 100% 66%) !important;
-  background: linear-gradient(90deg,
-    rgba(255,255,255,.55) 0%,
-    rgba(255,255,244,1) 24%,
-    #fff 72%,
-    rgba(255,255,255,.9) 100%) !important;
-  filter: blur(1.2px) brightness(1.25) !important;
+  content:"";position:absolute;inset:5% 0;border-radius:999px !important;clip-path:none !important;
+  background:repeating-linear-gradient(90deg,transparent 0 42px,rgba(255,255,255,.10) 42px 55px,rgba(255,224,91,.12) 55px 74px,transparent 74px 118px) !important;
+  background-size:190px 100% !important;mix-blend-mode:screen;filter:blur(1px) !important;
+  animation:chapter1PurifyBeamFlow .19s linear infinite;
 }
-html.is-embedded-story .chapter1-purify-beam-impact {
-  position: absolute;
-  z-index: 16;
-  left: 56%;
-  top: 49%;
-  width: min(25vw, 300px);
-  aspect-ratio: 1;
-  transform: translate(-50%,-50%);
-  opacity: 0;
-  pointer-events: none;
-  animation: chapter1PurifyBeamImpactLife 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-beam-impact-core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 42%;
-  aspect-ratio: 1;
-  transform: translate(-50%,-50%) scale(.24);
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 12%, #fff9d2 22%, #ffdd68 46%, rgba(255,190,29,.3) 64%, transparent 78%);
-  box-shadow: 0 0 28px #fff, 0 0 62px rgba(255,225,107,.94), 0 0 116px rgba(255,181,26,.65);
-  animation: chapter1PurifyImpactCore 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-beam-impact-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  transform: translate(-50%,-50%) scale(.18);
-  opacity: 0;
-}
-html.is-embedded-story .chapter1-purify-beam-impact-ring.ring-a {
-  width: 62%;
-  border: 4px solid rgba(255,244,177,.9);
-  box-shadow: 0 0 22px rgba(255,230,121,.82), inset 0 0 16px rgba(255,244,190,.48);
-  animation: chapter1PurifyImpactRingA 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-beam-impact-ring.ring-b {
-  width: 88%;
-  border: 2px solid rgba(255,205,68,.52);
-  box-shadow: 0 0 38px rgba(255,194,40,.44);
-  animation: chapter1PurifyImpactRingB 13.8s linear both;
-}
-html.is-embedded-story .chapter1-purify-launch-flash {
-  position: absolute;
-  z-index: 60;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at 52% 49%, #fff 0 7%, #fff8ce 16%, rgba(255,222,95,.78) 34%, rgba(255,190,31,.18) 58%, transparent 76%);
-  mix-blend-mode: screen;
-  animation: chapter1PurifyLaunchFlash 13.8s linear both;
-}
+html.is-embedded-story .chapter1-purify-beam-impact{position:absolute;z-index:16;left:55%;top:49%;width:min(24vw,290px);aspect-ratio:1;transform:translate(-50%,-50%);opacity:0;pointer-events:none;animation:chapter1PurifyBeamImpactLife 13.8s linear both}
+html.is-embedded-story .chapter1-purify-beam-impact-core{position:absolute;left:50%;top:50%;width:42%;aspect-ratio:1;transform:translate(-50%,-50%) scale(.24);border-radius:50%;background:radial-gradient(circle,#fff 0 12%,#fff9d2 22%,#ffdd68 46%,rgba(255,190,29,.3) 64%,transparent 78%);box-shadow:0 0 28px #fff,0 0 62px rgba(255,225,107,.94),0 0 116px rgba(255,181,26,.65);animation:chapter1PurifyImpactCore 13.8s linear both}
+html.is-embedded-story .chapter1-purify-beam-impact-ring{position:absolute;left:50%;top:50%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%) scale(.18);opacity:0}
+html.is-embedded-story .chapter1-purify-beam-impact-ring.ring-a{width:62%;border:4px solid rgba(255,244,177,.9);box-shadow:0 0 22px rgba(255,230,121,.82),inset 0 0 16px rgba(255,244,190,.48);animation:chapter1PurifyImpactRingA 13.8s linear both}
+html.is-embedded-story .chapter1-purify-beam-impact-ring.ring-b{width:88%;border:2px solid rgba(255,205,68,.52);box-shadow:0 0 38px rgba(255,194,40,.44);animation:chapter1PurifyImpactRingB 13.8s linear both}
+html.is-embedded-story .chapter1-purify-launch-flash{position:absolute;z-index:60;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 52% 49%,#fff 0 5%,#fff8ce 13%,rgba(255,222,95,.72) 28%,rgba(255,190,31,.12) 55%,transparent 76%);mix-blend-mode:screen;animation:chapter1PurifyLaunchFlash 13.8s linear both}
 
-/* 2차 샷: 드론 단독 화면에 우측에서 정화 빔이 관통한다. */
-html.is-embedded-story .chapter1-purify-drone-beam {
-  position: absolute;
-  z-index: 12;
-  left: 38%;
-  top: 43.3%;
-  width: 66%;
-  height: 13.6%;
-  opacity: 0;
-  transform-origin: left center;
-  pointer-events: none;
-  filter:
-    drop-shadow(0 0 12px rgba(255,255,255,1))
-    drop-shadow(0 0 30px rgba(255,235,146,.98))
-    drop-shadow(0 0 78px rgba(255,192,38,.78));
-  animation: chapter1PurifyDroneBeam 13.8s linear both;
+/* 2차 샷: 드론만 화면에 남긴 뒤, 오른쪽에서 같은 원통형 정화 빔이 화면을 가로질러 관통한다. */
+html.is-embedded-story .chapter1-purify-drone-halo{position:absolute;z-index:5;left:50%;top:49%;width:min(58vw,620px);aspect-ratio:1;transform:translate(-50%,-50%) scale(.7);opacity:0;border-radius:50%;background:radial-gradient(circle,rgba(126,33,155,.12) 0 16%,rgba(45,5,65,.18) 37%,transparent 70%);filter:blur(18px);animation:chapter1PurifyDroneHalo 13.8s linear both}
+html.is-embedded-story .chapter1-purify-drone-beam{
+  position:absolute;z-index:13;left:-4%;top:42.6%;width:108%;height:13.8%;opacity:0;transform-origin:right center;pointer-events:none;border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,177,17,.10),rgba(255,216,75,.72) 10%,rgba(255,246,183,.98) 25%,#fff 43% 57%,rgba(255,247,190,.98) 75%,rgba(255,210,58,.72) 90%,rgba(255,172,10,.1));
+  box-shadow:0 0 16px #fff,0 0 40px rgba(255,238,153,.98),0 0 94px rgba(255,196,44,.84),0 0 170px rgba(255,144,0,.32);
+  animation:chapter1PurifyDroneBeam 13.8s linear both;
 }
-html.is-embedded-story .chapter1-purify-drone-beam::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  clip-path: polygon(0 38%, 92% 0, 100% 50%, 92% 100%, 0 62%);
-  background: linear-gradient(270deg,
-    rgba(255,194,38,.32) 0%,
-    rgba(255,216,82,.84) 22%,
-    rgba(255,250,211,1) 62%,
-    rgba(255,255,255,1) 100%);
-}
-html.is-embedded-story .chapter1-purify-drone-beam::after {
-  content: "";
-  position: absolute;
-  inset: 36% 2% 36% 0;
-  clip-path: polygon(0 34%, 96% 0, 100% 50%, 96% 100%, 0 66%);
-  background: linear-gradient(270deg,
-    rgba(255,255,255,.88) 0%,
-    rgba(255,255,255,1) 36%,
-    rgba(255,255,242,1) 72%,
-    rgba(255,255,255,.68) 100%);
-  filter: blur(1px);
-}
+html.is-embedded-story .chapter1-purify-drone-beam::before{content:"";position:absolute;inset:25% 0;border-radius:999px;background:#fff;box-shadow:0 0 18px #fff,0 0 36px rgba(255,246,196,.94)}
+html.is-embedded-story .chapter1-purify-drone-beam::after{content:"";position:absolute;inset:5% 0;border-radius:999px;background:repeating-linear-gradient(90deg,transparent 0 45px,rgba(255,255,255,.1) 45px 62px,rgba(255,219,77,.13) 62px 84px,transparent 84px 124px);background-size:205px 100%;mix-blend-mode:screen;animation:chapter1PurifyBeamFlow .17s linear infinite}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-drone{left:50% !important;top:49% !important;width:min(31%,320px) !important;height:47% !important;z-index:11 !important;animation:chapter1PurifyDroneBeamHit 13.8s linear both !important}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-ring{left:50% !important;top:49% !important;animation:chapter1PurifyConversionRing 13.8s linear both !important}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-burst{left:50% !important;top:49% !important;animation:chapter1PurifyConversionBurst 13.8s linear both !important}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-fragment{width:52px !important;height:52px !important;left:calc(50% - 26px) !important;top:calc(49% - 26px) !important;z-index:21 !important;filter:brightness(1.35) saturate(1.2) drop-shadow(0 0 10px #fff) drop-shadow(0 0 26px rgba(255,238,142,1)) drop-shadow(0 0 62px rgba(255,190,20,.98)) drop-shadow(0 0 112px rgba(255,132,0,.58));animation:chapter1PurifyFragmentBirth 13.8s linear both,chapter1PurifyFragmentGlow .72s 11.72s ease-in-out infinite alternate !important}
+html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-fragment::before{display:none !important}
+html.is-embedded-story .chapter1-purify-drone-shards{position:absolute;z-index:18;inset:0;pointer-events:none}
+html.is-embedded-story .chapter1-purify-drone-shards i{position:absolute;left:50%;top:49%;width:7px;height:16px;border-radius:4px;background:linear-gradient(#fff8cc,#ffc83b);box-shadow:0 0 8px #fff,0 0 18px #ffd044;opacity:0;transform:rotate(var(--purify-shard-a)) translateX(3vmin) scale(.3);animation:chapter1PurifyDroneShard 13.8s var(--purify-shard-delay) linear both}
+html.is-embedded-story .chapter1-purify-death-wave{position:absolute;z-index:19;left:50%;top:49%;width:18vmin;height:18vmin;border-radius:50%;transform:translate(-50%,-50%) scale(.12);opacity:0;pointer-events:none;border:clamp(4px,.48vmin,8px) solid #ffd84a;box-shadow:0 0 28px rgba(255,238,151,.96),0 0 72px rgba(255,197,35,.7),inset 0 0 34px rgba(255,246,194,.38);animation:chapter1PurifyDeathWaveA 13.8s linear both}
+html.is-embedded-story .chapter1-purify-death-wave.wave-b{border-width:clamp(2px,.26vmin,4px);border-color:#fff4b0;animation-name:chapter1PurifyDeathWaveB}
 
-html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-drone {
-  left: 38% !important;
-  top: 49% !important;
-  width: min(30%, 300px) !important;
-  height: 45% !important;
-  animation: chapter1PurifyDroneBeamHit 13.8s linear both !important;
+@keyframes chapter1PurifyCardPresence{
+  0%,4%{opacity:0;transform:translate(-50%,-50%) scale(.76)}7.5%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}13.5%{opacity:1;transform:translate(-50%,-50%) scale(1)}18%,38.8%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}
+  40.2%{opacity:1;transform:translate(calc(-50% + 6.2vw),-50%) rotate(2.4deg) scale(1.04)}43%{opacity:1;transform:translate(calc(-50% + 7.2vw),calc(-50% - 3px)) rotate(3.6deg) scale(1.03)}46%{opacity:1;transform:translate(calc(-50% + 6.8vw),calc(-50% + 3px)) rotate(3deg) scale(1.025)}49%{opacity:1;transform:translate(calc(-50% + 7.4vw),calc(-50% - 2px)) rotate(3.8deg) scale(1.02)}52%{opacity:1;transform:translate(calc(-50% + 6.9vw),calc(-50% + 2px)) rotate(3.2deg) scale(1.02)}56%{opacity:1;transform:translate(calc(-50% + 7.1vw),-50%) rotate(2.6deg) scale(1.015)}61.8%{opacity:.92;transform:translate(calc(-50% + 6.5vw),-50%) rotate(1.2deg) scale(1.01)}64%,100%{opacity:0;transform:translate(calc(-50% + 6.5vw),-50%) scale(1.01)}
 }
-html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-ring {
-  animation: chapter1PurifyConversionRing 13.8s linear both !important;
-}
-html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-burst {
-  animation: chapter1PurifyConversionBurst 13.8s linear both !important;
-}
-html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-fragment {
-  width: 48px !important;
-  height: 48px !important;
-  left: calc(38% - 24px) !important;
-  top: calc(49% - 24px) !important;
-  filter:
-    brightness(1.25)
-    saturate(1.18)
-    drop-shadow(0 0 8px rgba(255,255,238,1))
-    drop-shadow(0 0 20px rgba(255,232,124,.98))
-    drop-shadow(0 0 46px rgba(255,193,31,.92))
-    drop-shadow(0 0 86px rgba(255,154,0,.48));
-  animation:
-    chapter1PurifyFragmentBirth 13.8s linear both,
-    chapter1PurifyFragmentGlow 1.05s 11.7s ease-in-out infinite alternate !important;
-}
-html.is-embedded-story [data-effect="attendance-student-card-purification"] .attendance-post-fragment::before {
-  display: none !important;
-}
-
-@keyframes chapter1PurifyCardPresence {
-  0%,4% { opacity:0; transform:translate(-50%,-50%) scale(.76); }
-  7.5% { opacity:1; transform:translate(-50%,-50%) scale(1.04); }
-  13.5% { opacity:1; transform:translate(-50%,-50%) scale(1); }
-  18%,22% { opacity:1; transform:translate(-50%,-50%) scale(1.02); }
-  26% { opacity:1; transform:translate(-50%,-50%) scale(1.06); }
-  30% { opacity:1; transform:translate(-50%,-50%) scale(1.01); }
-  34% { opacity:1; transform:translate(-50%,-50%) scale(1.1); }
-  38% { opacity:1; transform:translate(-50%,-50%) scale(1.16); }
-  40% { opacity:1; transform:translate(calc(-50% + 92px),-50%) rotate(3deg) scale(1.08); }
-  45% { opacity:1; transform:translate(calc(-50% + 132px),-50%) rotate(4.2deg) scale(1.05); }
-  52% { opacity:1; transform:translate(calc(-50% + 110px),-50%) rotate(2.8deg) scale(1.04); }
-  58% { opacity:1; transform:translate(calc(-50% + 94px),-50%) rotate(1.4deg) scale(1.02); }
-  61.5% { opacity:0; transform:translate(calc(-50% + 120px),-50%) rotate(1deg) scale(1.02); }
-  100% { opacity:0; transform:translate(calc(-50% + 120px),-50%) scale(1.02); }
-}
-@keyframes chapter1PurifyCardChargeGlow {
-  0%,15% { filter:drop-shadow(0 24px 30px rgba(0,0,0,.78)) drop-shadow(0 0 18px rgba(255,224,112,.52)) drop-shadow(0 0 48px rgba(255,214,70,.24)); }
-  22% { filter:drop-shadow(0 16px 24px rgba(0,0,0,.62)) drop-shadow(0 0 28px rgba(255,239,164,.78)) drop-shadow(0 0 68px rgba(255,209,60,.5)); }
-  28% { filter:brightness(1.12) drop-shadow(0 0 34px rgba(255,249,211,.9)) drop-shadow(0 0 78px rgba(255,207,53,.72)); }
-  34% { filter:brightness(1.24) drop-shadow(0 0 46px rgba(255,253,227,1)) drop-shadow(0 0 112px rgba(255,211,65,.94)) drop-shadow(0 0 164px rgba(255,171,0,.42)); }
-  39% { filter:brightness(1.58) drop-shadow(0 0 54px #fff) drop-shadow(0 0 124px rgba(255,218,86,1)); }
-  46%,58% { filter:brightness(1.22) drop-shadow(0 0 36px rgba(255,244,180,.92)) drop-shadow(0 0 88px rgba(255,205,48,.78)); }
-  61%,100% { filter:brightness(.88) drop-shadow(0 0 16px rgba(255,244,180,.18)); }
-}
-@keyframes chapter1PurifyCardAura {
-  0%,9% { opacity:0; transform:scale(.7); }
-  13% { opacity:.36; }
-  18% { opacity:.8; transform:scale(1.02); }
-  23% { opacity:.24; transform:scale(1.16); }
-  28% { opacity:.76; transform:scale(1.02); }
-  33% { opacity:.28; transform:scale(1.22); }
-  38% { opacity:1; transform:scale(1.12); }
-  41% { opacity:.18; transform:scale(1.38); }
-  100% { opacity:0; transform:scale(1.38); }
-}
-@keyframes chapter1PurifyAmbientGold {
-  0%,8% { opacity:0; transform:translate(-50%,-50%) scale(.84); }
-  12% { opacity:.34; }
-  18% { opacity:.78; }
-  24% { opacity:.98; transform:translate(-50%,-50%) scale(1); }
-  30% { opacity:.24; transform:translate(-50%,-50%) scale(1.06); }
-  36% { opacity:.74; transform:translate(-50%,-50%) scale(1.18); }
-  40% { opacity:.16; transform:translate(-50%,-50%) scale(1.42); }
-  61%,100% { opacity:0; }
-}
-@keyframes chapter1PurifyVignette {
-  0%,14% { opacity:0; }
-  22% { opacity:.36; }
-  36% { opacity:.86; }
-  40% { opacity:.14; }
-  47% { opacity:.54; }
-  61% { opacity:.16; }
-  68% { opacity:.08; }
-  75% { opacity:.2; }
-  100% { opacity:.12; }
-}
-@keyframes chapter1PurifyChargeField {
-  0%,16% { opacity:0; transform:translate(-50%,-50%) scale(.72); }
-  20% { opacity:.4; transform:translate(-50%,-50%) scale(.86); }
-  28% { opacity:.92; transform:translate(-50%,-50%) scale(1); }
-  36% { opacity:1; transform:translate(-50%,-50%) scale(1.1); }
-  39.6% { opacity:1; transform:translate(-50%,-50%) scale(1.18); }
-  41.2% { opacity:.12; transform:translate(-50%,-50%) scale(.72); }
-  100% { opacity:0; transform:translate(-50%,-50%) scale(1.32); }
-}
-@keyframes chapter1PurifyEnergyWaveA {
-  0%,16% { opacity:0; transform:translate(-50%,-50%) scale(.25); }
-  19% { opacity:.16; }
-  23% { opacity:.72; transform:translate(-50%,-50%) scale(.92); }
-  27% { opacity:0; transform:translate(-50%,-50%) scale(1.22); }
-  31% { opacity:.64; transform:translate(-50%,-50%) scale(.82); }
-  35% { opacity:0; transform:translate(-50%,-50%) scale(1.1); }
-  39% { opacity:.92; transform:translate(-50%,-50%) scale(1.02); }
-  41.2% { opacity:0; transform:translate(-50%,-50%) scale(1.28); }
-  100% { opacity:0; }
-}
-@keyframes chapter1PurifyEnergyWaveB {
-  0%,17% { opacity:0; transform:translate(-50%,-50%) scale(.28); }
-  21% { opacity:.22; }
-  25% { opacity:.58; transform:translate(-50%,-50%) scale(.86); }
-  29.5% { opacity:0; transform:translate(-50%,-50%) scale(1.18); }
-  33% { opacity:.42; transform:translate(-50%,-50%) scale(.8); }
-  37.4% { opacity:0; transform:translate(-50%,-50%) scale(1.08); }
-  40% { opacity:.72; transform:translate(-50%,-50%) scale(.98); }
-  41.5% { opacity:0; transform:translate(-50%,-50%) scale(1.24); }
-  100% { opacity:0; }
-}
-@keyframes chapter1PurifyEnergyWaveC {
-  0%,18% { opacity:0; transform:translate(-50%,-50%) scale(.3); }
-  22% { opacity:.14; }
-  27% { opacity:.42; transform:translate(-50%,-50%) scale(.88); }
-  31.5% { opacity:0; transform:translate(-50%,-50%) scale(1.12); }
-  35% { opacity:.28; transform:translate(-50%,-50%) scale(.82); }
-  39% { opacity:0; transform:translate(-50%,-50%) scale(1.06); }
-  40.2% { opacity:.52; transform:translate(-50%,-50%) scale(.94); }
-  41.6% { opacity:0; transform:translate(-50%,-50%) scale(1.2); }
-  100% { opacity:0; }
-}
-@keyframes chapter1PurifyChargeCore {
-  0%,16% { opacity:0; transform:translate(-50%,-50%) scale(.28); }
-  20% { opacity:.58; transform:translate(-50%,-50%) scale(.46); }
-  24% { opacity:.78; transform:translate(-50%,-50%) scale(.62); }
-  27% { opacity:.86; transform:translate(-50%,-50%) scale(.52); }
-  30% { opacity:.96; transform:translate(-50%,-50%) scale(.84); }
-  33% { opacity:1; transform:translate(-50%,-50%) scale(.68); }
-  36% { opacity:1; transform:translate(-50%,-50%) scale(1.02); }
-  38.8% { opacity:1; transform:translate(-50%,-50%) scale(1.24); }
-  40.8% { opacity:1; transform:translate(-50%,-50%) scale(.18); }
-  100% { opacity:0; transform:translate(-50%,-50%) scale(1.7); }
-}
-@keyframes chapter1PurifyRingA {
-  0%,18% { opacity:0; transform:translate(-50%,-50%) scale(.66); }
-  24% { opacity:.72; transform:translate(-50%,-50%) scale(.92); }
-  31% { opacity:.28; transform:translate(-50%,-50%) scale(1.16); }
-  37% { opacity:.88; transform:translate(-50%,-50%) scale(.96); }
-  40% { opacity:1; transform:translate(-50%,-50%) scale(1.2); }
-  41.3% { opacity:0; transform:translate(-50%,-50%) scale(1.56); }
-  100% { opacity:0; }
-}
-@keyframes chapter1PurifyRingB {
-  0%,18% { opacity:0; transform:translate(-50%,-50%) scale(.76) rotate(0deg); }
-  24% { opacity:.5; }
-  31% { opacity:.22; transform:translate(-50%,-50%) scale(1.02) rotate(160deg); }
-  37% { opacity:.66; transform:translate(-50%,-50%) scale(.98) rotate(290deg); }
-  40% { opacity:.9; transform:translate(-50%,-50%) scale(1.08) rotate(360deg); }
-  41.3% { opacity:0; transform:translate(-50%,-50%) scale(1.42) rotate(420deg); }
-  100% { opacity:0; }
-}
-@keyframes chapter1PurifyRingC {
-  0%,20% { opacity:0; transform:translate(-50%,-50%) scale(.78) rotate(0deg); }
-  27% { opacity:.34; }
-  34% { opacity:.22; transform:translate(-50%,-50%) scale(.98) rotate(-170deg); }
-  38% { opacity:.56; transform:translate(-50%,-50%) scale(1) rotate(-270deg); }
-  40% { opacity:.68; transform:translate(-50%,-50%) scale(1.04) rotate(-320deg); }
-  41.3% { opacity:0; transform:translate(-50%,-50%) scale(1.34) rotate(-380deg); }
-  100% { opacity:0; }
-}
-@keyframes chapter1PurifyParticleConverge {
-  0% { opacity:0; transform:rotate(var(--purify-particle-angle)) translateX(var(--purify-particle-radius)) scale(.35); }
-  12% { opacity:.92; }
-  72% { opacity:1; }
-  100% { opacity:0; transform:rotate(calc(var(--purify-particle-angle) + 140deg)) translateX(6px) scale(.12); }
-}
-@keyframes chapter1PurifyBeam {
-  0%,39.6% { opacity:0; transform:scaleX(.02) scaleY(.34); }
-  40.2% { opacity:1; transform:scaleX(.16) scaleY(.8); }
-  42% { opacity:1; transform:scaleX(1.02) scaleY(1.32); }
-  48% { opacity:1; transform:scaleX(1) scaleY(1.2); }
-  54% { opacity:1; transform:scaleX(1.03) scaleY(1.12); }
-  58.8% { opacity:1; transform:scaleX(1.05) scaleY(1); }
-  61.2% { opacity:0; transform:scaleX(1.08) scaleY(.22); }
-  100% { opacity:0; transform:scaleX(1.1) scaleY(.16); }
-}
-@keyframes chapter1PurifyBeamImpactLife {
-  0%,39.9% { opacity:0; }
-  40.2% { opacity:1; }
-  42.8% { opacity:1; }
-  45.2%,100% { opacity:0; }
-}
-@keyframes chapter1PurifyImpactCore {
-  0%,39.8% { opacity:0; transform:translate(-50%,-50%) scale(.18); }
-  40.3% { opacity:1; transform:translate(-50%,-50%) scale(.72); }
-  41.2% { opacity:1; transform:translate(-50%,-50%) scale(1.14); }
-  43.8% { opacity:.38; transform:translate(-50%,-50%) scale(1.48); }
-  45.3%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.8); }
-}
-@keyframes chapter1PurifyImpactRingA {
-  0%,39.9% { opacity:0; transform:translate(-50%,-50%) scale(.22); }
-  40.8% { opacity:.94; transform:translate(-50%,-50%) scale(.84); }
-  43.8% { opacity:.26; transform:translate(-50%,-50%) scale(1.54); }
-  45.4%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.84); }
-}
-@keyframes chapter1PurifyImpactRingB {
-  0%,40.1% { opacity:0; transform:translate(-50%,-50%) scale(.3); }
-  41.2% { opacity:.62; transform:translate(-50%,-50%) scale(.94); }
-  44.1% { opacity:.22; transform:translate(-50%,-50%) scale(1.62); }
-  45.6%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.98); }
-}
-@keyframes chapter1PurifyLaunchFlash {
-  0%,39.6% { opacity:0; }
-  40.1% { opacity:.94; }
-  40.9% { opacity:.34; }
-  42.2%,100% { opacity:0; }
-}
-@keyframes chapter1PurifyBeamScreenShake {
-  0%,39.7%,61.2%,73%,100% { transform:translate3d(0,0,0) rotate(0deg); }
-  40.1% { transform:translate3d(-16px,7px,0) rotate(-.55deg); }
-  40.6% { transform:translate3d(18px,-8px,0) rotate(.62deg); }
-  41.1% { transform:translate3d(-15px,-7px,0) rotate(-.5deg); }
-  41.6% { transform:translate3d(17px,8px,0) rotate(.56deg); }
-  42.1% { transform:translate3d(-13px,6px,0) rotate(-.46deg); }
-  42.6% { transform:translate3d(14px,-6px,0) rotate(.42deg); }
-  43.1% { transform:translate3d(-12px,-5px,0) rotate(-.38deg); }
-  43.6% { transform:translate3d(12px,5px,0) rotate(.34deg); }
-  44.2% { transform:translate3d(-10px,4px,0) rotate(-.3deg); }
-  44.8% { transform:translate3d(11px,-4px,0) rotate(.28deg); }
-  45.4% { transform:translate3d(-9px,-4px,0) rotate(-.26deg); }
-  46.1% { transform:translate3d(10px,4px,0) rotate(.24deg); }
-  46.8% { transform:translate3d(-8px,3px,0) rotate(-.22deg); }
-  47.5% { transform:translate3d(9px,-3px,0) rotate(.2deg); }
-  48.3% { transform:translate3d(-8px,-3px,0) rotate(-.18deg); }
-  49.1% { transform:translate3d(8px,3px,0) rotate(.16deg); }
-  50% { transform:translate3d(-7px,-2px,0) rotate(-.14deg); }
-  51% { transform:translate3d(7px,2px,0) rotate(.12deg); }
-  52.1% { transform:translate3d(-6px,-2px,0) rotate(-.1deg); }
-  53.4% { transform:translate3d(6px,2px,0) rotate(.08deg); }
-  54.8% { transform:translate3d(-5px,-1px,0) rotate(-.06deg); }
-  56.2% { transform:translate3d(4px,1px,0) rotate(.04deg); }
-  74.2% { transform:translate3d(-10px,4px,0) rotate(-.26deg); }
-  74.8% { transform:translate3d(9px,-4px,0) rotate(.24deg); }
-  75.4% { transform:translate3d(-8px,-3px,0) rotate(-.22deg); }
-  76% { transform:translate3d(8px,3px,0) rotate(.2deg); }
-  76.6% { transform:translate3d(-6px,2px,0) rotate(-.16deg); }
-  77.2% { transform:translate3d(6px,-2px,0) rotate(.14deg); }
-  77.8% { transform:translate3d(-5px,-2px,0) rotate(-.1deg); }
-  78.4% { transform:translate3d(4px,1px,0) rotate(.08deg); }
-}
-@keyframes chapter1PurifyDroneBeam {
-  0%,70% { opacity:0; transform:translateX(160px) scaleX(.08) scaleY(.4); }
-  73% { opacity:1; transform:translateX(84px) scaleX(.4) scaleY(.84); }
-  75.2% { opacity:1; transform:translateX(0) scaleX(1) scaleY(1.12); }
-  78% { opacity:1; transform:translateX(0) scaleX(1.02) scaleY(1); }
-  81% { opacity:.36; transform:translateX(-4px) scaleX(1.02) scaleY(.74); }
-  82.6%,100% { opacity:0; transform:translateX(-10px) scaleX(1.04) scaleY(.28); }
-}
-@keyframes chapter1PurifyDroneBeamHit {
-  0%,63% { opacity:0; transform:translate(-50%,-50%) scale(.78); filter:blur(8px) brightness(.55); }
-  66% { opacity:1; transform:translate(-50%,-50%) scale(1); filter:blur(0) brightness(1.02); }
-  72% { opacity:1; transform:translate(-50%,-50%) scale(1.01); filter:brightness(1.08); }
-  74.4% { transform:translate(calc(-50% - 5px),calc(-50% + 2px)) scale(1.02) rotate(-1.6deg); }
-  75.4% { transform:translate(calc(-50% + 6px),calc(-50% - 2px)) scale(1.02) rotate(1.6deg); }
-  76.4% { transform:translate(calc(-50% - 6px),calc(-50% + 3px)) scale(1.03) rotate(-1.7deg); }
-  77.4% { transform:translate(calc(-50% + 5px),calc(-50% - 3px)) scale(1.04) rotate(1.5deg); }
-  78.8% { transform:translate(calc(-50% - 4px),calc(-50% + 2px)) scale(1.06) rotate(-1.1deg); filter:brightness(1.32) saturate(.72) drop-shadow(0 0 30px rgba(255,229,128,.72)); }
-  80.6% { opacity:1; transform:translate(-50%,-50%) scale(1.08); filter:brightness(1.9) saturate(.22) drop-shadow(0 0 48px rgba(255,239,164,.94)); }
-  83.2% { opacity:1; transform:translate(-50%,-50%) scale(1.12); filter:brightness(2.55) saturate(0) blur(1px) drop-shadow(0 0 58px rgba(255,247,190,1)); }
-  86.2% { opacity:.48; transform:translate(-50%,-50%) scale(.78); filter:brightness(3.2) saturate(0) blur(8px); }
-  89% { opacity:0; transform:translate(-50%,-50%) scale(.32); filter:brightness(3.4) saturate(0) blur(16px); }
-  100% { opacity:0; }
-}
-@keyframes chapter1PurifyConversionRing {
-  0%,81% { opacity:0; transform:translate(-50%,-50%) scale(.2); }
-  83.8% { opacity:.96; transform:translate(-50%,-50%) scale(.82); }
-  88.4% { opacity:.42; transform:translate(-50%,-50%) scale(1.46); }
-  92%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.78); }
-}
-@keyframes chapter1PurifyConversionBurst {
-  0%,82% { opacity:0; transform:translate(-50%,-50%) scale(.12); }
-  84.4% { opacity:1; transform:translate(-50%,-50%) scale(.88); }
-  88.8% { opacity:.92; transform:translate(-50%,-50%) scale(1.18); }
-  93%,100% { opacity:0; transform:translate(-50%,-50%) scale(1.76); }
-}
-@keyframes chapter1PurifyFragmentBirth {
-  0%,86% { opacity:0; transform:translateY(14px) rotate(0deg) scale(.15); }
-  89.2% { opacity:1; transform:translateY(0) rotate(9deg) scale(1.16); }
-  92% { opacity:1; transform:translateY(-6px) rotate(15deg) scale(.96); }
-  100% { opacity:1; transform:translateY(-10px) rotate(12deg) scale(1); }
-}
-@keyframes chapter1PurifyFragmentGlow {
-  0% {
-    filter:
-      brightness(1.16) saturate(1.12)
-      drop-shadow(0 0 8px rgba(255,255,238,.96))
-      drop-shadow(0 0 20px rgba(255,232,124,.9))
-      drop-shadow(0 0 42px rgba(255,193,31,.78));
-  }
-  100% {
-    filter:
-      brightness(1.48) saturate(1.26)
-      drop-shadow(0 0 12px #fff)
-      drop-shadow(0 0 31px rgba(255,238,144,1))
-      drop-shadow(0 0 64px rgba(255,188,18,.98))
-      drop-shadow(0 0 104px rgba(255,142,0,.58));
-  }
-}
+@keyframes chapter1PurifyCardChargeGlow{0%,15%{filter:drop-shadow(0 24px 30px rgba(0,0,0,.78)) drop-shadow(0 0 18px rgba(255,224,112,.52))}22%{filter:drop-shadow(0 0 28px rgba(255,239,164,.78)) drop-shadow(0 0 68px rgba(255,209,60,.5))}30%{filter:brightness(1.1) drop-shadow(0 0 38px rgba(255,249,211,.94)) drop-shadow(0 0 88px rgba(255,207,53,.78))}38.8%{filter:brightness(1.28) drop-shadow(0 0 52px #fff) drop-shadow(0 0 124px rgba(255,218,86,1))}40.3%,61%{filter:brightness(1.12) drop-shadow(0 0 34px rgba(255,246,190,.9)) drop-shadow(0 0 84px rgba(255,204,43,.76))}64%,100%{filter:brightness(.8)}}
+@keyframes chapter1PurifyCardAura{0%,9%{opacity:0;transform:scale(.7)}13%{opacity:.36}18%{opacity:.82;transform:scale(1.02)}23%{opacity:.25;transform:scale(1.16)}28%{opacity:.78;transform:scale(1.02)}33%{opacity:.28;transform:scale(1.2)}38.6%{opacity:1;transform:scale(1.12)}40.8%{opacity:.12;transform:scale(1.38)}44%,100%{opacity:0}}
+@keyframes chapter1PurifyAmbientGold{0%,8%{opacity:0}12%{opacity:.34}18%{opacity:.78}25%{opacity:.96}31%{opacity:.42}37%{opacity:.8}40%{opacity:.14}62%,100%{opacity:0}}
+@keyframes chapter1PurifyOrbTimeline{0%,15.5%{opacity:0;transform:translate(-50%,-50%) scale(.08)}17.5%{opacity:.7;transform:translate(-50%,-50%) scale(.24)}20%{opacity:1;transform:translate(-50%,-50%) scale(.46)}22.5%{transform:translate(-50%,-50%) scale(.34)}25%{transform:translate(-50%,-50%) scale(.62)}27.4%{transform:translate(-50%,-50%) scale(.48)}30%{transform:translate(-50%,-50%) scale(.78)}32.2%{transform:translate(-50%,-50%) scale(.61)}34.5%{transform:translate(-50%,-50%) scale(.98)}36.4%{transform:translate(-50%,-50%) scale(.8)}38.4%{transform:translate(-50%,-50%) scale(1.18)}39.7%{opacity:1;transform:translate(-50%,-50%) scale(1.38)}40.45%{opacity:1;transform:translate(-50%,-50%) scale(.12);filter:brightness(2)}41.2%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
+@keyframes chapter1PurifyOrbAura{from{transform:scale(.84);opacity:.62}to{transform:scale(1.2);opacity:1}}
+@keyframes chapter1PurifyOrbBlob{from{border-radius:44% 56% 51% 49% / 53% 43% 57% 47%;transform:scale(.92) rotate(-2deg)}to{border-radius:57% 43% 45% 55% / 43% 59% 41% 57%;transform:scale(1.1) rotate(2deg)}}
+@keyframes chapter1PurifyOrbOrbit{to{transform:translate(-50%,-50%) rotate(378deg) scaleY(.68)}}
+@keyframes chapter1PurifyOrbOrbitReverse{to{transform:translate(-50%,-50%) rotate(-397deg) scaleY(.7)}}
+@keyframes chapter1PurifyOrbCore{from{transform:translate(-50%,-50%) rotate(45deg) scale(.72)}to{transform:translate(-50%,-50%) rotate(45deg) scale(1.32)}}
+@keyframes chapter1PurifyVignette{0%,14%{opacity:0}20%{opacity:.34}37%{opacity:.88}40%{opacity:.18}48%{opacity:.48}62%{opacity:.15}66%{opacity:.5}72%{opacity:.18}100%{opacity:.12}}
+@keyframes chapter1PurifyChargeField{0%,15.5%{opacity:0}18%{opacity:.52}22%,38.8%{opacity:1}40.7%{opacity:.24}41.5%,100%{opacity:0}}
+@keyframes chapter1PurifyWaveConverge{0%{opacity:0;transform:translate(-50%,-50%) scale(1.75)}18%{opacity:.78}72%{opacity:.46}100%{opacity:0;transform:translate(-50%,-50%) scale(.18)}}
+@keyframes chapter1PurifyRingSpin{0%{opacity:.46;transform:translate(-50%,-50%) rotate(0deg) scale(.9)}50%{opacity:.9;transform:translate(-50%,-50%) rotate(180deg) scale(1.08)}100%{opacity:.46;transform:translate(-50%,-50%) rotate(360deg) scale(.9)}}
+@keyframes chapter1PurifyRingSpinReverse{0%{opacity:.28;transform:translate(-50%,-50%) rotate(0deg) scale(1.08)}50%{opacity:.68;transform:translate(-50%,-50%) rotate(-180deg) scale(.92)}100%{opacity:.28;transform:translate(-50%,-50%) rotate(-360deg) scale(1.08)}}
+@keyframes chapter1PurifyEllipseSpin{0%{opacity:.24;transform:translate(-50%,-50%) rotate(-31deg) scale(1.05)}50%{opacity:.54;transform:translate(-50%,-50%) rotate(149deg) scale(.94)}100%{opacity:.24;transform:translate(-50%,-50%) rotate(329deg) scale(1.05)}}
+@keyframes chapter1PurifyParticleConverge{0%{opacity:0;transform:rotate(var(--purify-particle-angle)) translateX(var(--purify-particle-radius)) scale(.35)}12%{opacity:.95}78%{opacity:1}100%{opacity:0;transform:rotate(calc(var(--purify-particle-angle) + 130deg)) translateX(6px) scale(.1)}}
+@keyframes chapter1PurifyBeam{0%,39.8%{opacity:0;transform:scaleX(.02) scaleY(.82)}40.25%{opacity:1;transform:scaleX(.16) scaleY(1.05)}41.6%{opacity:1;transform:scaleX(1) scaleY(1.18)}44%,59.8%{opacity:1;transform:scaleX(1) scaleY(1)}61.6%{opacity:.5;transform:scaleX(1) scaleY(.78)}62.6%,100%{opacity:0;transform:scaleX(1) scaleY(.25)}}
+@keyframes chapter1PurifyBeamFlow{to{background-position:-190px 0}}
+@keyframes chapter1PurifyStreakRush{0%{opacity:0;transform:translateX(0) scaleX(.2)}16%{opacity:.8}100%{opacity:0;transform:translateX(-150vw) scaleX(1.4)}}
+@keyframes chapter1PurifyBeamImpactLife{0%,39.7%{opacity:0}40.2%{opacity:1}42.8%{opacity:1}45.2%,100%{opacity:0}}
+@keyframes chapter1PurifyImpactCore{0%,39.8%{opacity:0;transform:translate(-50%,-50%) scale(.18)}40.3%{opacity:1;transform:translate(-50%,-50%) scale(.72)}41.2%{opacity:1;transform:translate(-50%,-50%) scale(1.14)}43.8%{opacity:.38;transform:translate(-50%,-50%) scale(1.48)}45.3%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
+@keyframes chapter1PurifyImpactRingA{0%,39.9%{opacity:0;transform:translate(-50%,-50%) scale(.22)}40.8%{opacity:.94;transform:translate(-50%,-50%) scale(.84)}43.8%{opacity:.26;transform:translate(-50%,-50%) scale(1.54)}45.4%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.84)}}
+@keyframes chapter1PurifyImpactRingB{0%,40.1%{opacity:0;transform:translate(-50%,-50%) scale(.3)}41.2%{opacity:.62;transform:translate(-50%,-50%) scale(.94)}44.1%{opacity:.22;transform:translate(-50%,-50%) scale(1.62)}45.6%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.98)}}
+@keyframes chapter1PurifyLaunchFlash{0%,39.7%{opacity:0}40.15%{opacity:.96}40.8%{opacity:.32}42%,100%{opacity:0}}
+@keyframes chapter1PurifySharpShake{0%,100%{transform:translate(0,0)}12.5%{transform:translate(8px,-4px)}25%{transform:translate(-7px,5px)}37.5%{transform:translate(6px,6px)}50%{transform:translate(-8px,-5px)}62.5%{transform:translate(7px,3px)}75%{transform:translate(-5px,-6px)}87.5%{transform:translate(5px,5px)}}
+@keyframes chapter1PurifyImpactShake{0%,100%{transform:translate(0,0)}20%{transform:translate(6px,-3px)}40%{transform:translate(-5px,4px)}60%{transform:translate(5px,5px)}80%{transform:translate(-4px,-4px)}}
+@keyframes chapter1PurifyDroneHalo{0%,62%{opacity:0;transform:translate(-50%,-50%) scale(.7)}66%{opacity:.36;transform:translate(-50%,-50%) scale(1)}72%{opacity:.48}84%{opacity:.62;transform:translate(-50%,-50%) scale(1.08)}90%,100%{opacity:.18;transform:translate(-50%,-50%) scale(1.16)}}
+@keyframes chapter1PurifyDroneBeam{0%,69.2%{opacity:0;transform:scaleX(.035) scaleY(.84)}71.4%{opacity:.72;transform:scaleX(.28) scaleY(1.02)}73.8%{opacity:1;transform:scaleX(1) scaleY(1.12)}75.2%,80.6%{opacity:1;transform:scaleX(1) scaleY(1)}82%{opacity:.36;transform:scaleX(1) scaleY(.68)}83.1%,100%{opacity:0;transform:scaleX(1) scaleY(.22)}}
+@keyframes chapter1PurifyDroneBeamHit{0%,62.8%{opacity:0;transform:translate(-50%,-50%) scale(.82);filter:blur(8px) brightness(.55)}65.5%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0) brightness(1)}71.4%{opacity:1;transform:translate(-50%,-50%) scale(1.01);filter:brightness(1.08)}73.8%{transform:translate(calc(-50% - 5px),calc(-50% + 2px)) scale(1.02) rotate(-1.5deg)}75%{transform:translate(calc(-50% + 6px),calc(-50% - 3px)) scale(1.025) rotate(1.6deg)}76.2%{transform:translate(calc(-50% - 6px),calc(-50% + 3px)) scale(1.03) rotate(-1.7deg)}77.4%{transform:translate(calc(-50% + 5px),calc(-50% - 3px)) scale(1.04) rotate(1.5deg)}79.2%{filter:brightness(1.45) saturate(.58) drop-shadow(0 0 34px rgba(255,229,128,.78))}81.2%{opacity:1;transform:translate(-50%,-50%) scale(1.08);filter:brightness(2.1) saturate(.18) drop-shadow(0 0 52px rgba(255,239,164,.96))}83.8%{opacity:1;transform:translate(-50%,-50%) scale(1.12);filter:brightness(3.4) saturate(0) blur(1px) drop-shadow(0 0 68px rgba(255,247,190,1))}86.2%{opacity:.42;transform:translate(-50%,-50%) scale(.68);filter:brightness(4) saturate(0) blur(9px)}88.2%{opacity:0;transform:translate(-50%,-50%) scale(.18);filter:brightness(4) saturate(0) blur(18px)}100%{opacity:0}}
+@keyframes chapter1PurifyConversionRing{0%,81.8%{opacity:0;transform:translate(-50%,-50%) scale(.2)}84.2%{opacity:1;transform:translate(-50%,-50%) scale(.82)}88.4%{opacity:.4;transform:translate(-50%,-50%) scale(1.5)}92%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.85)}}
+@keyframes chapter1PurifyConversionBurst{0%,82.8%{opacity:0;transform:translate(-50%,-50%) scale(.12)}84.8%{opacity:1;transform:translate(-50%,-50%) scale(.9)}88.8%{opacity:.9;transform:translate(-50%,-50%) scale(1.2)}93%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
+@keyframes chapter1PurifyDroneShard{0%,83.4%{opacity:0;transform:rotate(var(--purify-shard-a)) translateX(3vmin) scale(.2)}84.4%{opacity:1}91%{opacity:.7;transform:rotate(var(--purify-shard-a)) translateX(calc(11vmin + var(--purify-shard-r))) scale(.9)}95%,100%{opacity:0;transform:rotate(var(--purify-shard-a)) translateX(calc(17vmin + var(--purify-shard-r))) scale(.35)}}
+@keyframes chapter1PurifyDeathWaveA{0%,84%{opacity:0;transform:translate(-50%,-50%) scale(.12)}85%{opacity:1}91%{opacity:.34;transform:translate(-50%,-50%) scale(5.8)}94%,100%{opacity:0;transform:translate(-50%,-50%) scale(7.4)}}
+@keyframes chapter1PurifyDeathWaveB{0%,84.6%{opacity:0;transform:translate(-50%,-50%) scale(.1)}86%{opacity:.9}92%{opacity:.26;transform:translate(-50%,-50%) scale(7.2)}95%,100%{opacity:0;transform:translate(-50%,-50%) scale(8.8)}}
+@keyframes chapter1PurifyFragmentBirth{0%,86.2%{opacity:0;transform:translateY(14px) rotate(0deg) scale(.15)}88.6%{opacity:1;transform:translateY(0) rotate(9deg) scale(1.2)}91%{opacity:1;transform:translateY(-7px) rotate(16deg) scale(.96)}100%{opacity:1;transform:translateY(-11px) rotate(12deg) scale(1)}}
+@keyframes chapter1PurifyFragmentGlow{from{filter:brightness(1.18) saturate(1.12) drop-shadow(0 0 9px #fff) drop-shadow(0 0 22px rgba(255,232,124,.92)) drop-shadow(0 0 48px rgba(255,193,31,.82))}to{filter:brightness(1.58) saturate(1.28) drop-shadow(0 0 14px #fff) drop-shadow(0 0 34px rgba(255,240,150,1)) drop-shadow(0 0 72px rgba(255,184,12,1)) drop-shadow(0 0 122px rgba(255,132,0,.68))}}
 
 /* 학사 시스템 비상 통제 전환은 스토리 프레임에 갇히지 않고 브라우저 전체를 덮는다. */
 html.is-embedded-story .battle-transition {
@@ -2384,69 +2048,80 @@ export function createChapter1StoryRuntime({
   document.head.appendChild(styleElement);
   root.innerHTML = normalizeStoryMarkup(storyDocument.markup);
 
-  // Part 1 첫 정화 후반부 전용 레이어. 기존 출석탄/학생증 마크업은 그대로 두고
-  // 에너지 파장, 응축 코어, 1차 빔 발사, 드론 단독 샷의 2차 빔을 보강한다.
+  // Part 1 첫 정화 후반부 전용 레이어. 기존 출석탄/학생증 마크업은 그대로 두고,
+  // 학생증 위 정화 에너지 덩어리, 수렴 파장/입자, 원통형 빔, 속도선, 드론 파편/확장 파동을 추가한다.
   if (part === 1) {
     const firstPurificationEffect = root.querySelector<HTMLElement>('[data-effect="attendance-student-card-purification"]');
-    if (firstPurificationEffect && !firstPurificationEffect.querySelector('.chapter1-purify-charge-field')) {
+    if (firstPurificationEffect && !firstPurificationEffect.querySelector('.chapter1-purify-card-orb')) {
+      const card = firstPurificationEffect.querySelector<HTMLElement>('.attendance-post-card');
+
+      const orb = document.createElement('div');
+      orb.className = 'chapter1-purify-card-orb';
+      orb.setAttribute('aria-hidden', 'true');
+      const orbAura = document.createElement('div'); orbAura.className = 'orb-aura';
+      const orbShell = document.createElement('div'); orbShell.className = 'orb-shell';
+      const orbCore = document.createElement('div'); orbCore.className = 'orb-core';
+      orb.append(orbAura, orbShell, orbCore);
+      card?.appendChild(orb);
+
       const chargeField = document.createElement('div');
       chargeField.className = 'chapter1-purify-charge-field';
       chargeField.setAttribute('aria-hidden', 'true');
-
-      const waveA = document.createElement('div');
-      waveA.className = 'chapter1-purify-energy-wave wave-a';
-      const waveB = document.createElement('div');
-      waveB.className = 'chapter1-purify-energy-wave wave-b';
-      const waveC = document.createElement('div');
-      waveC.className = 'chapter1-purify-energy-wave wave-c';
-
-      const chargeCore = document.createElement('div');
-      chargeCore.className = 'chapter1-purify-charge-core';
-      const chargeRingA = document.createElement('div');
-      chargeRingA.className = 'chapter1-purify-charge-ring ring-a';
-      const chargeRingB = document.createElement('div');
-      chargeRingB.className = 'chapter1-purify-charge-ring ring-b';
-      const chargeRingC = document.createElement('div');
-      chargeRingC.className = 'chapter1-purify-charge-ring ring-c';
-      const chargeParticles = document.createElement('div');
-      chargeParticles.className = 'chapter1-purify-charge-particles';
-
-      const particleAngles = [-164, -139, -116, -92, -68, -43, -18, 6, 31, 55, 79, 104, 129, 153, 177, 202, 227, 252];
-      particleAngles.forEach((angle, index) => {
-        const particle = document.createElement('i');
-        particle.style.setProperty('--purify-particle-angle', `${angle}deg`);
-        particle.style.setProperty('--purify-particle-radius', `${116 + (index % 5) * 24}px`);
-        particle.style.setProperty('--purify-particle-delay', `${(index % 7) * 0.075}s`);
-        particle.style.setProperty('--purify-particle-size', `${5 + (index % 4) * 2}px`);
+      const waveA = document.createElement('div'); waveA.className = 'chapter1-purify-energy-wave wave-a';
+      const waveB = document.createElement('div'); waveB.className = 'chapter1-purify-energy-wave wave-b';
+      const waveC = document.createElement('div'); waveC.className = 'chapter1-purify-energy-wave wave-c';
+      const chargeCore = document.createElement('div'); chargeCore.className = 'chapter1-purify-charge-core';
+      const chargeRingA = document.createElement('div'); chargeRingA.className = 'chapter1-purify-charge-ring ring-a';
+      const chargeRingB = document.createElement('div'); chargeRingB.className = 'chapter1-purify-charge-ring ring-b';
+      const chargeRingC = document.createElement('div'); chargeRingC.className = 'chapter1-purify-charge-ring ring-c';
+      const chargeParticles = document.createElement('div'); chargeParticles.className = 'chapter1-purify-charge-particles';
+      const particleAngles = [-164,-139,-116,-92,-68,-43,-18,6,31,55,79,104,129,153,177,202,227,252,276,301,326,348];
+      particleAngles.forEach((angle,index)=>{
+        const particle=document.createElement('i');
+        particle.style.setProperty('--purify-particle-angle',`${angle}deg`);
+        particle.style.setProperty('--purify-particle-radius',`${132+(index%6)*29}px`);
+        particle.style.setProperty('--purify-particle-delay',`${(index%8)*0.065}s`);
+        particle.style.setProperty('--purify-particle-size',`${5+(index%4)*2}px`);
         chargeParticles.appendChild(particle);
       });
+      chargeField.append(waveA,waveB,waveC,chargeCore,chargeRingA,chargeRingB,chargeRingC,chargeParticles);
 
-      chargeField.append(waveA, waveB, waveC, chargeCore, chargeRingA, chargeRingB, chargeRingC, chargeParticles);
+      const beamImpact=document.createElement('div');
+      beamImpact.className='chapter1-purify-beam-impact';beamImpact.setAttribute('aria-hidden','true');
+      const impactCore=document.createElement('div');impactCore.className='chapter1-purify-beam-impact-core';
+      const impactRingA=document.createElement('div');impactRingA.className='chapter1-purify-beam-impact-ring ring-a';
+      const impactRingB=document.createElement('div');impactRingB.className='chapter1-purify-beam-impact-ring ring-b';
+      beamImpact.append(impactCore,impactRingA,impactRingB);
 
-      const beamImpact = document.createElement('div');
-      beamImpact.className = 'chapter1-purify-beam-impact';
-      beamImpact.setAttribute('aria-hidden', 'true');
-      const impactCore = document.createElement('div');
-      impactCore.className = 'chapter1-purify-beam-impact-core';
-      const impactRingA = document.createElement('div');
-      impactRingA.className = 'chapter1-purify-beam-impact-ring ring-a';
-      const impactRingB = document.createElement('div');
-      impactRingB.className = 'chapter1-purify-beam-impact-ring ring-b';
-      beamImpact.append(impactCore, impactRingA, impactRingB);
+      const launchFlash=document.createElement('div');launchFlash.className='chapter1-purify-launch-flash';launchFlash.setAttribute('aria-hidden','true');
+      const cinematicVignette=document.createElement('div');cinematicVignette.className='chapter1-purify-cinematic-vignette';cinematicVignette.setAttribute('aria-hidden','true');
 
-      const launchFlash = document.createElement('div');
-      launchFlash.className = 'chapter1-purify-launch-flash';
-      launchFlash.setAttribute('aria-hidden', 'true');
+      const streaks=document.createElement('div');streaks.className='chapter1-purify-beam-streaks';streaks.setAttribute('aria-hidden','true');
+      for(let i=0;i<18;i++){
+        const streak=document.createElement('i');
+        streak.style.setProperty('--purify-streak-y',`${7+(i*5.1)%88}%`);
+        streak.style.setProperty('--purify-streak-w',`${180+(i%5)*70}px`);
+        streak.style.setProperty('--purify-streak-h',`${1+(i%3)}px`);
+        streak.style.setProperty('--purify-streak-blur',`${i%4===0?1.3:.25}px`);
+        streak.style.setProperty('--purify-streak-delay',`${(i%7)*0.018}s`);
+        streaks.appendChild(streak);
+      }
 
-      const cinematicVignette = document.createElement('div');
-      cinematicVignette.className = 'chapter1-purify-cinematic-vignette';
-      cinematicVignette.setAttribute('aria-hidden', 'true');
+      const droneHalo=document.createElement('div');droneHalo.className='chapter1-purify-drone-halo';droneHalo.setAttribute('aria-hidden','true');
+      const droneBeam=document.createElement('div');droneBeam.className='chapter1-purify-drone-beam';droneBeam.setAttribute('aria-hidden','true');
 
-      const droneBeam = document.createElement('div');
-      droneBeam.className = 'chapter1-purify-drone-beam';
-      droneBeam.setAttribute('aria-hidden', 'true');
+      const shards=document.createElement('div');shards.className='chapter1-purify-drone-shards';shards.setAttribute('aria-hidden','true');
+      for(let i=0;i<28;i++){
+        const shard=document.createElement('i');
+        shard.style.setProperty('--purify-shard-a',`${(i*47)%360}deg`);
+        shard.style.setProperty('--purify-shard-delay',`${(i%9)*0.012}s`);
+        shard.style.setProperty('--purify-shard-r',`${(i%5)*1.6}vmin`);
+        shards.appendChild(shard);
+      }
+      const deathWaveA=document.createElement('div');deathWaveA.className='chapter1-purify-death-wave';deathWaveA.setAttribute('aria-hidden','true');
+      const deathWaveB=document.createElement('div');deathWaveB.className='chapter1-purify-death-wave wave-b';deathWaveB.setAttribute('aria-hidden','true');
 
-      firstPurificationEffect.append(cinematicVignette, chargeField, beamImpact, launchFlash, droneBeam);
+      firstPurificationEffect.append(cinematicVignette,chargeField,streaks,beamImpact,launchFlash,droneHalo,droneBeam,shards,deathWaveA,deathWaveB);
     }
   }
 
