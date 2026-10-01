@@ -89,6 +89,7 @@ const FULLSCREEN_EFFECTS = new Set([
   "student-card-shutdown",
   "graduation-day-atmosphere",
   "graduation-ceremony-background",
+  "autumn-campus-location-transition",
 ]);
 
 const STORY_SECTIONS: StorySectionMeta[] = [

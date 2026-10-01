@@ -3457,7 +3457,7 @@ window.STORY_SCENES = {
   graduation_core: { chapter:'CHAPTER 3', title:'첨성대 코어 · 졸업 영역', subtitle:'최심부', background:'chapter3/backgrounds/digrion_core.png', position:'center 18%', tint:'rgba(6,3,12,.10)' },
   graduation_core_purified: { chapter:'CHAPTER 3', title:'첨성대 코어 · 졸업 영역', subtitle:'정화된 최심부', background:'chapter3/backgrounds/graduation_core_purified.png', position:'center center', tint:'rgba(255,244,220,.02)', filter:'brightness(.92) saturate(.96) contrast(1.02)' },
   campus_winter: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'4학년 2학기 종료', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(152,177,195,.18)' },
-  campus_autumn_3weeks: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'종강까지 3주 전', background:'chapter3/backgrounds/campus_autumn_3weeks_v97.png', position:'center center', tint:'rgba(116,78,24,.06)' },
+  campus_autumn_3weeks: { chapter:'CHAPTER 3', title:'가을의 경북대학교', subtitle:'종강까지 3주 전', background:'chapter3/backgrounds/campus_autumn_3weeks_v97.png', position:'center center', tint:'rgba(116,78,24,.06)' },
   graduation_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'졸업식', background:'chapter3/backgrounds/graduation_ceremony_entrance.png', position:'center center', tint:'rgba(22,14,5,.04)' },
   ceremony_hall: { chapter:'CHAPTER 3', title:'경북대학교 학위수여식장', subtitle:'2030학년도 전기 학위수여식', background:'chapter3/backgrounds/graduation_ceremony_hall.png', position:'center center', tint:'rgba(8,8,10,.06)' },
   graduation_campus: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'졸업식이 끝난 뒤', background:'chapter3/backgrounds/graduation_ceremony_entrance.png', position:'center center', tint:'rgba(20,12,5,.05)' },
@@ -3625,7 +3625,7 @@ window.STORY_DATA = {
       C3D.line("narrator", "수업과 과제, 자소서와 자격증 공부를 오가는 사이,", "campus_day", "졸업자가진단"),
       C3D.line("narrator", "하루하루는 생각보다 빠르게 지나갔다.", "campus_day", "졸업자가진단"),
       C3D.fx("semester-time-passage", "campus_day", 4700, {text:"종강까지 3주 전"}),
-      C3D.loc("campus_autumn_3weeks", 1200),
+      C3D.fx("autumn-campus-location-transition", "campus_autumn_3weeks", 2400, {title:"가을의 경북대학교",subtitle:"종강까지 3주 전"}),
       C3D.line("narrator", "어느새 캠퍼스에는 차가운 바람이 불기 시작했고,", "campus_autumn_3weeks", "졸업자가진단"),
       C3D.line("narrator", "마지막 학기도 이제 종강까지 3주만을 남겨두고 있었다.", "campus_autumn_3weeks", "졸업자가진단"),
       C3D.line("hobanwoo", "벌써 종강까지 3주밖에 안 남았네.", "campus_autumn_3weeks", "졸업자가진단", {right:"hobanwoo",pose:"neutral"}),
@@ -6703,7 +6703,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     return false;
   };
 
-  const bodyViewportEffectIds = new Set(['teleport-core', 'boss-emergence', 'recruitment-result', 'digrion-body-break', 'monthly-schedule', 'job-posting-browse', 'job-application-submit', 'recruitment-application-glitch', 'graduation-portal-sequence', 'diagnosis-glitch', 'semester-time-passage', 'combat-transition', 'digrion-spirit-reveal', 'purification-energy-form', 'purification-launch', 'purification-collision', 'purification-explosion', 'first-monster-birth', 'student-card-shutdown', 'graduation-day-atmosphere', 'graduation-ceremony-background']);
+  const bodyViewportEffectIds = new Set(['teleport-core', 'boss-emergence', 'recruitment-result', 'digrion-body-break', 'monthly-schedule', 'job-posting-browse', 'job-application-submit', 'recruitment-application-glitch', 'graduation-portal-sequence', 'diagnosis-glitch', 'semester-time-passage', 'combat-transition', 'digrion-spirit-reveal', 'purification-energy-form', 'purification-launch', 'purification-collision', 'purification-explosion', 'first-monster-birth', 'student-card-shutdown', 'graduation-day-atmosphere', 'graduation-ceremony-background', 'autumn-campus-location-transition']);
 
   function itemKeepsPersistentOverlay(item, effectId) {
     return effectId === 'chat-snapshot' || Number(item?.persistDialogueCount || 0) > 0;
@@ -13869,6 +13869,134 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
     <div class="c3-grad-bg088">
       <img src="assets/chapter3/backgrounds/graduation_ceremony_hall.png" alt="경북대학교 학위수여식장">
       <div class="c3-grad-caption088"><small>KYUNGPOOK NATIONAL UNIVERSITY</small><strong>학위수여식장</strong><span>경북대학교 대강당</span></div>
+    </div>`);
+})();
+</script>
+
+
+
+<style id="chapter3-patch-099-autumn-location-fullscreen-style">
+/* PATCH099: the post-intertitle autumn campus location reveal fills the real browser viewport. */
+.story-body-effect-host[data-effect="autumn-campus-location-transition"]{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  z-index:2147482500!important;
+  overflow:hidden!important;
+  background:#050506!important;
+  pointer-events:none!important;
+}
+.story-body-effect-host[data-effect="autumn-campus-location-transition"]>.ch3-effect{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  overflow:hidden!important;
+}
+.c3-autumn-location099{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  background:#050506;
+  color:#fff;
+  isolation:isolate;
+  animation:c3AutumnEnvelope099 2.4s linear both;
+}
+.c3-autumn-location099 .autumn-bg099{
+  position:absolute;
+  z-index:0;
+  inset:-2.5%;
+  width:105%;
+  height:105%;
+  object-fit:cover;
+  object-position:center center;
+  transform:scale(1.04);
+  filter:brightness(.92) saturate(1.05) contrast(1.02);
+  animation:c3AutumnCamera099 2.4s cubic-bezier(.2,.78,.2,1) both;
+}
+.c3-autumn-location099 .autumn-shade099{
+  position:absolute;
+  z-index:1;
+  inset:0;
+  background:
+    linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.015) 46%,rgba(0,0,0,.42) 100%),
+    radial-gradient(circle at 50% 47%,transparent 24%,rgba(0,0,0,.48) 100%);
+}
+.c3-autumn-location099 .autumn-copy099{
+  position:absolute;
+  z-index:2;
+  left:50%;
+  top:50%;
+  width:min(900px,86vw);
+  min-height:190px;
+  display:grid;
+  place-content:center;
+  gap:10px;
+  transform:translate(-50%,-46%) scale(.98);
+  text-align:center;
+  opacity:0;
+  text-shadow:0 4px 22px rgba(0,0,0,.88);
+  animation:c3AutumnCopy099 2.4s cubic-bezier(.2,.82,.2,1) both;
+}
+.c3-autumn-location099 .autumn-copy099::before,
+.c3-autumn-location099 .autumn-copy099::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  width:min(720px,76vw);
+  height:2px;
+  transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent,rgba(220,164,70,.82),#fff3c2,rgba(220,164,70,.82),transparent);
+  box-shadow:0 0 16px rgba(220,164,70,.58);
+}
+.c3-autumn-location099 .autumn-copy099::before{top:16px}
+.c3-autumn-location099 .autumn-copy099::after{bottom:16px}
+.c3-autumn-location099 .autumn-copy099 small{
+  color:#efc66d;
+  font:900 12px/1.2 "Noto Sans KR",sans-serif;
+  letter-spacing:.34em;
+}
+.c3-autumn-location099 .autumn-copy099 strong{
+  color:#fff;
+  font:1000 clamp(42px,6vw,84px)/1.05 "Noto Sans KR",sans-serif;
+  letter-spacing:-.045em;
+}
+.c3-autumn-location099 .autumn-copy099 span{
+  color:rgba(255,255,255,.86);
+  font:800 clamp(14px,1.4vw,21px)/1.4 "Noto Sans KR",sans-serif;
+}
+@keyframes c3AutumnEnvelope099{
+  0%{opacity:0}
+  10%,91%{opacity:1}
+  100%{opacity:0}
+}
+@keyframes c3AutumnCamera099{
+  0%{transform:scale(1.055);filter:brightness(.72) saturate(.96)}
+  24%{filter:brightness(.94) saturate(1.05)}
+  100%{transform:scale(1.01);filter:brightness(.92) saturate(1.05)}
+}
+@keyframes c3AutumnCopy099{
+  0%,20%{opacity:0;transform:translate(-50%,-43%) scale(.975)}
+  31%,82%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-54%) scale(1.018)}
+}
+</style>
+<script id="chapter3-patch-099-autumn-location-fullscreen-script">
+(() => {
+  window.STORY_CUSTOM_EFFECTS['autumn-campus-location-transition'] = ({ layer, item }) => c3Mount(layer, `
+    <div class="c3-autumn-location099" aria-label="${c3Esc(item.title || '가을의 경북대학교')}">
+      <img class="autumn-bg099" src="assets/chapter3/backgrounds/campus_autumn_3weeks_v97.png" alt="가을의 경북대학교 캠퍼스">
+      <div class="autumn-shade099"></div>
+      <div class="autumn-copy099">
+        <small>KYUNGPOOK NATIONAL UNIVERSITY</small>
+        <strong>${c3Esc(item.title || '가을의 경북대학교')}</strong>
+        <span>${c3Esc(item.subtitle || '종강까지 3주 전')}</span>
+      </div>
     </div>`);
 })();
 </script>
