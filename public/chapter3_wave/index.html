@@ -45,10 +45,11 @@
   }
   body.embedded .embeddedLifeHud{display:flex}
   .embeddedLifeShield{
-    width:36px;
-    height:38px;
+    width:34px;
+    height:37px;
     display:block;
     flex:none;
+    object-fit:contain;
   }
   /* PATCH 090: large centered attack-disabled notice. It finishes before survival patterns begin. */
   .attackDisabledStatus073{
@@ -99,7 +100,7 @@
     80%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:brightness(1)}
     100%{opacity:0;transform:translate(-50%,-53%) scale(.985);filter:brightness(.98)}
   }
-  @media(max-width:560px){.embeddedLifeShield{width:32px;height:34px}}
+  @media(max-width:560px){.embeddedLifeShield{width:34px;height:37px}}
 
   /* PATCH 070: Chapter 1 exact 100% purification overlay copied into Chapter 3 wave. */
   .chapter1-wave-purification-overlay070{
@@ -261,13 +262,7 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const norm=(x,y)=>{const d=Math.hypot(x,y)||1;return{x:x/d,y:y/d}};
 const angleDiff=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
 
-const lifeShieldSvg066 = active => `
-  <svg class="embeddedLifeShield" viewBox="0 0 28 32" aria-hidden="true" shape-rendering="crispEdges">
-    <!-- Chapter 1 life shield silhouette: black shell + faceted red/gray core. -->
-    <path d="M10 0H18L25 4L28 8L26 23L14 32L2 23L0 8L3 4Z" fill="#01050b"/>
-    <path d="M10 4H18L24 7L25 9L23 21L14 28L5 21L3 9L4 7Z" fill="${active ? '#d60020' : '#34383f'}"/>
-    <path d="M10 4H18L24 7L25 9L24 16H4L3 9L4 7Z" fill="${active ? '#ff414d' : '#3d4249'}"/>
-  </svg>`;
+const lifeShieldSprite066 = active => `<img class="embeddedLifeShield" src="assets/ui/${active ? 'life_shield_active_ch1.png' : 'life_shield_inactive_ch1.png'}" width="34" height="37" alt="" aria-hidden="true" draggable="false">`;
 let lastLifeHp066=-1,lastLifeMax066=-1;
 function renderEmbeddedLifeHud066(){
   if(!EMBEDDED || !embeddedLifeHud) return;
@@ -276,7 +271,7 @@ function renderEmbeddedLifeHud066(){
   if(hp===lastLifeHp066 && max===lastLifeMax066) return;
   lastLifeHp066=hp;
   lastLifeMax066=max;
-  embeddedLifeHud.innerHTML=Array.from({length:max},(_,i)=>lifeShieldSvg066(i<hp)).join('');
+  embeddedLifeHud.innerHTML=Array.from({length:max},(_,i)=>lifeShieldSprite066(i<hp)).join('');
 }
 
 const TYPES={
