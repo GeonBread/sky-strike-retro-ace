@@ -11065,6 +11065,10 @@ window.STORY_CUSTOM_EFFECTS['time-card'] = ({ layer, item }) => {
 };
 
 window.STORY_CUSTOM_EFFECTS['chat-snapshot'] = ({ layer, item }) => {
+  // persistDialogueCount로 다음 대사 동안 카톡창을 유지할 때 StorySystem이 같은 효과를
+  // persistentReplay=true로 한 번 더 마운트한다. 이 재마운트에서는 알림/진동/메시지
+  // 타이핑을 다시 재생하지 않고 이미 확인한 최종 채팅 화면만 즉시 보여준다.
+  const persistentReplay = Boolean(item?.persistentReplay);
   const clone = value => JSON.parse(JSON.stringify(value || []));
   const historyBefore = clone(Array.isArray(item.historyBefore) ? item.historyBefore : []);
   const snapshotMessages = clone(Array.isArray(item.messages) ? item.messages : []);
@@ -11305,8 +11309,8 @@ window.STORY_CUSTOM_EFFECTS['chat-snapshot'] = ({ layer, item }) => {
     .filter(entry => entry.type === 'message' && entry.side === 'in')
     .slice(0, Math.max(1, Math.min(2, Number(item.notificationCount || 2))));
 
-  const hasIncomingIntro = notificationMessages.length > 0;
-  const showPhoneIntro = hasIncomingIntro || Boolean(item.forcePhoneIntro);
+  const hasIncomingIntro = !persistentReplay && notificationMessages.length > 0;
+  const showPhoneIntro = !persistentReplay && (hasIncomingIntro || Boolean(item.forcePhoneIntro));
   const notificationIntroLeadMs = hasIncomingIntro ? Math.max(2200, Number(item.notificationHoldMs || 2200)) : Math.max(900, Number(item.phoneIntroHoldMs || 1100));
   const notificationIntroSwapMs = hasIncomingIntro ? Math.max(700, Number(item.notificationSwapMs || 900)) : Math.max(450, Number(item.phoneIntroSwapMs || 650));
 
@@ -11383,7 +11387,7 @@ window.STORY_CUSTOM_EFFECTS['chat-snapshot'] = ({ layer, item }) => {
 
   const main = root.querySelector('main');
   const input = root.querySelector('.c2-chat-input');
-  const skipMessageTypingAnimation = hasIncomingIntro;
+  const skipMessageTypingAnimation = persistentReplay || hasIncomingIntro;
   let renderedHistory = skipMessageTypingAnimation ? [...normalizedBaseHistory, ...normalizedNewEntries] : [...normalizedBaseHistory];
   main.innerHTML = renderedHistory.map(rowHtml).join('');
 
