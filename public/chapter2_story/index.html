@@ -721,6 +721,24 @@ button { color: inherit; }
 }
 .story-global-effect-layer > * { position: absolute; inset: 0; }
 
+/* Persistent browser/app effects that must stay full viewport while dialogue continues. */
+.story-global-persistent-overlay {
+  position: fixed;
+  z-index: 1190;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  pointer-events: none;
+  overflow: hidden;
+}
+.story-global-persistent-overlay > * { position: absolute; inset: 0; }
+.story-global-persistent-overlay[aria-hidden="true"] { display: none; }
+.story-global-persistent-overlay .c2-generated-drive.is-persistent-replay {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 .dialogue-jump-panel {
   position: absolute;
   z-index: 80;
@@ -1086,6 +1104,46 @@ kbd {
 .c2-chat-persistent-root .c2-chat-app main{scroll-behavior:auto!important;overflow-anchor:none!important}
 
 
+/* 학생증이 핵심 오염원 이름을 선언할 때 보스명처럼 보이는 전용 텍스트 연출. */
+.dialogue-text.is-boss-name-reveal {
+  position: relative;
+  width: 100%;
+  color: #ead7ff !important;
+  font-size: clamp(25px, 3.4vw, 44px) !important;
+  font-weight: 1000 !important;
+  letter-spacing: .11em !important;
+  text-align: center !important;
+  text-shadow:
+    0 3px 0 rgba(0,0,0,.94),
+    0 0 10px rgba(255,255,255,.52),
+    0 0 24px rgba(183,121,255,.92),
+    0 0 52px rgba(113,48,190,.72) !important;
+  animation: c2BossNameDialogueReveal .78s cubic-bezier(.16,.86,.2,1) both;
+}
+.dialogue-text.is-boss-name-reveal::before,
+.dialogue-text.is-boss-name-reveal::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: min(78%, 560px);
+  height: 2px;
+  transform: translateX(-50%) scaleX(0);
+  background: linear-gradient(90deg, transparent, #b779ff, #fff, #b779ff, transparent);
+  box-shadow: 0 0 12px rgba(183,121,255,.9);
+  animation: c2BossNameDialogueLine .72s .08s cubic-bezier(.2,.82,.2,1) forwards;
+}
+.dialogue-text.is-boss-name-reveal::before { top: -10px; }
+.dialogue-text.is-boss-name-reveal::after { bottom: -10px; }
+@keyframes c2BossNameDialogueReveal {
+  0% { opacity:0; transform:translateY(12px) scale(.86); filter:blur(8px); }
+  48% { opacity:1; transform:translateY(-2px) scale(1.045); filter:blur(0); }
+  100% { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+}
+@keyframes c2BossNameDialogueLine {
+  0% { opacity:0; transform:translateX(-50%) scaleX(0); }
+  100% { opacity:1; transform:translateX(-50%) scaleX(1); }
+}
+
 /* FIX44: 모든 장소 이동은 브라우저 전체 화면에서 실행합니다. */
 .story-global-location-transition {
   position: absolute;
@@ -1134,7 +1192,7 @@ kbd {
   z-index: 4;
   left: 50%;
   top: 50%;
-  width: min(900px, 84vw);
+  width: min(1180px, 94vw);
   min-height: 190px;
   display: grid;
   place-content: center;
@@ -1167,9 +1225,11 @@ kbd {
 .story-global-location-copy strong {
   color: #fff;
   font-family: "Noto Sans KR", system-ui, sans-serif;
-  font-size: clamp(40px, 6.4vw, 86px);
+  font-size: clamp(28px, 4.2vw, 62px);
   font-weight: 1000;
-  letter-spacing: -.05em;
+  letter-spacing: -.045em;
+  line-height: 1.05;
+  white-space: nowrap;
   text-shadow: 0 4px 0 rgba(0,0,0,.9), 0 0 16px rgba(255,255,255,.18), 0 0 42px rgba(191,124,38,.42);
 }
 @keyframes storyGlobalLocationEnvelope {
@@ -1796,6 +1856,7 @@ html.is-chapter2-embedded .story-stage.is-full-story {
   </main>
 
   <div class="story-global-effect-layer" id="storyGlobalEffectLayer" aria-hidden="true"></div>
+  <div class="story-global-persistent-overlay" id="storyGlobalPersistentOverlay" aria-hidden="true"></div>
 
   <div class="resource-error-panel" id="resourceErrorPanel" role="alert">
     <strong>이미지 파일을 찾지 못했습니다.</strong>
@@ -6226,7 +6287,8 @@ window.STORY_DATA = {
         "scene": "library_reading_night",
         "pose": "dejected",
         "statusLabel": "내부 마감일",
-        "right": "hobanwoo"
+        "right": "hobanwoo",
+        "forceAbovePersistentEffect": true
       },
       {
         "speaker": "hobanwoo",
@@ -6234,7 +6296,8 @@ window.STORY_DATA = {
         "scene": "library_reading_night",
         "pose": "gloomy",
         "statusLabel": "내부 마감일",
-        "right": "hobanwoo"
+        "right": "hobanwoo",
+        "forceAbovePersistentEffect": true
       },
       {
         "type": "custom-effect",
@@ -6355,14 +6418,14 @@ window.STORY_DATA = {
       {
         "type": "custom-effect",
         "effect": "corruption-fire-transition",
-        "duration": 4300,
+        "duration": 5200,
         "scene": "black_screen",
         "hideActors": true
       },
       {
         "type": "custom-effect",
         "effect": "battle-summary",
-        "duration": 5200,
+        "duration": 6200,
         "scene": "corrupted_library",
         "leftTitle": "팀플 계열",
         "rightTitle": "시험 계열",
@@ -9342,7 +9405,8 @@ window.STORY_DATA = {
           "민재",
           "소연",
           "준호"
-        ]
+        ],
+        "syncSceneBeforeEffect": true
       },
       {
         "speaker": "hobanwoo",
@@ -9414,7 +9478,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "별 신호를 차단하던 오염 반응이 약화됨.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9423,7 +9487,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "아까는 위치도 못 찾았잖아.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "thinking",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9431,7 +9495,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "현재 두 개의 미회수 별 신호를 확인할 수 있음.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9440,7 +9504,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "팀원들이 다시 자기 할 일을 시작해서 그런 건가?",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "thinking",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9448,7 +9512,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "관련 가능성이 높음.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9457,7 +9521,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "핵심 오염원 위치 추적함.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9466,7 +9530,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "이번에는 어디야?",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "thinking",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9474,7 +9538,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "현실 공간에서 일치하는 좌표가 확인되지 않음.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9483,7 +9547,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "아……",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "surprised",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9491,7 +9555,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "설마 또 코어 영역이야?",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "thinking",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9499,7 +9563,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "맞음.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9508,7 +9572,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "핵심 오염원 명칭 확인함.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9517,16 +9581,17 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "팀플 블랙홀 무임승차자.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
-        "right": "hobanwoo"
+        "right": "hobanwoo",
+        "bossNameReveal": true
       },
       {
         "speaker": "hobanwoo",
         "text": "이름이 왜 저래? 좀 유치한데?",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "uneasy",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9534,7 +9599,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "코어 영역 좌표 확인함.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9543,7 +9608,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "이동 가능함.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9552,7 +9617,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "저번에 썼던 코어 이동 기능 말하는 거야?",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "thinking",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9560,7 +9625,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "코어 영역 이동 기능이 맞음.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9569,7 +9634,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "그럼 이번에도 포탈 열면 되는 거네.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "earnest",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9577,7 +9642,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "포탈 생성함.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9593,7 +9658,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "확실히 저번보다 빨리 열리네.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "surprised",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9601,7 +9666,7 @@ window.STORY_DATA = {
       {
         "speaker": "student_card",
         "text": "시작의 별과 적응의 별 회수 이후 연결 기능이 안정화됨.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "default",
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
@@ -9610,7 +9675,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "별을 회수한 효과가 있긴 있구나.",
-        "scene": "library_reading_night",
+        "scene": "library_transition_hall",
         "pose": "happy",
         "statusLabel": "핵심 오염원 출현",
         "right": "hobanwoo"
@@ -9950,7 +10015,7 @@ window.STORY_DATA = {
       {
         "type": "custom-effect",
         "effect": "boss-emergence",
-        "duration": 4200,
+        "duration": 6500,
         "scene": "boss_arena"
       },
       {
@@ -10167,25 +10232,7 @@ window.STORY_DATA = {
       },
       {
         "speaker": "student_card",
-        "text": "흡수 완료함.",
-        "scene": "boss_arena_purified",
-        "pose": "default",
-        "statusLabel": "보스 처치",
-        "left": "student_card",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "student_card",
         "text": "팀플의 별 확인함.",
-        "scene": "boss_arena_purified",
-        "pose": "default",
-        "statusLabel": "보스 처치",
-        "left": "student_card",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "student_card",
-        "text": "흡수 완료함.",
         "scene": "boss_arena_purified",
         "pose": "default",
         "statusLabel": "보스 처치",
@@ -10299,14 +10346,6 @@ window.STORY_DATA = {
         "pose": "default",
         "statusLabel": "보스 처치",
         "left": "student_card",
-        "right": "hobanwoo"
-      },
-      {
-        "speaker": "hobanwoo",
-        "text": "……오늘따라 맞다는 말을 되게 잘하네.",
-        "scene": "boss_arena_purified",
-        "pose": "uneasy",
-        "statusLabel": "보스 처치",
         "right": "hobanwoo"
       },
       {
@@ -10757,15 +10796,15 @@ window.STORY_DATA = {
     },
     {
       "title": "발표",
-      "index": 313
+      "index": 310
     },
     {
       "title": "시험",
-      "index": 325
+      "index": 332
     },
     {
       "title": "챕터 종료",
-      "index": 341
+      "index": 339
     }
   ],
   "sectionIndexes": [
@@ -10835,15 +10874,15 @@ window.STORY_DATA = {
     },
     {
       "title": "발표",
-      "index": 313
+      "index": 310
     },
     {
       "title": "시험",
-      "index": 325
+      "index": 332
     },
     {
       "title": "챕터 종료",
-      "index": 341
+      "index": 339
     }
   ]
 };
@@ -12028,37 +12067,56 @@ window.STORY_CUSTOM_EFFECTS['combat-transition'] = ({ layer, item }) => {
 
 window.STORY_CUSTOM_EFFECTS['battle-summary'] = ({ layer, item }) => {
   if (String(item.footer || '') === '오염 파편 출현') {
-    item.duration = Math.max(Number(item.duration || 0), 5200);
+    item.duration = Math.max(Number(item.duration || 0), 6200);
+    const monsters = [
+      ['팀플 잠수함', '/assets/chapter2/waves/enemies/no_reply.png'],
+      ['보고서 페이지 드론', '/assets/chapter2/waves/enemies/page_compressor.png'],
+      ['발표 레이저 포인터', '/assets/chapter2/waves/enemies/laser_pointer.png'],
+      ['참고문헌 벌레', '/assets/chapter2/waves/enemies/reference_bug.png'],
+      ['족보 유령', '/assets/chapter2/waves/enemies/ghost_exam.png'],
+      ['시험기간 카운트다운', '/assets/chapter2/waves/enemies/countdown_bot.png'],
+      ['밤샘 에너지 흡수체', '/assets/chapter2/waves/enemies/energy_absorber.png']
+    ];
     return c2MakeLayer(layer, `
-      <div class="c2-corruption-birth-gallery">
-        <div class="c2-corruption-birth-image is-ghost"><img src="assets/chapter2/illustrations/corruption_birth_ghost.png" alt="족보 유령 탄생" /></div>
-        <div class="c2-corruption-birth-image is-highlighter"><img src="assets/chapter2/illustrations/corruption_birth_highlighter.png" alt="오답 유도 형광펜 탄생" /></div>
-        <div class="c2-corruption-birth-image is-energy"><img src="assets/chapter2/illustrations/corruption_birth_energy_absorber.png" alt="밤샘 에너지 흡수체 탄생" /></div>
-        <div class="c2-corruption-birth-image is-bubble"><img src="assets/chapter2/illustrations/corruption_birth_silent_bubble.png" alt="무응답 말풍선 탄생" /></div>
-        <div class="c2-corruption-birth-flash"></div>
+      <div class="c2-monster-raid">
+        <div class="c2-monster-raid-bg"></div>
+        <div class="c2-monster-raid-vignette"></div>
+        <div class="c2-monster-raid-corruption"><i></i><i></i><i></i></div>
+        <div class="c2-monster-raid-ring ring-a"></div>
+        <div class="c2-monster-raid-ring ring-b"></div>
+        <div class="c2-monster-raid-flash"></div>
+        <div class="c2-monster-raid-particles">${Array.from({length:42},(_,i)=>`<i style="--i:${i};--a:${(i*137.5)%360}deg;--d:${(i%9)*.035}s"></i>`).join('')}</div>
+        <div class="c2-monster-raid-grid">
+          ${monsters.map((monster,index)=>`<figure style="--i:${index}"><div><img src="${monster[1]}" alt="${c2Escape(monster[0])}"></div><figcaption>${c2Escape(monster[0])}</figcaption></figure>`).join('')}
+        </div>
+        <div class="c2-monster-raid-title"><small>CORRUPTION DETECTED</small><strong>오염 파편 출현</strong></div>
         <style>
-          .c2-corruption-birth-gallery{position:absolute;inset:0;overflow:hidden;background:#030107}
-          .c2-corruption-birth-image{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transform:scale(1.08);filter:brightness(.4) blur(8px)}
-          .c2-corruption-birth-image img{width:100%;height:100%;object-fit:cover;display:block}
-          .c2-corruption-birth-image.is-ghost{animation:c2CorruptionBirthShot 1.55s 0s ease both}
-          .c2-corruption-birth-image.is-highlighter{animation:c2CorruptionBirthShot 1.55s 1.2s ease both}
-          .c2-corruption-birth-image.is-energy{animation:c2CorruptionBirthShot 1.55s 2.4s ease both}
-          .c2-corruption-birth-image.is-bubble{animation:c2CorruptionBirthFinal 2.0s 3.6s ease both}
-          .c2-corruption-birth-flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center,rgba(188,105,255,.62),rgba(34,4,61,.2) 38%,transparent 66%);mix-blend-mode:screen;opacity:0;animation:c2CorruptionBirthFlash 1.2s ease-in-out 4}
-          @keyframes c2CorruptionBirthShot{
-            0%{opacity:0;transform:scale(1.11);filter:brightness(.22) blur(12px)}
-            18%{opacity:1;filter:brightness(.82) blur(2px)}
-            58%{opacity:1;transform:scale(1.02);filter:brightness(1) blur(0)}
-            82%{opacity:1;filter:brightness(.78) blur(1px)}
-            100%{opacity:0;transform:scale(.98);filter:brightness(.28) blur(8px)}
-          }
-          @keyframes c2CorruptionBirthFinal{
-            0%{opacity:0;transform:scale(1.1);filter:brightness(.25) blur(12px)}
-            22%{opacity:1;filter:brightness(.86) blur(2px)}
-            62%{opacity:1;transform:scale(1.01);filter:brightness(1) blur(0)}
-            100%{opacity:1;transform:scale(1);filter:brightness(.88) blur(0)}
-          }
-          @keyframes c2CorruptionBirthFlash{0%,100%{opacity:0}45%{opacity:.28}55%{opacity:.52}}
+          .c2-monster-raid{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#030107;animation:c2MonsterRaidShake 6.2s steps(1,end) both}
+          .c2-monster-raid-bg{position:absolute;inset:-4%;background:url('assets/chapter2/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.30) saturate(.64) contrast(1.08);transform:scale(1.06);animation:c2MonsterRaidBg 6.2s ease both}
+          .c2-monster-raid-vignette{position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,rgba(183,121,255,.06) 0 15%,rgba(25,4,39,.34) 42%,rgba(0,0,0,.82) 100%),linear-gradient(180deg,rgba(0,0,0,.08),rgba(16,0,28,.52));z-index:1}
+          .c2-monster-raid-corruption{position:absolute;z-index:2;left:50%;top:48%;width:min(46vw,520px);aspect-ratio:1;transform:translate(-50%,-50%) scale(.16);filter:drop-shadow(0 0 46px rgba(183,121,255,.9));animation:c2MonsterRaidCore 6.2s cubic-bezier(.16,.86,.2,1) both}
+          .c2-monster-raid-corruption>i{position:absolute;border-radius:44% 56% 62% 38%/54% 46% 54% 46%;background:radial-gradient(circle at 38% 32%,#efe2ff 0 5%,#b779ff 14%,#7134ad 42%,#180620 72%);box-shadow:inset 0 0 36px rgba(255,255,255,.12),0 0 38px rgba(183,121,255,.58);mix-blend-mode:screen;animation:c2MonsterRaidBlob .72s ease-in-out infinite alternate}
+          .c2-monster-raid-corruption>i:nth-child(1){inset:18%}.c2-monster-raid-corruption>i:nth-child(2){inset:24% 12% 14% 28%;animation-delay:-.23s;transform:rotate(54deg)}.c2-monster-raid-corruption>i:nth-child(3){inset:12% 28% 28% 14%;animation-delay:-.41s;transform:rotate(-36deg)}
+          .c2-monster-raid-ring{position:absolute;z-index:3;left:50%;top:48%;width:min(44vw,510px);aspect-ratio:1;border-radius:50%;border:2px solid rgba(226,199,255,.58);opacity:0;transform:translate(-50%,-50%) scale(.1);box-shadow:0 0 36px rgba(183,121,255,.44)}
+          .c2-monster-raid-ring.ring-a{animation:c2MonsterRaidRingA 6.2s ease-out both}.c2-monster-raid-ring.ring-b{animation:c2MonsterRaidRingB 6.2s ease-out both}
+          .c2-monster-raid-flash{position:absolute;z-index:8;inset:0;opacity:0;background:radial-gradient(circle at 50% 48%,#fff 0 4%,#e8d2ff 10%,rgba(183,121,255,.64) 25%,rgba(63,18,97,.18) 48%,transparent 72%);mix-blend-mode:screen;animation:c2MonsterRaidFlash 6.2s ease-out both}
+          .c2-monster-raid-particles{position:absolute;z-index:4;inset:0}.c2-monster-raid-particles i{position:absolute;left:50%;top:48%;width:6px;height:6px;border-radius:50%;background:#f4e8ff;box-shadow:0 0 10px #b779ff,0 0 22px rgba(183,121,255,.72);opacity:0;transform:rotate(var(--a)) translateX(8px);animation:c2MonsterRaidParticle 2.25s calc(1.2s + var(--d)) ease-out both}
+          .c2-monster-raid-grid{position:absolute;z-index:10;inset:10% 4% 15%;display:flex;align-items:center;justify-content:center;gap:clamp(6px,1.3vw,20px);opacity:1}
+          .c2-monster-raid-grid figure{position:relative;width:min(12.7vw,170px);height:68%;margin:0;display:grid;grid-template-rows:1fr auto;align-items:end;justify-items:center;gap:8px;opacity:0;transform:translateY(34px) scale(.56);filter:brightness(.3) blur(8px);animation:c2MonsterRaidSpawn .72s calc(2.25s + var(--i)*.11s) cubic-bezier(.18,.9,.2,1) forwards}
+          .c2-monster-raid-grid figure>div{width:100%;height:100%;display:grid;place-items:center}.c2-monster-raid-grid img{width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 0 13px rgba(183,121,255,.9)) drop-shadow(0 18px 24px rgba(0,0,0,.7));animation:c2MonsterRaidMonsterFloat 1.45s ease-in-out infinite alternate}
+          .c2-monster-raid-grid figcaption{min-height:2.4em;color:#f2eaff;font-size:clamp(10px,1.05vw,15px);font-weight:900;line-height:1.2;text-align:center;text-shadow:0 2px 5px #000,0 0 14px rgba(183,121,255,.72)}
+          .c2-monster-raid-title{position:absolute;z-index:14;left:50%;bottom:5%;transform:translate(-50%,18px);width:min(90vw,900px);text-align:center;opacity:0;animation:c2MonsterRaidTitle 6.2s ease both}.c2-monster-raid-title small{display:block;color:#cfa7ff;font-size:clamp(10px,1vw,14px);font-weight:1000;letter-spacing:.42em}.c2-monster-raid-title strong{display:block;margin-top:6px;color:#f5edff;font-size:clamp(30px,4.5vw,64px);font-weight:1000;letter-spacing:.08em;text-shadow:0 4px 18px #000,0 0 18px rgba(255,255,255,.3),0 0 44px rgba(183,121,255,.72)}
+          @keyframes c2MonsterRaidBg{0%{filter:brightness(.08) saturate(.45) blur(10px);transform:scale(1.12)}40%{filter:brightness(.2) saturate(.6) blur(4px)}100%{filter:brightness(.34) saturate(.72) blur(0);transform:scale(1.03)}}
+          @keyframes c2MonsterRaidCore{0%{opacity:0;transform:translate(-50%,-50%) scale(.08)}18%{opacity:1;transform:translate(-50%,-50%) scale(.44)}32%{transform:translate(-50%,-50%) scale(1.08)}43%{opacity:1;transform:translate(-50%,-50%) scale(.2);filter:brightness(2.4) drop-shadow(0 0 60px rgba(183,121,255,1))}52%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+          @keyframes c2MonsterRaidBlob{from{border-radius:44% 56% 62% 38%/54% 46% 54% 46%;filter:brightness(.92)}to{border-radius:63% 37% 42% 58%/38% 62% 43% 57%;filter:brightness(1.25)}}
+          @keyframes c2MonsterRaidRingA{0%,18%{opacity:0;transform:translate(-50%,-50%) scale(.12)}26%{opacity:.9}48%{opacity:.22;transform:translate(-50%,-50%) scale(1.65)}55%,100%{opacity:0;transform:translate(-50%,-50%) scale(2.1)}}
+          @keyframes c2MonsterRaidRingB{0%,24%{opacity:0;transform:translate(-50%,-50%) scale(.1)}34%{opacity:.72}52%{opacity:.18;transform:translate(-50%,-50%) scale(2)}60%,100%{opacity:0;transform:translate(-50%,-50%) scale(2.5)}}
+          @keyframes c2MonsterRaidFlash{0%,35%{opacity:0}40%{opacity:.95}43%{opacity:.18}48%,100%{opacity:0}}
+          @keyframes c2MonsterRaidParticle{0%{opacity:0;transform:rotate(var(--a)) translateX(8px) scale(.2)}15%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateX(min(42vw,480px)) scale(1.2)}}
+          @keyframes c2MonsterRaidSpawn{0%{opacity:0;transform:translateY(34px) scale(.56);filter:brightness(.25) blur(8px)}42%{opacity:1;transform:translateY(-6px) scale(1.08);filter:brightness(1.55) blur(0)}100%{opacity:1;transform:translateY(0) scale(1);filter:brightness(1) blur(0)}}
+          @keyframes c2MonsterRaidMonsterFloat{from{transform:translateY(-4px) rotate(-1deg)}to{transform:translateY(5px) rotate(1deg)}}
+          @keyframes c2MonsterRaidTitle{0%,56%{opacity:0;transform:translate(-50%,18px) scale(.9)}68%{opacity:1;transform:translate(-50%,-2px) scale(1.03)}78%,94%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-8px) scale(1)}}
+          @keyframes c2MonsterRaidShake{0%,37%,50%,100%{transform:translate3d(0,0,0)}38%{transform:translate3d(-9px,4px,0)}39%{transform:translate3d(10px,-5px,0)}40%{transform:translate3d(-8px,-4px,0)}41%{transform:translate3d(9px,4px,0)}42%{transform:translate3d(-6px,3px,0)}43%{transform:translate3d(6px,-3px,0)}44%{transform:translate3d(-4px,-2px,0)}45%{transform:translate3d(4px,2px,0)}}
         </style>
       </div>`);
   }
@@ -12389,6 +12447,11 @@ window.STORY_CUSTOM_EFFECTS['boss-emergence'] = ({ layer }) => c2MakeLayer(layer
     <div class="c2-boss-emergence-runes">${Array.from({length:12}, (_,i)=>`<span style="--i:${i}"></span>`).join('')}</div>
     <div class="c2-boss-emergence-dust">${Array.from({length:28}, (_,i)=>`<span style="--i:${i}"></span>`).join('')}</div>
     <div class="c2-boss-emergence-boss-wrap"><img src="assets/chapter2/illustrations/ill_boss_phase1.png" alt="책임의 블랙홀 무임승차자" class="c2-boss-emergence-boss" /></div>
+    <div class="c2-boss-emergence-title">
+      <small>CHAPTER 2 · BOSS</small>
+      <strong>책임의 블랙홀</strong>
+      <b>팀플 블랙홀 무임승차자</b>
+    </div>
     <style>
       .c2-boss-emergence-blackhole{position:absolute;inset:0;overflow:hidden;background:#020208}
       .c2-boss-emergence-bg{position:absolute;inset:-6%;background:url('assets/chapter2/backgrounds/bg_ch2_blackhole_corrupt.png') center/cover no-repeat;filter:brightness(.18) saturate(.78) blur(14px);transform:scale(1.18);animation:c2BossEmergenceBg 4.2s ease both}
@@ -12405,7 +12468,10 @@ window.STORY_CUSTOM_EFFECTS['boss-emergence'] = ({ layer }) => c2MakeLayer(layer
       .c2-boss-emergence-energy-beams span{position:absolute;left:50%;top:50%;width:4px;height:min(28vh,240px);transform-origin:50% 0%;border-radius:999px;background:linear-gradient(180deg,rgba(255,242,210,.95),rgba(182,120,255,.82) 40%,rgba(0,0,0,0));opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(-6%) scaleY(.2);filter:blur(.2px);animation:c2BossEmergenceBeam 4.2s ease-out both}
       .c2-boss-emergence-runes span{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border:2px solid rgba(241,234,255,.72);border-radius:3px;opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-28vh) rotate(45deg) scale(.3);box-shadow:0 0 14px rgba(189,125,255,.34);animation:c2BossEmergenceRune 4.2s ease-out calc(var(--i)*.03s) both}
       .c2-boss-emergence-dust span{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:radial-gradient(circle,rgba(255,233,184,.98),rgba(201,128,255,.24) 60%,rgba(0,0,0,0) 72%);opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*12.857deg)) translateY(0) scale(.18);animation:c2BossEmergenceDust 4s ease-out calc(var(--i)*.04s) both}
-      .c2-boss-emergence-title{position:absolute;left:50%;top:9%;transform:translateX(-50%) scale(.82);font-size:clamp(20px,2.8vw,42px);font-weight:900;letter-spacing:.32em;color:rgba(243,239,255,.88);text-shadow:0 0 22px rgba(170,121,255,.55),0 0 48px rgba(34,10,66,.72);opacity:0;animation:c2BossEmergenceTitle 4.2s ease both}
+      .c2-boss-emergence-title{position:absolute;z-index:20;left:50%;bottom:5.5%;transform:translate(-50%,22px) scale(.92);width:min(92vw,980px);display:grid;justify-items:center;gap:4px;text-align:center;opacity:0;color:#fff;text-shadow:0 4px 26px #000,0 0 24px rgba(183,121,255,.62);animation:c2BossEmergenceTitle 6.5s ease both}
+      .c2-boss-emergence-title small{font-size:clamp(10px,1vw,15px);letter-spacing:.44em;color:#d7b5ff;font-weight:1000}
+      .c2-boss-emergence-title strong{font-size:clamp(18px,2vw,30px);letter-spacing:.14em;color:#efe5ff;font-weight:900}
+      .c2-boss-emergence-title b{font-size:clamp(38px,5.4vw,78px);line-height:1.03;font-weight:1000;letter-spacing:.04em;background:linear-gradient(180deg,#fff 0%,#edd6ff 38%,#b779ff 72%,#fff0b0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 12px rgba(255,255,255,.22)) drop-shadow(0 0 28px rgba(183,121,255,.62))}
       .c2-boss-emergence-boss-wrap{position:absolute;left:50%;top:52%;width:min(58vw,540px);transform:translate(-50%,-50%) scale(.12);opacity:0;filter:drop-shadow(0 0 30px rgba(76,24,150,.78)) drop-shadow(0 12px 34px rgba(0,0,0,.62));animation:c2BossEmergenceBoss 4.2s cubic-bezier(.2,.82,.2,1) both}
       .c2-boss-emergence-boss{display:block;width:100%;height:auto;object-fit:contain}
       .c2-boss-emergence-caption{position:absolute;left:50%;bottom:7.2%;transform:translateX(-50%);width:min(82vw,900px);padding:.78rem 1.18rem;border-radius:999px;background:rgba(6,8,18,.68);border:1px solid rgba(255,255,255,.18);color:#f4f6fb;font-size:clamp(14px,1.45vw,20px);letter-spacing:.04em;text-align:center;opacity:0;animation:c2BossEmergenceCaption 4.2s ease both}
@@ -12421,7 +12487,7 @@ window.STORY_CUSTOM_EFFECTS['boss-emergence'] = ({ layer }) => c2MakeLayer(layer
       @keyframes c2BossEmergenceBeam{0%,18%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(0) scaleY(.1)}30%{opacity:.94}100%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(-18%) scaleY(1.16)}}
       @keyframes c2BossEmergenceRune{0%,20%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-12vh) rotate(45deg) scale(.16)}42%{opacity:.92}100%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-38vh) rotate(200deg) scale(1.05)}}
       @keyframes c2BossEmergenceDust{0%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*12.857deg)) translateY(0) scale(.16)}22%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*12.857deg)) translateY(calc(-240px - var(--i)*5px)) scale(1)}}
-      @keyframes c2BossEmergenceTitle{0%,28%{opacity:0;transform:translateX(-50%) translateY(18px) scale(.78)}44%{opacity:1}100%{opacity:.9;transform:translateX(-50%) translateY(0) scale(1)}}
+      @keyframes c2BossEmergenceTitle{0%,68%{opacity:0;transform:translate(-50%,22px) scale(.9);filter:blur(8px)}74%{opacity:1;transform:translate(-50%,-2px) scale(1.035);filter:blur(0)}79%,98%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)}100%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)}}
       @keyframes c2BossEmergenceBoss{0%{opacity:0;transform:translate(-50%,-42%) scale(.08) rotate(-10deg)}24%{opacity:.25}52%{opacity:.92}70%{transform:translate(-50%,-51%) scale(1.16) rotate(2deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}}
       @keyframes c2BossEmergenceCaption{0%,62%{opacity:0;transform:translateX(-50%) translateY(16px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
     </style>
@@ -13474,7 +13540,7 @@ window.STORY_CUSTOM_EFFECTS['word-crash'] = ({ layer, item }) => {
   // Word 오류는 스토리/게임 스테이지 크기에 묶이지 않고 브라우저 전체 화면을 덮습니다.
   const host = document.createElement('div');
   host.className = 'c2-word-crash-global-host';
-  host.style.cssText = 'position:fixed;inset:0;z-index:2147482000;width:100vw;height:100vh;overflow:hidden;background:#d7d9dd;pointer-events:none';
+  host.style.cssText = 'position:fixed;inset:0;z-index:2147482000;width:100vw;height:100dvh;max-width:none;max-height:none;overflow:hidden;background:#d7d9dd;pointer-events:none;transform:none';
   host.innerHTML = `
     <div class="c2-word-crash-root">
       <style>
@@ -13538,6 +13604,28 @@ window.STORY_CUSTOM_EFFECTS['word-crash'] = ({ layer, item }) => {
       root.dataset.errorCount = String(index + 1);
     }
   };
+  if (item.persistentReplay) {
+    // 대사와 함께 유지되는 두 번째 마운트에서는 오류 연출을 처음부터 재생하지 않습니다.
+    // 최종 실패 화면을 즉시 복원해 전체화면 상태만 유지합니다.
+    for (let index = 0; index < 8; index += 1) {
+      if (!errorLayer) break;
+      const box = document.createElement('div');
+      box.className = 'c2-word-error-box is-visible';
+      const pos = positions[index % positions.length];
+      box.style.left = pos.left;
+      box.style.top = pos.top;
+      box.style.zIndex = String(20 + index);
+      box.style.opacity = '1';
+      box.style.transform = 'translate(-50%,-50%) scale(1) rotate(0deg)';
+      box.style.animation = 'none';
+      box.innerHTML = `<header><span>Microsoft Word</span><b>×</b></header><div><i>!</i><p>${c2Escape(errorMessages[index % errorMessages.length])}</p></div><footer><button>확인</button></footer>`;
+      errorLayer.appendChild(box);
+    }
+    root?.classList.add('is-failed');
+    root?.classList.remove('is-shaking');
+    root?.style.setProperty('--crash-blur', '0px');
+    return () => host.remove();
+  }
   [900,1400,1850,2250,2620,2970,3300,3620].forEach((delay,index)=>timeouts.push(setTimeout(()=>spawnError(index),delay)));
   timeouts.push(setTimeout(()=>root?.classList.add('is-failed'),4050));
   return () => { timeouts.forEach(clearTimeout); host.remove(); };
@@ -13670,69 +13758,50 @@ window.STORY_CUSTOM_EFFECTS['chapter-ending-credits'] = ({ item }) => {
 };
 
 window.STORY_CUSTOM_EFFECTS['corruption-fire-transition'] = ({ layer, item }) => {
-  const host = document.createElement('div');
-  host.className = 'c2-corruption-fire-global-host';
-  host.style.cssText = 'position:fixed;inset:0;z-index:2147482500;width:100vw;height:100vh;overflow:hidden;background:#000;pointer-events:none';
-
-  const flames = Array.from({ length: 16 }, (_, index) => {
-    const side = index % 4;
-    const x = side === 0 ? `${8 + index * 5}%` : side === 1 ? `${78 - index * 2}%` : side === 2 ? `${12 + index * 4}%` : `${74 - index * 3}%`;
-    const y = side === 0 ? `${8 + index * 4}%` : side === 1 ? `${12 + index * 4}%` : side === 2 ? `${64 + (index % 4) * 5}%` : `${20 + (index % 6) * 9}%`;
-    const size = 120 + (index % 5) * 36;
-    const delay = (index % 6) * 120;
-    const rotate = -32 + index * 9;
-    return `<span class="c2-corruption-flame" style="left:${x};top:${y};--flame-size:${size}px;--flame-delay:${delay}ms;--flame-rotate:${rotate}deg"></span>`;
-  }).join('');
-
-  host.innerHTML = `
-    <div class="c2-corruption-fire-root">
+  item.duration = Math.max(5200, Number(item.duration || 0));
+  const cleanup = c2MakeLayer(layer, `
+    <div class="c2-corruption-rupture">
+      <div class="c2-corruption-rupture-bg"></div>
+      <div class="c2-corruption-rupture-dim"></div>
+      <div class="c2-corruption-rupture-scan"></div>
+      <div class="c2-corruption-rupture-cracks">${Array.from({length:18},(_,i)=>`<i style="--i:${i};--a:${(i*20)+7}deg;--l:${24+(i%6)*7}%;--d:${(i%7)*.055}s"></i>`).join('')}</div>
+      <div class="c2-corruption-rupture-core"><i></i><i></i><i></i><b></b></div>
+      <div class="c2-corruption-rupture-orbit orbit-a"></div>
+      <div class="c2-corruption-rupture-orbit orbit-b"></div>
+      <div class="c2-corruption-rupture-pull">${Array.from({length:48},(_,i)=>`<i style="--a:${(i*137.5)%360}deg;--r:${180+(i%9)*28}px;--d:${(i%11)*.04}s"></i>`).join('')}</div>
+      <div class="c2-corruption-rupture-flash"></div>
+      <div class="c2-corruption-rupture-copy"><small>SYSTEM ANOMALY</small><strong>오염 반응 급상승</strong></div>
       <style>
-        .c2-corruption-fire-root{position:absolute;inset:0;overflow:hidden;background:#000}
-        .c2-corruption-fire-root::before{content:'';position:absolute;inset:-10%;background:radial-gradient(circle at 50% 58%,rgba(117,37,159,.08),transparent 38%),radial-gradient(circle at 50% 50%,rgba(26,0,54,.24),transparent 62%);opacity:0;transform:scale(.96);transition:opacity .8s ease,transform 1s ease}
-        .c2-corruption-fire-root::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 52%,rgba(196,102,255,.22),rgba(71,18,100,.18) 25%,rgba(20,0,35,.58) 56%,rgba(0,0,0,.96) 86%);mix-blend-mode:screen;opacity:0;transition:opacity .9s ease}
-        .c2-corruption-fire-root.is-burning::before{opacity:.8;transform:scale(1.03)}
-        .c2-corruption-fire-root.is-purple::after{opacity:1}
-        .c2-corruption-backfill{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(121,36,198,.08),rgba(44,0,58,.24) 42%,rgba(0,0,0,0) 75%);opacity:0;transition:opacity .9s ease}
-        .c2-corruption-fire-root.is-purple .c2-corruption-backfill{opacity:1}
-        .c2-corruption-fire-field{position:absolute;inset:0;filter:blur(1px)}
-        .c2-corruption-flame{position:absolute;width:var(--flame-size);height:calc(var(--flame-size) * 1.6);margin-left:calc(var(--flame-size) * -.5);margin-top:calc(var(--flame-size) * -.8);border-radius:50% 50% 42% 42%;background:
-          radial-gradient(circle at 50% 78%,rgba(255,186,76,.94),rgba(255,128,51,.72) 28%,rgba(179,41,134,.58) 52%,rgba(70,0,89,.22) 72%,rgba(0,0,0,0) 82%),
-          radial-gradient(circle at 50% 22%,rgba(255,255,255,.3),rgba(255,255,255,0) 42%);
-          opacity:0;transform:scale(.42) rotate(var(--flame-rotate)) translateY(26px);filter:blur(8px) saturate(1.16);mix-blend-mode:screen;animation:none}
-        .c2-corruption-fire-root.is-burning .c2-corruption-flame{animation:c2CorruptionFlameRise 1.38s ease-in-out infinite;animation-delay:var(--flame-delay);opacity:.96}
-        .c2-corruption-fire-root.is-purple .c2-corruption-flame{filter:blur(10px) hue-rotate(18deg) saturate(1.4)}
-        .c2-corruption-embers{position:absolute;inset:0;opacity:0;transition:opacity .5s ease}
-        .c2-corruption-fire-root.is-burning .c2-corruption-embers{opacity:1}
-        .c2-corruption-ember{position:absolute;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle,#ffd97d 0,rgba(255,129,58,.9) 48%,rgba(118,15,108,0) 100%);box-shadow:0 0 18px rgba(255,145,64,.45);animation:c2CorruptionEmberFloat 2.1s linear infinite}
-        .c2-corruption-wave{position:absolute;left:50%;top:50%;width:18vmin;height:18vmin;border-radius:50%;border:2px solid rgba(240,205,255,.85);box-shadow:0 0 0 3px rgba(204,120,255,.22),0 0 80px rgba(223,176,255,.42);transform:translate(-50%,-50%) scale(.08);opacity:0}
-        .c2-corruption-fire-root.is-shockwave .c2-corruption-wave{animation:c2CorruptionWaveBurst .82s cubic-bezier(.16,.78,.18,1) forwards}
-        .c2-corruption-fire-root.is-clearing::before,.c2-corruption-fire-root.is-clearing::after,.c2-corruption-fire-root.is-clearing .c2-corruption-backfill,.c2-corruption-fire-root.is-clearing .c2-corruption-embers,.c2-corruption-fire-root.is-clearing .c2-corruption-flame{opacity:0!important;transition:opacity .36s ease!important}
-        .c2-corruption-fire-root.is-fading{animation:c2CorruptionFinalFade .44s ease forwards}
-        @keyframes c2CorruptionFlameRise{0%{transform:scale(.4) rotate(calc(var(--flame-rotate) - 6deg)) translateY(30px);opacity:0}22%{opacity:.92}50%{transform:scale(1.02) rotate(var(--flame-rotate)) translateY(-4px)}78%{transform:scale(.96) rotate(calc(var(--flame-rotate) + 4deg)) translateY(-18px)}100%{transform:scale(.5) rotate(calc(var(--flame-rotate) + 8deg)) translateY(-36px);opacity:0}}
-        @keyframes c2CorruptionEmberFloat{0%{transform:translate3d(0,22px,0) scale(.5);opacity:0}18%{opacity:.95}70%{opacity:.7}100%{transform:translate3d(calc(var(--ember-drift, 0px)), -130px, 0) scale(1.12);opacity:0}}
-        @keyframes c2CorruptionWaveBurst{0%{transform:translate(-50%,-50%) scale(.08);opacity:0}10%{opacity:1}72%{opacity:.86}100%{transform:translate(-50%,-50%) scale(16);opacity:0}}
-        @keyframes c2CorruptionFinalFade{from{opacity:1}to{opacity:0}}
+        .c2-corruption-rupture{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#000;animation:c2CorruptionRuptureShake 5.2s steps(1,end) both}
+        .c2-corruption-rupture-bg{position:absolute;inset:-4%;background:url('assets/chapter2/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.56) saturate(.78);transform:scale(1.04);animation:c2CorruptionRuptureBg 5.2s ease both}
+        .c2-corruption-rupture-dim{position:absolute;z-index:1;inset:0;background:radial-gradient(circle at 50% 48%,rgba(183,121,255,.03),rgba(42,5,68,.18) 38%,rgba(0,0,0,.82) 100%);animation:c2CorruptionRuptureDim 5.2s ease both}
+        .c2-corruption-rupture-scan{position:absolute;z-index:2;inset:0;opacity:0;background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(183,121,255,.08) 4px,transparent 5px);mix-blend-mode:screen;animation:c2CorruptionRuptureScan 5.2s steps(2,end) both}
+        .c2-corruption-rupture-cracks{position:absolute;z-index:5;left:50%;top:48%;width:min(80vw,1000px);height:min(74vh,760px);transform:translate(-50%,-50%)}
+        .c2-corruption-rupture-cracks i{position:absolute;left:50%;top:50%;width:var(--l);height:3px;transform-origin:0 50%;transform:rotate(var(--a)) scaleX(0);background:linear-gradient(90deg,#fff,rgba(183,121,255,.92) 12%,rgba(103,42,158,.64) 56%,transparent);box-shadow:0 0 7px #fff,0 0 18px rgba(183,121,255,.88);opacity:0;animation:c2CorruptionCrackGrow 1.2s calc(1.05s + var(--d)) cubic-bezier(.16,.86,.2,1) forwards}
+        .c2-corruption-rupture-core{position:absolute;z-index:7;left:50%;top:48%;width:min(34vw,390px);aspect-ratio:1;transform:translate(-50%,-50%) scale(.06);opacity:0;filter:drop-shadow(0 0 32px rgba(183,121,255,.9));animation:c2CorruptionRuptureCore 5.2s cubic-bezier(.16,.86,.2,1) both}
+        .c2-corruption-rupture-core>i{position:absolute;border-radius:45% 55% 63% 37%/56% 45% 55% 44%;background:radial-gradient(circle at 36% 30%,#fff 0 4%,#d9b6ff 10%,#b779ff 22%,#6d2f9f 48%,#16051e 74%);mix-blend-mode:screen;box-shadow:inset 0 0 38px rgba(255,255,255,.12),0 0 38px rgba(183,121,255,.55);animation:c2CorruptionRuptureBlob .64s ease-in-out infinite alternate}
+        .c2-corruption-rupture-core>i:nth-child(1){inset:14%}.c2-corruption-rupture-core>i:nth-child(2){inset:24% 12% 18% 30%;animation-delay:-.21s;transform:rotate(55deg)}.c2-corruption-rupture-core>i:nth-child(3){inset:13% 29% 29% 15%;animation-delay:-.39s;transform:rotate(-42deg)}
+        .c2-corruption-rupture-core>b{position:absolute;left:50%;top:50%;width:28%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:#f8efff;box-shadow:0 0 20px #fff,0 0 52px #b779ff,0 0 98px rgba(109,47,159,.82);animation:c2CorruptionRuptureCorePulse .46s ease-in-out infinite alternate}
+        .c2-corruption-rupture-orbit{position:absolute;z-index:6;left:50%;top:48%;border-radius:50%;border:2px solid rgba(220,188,255,.5);box-shadow:0 0 18px rgba(183,121,255,.35);opacity:0}.c2-corruption-rupture-orbit.orbit-a{width:min(42vw,510px);aspect-ratio:1;animation:c2CorruptionOrbitA 5.2s linear both}.c2-corruption-rupture-orbit.orbit-b{width:min(57vw,680px);aspect-ratio:1;border-style:dashed;animation:c2CorruptionOrbitB 5.2s linear both}
+        .c2-corruption-rupture-pull{position:absolute;z-index:4;inset:0}.c2-corruption-rupture-pull i{position:absolute;left:50%;top:48%;width:5px;height:5px;border-radius:50%;background:#ead9ff;box-shadow:0 0 9px #b779ff;opacity:0;transform:rotate(var(--a)) translateX(var(--r));animation:c2CorruptionPull 1.75s calc(1.6s + var(--d)) ease-in forwards}
+        .c2-corruption-rupture-flash{position:absolute;z-index:20;inset:0;background:radial-gradient(circle at 50% 48%,#fff 0 7%,#e7c8ff 15%,rgba(183,121,255,.72) 31%,rgba(67,18,101,.12) 58%,transparent 76%);opacity:0;mix-blend-mode:screen;animation:c2CorruptionRuptureFlash 5.2s ease-out both}
+        .c2-corruption-rupture-copy{position:absolute;z-index:24;left:50%;bottom:7%;transform:translate(-50%,16px);width:min(88vw,800px);text-align:center;opacity:0;animation:c2CorruptionRuptureCopy 5.2s ease both}.c2-corruption-rupture-copy small{display:block;color:#cba6ff;font-size:clamp(10px,1vw,14px);font-weight:1000;letter-spacing:.42em}.c2-corruption-rupture-copy strong{display:block;margin-top:6px;color:#f0e4ff;font-size:clamp(28px,4vw,58px);font-weight:1000;letter-spacing:.06em;text-shadow:0 3px 12px #000,0 0 24px rgba(183,121,255,.86)}
+        @keyframes c2CorruptionRuptureBg{0%{filter:brightness(.7) saturate(.8);transform:scale(1.02)}25%{filter:brightness(.46) saturate(.74)}58%{filter:brightness(.2) saturate(.68);transform:scale(1.08)}100%{filter:brightness(.08) saturate(.55);transform:scale(1.13)}}
+        @keyframes c2CorruptionRuptureDim{0%{opacity:.12}42%{opacity:.64}100%{opacity:.94}}
+        @keyframes c2CorruptionRuptureScan{0%,18%{opacity:0}24%,72%{opacity:.72}76%,100%{opacity:.08}}
+        @keyframes c2CorruptionCrackGrow{0%{opacity:0;transform:rotate(var(--a)) scaleX(0)}12%{opacity:1}100%{opacity:.74;transform:rotate(var(--a)) scaleX(1)}}
+        @keyframes c2CorruptionRuptureCore{0%,22%{opacity:0;transform:translate(-50%,-50%) scale(.05)}34%{opacity:1;transform:translate(-50%,-50%) scale(.44)}56%{transform:translate(-50%,-50%) scale(1.05)}68%{opacity:1;transform:translate(-50%,-50%) scale(1.18)}73%{opacity:1;transform:translate(-50%,-50%) scale(.12);filter:brightness(2.8) drop-shadow(0 0 72px #b779ff)}80%,100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
+        @keyframes c2CorruptionRuptureBlob{from{border-radius:45% 55% 63% 37%/56% 45% 55% 44%;filter:brightness(.9)}to{border-radius:62% 38% 40% 60%/39% 61% 42% 58%;filter:brightness(1.28)}}
+        @keyframes c2CorruptionRuptureCorePulse{from{transform:translate(-50%,-50%) scale(.82);opacity:.72}to{transform:translate(-50%,-50%) scale(1.2);opacity:1}}
+        @keyframes c2CorruptionOrbitA{0%,26%{opacity:0;transform:translate(-50%,-50%) scale(.42) rotate(0deg)}38%{opacity:.72}70%{opacity:.9;transform:translate(-50%,-50%) scale(1) rotate(260deg)}76%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.5) rotate(330deg)}}
+        @keyframes c2CorruptionOrbitB{0%,30%{opacity:0;transform:translate(-50%,-50%) scale(.48) rotate(0deg)}42%{opacity:.4}70%{opacity:.68;transform:translate(-50%,-50%) scale(1) rotate(-210deg)}78%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.36) rotate(-300deg)}}
+        @keyframes c2CorruptionPull{0%{opacity:0;transform:rotate(var(--a)) translateX(var(--r)) scale(.4)}18%{opacity:.9}100%{opacity:0;transform:rotate(calc(var(--a) + 120deg)) translateX(9px) scale(.12)}}
+        @keyframes c2CorruptionRuptureFlash{0%,68%{opacity:0}72%{opacity:1}74%{opacity:.22}78%,100%{opacity:0}}
+        @keyframes c2CorruptionRuptureCopy{0%,72%{opacity:0;transform:translate(-50%,16px) scale(.9)}79%,94%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-8px) scale(1)}}
+        @keyframes c2CorruptionRuptureShake{0%,68%,80%,100%{transform:translate3d(0,0,0)}69%{transform:translate3d(-11px,5px,0)}70%{transform:translate3d(12px,-6px,0)}71%{transform:translate3d(-10px,-4px,0)}72%{transform:translate3d(10px,5px,0)}73%{transform:translate3d(-7px,3px,0)}74%{transform:translate3d(8px,-3px,0)}75%{transform:translate3d(-5px,-2px,0)}76%{transform:translate3d(5px,2px,0)}}
       </style>
-      <div class="c2-corruption-backfill"></div>
-      <div class="c2-corruption-fire-field">${flames}</div>
-      <div class="c2-corruption-embers">
-        ${Array.from({ length: 26 }, (_, index) => `<span class="c2-corruption-ember" style="left:${6 + (index * 3.4) % 90}%;top:${72 + (index % 4) * 7}%;animation-delay:${(index % 7) * 160}ms;--ember-drift:${-28 + (index % 8) * 9}px"></span>`).join('')}
-      </div>
-      <div class="c2-corruption-wave"></div>
-    </div>`;
-
-  document.body.appendChild(host);
-  const root = host.querySelector('.c2-corruption-fire-root');
-  const timeouts = [];
-  timeouts.push(setTimeout(() => root?.classList.add('is-burning'), 260));
-  timeouts.push(setTimeout(() => root?.classList.add('is-purple'), 1550));
-  timeouts.push(setTimeout(() => root?.classList.add('is-shockwave', 'is-clearing'), 3150));
-  timeouts.push(setTimeout(() => root?.classList.add('is-fading'), 3700));
-
-  return () => {
-    timeouts.forEach(clearTimeout);
-    host.remove();
-  };
+    </div>`);
+  return cleanup;
 };
 
 window.STORY_CUSTOM_EFFECTS['presentation-background-hold'] = ({ layer, item }) => {
@@ -14268,6 +14337,7 @@ document.head.appendChild(c2Style);
     illustrationImage: required('illustrationImage'),
     effectLayer: required('storyEffectLayer'),
     globalEffectLayer: required('storyGlobalEffectLayer'),
+    globalPersistentOverlay: required('storyGlobalPersistentOverlay'),
     persistentOverlay: required('storyPersistentOverlay'),
     leftActor: required('leftActor'),
     leftActorImage: required('leftActorImage'),
@@ -14616,6 +14686,8 @@ document.head.appendChild(c2Style);
     }
     el.persistentOverlay.replaceChildren();
     el.persistentOverlay.setAttribute('aria-hidden', 'true');
+    el.globalPersistentOverlay.replaceChildren();
+    el.globalPersistentOverlay.setAttribute('aria-hidden', 'true');
     el.stage.classList.remove('has-persistent-overlay');
   }
 
@@ -14868,6 +14940,14 @@ document.head.appendChild(c2Style);
         from = index + starName.length;
       }
     }
+    // Chapter 3와 동일한 보라색으로 모든 '오염' 텍스트를 자동 강조합니다.
+    let corruptionFrom = 0;
+    while (corruptionFrom < text.length) {
+      const index = text.indexOf('오염', corruptionFrom);
+      if (index < 0) break;
+      ranges.push({ start: index, end: index + 2, color: '#b779ff' });
+      corruptionFrom = index + 2;
+    }
     return ranges;
   }
 
@@ -14972,8 +15052,10 @@ document.head.appendChild(c2Style);
   }
 
   function syncGlobalEffectActorOverlay(item, speakerId) {
-    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host'));
-    const shouldShowOverlayActor = Boolean(item?.forceAbovePersistentEffect && hasBlockingGlobalEffect);
+    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host')) || el.globalPersistentOverlay.getAttribute('aria-hidden') === 'false';
+    const shouldShowOverlayActor = Boolean(hasBlockingGlobalEffect && (
+      item?.forceAbovePersistentEffect || el.globalPersistentOverlay.getAttribute('aria-hidden') === 'false'
+    ));
     if (!shouldShowOverlayActor) {
       removeGlobalEffectActorOverlay();
       return;
@@ -15045,7 +15127,7 @@ document.head.appendChild(c2Style);
   }
 
   function elevateDialogueAboveGlobalEffects(item, speakerId) {
-    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host'));
+    const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host')) || el.globalPersistentOverlay.getAttribute('aria-hidden') === 'false';
     if (!hasBlockingGlobalEffect) {
       restoreDialogueLayerHome();
       return;
@@ -15177,6 +15259,11 @@ document.head.appendChild(c2Style);
     document.documentElement.style.setProperty('--speaker-accent', accent);
     el.speakerTag.textContent = item.speakerName || speaker.name || speakerId;
     el.dialogueLayer.classList.toggle('speaker-right', speaker.side === 'right');
+    el.dialogueText.classList.remove('is-boss-name-reveal');
+    if (item.bossNameReveal) {
+      void el.dialogueText.offsetWidth;
+      el.dialogueText.classList.add('is-boss-name-reveal');
+    }
 
     const wasClosed = !state.dialogueOpen;
     openDialoguePanel(wasClosed);
@@ -15217,13 +15304,16 @@ document.head.appendChild(c2Style);
     if (persistOverlayAfterOpening) {
       cleanupActiveEffect();
       clearPersistentOverlay();
-      el.persistentOverlay.setAttribute('aria-hidden', 'false');
+      const useGlobalPersistentOverlay = effectId === 'folder-snapshot' || effectId === 'word-crash';
+      const persistentLayer = useGlobalPersistentOverlay ? el.globalPersistentOverlay : el.persistentOverlay;
+      persistentLayer.setAttribute('aria-hidden', 'false');
+      if (useGlobalPersistentOverlay) el.persistentOverlay.setAttribute('aria-hidden', 'true');
       el.stage.classList.add('has-persistent-overlay');
       state.persistentDialoguesRemaining = Math.max(0, Number(item.persistDialogueCount || 0));
       const handler = customEffects[effectId];
       if (typeof handler === 'function') {
         const replayItem = { ...item, persistentReplay: true };
-        const cleanup = handler({ layer: el.persistentOverlay, item: replayItem, api, state: getState() });
+        const cleanup = handler({ layer: persistentLayer, item: replayItem, api, state: getState() });
         state.persistentEffectCleanup = typeof cleanup === 'function' ? cleanup : null;
       }
       hooks.onEffectEnd?.({ effectId, item, api });
@@ -15340,8 +15430,11 @@ function runCustomEffect(item) {
     el.stage.classList.add('is-cinematic-effect');
     // 오염 파편 출현은 장소 타이틀 없이 배경만 조용히 전환합니다.
     if (effectId === 'battle-summary' && item.scene) updateScene(item.scene);
-    // 카톡은 현재 표시 중인 스토리 배경을 그대로 유지하고 스마트폰만 겹쳐 표시합니다.
-    // item.scene 값이 있어도 이 시점에는 배경을 다시 교체하지 않습니다.
+    // 카톡은 기본적으로 현재 스토리 배경을 유지하되, 특정 타이밍에서 야간 배경으로
+    // 먼저 전환해야 하는 경우(syncSceneBeforeEffect)에는 효과 시작 전에 장면을 동기화합니다.
+    if (effectId === 'chat-snapshot' && item.syncSceneBeforeEffect && item.scene) {
+      updateScene(item.scene, { force: true, suppressFlash: true });
+    }
     const handler = customEffects[effectId];
     const wantsPersistent = itemKeepsPersistentOverlay(item, effectId);
     const isPersistentOpening = wantsPersistent;
