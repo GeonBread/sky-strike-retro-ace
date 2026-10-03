@@ -3528,7 +3528,7 @@ window.STORY_CHARACTERS = {
 
 const C3D = {
   sec: (title, scene) => ({ type:'section-marker', title, duration:0, scene }),
-  loc: (scene, duration=1500) => ({ type:'location-title', scene, duration }),
+  loc: (scene, duration=1500, extra={}) => ({ type:'location-title', scene, duration, ...extra }),
   fx: (effect, scene, duration=2400, extra={}) => ({ type:'custom-effect', effect, duration, scene, hideActors:true, ...extra }),
   line: (speaker, text, scene, statusLabel, extra={}) => ({ speaker, text, scene, statusLabel, ...extra })
 };
@@ -3585,7 +3585,7 @@ window.STORY_DATA = {
 
       C3D.sec("장면 4. 다시 만난 4조", "campus_autumn"),
       C3D.fx("story-intertitle", "campus_autumn", 2200, {text:"중간고사가 끝난 이후"}),
-      C3D.loc("campus_autumn", 1200),
+      C3D.loc("campus_autumn", 1200, {hostEffectId:"location-campus-ilcheongdam"}),
       C3D.line("junho", "야! 호반우!", "campus_autumn", "다시 만난 4조", {left:"junho",right:"hobanwoo",pose:"greeting",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
       C3D.line("hobanwoo", "어?", "campus_autumn", "다시 만난 4조", {right:"hobanwoo",pose:"surprised",left:"junho",leftImage:"chapter3/characters/junho_team4_scene_default_v52.png"}),
       C3D.line("soyeon", "와, 진짜 오랜만에 본다!", "campus_autumn", "다시 만난 4조", {left:"soyeon",right:"hobanwoo",pose:"greeting",leftImage:"chapter3/characters/soyeon_team4_scene_greeting_v52.png"}),
@@ -3643,7 +3643,7 @@ window.STORY_DATA = {
 
       C3D.sec("장면 9. 나만 그런 게 아니다", "campus_baegyangro_day"),
       C3D.fx("story-intertitle", "campus_baegyangro_day", 2200, {text:"다음 날 아침"}),
-      C3D.loc("campus_baegyangro_day", 1200),
+      C3D.loc("campus_baegyangro_day", 1200, {hostEffectId:"location-campus-baegyangro"}),
       C3D.line("student1", "요즘 학교 서버 좀 이상하지 않아?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student1",right:"hobanwoo"}),
       C3D.line("student2", "난 과제 제출한 게 갑자기 미제출로 뜨던데?", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student2",right:"hobanwoo"}),
       C3D.line("student3", "난 이수한 강의 내역이 갑자기 사라졌어.", "campus_baegyangro_day", "나만 그런 게 아니다", {left:"student3",right:"hobanwoo"}),
@@ -3653,7 +3653,7 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "(근데 정말 서버 문제일까..?)", "campus_baegyangro_day", "나만 그런 게 아니다", {right:"hobanwoo",pose:"worried"}),
 
       C3D.sec("장면 10. 오염 흔적", "campus_night_promenade"),
-      C3D.loc("campus_night_promenade", 1200),
+      C3D.loc("campus_night_promenade", 1200, {hostEffectId:"location-campus-night-promenade"}),
       C3D.line("hobanwoo", "휴.. 자소서 다 썼다.", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
       C3D.line("hobanwoo", "피곤하니까 빨리 집 가서 자야겠다.", "campus_night_promenade", "오염 흔적", {right:"hobanwoo",pose:"neutral"}),
       C3D.fx("corruption-trace", "campus_night_promenade", 2400, {stage:1}),
@@ -6556,6 +6556,9 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     document.documentElement.style.setProperty('--speaker-accent', accent);
     el.speakerTag.textContent = item.speakerName || speaker.name || speakerId;
     el.dialogueLayer.classList.toggle('speaker-right', speaker.side === 'right');
+    const isDigrionBossDialogue = speakerId === 'digrion' || speakerId === 'digrion_spirit';
+    el.dialogueLayer.classList.toggle('is-digrion-boss-dialogue101', isDigrionBossDialogue);
+    el.dialogueBox.setAttribute('data-boss-dialogue', isDigrionBossDialogue ? 'digrion' : '');
 
     const wasClosed = !state.dialogueOpen;
     openDialoguePanel(wasClosed);
@@ -6672,7 +6675,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
       root.remove();
       el.globalEffectLayer.setAttribute('aria-hidden', 'true');
     };
-    state.effectTimer = window.setTimeout(() => finishEffect(item, 'location-title'), duration);
+    state.effectTimer = window.setTimeout(() => finishEffect(item, item.hostEffectId || 'location-title'), duration);
   }
 
   function runFadeBlack(item) {
@@ -6829,7 +6832,7 @@ function runCustomEffect(item) {
   function runEffect(item) {
     cleanupActiveEffect();
     clearRuntimeTimers();
-    const effectId = item.type === 'custom-effect' ? item.effect : item.type;
+    const effectId = item.type === 'custom-effect' ? item.effect : (item.hostEffectId || item.type);
     if (!itemKeepsPersistentOverlay(item, effectId)) clearPersistentOverlay();
 
     if (item.type === 'section-marker') {
@@ -14000,6 +14003,123 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
     </div>`);
 })();
 </script>
+
+
+<style id="chapter3-patch-101-digrion-boss-dialogue-style">
+/* PATCH101: Digrion uses a dedicated final-boss dialogue presentation. */
+.dialogue-layer.is-digrion-boss-dialogue101{
+  --speaker-accent:#9d4dff;
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .dialogue-box{
+  min-height:clamp(154px,19vw,216px);
+  border-color:#7f35c9!important;
+  background:
+    linear-gradient(90deg,rgba(151,54,255,.07) 0 1px,transparent 1px 24px),
+    linear-gradient(0deg,rgba(216,61,112,.045) 0 1px,transparent 1px 24px),
+    radial-gradient(circle at 12% 50%,rgba(152,60,255,.17),transparent 34%),
+    linear-gradient(180deg,rgba(16,5,27,.985),rgba(2,1,7,.995))!important;
+  background-size:24px 24px,24px 24px,auto,auto!important;
+  box-shadow:
+    0 0 0 3px #160b22,
+    0 0 0 6px #47205f,
+    inset 0 0 0 1px rgba(239,210,255,.17),
+    inset 0 0 46px rgba(118,36,181,.16),
+    0 10px 0 #321043,
+    0 24px 55px rgba(0,0,0,.82),
+    0 0 24px rgba(163,68,255,.46),
+    0 0 62px rgba(124,31,190,.24)!important;
+  animation:c3DigrionBossBoxPulse101 2.4s ease-in-out infinite alternate;
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .dialogue-box::before{
+  content:"";
+  left:-12px;
+  top:-12px;
+  width:42px;
+  height:12px;
+  border:0;
+  border-left:5px solid #f24778;
+  border-top:5px solid #b963ff;
+  background:transparent;
+  box-shadow:none;
+  transform:skewX(-24deg);
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .dialogue-box::after{
+  content:"";
+  right:-12px;
+  bottom:-12px;
+  width:42px;
+  height:12px;
+  border:0;
+  border-right:5px solid #f24778;
+  border-bottom:5px solid #b963ff;
+  background:transparent;
+  box-shadow:none;
+  transform:skewX(-24deg);
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .speaker-tag{
+  min-width:250px;
+  padding:14px 22px 9px;
+  border-color:#21102e!important;
+  background:linear-gradient(180deg,#7e2ec5 0%,#431265 58%,#22092f 100%)!important;
+  box-shadow:
+    0 0 0 2px #a95af0,
+    0 6px 0 #250b35,
+    0 0 24px rgba(175,73,255,.58)!important;
+  color:#fff8ff;
+  letter-spacing:.08em;
+  text-shadow:1px 0 #ff4779,-1px 0 #7d5cff,0 0 10px rgba(220,174,255,.75),2px 2px 0 #130617!important;
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .speaker-tag::before{
+  content:"FINAL BOSS";
+  position:absolute;
+  left:18px;
+  top:3px;
+  color:#ffd0e2;
+  font:1000 8px/1 "Noto Sans KR",system-ui,sans-serif;
+  letter-spacing:.32em;
+  opacity:.9;
+  text-shadow:0 0 8px rgba(255,73,126,.8);
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .dialogue-marker{
+  color:#ca7dff!important;
+  font-size:0!important;
+  text-shadow:none!important;
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .dialogue-marker::before{
+  content:"◆";
+  font-size:clamp(25px,3vw,39px);
+  color:#e5b0ff;
+  text-shadow:0 0 7px #d789ff,0 0 18px rgba(177,66,255,.9),0 0 34px rgba(114,27,178,.7);
+  animation:c3DigrionBossSigil101 1.35s ease-in-out infinite alternate;
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .dialogue-text{
+  color:#fff9ff!important;
+  font-weight:950!important;
+  letter-spacing:.018em!important;
+  text-shadow:
+    1px 0 0 rgba(255,64,118,.72),
+    -1px 0 0 rgba(117,83,255,.8),
+    0 0 8px rgba(212,160,255,.36),
+    3px 3px 0 #070209!important;
+  animation:c3DigrionBossText101 1.9s ease-in-out infinite alternate;
+}
+.dialogue-layer.is-digrion-boss-dialogue101 .continue-indicator{
+  color:#d89cff!important;
+  filter:drop-shadow(0 0 9px rgba(190,83,255,.95))!important;
+}
+@keyframes c3DigrionBossBoxPulse101{
+  from{filter:brightness(.98);}
+  to{filter:brightness(1.06);}
+}
+@keyframes c3DigrionBossSigil101{
+  from{transform:scale(.92) rotate(-3deg);filter:brightness(.9)}
+  to{transform:scale(1.08) rotate(3deg);filter:brightness(1.25)}
+}
+@keyframes c3DigrionBossText101{
+  from{filter:drop-shadow(0 0 0 rgba(174,70,255,0));}
+  to{filter:drop-shadow(0 0 3px rgba(174,70,255,.34));}
+}
+</style>
 
 </body>
 </html>

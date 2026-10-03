@@ -90,39 +90,39 @@ const FULLSCREEN_EFFECTS = new Set([
   "graduation-day-atmosphere",
   "graduation-ceremony-background",
   "autumn-campus-location-transition",
+  "location-campus-ilcheongdam",
+  "location-campus-baegyangro",
+  "location-campus-night-promenade",
 ]);
 
 const STORY_SECTIONS: StorySectionMeta[] = [
   { ordinal: 0, title: "장면 1. 마지막 학기의 시작", scene: "마지막 학기 도입" },
   { ordinal: 1, title: "장면 2. 할 게 왜 이렇게 많냐", scene: "호반우 자취방" },
   { ordinal: 2, title: "장면 3. 9월과 10월", scene: "채용·자소서·자격증" },
-  { ordinal: 3, title: "장면 4. 다시 만난 4조", scene: "캠퍼스 재회" },
+  { ordinal: 3, title: "장면 4. 다시 만난 4조", scene: "일청담" },
   { ordinal: 4, title: "장면 6. 이상한 지원 기록", scene: "채용 지원 기록 오류" },
   { ordinal: 5, title: "장면 7. 졸업자가진단", scene: "졸업요건 확인" },
-  { ordinal: 6, title: "장면 9. 나만 그런 게 아니다", scene: "학교 시스템 이상" },
-  { ordinal: 7, title: "장면 10. 오염 흔적", scene: "밤의 캠퍼스" },
+  { ordinal: 6, title: "장면 9. 나만 그런 게 아니다", scene: "경북대학교 백양로" },
+  { ordinal: 7, title: "장면 10. 오염 흔적", scene: "밤의 경북대학교 산책로" },
   { ordinal: 8, title: "장면 11. 첫 오염 개체", scene: "몬스터 생성" },
   { ordinal: 9, title: "장면 12. 학생증 재활성화와 마지막 두 별", scene: "전투 준비" },
   { ordinal: 10, title: "장면 15. 일반 몬스터 웨이브", scene: "일반 전투 전체" },
   { ordinal: 11, title: "장면 16. 정화율 100%", scene: "일반 전투 종료" },
   { ordinal: 12, title: "장면 17. 핵심 오염원 추적", scene: "보스 추적" },
   { ordinal: 13, title: "장면 20. 최종 공간", scene: "첨성대 코어·졸업 영역" },
-  { ordinal: 14, title: "장면 21. 디그리온과 불안", scene: "디그리온 대면" },
-  { ordinal: 15, title: "장면 22. 졸업 이후", scene: "디그리온 대화" },
-  { ordinal: 16, title: "장면 23. 호반우의 대답", scene: "최종전 직전" },
-  { ordinal: 17, title: "장면 29. 마지막 두 별 봉인 약화", scene: "보스 후반부" },
-  { ordinal: 18, title: "장면 30. 긍지의 별", scene: "별 해방" },
-  { ordinal: 19, title: "장면 31. 졸업의 별", scene: "별 해방" },
-  { ordinal: 20, title: "장면 32. 디그리온 본체 파괴", scene: "보스 본체 붕괴" },
-  { ordinal: 21, title: "장면 33. 여섯 별 연결", scene: "최종 정화 준비" },
-  { ordinal: 22, title: "장면 34. 정화 에너지 형성", scene: "최종 정화" },
-  { ordinal: 23, title: "장면 35. 발사", scene: "최종 정화" },
-  { ordinal: 24, title: "장면 36. 충돌", scene: "디그리온 정신 충돌" },
-  { ordinal: 25, title: "장면 37. 최종 정화 후", scene: "정화 직후" },
-  { ordinal: 26, title: "장면 38. 첨성대 코어 정상화", scene: "코어 정상화" },
-  { ordinal: 27, title: "장면 41. 졸업식 날", scene: "졸업식" },
-  { ordinal: 28, title: "장면 42. 학위수여식", scene: "학위수여식장" },
-  { ordinal: 29, title: "장면 43. 졸업식이 끝난 뒤", scene: "엔딩" },
+  { ordinal: 14, title: "장면 29. 마지막 두 별 봉인 약화", scene: "보스 후반부" },
+  { ordinal: 15, title: "장면 30. 긍지의 별", scene: "별 해방" },
+  { ordinal: 16, title: "장면 31. 졸업의 별", scene: "별 해방" },
+  { ordinal: 17, title: "장면 32. 디그리온 본체 파괴", scene: "보스 본체 붕괴" },
+  { ordinal: 18, title: "장면 33. 여섯 별 연결", scene: "최종 정화 준비" },
+  { ordinal: 19, title: "장면 34. 정화 에너지 형성", scene: "최종 정화" },
+  { ordinal: 20, title: "장면 35. 발사", scene: "최종 정화" },
+  { ordinal: 21, title: "장면 36. 충돌", scene: "디그리온 정신 충돌" },
+  { ordinal: 22, title: "장면 37. 최종 정화 후", scene: "정화 직후" },
+  { ordinal: 23, title: "장면 38. 첨성대 코어 정상화", scene: "코어 정상화" },
+  { ordinal: 24, title: "장면 41. 졸업식 날", scene: "졸업식" },
+  { ordinal: 25, title: "장면 42. 학위수여식", scene: "학위수여식장" },
+  { ordinal: 26, title: "장면 43. 졸업식이 끝난 뒤", scene: "엔딩" },
 ];
 
 const WAVES: WaveMeta[] = [
@@ -163,7 +163,7 @@ const WAVES: WaveMeta[] = [
   { index: 34, title: "WAVE 35 · 졸업요건 총합 혼전", desc: "이전 웨이브의 핵심 배치들을 순차적으로 재등장시키는 최종 종합전. 각 배치에서 일정 수 이상의 몬스터가 처리되면 살아남은 몬스터는 그대로 전장에 남고 다음 배치가 합류한다. 전투영역 축소·이동·재확장도 단계별로 섞인다", pattern: "grandFinaleMixed" },
 ];
 
-const BOSS_SECTIONS = STORY_SECTIONS.filter((section) => section.ordinal >= 13 && section.ordinal <= 26);
+const BOSS_SECTIONS = STORY_SECTIONS.filter((section) => section.ordinal >= 13 && section.ordinal <= 23);
 
 
 const CHAPTER3_PROGRESS_KEY = "sky-strike-chapter3-story-progress-v1";
@@ -324,7 +324,9 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       postStoryCommand("start-item-index", { index: storyLaunch.index });
       return;
     }
-    postStoryCommand("start-section-ordinal", { ordinal: storyLaunch.ordinal });
+    const section = STORY_SECTIONS[storyLaunch.ordinal];
+    if (section) postStoryCommand("start-section", { titlePrefix: section.title });
+    else postStoryCommand("start-section-ordinal", { ordinal: storyLaunch.ordinal });
   }, [ready, screen, storyLaunch]);
 
   useEffect(() => {
