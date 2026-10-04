@@ -471,6 +471,24 @@ export class AudioSystem {
     });
   }
 
+  startChapter3FinalSpaceBgm() {
+    const track = "/audio/chapter3-final-space-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.bgmElement.play().catch(() => {
+      this.isPlayingBgm = false;
+    });
+  }
+
   startFinalEndingBgm() {
     const track = "/audio/final-ending-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {

@@ -1,17 +1,23 @@
-CH3 STORY SFX PATCH 002 (cumulative)
+CH3_STORY_SFX_BGM_PATCH_003
 
-적용 내용
-- 챕터 3 플레이어 발사음: 챕터 1 sfx.shoot() 재사용
-- 적 피격음: 챕터 1 sfx.enemyHit() 재사용
-- 적 파괴음: 챕터 1 sfx.enemyExplode() 재사용
-- 스마트 폭탄 사용음: 챕터 1 sfx.bossExplode() 재사용
-- 아이템 획득음: 챕터 1 sfx.powerup() 재사용
-- 플레이어 피격/격추음: 챕터 1 플레이어 피해 처리와 동일한 sfx.hit() 재사용
+누적 패치입니다. PATCH_001/002의 챕터 3 전투 효과음 수정사항을 모두 포함합니다.
 
-적용 방법
-- 프로젝트 루트에 이 ZIP 내부 구조 그대로 덮어쓰기
+추가 사항:
+- 사용자 제공 KakaoTalk MP4의 오디오를 chapter3-final-space-bgm.mp3로 추출.
+- 장면 20 '최종 공간' teleport-core 연출에서 포탈 이동 후 암전이 풀리고
+  첨성대 코어·졸업 영역 배경이 처음 나타나는 10.2초 지점에 BGM 시작.
+- AudioSystem을 통해 BGM 볼륨 설정을 그대로 따름.
+- 최종 공간 음악은 반복 재생.
+- 이후 chapter-ending에서 기존 final-ending-bgm.mp3가 시작되면 자연스럽게 교체됨.
+- 챕터 3 선택 화면으로 복귀하거나 스토리가 끝나면 해당 BGM 정지.
 
-검증
-- public/chapter3_wave/index.html 내 JavaScript 구문 검사 통과
-- Chapter3StoryExperience.tsx TypeScript transpile 구문 검사 통과
-- 전체 npm lint/build는 제공된 프로젝트의 node_modules 의존성 일부가 누락되어 실행 불가
+포함된 기존 효과음:
+- 플레이어 탄 발사: Chapter 1 sfx.shoot()
+- 적 피격: sfx.enemyHit()
+- 적 파괴: sfx.enemyExplode()
+- 폭탄: sfx.bossExplode()
+- 아이템 획득: sfx.powerup()
+- 플레이어 피격/격추: sfx.hit()
+
+적용:
+프로젝트 루트에 ZIP 내부 구조 그대로 덮어쓰기.

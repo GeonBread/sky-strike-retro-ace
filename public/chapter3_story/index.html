@@ -11592,6 +11592,8 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       later(() => {
         scene?.classList.add('arrived');
         scene?.classList.add('reveal-core');
+        // Start the final-space BGM on the same frame the core background begins to appear.
+        window.STORY_HOOKS?._emit?.('final-space-bgm-start');
       }, 10200);
 
       /* PATCH059: wait until the blackout has almost completely cleared, then perform
