@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Shield } from "lucide-react";
+import { sfx } from "../../game/AudioSystem";
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter3StoryExperience.css";
 
@@ -214,6 +215,13 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const [wavePaused, setWavePaused] = useState(false);
   const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: 0, totalWaves: WAVES.length, enemies: 0 });
 
+  useEffect(() => {
+    if (!waveActive) return;
+    sfx.startBgmForPhase(3);
+    return () => {
+      if (sfx.currentBgmTrack === "/audio/chapter3-wave-bgm.mp3") sfx.stopBgm();
+    };
+  }, [waveActive]);
   useEffect(() => () => {
     if (waveRetryPromptTimerRef.current !== null) {
       window.clearTimeout(waveRetryPromptTimerRef.current);
@@ -263,6 +271,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       ].forEach((property) => storyFrame.style.removeProperty(property));
     }
 
+    if (sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3") sfx.stopBgm();
     setFullscreenEffect(null);
     clearWaveRetryPromptTimer();
     setWaveActive(false);
@@ -350,6 +359,9 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
             launchWave(0, false, "story");
             return;
           }
+          if (effectId === "chapter-ending") {
+            sfx.startFinalEndingBgm();
+          }
           if (FULLSCREEN_EFFECTS.has(effectId)) setFullscreenEffect(effectId);
           return;
         }
@@ -377,6 +389,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         if (message.type === "story-complete") {
           setFullscreenEffect(null);
           setWaveActive(false);
+          if (sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3") sfx.stopBgm();
           if (storyIsTestJump) {
             returnToSelector();
           } else {
