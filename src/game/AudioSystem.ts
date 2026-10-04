@@ -452,8 +452,8 @@ export class AudioSystem {
         : chapter === 3
         ? "/audio/3phase%20(Starfall%20Circuit).mp3"
         : chapter === 2
-          ? "/audio/2phase%20(Stellar%20Drift2).mp3"
-          : "/audio/1phase%20bgm%20(Stellar%20Drift1).mp3";
+          ? "/audio/1phase%20bgm%20(Stellar%20Drift1).mp3"
+          : "/audio/chapter1-wave-bgm.mp3";
 
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
@@ -472,7 +472,21 @@ export class AudioSystem {
   }
 
   startBossBgm() {
-    this.startBgmForPhase(2);
+    const track = "/audio/2phase%20(Stellar%20Drift2).mp3";
+    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.bgmElement.play().catch(() => {
+      this.isPlayingBgm = false;
+    });
     return;
     this.stopBgm();
     if (!this.ctx) return;
