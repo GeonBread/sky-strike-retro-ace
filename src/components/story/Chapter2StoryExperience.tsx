@@ -99,8 +99,13 @@ const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
 const STORY_SEGMENT = "chapter2_full";
 const CHAPTER2_WAVE_COUNT = 20;
 // STORY_DATA 기준: "비어 있는 공유 폴더" section-marker가 index 53,
+// Word 자동 저장 실패 직후 "(뭐.. 뭐야!)" 대사가 index 112,
+// 일반 오염 전투 section-marker가 index 140, 정화 끝 section-marker가 index 144,
 // "책임의 블랙홀" 프리보스 연출이 index 240에서 시작한다.
 const CHAPTER2_STRUGGLE_BGM_START_INDEX = 53;
+const CHAPTER2_CONTAMINATION_BGM_START_INDEX = 112;
+const CHAPTER2_CONTAMINATION_BGM_END_INDEX = 140;
+const CHAPTER2_STRUGGLE_BGM_RESUME_INDEX = 144;
 const CHAPTER2_PREBOSS_BGM_START_INDEX = 240;
 function isChapter2FullscreenStoryEffect(effectId: string | undefined): boolean {
   if (!effectId) return false;
@@ -283,14 +288,32 @@ export function Chapter2StoryExperience({
         if (Number.isInteger(storyIndex)) setCurrentStoryIndex(storyIndex);
 
         if (phase === "story") {
-          // "비어 있는 공유 폴더" 장면부터 잘 안 풀리는 상황 BGM을 유지한다.
-          // 웨이브 전투가 이 곡을 덮어쓴 뒤 스토리로 복귀해도 첫 progress에서 다시 복원된다.
+          // "비어 있는 공유 폴더"부터 Word 자동 저장 실패 연출까지는 잘 안 풀리는 상황 BGM을 유지한다.
+          // 오염 발생 전투가 끝난 뒤 "정화 끝" 장면부터 #241 전까지도 같은 곡으로 복귀한다.
           if (
             Number.isInteger(storyIndex)
-            && storyIndex >= CHAPTER2_STRUGGLE_BGM_START_INDEX
-            && storyIndex < CHAPTER2_PREBOSS_BGM_START_INDEX
+            && (
+              (
+                storyIndex >= CHAPTER2_STRUGGLE_BGM_START_INDEX
+                && storyIndex < CHAPTER2_CONTAMINATION_BGM_START_INDEX
+              )
+              || (
+                storyIndex >= CHAPTER2_STRUGGLE_BGM_RESUME_INDEX
+                && storyIndex < CHAPTER2_PREBOSS_BGM_START_INDEX
+              )
+            )
           ) {
             sfx.startChapter2StruggleBgm();
+          }
+
+          // Word 자동 저장 실패 직후 #113 "(뭐.. 뭐야!)" 대사가 시작되는 순간
+          // 오염 발생 BGM으로 교체하고, 일반 오염 전투 진입 전까지 유지한다.
+          if (
+            Number.isInteger(storyIndex)
+            && storyIndex >= CHAPTER2_CONTAMINATION_BGM_START_INDEX
+            && storyIndex < CHAPTER2_CONTAMINATION_BGM_END_INDEX
+          ) {
+            sfx.startChapter2ContaminationBgm();
           }
 
           // 스토리 #241: "책임의 블랙홀" 도착 연출이 시작되는 순간부터 보스 웨이브 전용 BGM으로 교체한다.
