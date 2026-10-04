@@ -1606,6 +1606,9 @@ export function startChapter2WaveSystem(engine: any, startIndex = 0) {
   engine.chapter2Wave.enabled = true;
   engine.chapter2Wave.allWavesCleared = false;
   engine.stage = 2;
+  // GameEngine.start() always boots with phase 1 BGM first.
+  // Explicitly switch here so Chapter 2 waves always use the former Chapter 1 wave track.
+  sfx.startBgmForPhase(2);
   beginWave(engine, startIndex, false);
 }
 
