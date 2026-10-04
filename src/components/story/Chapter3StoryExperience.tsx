@@ -434,6 +434,18 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
           return;
         }
 
+        if (message.type === "sfx-powerup") {
+          sfx.resumeAll();
+          sfx.powerup();
+          return;
+        }
+
+        if (message.type === "sfx-player-hit") {
+          sfx.resumeAll();
+          sfx.hit();
+          return;
+        }
+
         if (message.type === "hud-state") {
           setWaveHud({
             hp: Math.max(0, Math.floor(message.detail?.hp ?? 3)),

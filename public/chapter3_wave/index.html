@@ -2086,7 +2086,7 @@ function checkEnemyBodyCollision074(){
 }
 function updatePowerUps(dt){
  for(const p of powerups){p.t+=dt;p.y+=p.vy*dt;if(!player.dead&&Math.hypot(player.x-p.x,player.y-p.y)<78){
-  p.collected=true;if(p.type==='power')player.powerLevel=Math.min(5,player.powerLevel+1);else player.hp=Math.min(player.maxHp,player.hp+1);
+  p.collected=true;emitWave('sfx-powerup');if(p.type==='power')player.powerLevel=Math.min(5,player.powerLevel+1);else player.hp=Math.min(player.maxHp,player.hp+1);
   addEffect({kind:'ring',x:p.x,y:p.y,life:.32,color:p.type==='power'?'#38bdf8':'#4ade80'});
  }}
  powerups=powerups.filter(p=>!p.collected&&p.y<H+40);
@@ -2123,7 +2123,7 @@ function updateSmartBomb(dt){
 function updateBullets(dt){for(const b of bullets){b.t=(b.t||0)+dt;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.kind==='deadlineShard'){const drag=Math.pow(b.drag||.992,dt*60);b.vx*=drag;b.vy*=drag;}/* suicideShard intentionally has no drag: it flies straight at its launch speed until off-screen. */b.life-=dt;if(!player.dead&&Math.hypot(player.x-b.x,player.y-b.y)<player.r+b.r)damagePlayer();}bullets=bullets.filter(b=>b.life>0&&b.x>-80&&b.x<W+80&&b.y>-80&&b.y<H+80);
  for(const b of playerBullets){b.x+=(b.vx||0)*dt;b.y+=b.vy*dt;b.life-=dt;for(const e of enemies){if(e.dead||e.attackable===false)continue;if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+b.r){e.hp-=b.damage??18;e.hitFlash=1;e.hurtPulse=.22;b.life=0;emitWave('sfx-enemy-hit');spawnChapter1LikeEnemyHit(b.x,b.y);if(e.hp<=0)killEnemy(e,true,true);break;}}}playerBullets=playerBullets.filter(b=>b.life>0&&b.y>-40&&b.x>-40&&b.x<W+40);
 }
-function damagePlayer(force=false){if(gameOver||player.dead)return;if(invincible&&!force)return;if(player.hitTimer>0&&!force)return;player.hp--;if(player.powerLevel>1)player.powerLevel--;player.dead=true;player.respawnTimer=.55;player.drag=false;addEffect({kind:'ring',x:player.x,y:player.y,life:.45,color:'#ffffff'});if(player.hp<=0&&EMBEDDED){/* failure is emitted after the short death beat */}}
+function damagePlayer(force=false){if(gameOver||player.dead)return;if(invincible&&!force)return;if(player.hitTimer>0&&!force)return;player.hp--;emitWave('sfx-player-hit');if(player.powerLevel>1)player.powerLevel--;player.dead=true;player.respawnTimer=.55;player.drag=false;addEffect({kind:'ring',x:player.x,y:player.y,life:.45,color:'#ffffff'});if(player.hp<=0&&EMBEDDED){/* failure is emitted after the short death beat */}}
 function updateSpecialWave(dt){
  const special=waves[waveIndex].special;
  if(isSurvivalSpecial(special)){updateSurvivalWave(dt);return;}
