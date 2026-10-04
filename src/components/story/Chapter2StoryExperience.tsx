@@ -107,6 +107,9 @@ const CHAPTER2_CONTAMINATION_BGM_START_INDEX = 112;
 const CHAPTER2_CONTAMINATION_BGM_END_INDEX = 140;
 const CHAPTER2_STRUGGLE_BGM_RESUME_INDEX = 144;
 const CHAPTER2_PREBOSS_BGM_START_INDEX = 240;
+// STORY_DATA 기준: "발표" section-marker가 index 310 (#311)에서 시작한다.
+// 이 지점부터 Chapter 2 엔딩까지는 발표/엔딩 전용 BGM을 유지한다.
+const CHAPTER2_PRESENTATION_ENDING_BGM_START_INDEX = 310;
 function isChapter2FullscreenStoryEffect(effectId: string | undefined): boolean {
   if (!effectId) return false;
   // 보스 영역 도착 직후의 배경/LOCATION 표시는 스토리 게임 프레임 안에서만 보여준다.
@@ -319,6 +322,15 @@ export function Chapter2StoryExperience({
           // 스토리 #241: "책임의 블랙홀" 도착 연출이 시작되는 순간부터 보스 웨이브 전용 BGM으로 교체한다.
           if (data.effectId === "boss-arrival-background-title") {
             sfx.startChapter2PreBossBgm();
+          }
+
+          // "발표" 장면(section-marker index 310 / 스토리 #311)이 시작되는 순간부터
+          // Chapter 2 엔딩까지 발표/엔딩 전용 BGM을 유지한다.
+          if (
+            Number.isInteger(storyIndex)
+            && storyIndex >= CHAPTER2_PRESENTATION_ENDING_BGM_START_INDEX
+          ) {
+            sfx.startChapter2PresentationEndingBgm();
           }
         }
         if (
