@@ -59,6 +59,26 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   }
   normalized = normalized.replace(typeCurrentLineHook, autoRevealDialogueHook);
 
+  // 출석체크 드론의 첫 경고 대사가 화면에 뜨는 정확한 순간부터 추적 BGM으로 전환한다.
+  // 텍스트 자체를 기준으로 잡아 일반 진행과 TEST 이동 모두 같은 타이밍을 사용한다.
+  if (part === 1) {
+    const droneChaseBgmHook = `    if (item && !item.effectOnly && dialogueLayer.hidden) {
+      dialogueLayer.hidden = false;
+      dialogueLayer.classList.remove('is-opening');
+    }`;
+    const droneChaseBgmUpgrade = `    if (item && !item.effectOnly && dialogueLayer.hidden) {
+      dialogueLayer.hidden = false;
+      dialogueLayer.classList.remove('is-opening');
+    }
+    if (String(item?.text || '').trim() === '출석을 확인합니다.') {
+      window.__CHAPTER1_START_DRONE_CHASE_BGM__?.();
+    }`;
+    if (!normalized.includes(droneChaseBgmHook)) {
+      throw new Error('Chapter 1 attendance drone BGM dialogue hook was not found.');
+    }
+    normalized = normalized.replace(droneChaseBgmHook, droneChaseBgmUpgrade);
+  }
+
   // 대사창이 숨겨진 시네마틱에서는 Space 입력으로 숨은 대사를 넘기거나
   // 연출을 재시작하지 못하게 한다. 연출은 등록된 타이머만으로 자동 진행된다.
   const storyKeyPatterns = [
@@ -2273,6 +2293,9 @@ export function createChapter1StoryRuntime({
   });
   localWindowValues.set("__CHAPTER1_START_DAILY_BGM__", () => {
     sfx.startChapter1DailyBgm();
+  });
+  localWindowValues.set("__CHAPTER1_START_DRONE_CHASE_BGM__", () => {
+    sfx.startChapter1DroneChaseBgm();
   });
 
   const executeScript = (source: string): void => {

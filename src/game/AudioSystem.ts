@@ -6,6 +6,7 @@ export class AudioSystem {
   bgmElement: HTMLAudioElement | null = null;
   currentBgmTrack: string | null = null;
   isPlayingBgm = false;
+  private bgmGestureRetry: ((event: Event) => void) | null = null;
 
   bgmVol = 0.5;
   sfxVol = 0.8;
@@ -27,6 +28,43 @@ export class AudioSystem {
       this.sfxVolumeParams.gain.value = this.sfxVol;
       this.sfxVolumeParams.connect(this.ctx.destination);
     }
+  }
+
+  private clearBgmGestureRetry() {
+    if (!this.bgmGestureRetry) return;
+    window.removeEventListener("pointerdown", this.bgmGestureRetry, true);
+    window.removeEventListener("keydown", this.bgmGestureRetry, true);
+    this.bgmGestureRetry = null;
+  }
+
+  private armBgmGestureRetry() {
+    if (this.bgmGestureRetry) return;
+    const retry = () => {
+      if (!this.bgmElement || !this.isPlayingBgm) {
+        this.clearBgmGestureRetry();
+        return;
+      }
+      if (this.ctx?.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+      this.bgmElement.play().then(() => {
+        this.clearBgmGestureRetry();
+      }).catch(() => {});
+    };
+    this.bgmGestureRetry = retry;
+    window.addEventListener("pointerdown", retry, true);
+    window.addEventListener("keydown", retry, true);
+  }
+
+  private requestBgmPlayback() {
+    if (!this.bgmElement) return;
+    this.bgmElement.play().then(() => {
+      this.clearBgmGestureRetry();
+    }).catch(() => {
+      // 스토리 연출/전투 가이드처럼 사용자 입력과 떨어진 시점에 트랙이 바뀌면
+      // 브라우저 자동재생 정책으로 새 Audio 재생이 막힐 수 있다. 다음 입력에서 같은 트랙을 재시도한다.
+      this.armBgmGestureRetry();
+    });
   }
 
   setVolumes(bgm: number, sfx: number) {
@@ -54,7 +92,7 @@ export class AudioSystem {
       this.ctx.resume();
     }
     if (this.bgmElement && this.isPlayingBgm && this.bgmElement.paused) {
-      this.bgmElement.play().catch(() => {});
+      this.requestBgmPlayback();
     }
   }
 
@@ -478,6 +516,22 @@ export class AudioSystem {
     this.bgmElement.play().catch(() => {});
   }
 
+  startChapter1DroneChaseBgm() {
+    const track = "/audio/chapter1-drone-chase-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.requestBgmPlayback();
+  }
+
   startChapter2StruggleBgm() {
     const track = "/audio/chapter2-struggle-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
@@ -564,9 +618,7 @@ export class AudioSystem {
     this.bgmElement.loop = true;
     this.bgmElement.volume = this.bgmVol;
     this.isPlayingBgm = true;
-    this.bgmElement.play().catch(() => {
-      this.isPlayingBgm = false;
-    });
+    this.requestBgmPlayback();
   }
 
   startChapter3FinalSpaceBgm() {
@@ -757,6 +809,7 @@ export class AudioSystem {
 
   stopBgm() {
     this.isPlayingBgm = false;
+    this.clearBgmGestureRetry();
     if (this.bgmElement) {
       this.bgmElement.pause();
       this.bgmElement.currentTime = 0;
