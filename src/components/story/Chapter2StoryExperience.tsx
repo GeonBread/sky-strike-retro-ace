@@ -98,6 +98,10 @@ interface Chapter2StoryExperienceProps {
 const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
 const STORY_SEGMENT = "chapter2_full";
 const CHAPTER2_WAVE_COUNT = 20;
+// STORY_DATA 기준: "비어 있는 공유 폴더" section-marker가 index 53,
+// "책임의 블랙홀" 프리보스 연출이 index 240에서 시작한다.
+const CHAPTER2_STRUGGLE_BGM_START_INDEX = 53;
+const CHAPTER2_PREBOSS_BGM_START_INDEX = 240;
 function isChapter2FullscreenStoryEffect(effectId: string | undefined): boolean {
   if (!effectId) return false;
   // 보스 영역 도착 직후의 배경/LOCATION 표시는 스토리 게임 프레임 안에서만 보여준다.
@@ -275,10 +279,24 @@ export function Chapter2StoryExperience({
       }
 
       if (data.type === "progress") {
-        if (Number.isInteger(data.state?.index)) setCurrentStoryIndex(Number(data.state?.index));
-        // 스토리 #241: "책임의 블랙홀" 도착 연출이 시작되는 순간부터 보스 웨이브 전용 BGM을 재생한다.
-        if (data.effectId === "boss-arrival-background-title" && phase === "story") {
-          sfx.startChapter2PreBossBgm();
+        const storyIndex = Number(data.state?.index);
+        if (Number.isInteger(storyIndex)) setCurrentStoryIndex(storyIndex);
+
+        if (phase === "story") {
+          // "비어 있는 공유 폴더" 장면부터 잘 안 풀리는 상황 BGM을 유지한다.
+          // 웨이브 전투가 이 곡을 덮어쓴 뒤 스토리로 복귀해도 첫 progress에서 다시 복원된다.
+          if (
+            Number.isInteger(storyIndex)
+            && storyIndex >= CHAPTER2_STRUGGLE_BGM_START_INDEX
+            && storyIndex < CHAPTER2_PREBOSS_BGM_START_INDEX
+          ) {
+            sfx.startChapter2StruggleBgm();
+          }
+
+          // 스토리 #241: "책임의 블랙홀" 도착 연출이 시작되는 순간부터 보스 웨이브 전용 BGM으로 교체한다.
+          if (data.effectId === "boss-arrival-background-title") {
+            sfx.startChapter2PreBossBgm();
+          }
         }
         if (
           data.effectId
