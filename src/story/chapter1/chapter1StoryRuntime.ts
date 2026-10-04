@@ -130,6 +130,24 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     normalized = normalized.replace(admissionWanderPreview, admissionStaticPreview);
   }
 
+  // 입학식 장면이 실제로 시작되는 순간부터 Chapter 1 일상 BGM을 재생한다.
+  // 테스트 장면 점프에서도 동일하게 동작하도록 scene-preview 실행 분기에 직접 연결한다.
+  const admissionBgmScenePreviewHook = `    } else if (item.effect === 'scene-preview') {
+      const previewScene = item.scene || item.previewScene || {};
+      updateScene(previewScene, { force: true, suppressFlash: true });
+      activateScenePreview(item.previewStyle || 'wander');`;
+  const admissionBgmScenePreviewUpgrade = `    } else if (item.effect === 'scene-preview') {
+      const previewScene = item.scene || item.previewScene || {};
+      if (item.previewStyle === 'admission-hold-fit') {
+        window.__CHAPTER1_START_DAILY_BGM__?.();
+      }
+      updateScene(previewScene, { force: true, suppressFlash: true });
+      activateScenePreview(item.previewStyle || 'wander');`;
+  if (!normalized.includes(admissionBgmScenePreviewHook)) {
+    throw new Error('Chapter 1 admission BGM scene-preview hook was not found.');
+  }
+  normalized = normalized.replace(admissionBgmScenePreviewHook, admissionBgmScenePreviewUpgrade);
+
   // 게이트키퍼 최초 등장 이펙트는 story-stage 폭 확장에 의존하지 않고 전체 뷰포트 호스트로 직접 이동시킨다.
   if (part === 2) {
     const storyEffectLayerDeclarationHook = `  const storyEffectLayer = document.getElementById('storyEffectLayer');`;
@@ -2252,6 +2270,9 @@ export function createChapter1StoryRuntime({
   localWindowValues.set("__CHAPTER1_SHOW_LOCATION_TITLE__", showLocationTitle);
   localWindowValues.set("__CHAPTER1_PLAY_STORY_SFX__", (kind: string) => {
     if (kind === "star-reveal") sfx.starReveal();
+  });
+  localWindowValues.set("__CHAPTER1_START_DAILY_BGM__", () => {
+    sfx.startChapter1DailyBgm();
   });
 
   const executeScript = (source: string): void => {
