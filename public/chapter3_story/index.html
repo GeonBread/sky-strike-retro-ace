@@ -3490,7 +3490,12 @@ window.STORY_HOOKS = {
   },
   onSegmentComplete(payload) { if (payload?.sectionOnly) this._emit('section-complete', { segmentId: payload?.segmentId || '', sectionOnly: true }); },
   onEffectStart(payload) { this._emit('effect-start', { effectId: payload?.effectId || '' }); },
-  onEffectEnd(payload) { this._emit('effect-end', { effectId: payload?.effectId || '' }); },
+  onEffectEnd(payload) {
+    const effectId = payload?.effectId || '';
+    this._emit('effect-end', { effectId });
+    // Scene 32: start the supplied late-game BGM only after Digrion's full body-destruction cinematic ends.
+    if (effectId === 'digrion-body-break') this._emit('late-story-bgm-start');
+  },
   onStoryComplete(payload) { this._emit('story-complete', { segmentId: payload?.segmentId || '' }); }
 };
 

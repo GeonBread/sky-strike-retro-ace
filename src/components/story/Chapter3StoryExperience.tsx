@@ -271,7 +271,11 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       ].forEach((property) => storyFrame.style.removeProperty(property));
     }
 
-    if (sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3" || sfx.currentBgmTrack === "/audio/chapter3-final-space-bgm.mp3") sfx.stopBgm();
+    if (
+      sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3" ||
+      sfx.currentBgmTrack === "/audio/chapter3-final-space-bgm.mp3" ||
+      sfx.currentBgmTrack === "/audio/chapter3-late-bgm.mp3"
+    ) sfx.stopBgm();
     setFullscreenEffect(null);
     clearWaveRetryPromptTimer();
     setWaveActive(false);
@@ -358,6 +362,12 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
           return;
         }
 
+        if (message.type === "late-story-bgm-start") {
+          sfx.resumeAll();
+          sfx.startChapter3LateBgm();
+          return;
+        }
+
         if (message.type === "effect-start") {
           const effectId = message.detail?.effectId || "";
           if (effectId === "battle-running") {
@@ -395,7 +405,11 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         if (message.type === "story-complete") {
           setFullscreenEffect(null);
           setWaveActive(false);
-          if (sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3" || sfx.currentBgmTrack === "/audio/chapter3-final-space-bgm.mp3") sfx.stopBgm();
+          if (
+            sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3" ||
+            sfx.currentBgmTrack === "/audio/chapter3-final-space-bgm.mp3" ||
+            sfx.currentBgmTrack === "/audio/chapter3-late-bgm.mp3"
+          ) sfx.stopBgm();
           if (storyIsTestJump) {
             returnToSelector();
           } else {
