@@ -408,6 +408,32 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
           return;
         }
 
+        // Chapter 3 combat reuses the exact Chapter 1 procedural SFX.
+        // The wave runs inside an iframe, so it asks the host to play the shared AudioSystem sounds.
+        if (message.type === "sfx-player-shoot") {
+          sfx.resumeAll();
+          sfx.shoot();
+          return;
+        }
+
+        if (message.type === "sfx-enemy-hit") {
+          sfx.resumeAll();
+          sfx.enemyHit();
+          return;
+        }
+
+        if (message.type === "sfx-enemy-explode") {
+          sfx.resumeAll();
+          sfx.enemyExplode();
+          return;
+        }
+
+        if (message.type === "sfx-smart-bomb") {
+          sfx.resumeAll();
+          sfx.bossExplode();
+          return;
+        }
+
         if (message.type === "hud-state") {
           setWaveHud({
             hp: Math.max(0, Math.floor(message.detail?.hp ?? 3)),

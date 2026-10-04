@@ -1641,7 +1641,7 @@ function splitEnemy(e){
  }
 }
 function maybeDropPowerUp(e){if(!EMBEDDED||e.attackable===false||Math.random()>=.12)return;powerups.push({x:e.x,y:e.y,r:11,vy:120,type:Math.random()<.30?'heal':'power',t:0});}
-function killEnemy(e,rewardDrop=false){if(e.dead)return;if(waves[waveIndex]?.special==='grandFinaleMixed'&&e.grandBatch!=null&&!e.grandDefeatCounted){e.grandDefeatCounted=true;specialState.grandBatchDefeated=specialState.grandBatchDefeated||{};specialState.grandBatchDefeated[e.grandBatch]=(specialState.grandBatchDefeated[e.grandBatch]||0)+1;}e.dead=true;if(rewardDrop)maybeDropPowerUp(e);spawnChapter2EnemyDeath072(e);if(e.type==='splitter')splitEnemy(e);if(e.type==='tractor')rebuildPairs();if(e.type==='snake')compactSnakeFormation();}
+function killEnemy(e,rewardDrop=false,playDestroySfx=false){if(e.dead)return;if(waves[waveIndex]?.special==='grandFinaleMixed'&&e.grandBatch!=null&&!e.grandDefeatCounted){e.grandDefeatCounted=true;specialState.grandBatchDefeated=specialState.grandBatchDefeated||{};specialState.grandBatchDefeated[e.grandBatch]=(specialState.grandBatchDefeated[e.grandBatch]||0)+1;}e.dead=true;if(playDestroySfx)emitWave('sfx-enemy-explode');if(rewardDrop)maybeDropPowerUp(e);spawnChapter2EnemyDeath072(e);if(e.type==='splitter')splitEnemy(e);if(e.type==='tractor')rebuildPairs();if(e.type==='snake')compactSnakeFormation();}
 
 const PLAYER_BULLET_SPEED_MULT=1.16;
 function addSciencePlayerBullet(kind,x,y,size,vxFrame,vyFrame,damage){
@@ -1659,6 +1659,7 @@ function addSciencePlayerBullet(kind,x,y,size,vxFrame,vyFrame,damage){
  });
 }
 function spawnPlayerVolley(){
+ emitWave('sfx-player-shoot');
  const lv=clamp(player.powerLevel,1,5),x=player.x,y=player.y-(player.bodyHalf||24);
  const baseVy=-18.4-lv*.62;
  const damage=[18,13,11,9.5,8.5][lv-1];
@@ -2093,6 +2094,7 @@ function updatePowerUps(dt){
 function triggerSmartBomb(){
  if(gameOver||player.dead||player.bombs<=0||bombActive)return;
  player.bombs--;
+ emitWave('sfx-smart-bomb');
  bombActive=true;
  bombRadius=0;
  bombOriginX=player.x;
@@ -2119,7 +2121,7 @@ function updateSmartBomb(dt){
  if(bombRadius>=bombMaxRadius){bombActive=false;bombRadius=0;}
 }
 function updateBullets(dt){for(const b of bullets){b.t=(b.t||0)+dt;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.kind==='deadlineShard'){const drag=Math.pow(b.drag||.992,dt*60);b.vx*=drag;b.vy*=drag;}/* suicideShard intentionally has no drag: it flies straight at its launch speed until off-screen. */b.life-=dt;if(!player.dead&&Math.hypot(player.x-b.x,player.y-b.y)<player.r+b.r)damagePlayer();}bullets=bullets.filter(b=>b.life>0&&b.x>-80&&b.x<W+80&&b.y>-80&&b.y<H+80);
- for(const b of playerBullets){b.x+=(b.vx||0)*dt;b.y+=b.vy*dt;b.life-=dt;for(const e of enemies){if(e.dead||e.attackable===false)continue;if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+b.r){e.hp-=b.damage??18;e.hitFlash=1;e.hurtPulse=.22;b.life=0;spawnChapter1LikeEnemyHit(b.x,b.y);if(e.hp<=0)killEnemy(e,true);break;}}}playerBullets=playerBullets.filter(b=>b.life>0&&b.y>-40&&b.x>-40&&b.x<W+40);
+ for(const b of playerBullets){b.x+=(b.vx||0)*dt;b.y+=b.vy*dt;b.life-=dt;for(const e of enemies){if(e.dead||e.attackable===false)continue;if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+b.r){e.hp-=b.damage??18;e.hitFlash=1;e.hurtPulse=.22;b.life=0;emitWave('sfx-enemy-hit');spawnChapter1LikeEnemyHit(b.x,b.y);if(e.hp<=0)killEnemy(e,true,true);break;}}}playerBullets=playerBullets.filter(b=>b.life>0&&b.y>-40&&b.x>-40&&b.x<W+40);
 }
 function damagePlayer(force=false){if(gameOver||player.dead)return;if(invincible&&!force)return;if(player.hitTimer>0&&!force)return;player.hp--;if(player.powerLevel>1)player.powerLevel--;player.dead=true;player.respawnTimer=.55;player.drag=false;addEffect({kind:'ring',x:player.x,y:player.y,life:.45,color:'#ffffff'});if(player.hp<=0&&EMBEDDED){/* failure is emitted after the short death beat */}}
 function updateSpecialWave(dt){
