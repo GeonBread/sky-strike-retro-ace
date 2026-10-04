@@ -276,6 +276,10 @@ export function Chapter2StoryExperience({
 
       if (data.type === "progress") {
         if (Number.isInteger(data.state?.index)) setCurrentStoryIndex(Number(data.state?.index));
+        // 스토리 #241: "책임의 블랙홀" 도착 연출이 시작되는 순간부터 보스 웨이브 전용 BGM을 재생한다.
+        if (data.effectId === "boss-arrival-background-title" && phase === "story") {
+          sfx.startChapter2PreBossBgm();
+        }
         if (
           data.effectId
           && isChapter2FullscreenStoryEffect(data.effectId)

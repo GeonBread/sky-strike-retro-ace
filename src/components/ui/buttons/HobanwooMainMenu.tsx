@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { sfx } from "../../../game/AudioSystem";
 import { HobanwooSpriteButton } from "./HobanwooSpriteButton";
 import "./hobanwooMainMenu.css";
 
@@ -26,6 +28,20 @@ export function HobanwooMainMenu({
   onSettings,
   onShipSelect,
 }: HobanwooMainMenuProps) {
+  useEffect(() => {
+    sfx.startMenuBgm();
+
+    const resumeMenuBgm = () => sfx.resumeAll();
+    window.addEventListener("pointerdown", resumeMenuBgm, { capture: true });
+    window.addEventListener("keydown", resumeMenuBgm, { capture: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", resumeMenuBgm, { capture: true });
+      window.removeEventListener("keydown", resumeMenuBgm, { capture: true });
+      sfx.stopBgm();
+    };
+  }, []);
+
   return (
     <section
       className={[

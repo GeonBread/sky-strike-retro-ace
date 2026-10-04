@@ -444,6 +444,40 @@ export class AudioSystem {
     this.playNoise(0.12);
   }
 
+  startMenuBgm() {
+    const track = "/audio/main-menu-bgm.m4a";
+    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    // 첫 화면 자동재생이 브라우저 정책으로 막혀도 재생 요청 상태는 유지한다.
+    // 이후 첫 포인터/키 입력에서 resumeAll()이 같은 트랙을 즉시 재개한다.
+    this.bgmElement.play().catch(() => {});
+  }
+
+  startChapter2PreBossBgm() {
+    const track = "/audio/chapter2-preboss-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.bgmElement.play().catch(() => {});
+  }
+
   startBgmForPhase(phase: number) {
     const chapter = Math.max(1, Math.floor(phase));
     const track =
