@@ -632,6 +632,26 @@ export class AudioSystem {
     this.bgmElement.play().catch(() => {});
   }
 
+  startChapter2CoreContaminationSourceBgm() {
+    const track = "/audio/chapter2-core-contamination-source-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.requestBgmPlayback();
+  }
+
   startChapter2PreBossBgm() {
     const track = "/audio/chapter2-preboss-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {

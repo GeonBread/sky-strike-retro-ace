@@ -115,6 +115,13 @@ const CHAPTER2_STRUGGLE_BGM_RESUME_INDEX = 144;
 const CHAPTER2_WAVE_TRANSITION_INDEX = 142;
 const CHAPTER2_MIDCHECK_CALENDAR_INDEX = 164;
 const CHAPTER2_MIDCHECK_DAILY_BGM_START_INDEX = 165;
+// 화면 표시 기준 스토리 #202 = 내부 index 201의 공부 연출.
+// 여기서 일상 BGM을 페이드아웃하고, #203(section marker)은 무음으로 둔다.
+const CHAPTER2_CORE_SOURCE_STUDY_FADE_INDEX = 201;
+const CHAPTER2_CORE_SOURCE_SILENT_INDEX = 202;
+// 화면 표시 기준 스토리 #204 = 내부 index 203의 학생증 첫 대사.
+// 첨부된 핵심 오염원 출현 BGM을 여기서 시작해 책임의 블랙홀 포탈까지 유지한다.
+const CHAPTER2_CORE_SOURCE_BGM_START_INDEX = 203;
 const CHAPTER2_BOSS_PORTAL_DEPARTURE_INDEX = 239;
 const CHAPTER2_PREBOSS_BGM_START_INDEX = 240;
 // STORY_DATA 기준: "발표" section-marker가 index 310 (#311)에서 시작한다.
@@ -389,21 +396,49 @@ export function Chapter2StoryExperience({
             sfx.fadeOutBgm(3600);
           }
 
-          // 중간 점검의 첫 대사부터 책임의 블랙홀 이동 직전까지는 일상 BGM을 유지한다.
+          // 중간 점검의 첫 대사부터 스토리 #202 공부 연출 직전까지는 일상 BGM을 유지한다.
           if (
             Number.isInteger(storyIndex)
             && storyIndex >= CHAPTER2_MIDCHECK_DAILY_BGM_START_INDEX
-            && storyIndex < CHAPTER2_BOSS_PORTAL_DEPARTURE_INDEX
+            && storyIndex < CHAPTER2_CORE_SOURCE_STUDY_FADE_INDEX
           ) {
             sfx.startChapter1DailyBgm();
           }
 
-          // 책임의 블랙홀로 실제 이동하는 포탈 연출에서는 일상 BGM을 천천히 끈다.
+          // 스토리 #202: 공부 연출이 시작되면 직전 일상 BGM을 서서히 끈다.
+          // 테스트 메뉴에서 #202로 바로 점프해도 동일한 전환이 재현되도록 먼저 일상 BGM을 복원한다.
+          if (
+            storyIndex === CHAPTER2_CORE_SOURCE_STUDY_FADE_INDEX
+            && data.effectId === "study-session"
+          ) {
+            sfx.startChapter1DailyBgm();
+            sfx.fadeOutBgm(2200);
+          }
+
+          // 스토리 #203(section marker)은 무음 구간이다.
+          // 자연 진행에서는 #202의 2.2초 페이드가 이미 끝난 상태이며,
+          // 테스트 메뉴에서 #203으로 바로 점프한 경우에도 이전 장면의 BGM이 남지 않게 한다.
+          if (storyIndex === CHAPTER2_CORE_SOURCE_SILENT_INDEX) {
+            sfx.stopBgm();
+          }
+
+          // 스토리 #204 학생증 첫 대사부터 책임의 블랙홀 포탈 직전까지는
+          // 사용자가 첨부한 '챕터 2 핵심 오염원 출현' BGM을 구간 상태로 유지한다.
+          // 따라서 #204 이후 중간 장면으로 직접 점프해도 같은 곡이 복원된다.
+          if (
+            Number.isInteger(storyIndex)
+            && storyIndex >= CHAPTER2_CORE_SOURCE_BGM_START_INDEX
+            && storyIndex < CHAPTER2_BOSS_PORTAL_DEPARTURE_INDEX
+          ) {
+            sfx.startChapter2CoreContaminationSourceBgm();
+          }
+
+          // 책임의 블랙홀로 실제 이동하는 포탈 연출에서는 핵심 오염원 출현 BGM을 천천히 끈다.
           if (
             storyIndex === CHAPTER2_BOSS_PORTAL_DEPARTURE_INDEX
             && data.effectId === "core-portal-open"
           ) {
-            sfx.startChapter1DailyBgm();
+            sfx.startChapter2CoreContaminationSourceBgm();
             sfx.fadeOutBgm(3600);
           }
 
