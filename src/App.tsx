@@ -380,11 +380,17 @@ function GameCanvas({
       engine.player.powerLevel = Math.max(1, Math.min(5, Math.floor(chapter1StartingPowerLevel)));
     }
     if (chapter1WaveOnly) {
-      engine.chapter1Wave.enabled = true;
-      engine.chapter1Wave.running = false;
-      engine.chapter1Wave.selectedWave = Math.max(0, chapter1WaveStartIndex);
-      engine.chapter1Wave.nextWave = Math.max(0, chapter1WaveStartIndex);
-      engine.chapter1Wave.allWavesCleared = false;
+      if (simulationEnabled) {
+        // TEST 직접 진입/재도전은 첫 웨이브를 즉시 명시적으로 시작한다.
+        engine.startChapter1Waves(chapter1WaveStartIndex);
+      } else {
+        // 전투 가이드 동안에는 화면만 준비하고, 가이드 종료 시 별도 effect에서 시작한다.
+        engine.chapter1Wave.enabled = true;
+        engine.chapter1Wave.running = false;
+        engine.chapter1Wave.selectedWave = Math.max(0, chapter1WaveStartIndex);
+        engine.chapter1Wave.nextWave = Math.max(0, chapter1WaveStartIndex);
+        engine.chapter1Wave.allWavesCleared = false;
+      }
     }
     if (chapter1BossOnly) {
       engine.chapter1Wave.enabled = false;
@@ -411,6 +417,14 @@ function GameCanvas({
       engine.stop();
     };
   }, []);
+
+  useEffect(() => {
+    if (!chapter1WaveOnly || !simulationEnabled || !engineRef.current) return;
+    const runtime = engineRef.current.chapter1Wave;
+    if (runtime?.running || runtime?.allWavesCleared) return;
+    // 전투 가이드 -> 실제 전투 전환에서도 첫 웨이브를 확실하게 직접 시작한다.
+    engineRef.current.startChapter1Waves(chapter1WaveStartIndex);
+  }, [chapter1WaveOnly, simulationEnabled, chapter1WaveStartIndex]);
 
   useEffect(() => {
     if (!chapter2WaveOnly || !chapter2WaveControlCommand || !engineRef.current) return;
@@ -947,6 +961,13 @@ function Chapter1StoryExperience({
   }, [phase, part, currentWaveIndex]);
 
   useEffect(() => {
+    if (phase !== "wave-guide" || waveGuideVisualReady) return;
+    // 배경/플레이어 이미지 한 장의 decode 실패가 전투 흐름 전체를 영구 정지시키지 않도록 한다.
+    const fallbackTimer = window.setTimeout(() => setWaveGuideVisualReady(true), 1200);
+    return () => window.clearTimeout(fallbackTimer);
+  }, [phase, waveGuideVisualReady, waveRunKey]);
+
+  useEffect(() => {
     if (phase !== "wave-guide" || !waveGuideVisualReady || storyPauseOpen) return;
     const handleGuideKey = (event: KeyboardEvent) => {
       if (event.code !== "Enter" && event.code !== "Space") return;
@@ -1122,37 +1143,25 @@ function Chapter1StoryExperience({
           <aside className="chapter1-story-test-panel" aria-label="챕터 1 스토리 테스트 이동">
             <div className="chapter1-story-test-title">CHAPTER 1 TEST</div>
             <div className="chapter1-story-test-group">
-              <strong>프롤로그·입학</strong>
-              <button onClick={() => jumpToPreview(1, "full-flow", true)}>처음부터</button>
-              <button onClick={() => jumpToPreview(1, "prologue-dialogue", true)}>프롤로그</button>
-              <button onClick={() => jumpToPreview(1, "opening-credits-cinematic", true)}>오프닝 크레딧</button>
-              <button onClick={() => jumpToPreview(1, "entrance-dialogue", true)}>입학식</button>
+              <strong>전반부 스토리</strong>
+              <button onClick={() => jumpToPreview(1, "full-flow")}>처음부터</button>
+              <button onClick={() => jumpToPreview(1, "prologue-dialogue")}>프롤로그</button>
+              <button onClick={() => jumpToPreview(1, "entrance-dialogue")}>입학식</button>
+              <button onClick={() => jumpToPreview(1, "notice-dialogue")}>공지 폭주</button>
+              <button onClick={() => jumpToPreview(1, "room-dialogue")}>강의실 혼선</button>
+              <button onClick={() => jumpToPreview(1, "login-dialogue")}>로그인 감시</button>
+              <button onClick={() => jumpToPreview(1, "attendance-dialogue")}>출석 드론</button>
+              <button onClick={() => jumpToPreview(1, "first-purification-dialogue")}>첫 정화</button>
             </div>
             <div className="chapter1-story-test-group">
-              <strong>오염 사건</strong>
-              <button onClick={() => jumpToPreview(1, "notice-dialogue", true)}>공지 폭주</button>
-              <button onClick={() => jumpToPreview(1, "login-dialogue", true)}>로그인 감시</button>
-              <button onClick={() => jumpToPreview(1, "room-dialogue", true)}>강의실 혼선</button>
-              <button onClick={() => jumpToPreview(1, "attendance-dialogue", true)}>출석 드론</button>
-              <button onClick={() => jumpToPreview(1, "attendance-escape-dialogue", true)}>비상 계단 추격</button>
-            </div>
-            <div className="chapter1-story-test-group">
-              <strong>첫 정화·전투 진입</strong>
-              <button onClick={() => jumpToPreview(1, "first-purification-cinematic", true)}>출석탄→첫 정화 연출</button>
-              <button onClick={() => jumpToPreview(1, "first-purification-dialogue", true)}>첫 정화 후 대사</button>
-              <button onClick={() => jumpToPreview(1, "decision-dialogue", true)}>전투 결심</button>
+              <strong>전투·후반부</strong>
+              <button onClick={() => jumpToPreview(2, "decision-dialogue")}>전투 결심</button>
               <button onClick={openWaveGuide}>전투 가이드</button>
               <button className="is-combat" onClick={jumpToWave}>실제 웨이브 시작</button>
-            </div>
-            <div className="chapter1-story-test-group">
-              <strong>학사 코어·보스·엔딩</strong>
               <button onClick={jumpToPurification}>정화율 100% 연출</button>
-              <button onClick={() => jumpToPreview(2, "energy100-dialogue", true)}>100% 후 대사·포탈</button>
-              <button onClick={() => jumpToPreview(2, "boss-dialogue", true)}>보스 최초 등장</button>
               <button className="is-combat" onClick={jumpToBoss}>실제 보스 시작</button>
-              <button onClick={() => jumpToPreview(2, "boss-purification-dialogue", true)}>보스 격파 후 정화</button>
-              <button onClick={() => jumpToPreview(2, "star-recovery-dialogue", true)}>별 회수</button>
-              <button onClick={() => jumpToPreview(2, "system-restore-dialogue", true)}>학사 시스템 복구</button>
+              <button onClick={() => jumpToPreview(2, "boss-purification-dialogue")}>보스 격파 후 정화</button>
+              <button onClick={() => jumpToPreview(2, "star-recovery-dialogue")}>별 회수</button>
               <button onClick={() => jumpToPreview(2, "chapter-end-dialogue", true)}>챕터 엔딩</button>
             </div>
           </aside>

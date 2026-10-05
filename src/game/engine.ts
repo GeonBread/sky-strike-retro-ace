@@ -178,7 +178,7 @@ import type { DebrisCoverState } from "./obstacles/debrisCoverTypes";
 import type { MeteorObstacleState } from "./obstacles/meteorObstacleTypes";
 import type { GameEngineRuntimeContext } from "./runtime/gameEngineRuntimeContext";
 import { createChapter1WaveRuntime, type Chapter1WaveRuntime } from "./chapter1/chapter1WaveTypes";
-import { getChapter1WaveProgressSystem, skipCurrentChapter1WaveSystem } from "./chapter1/chapter1WaveSystem";
+import { getChapter1WaveProgressSystem, skipCurrentChapter1WaveSystem, startChapter1WavesSystem } from "./chapter1/chapter1WaveSystem";
 import {
   createChapter2WaveRuntime,
   getChapter2WaveProgressSystem,
@@ -725,6 +725,11 @@ export class GameEngine implements GameEngineRuntimeContext {
     spawnEnemyWaveSystem(this, dt);
   }
 
+
+  /** 스토리 모드에서 챕터 1 실제 웨이브를 지정 위치부터 즉시 시작한다. */
+  public startChapter1Waves(startWaveIndex = 0): void {
+    startChapter1WavesSystem(this, startWaveIndex);
+  }
 
   /** 테스트 UI에서 현재 챕터 1 웨이브를 즉시 넘긴다. */
   public skipCurrentChapter1Wave(): boolean {
