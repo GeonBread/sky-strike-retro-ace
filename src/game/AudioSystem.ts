@@ -700,6 +700,66 @@ export class AudioSystem {
     this.bgmElement.play().catch(() => {});
   }
 
+  startChapter3DailyBgm() {
+    const track = "/audio/chapter3-daily-story-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.requestBgmPlayback();
+  }
+
+  startChapter3StrangeEventBgm() {
+    const track = "/audio/chapter3-strange-event-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.requestBgmPlayback();
+  }
+
+  startChapter3ContaminationEventBgm() {
+    const track = "/audio/chapter3-contamination-event-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.requestBgmPlayback();
+  }
+
   startBgmForPhase(phase: number) {
     const chapter = Math.max(1, Math.floor(phase));
     const track =

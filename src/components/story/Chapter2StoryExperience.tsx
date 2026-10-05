@@ -484,7 +484,7 @@ export function Chapter2StoryExperience({
           storyBossEmergenceTimerRef.current = window.setTimeout(() => {
             storyBossEmergenceTimerRef.current = null;
             setStoryBossEmergenceActive(false);
-          }, 4200);
+          }, 5200);
         }
         if (
           data.effectId === "combat-transition"

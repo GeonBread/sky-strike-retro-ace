@@ -457,7 +457,7 @@ function insertWaveAfter(anchorSpecial,wave){
  else waves.push(wave);
 }
 insertWaveAfter('chargerTriple',{title:'횡방향 회피 시험',desc:'전투영역의 세로 폭이 크게 압축되고 Y 이동이 잠긴다. 화면 위쪽의 학점 압박 드릴이 점선으로 조준한 뒤 가속 돌진하며, 공격 없이 좌우 이동만으로 연속 돌진을 버티는 회피 전용 웨이브',special:'survivalHorizontalRush',survival:true,viewShift:true});
-insertWaveAfter('chargerClock8',{title:'안전 통로 돌파',desc:'매우 좁은 수평 전투영역에서 Y 이동이 잠긴다. 화면 위에 학점 압박 드릴을 빽빽하게 한 줄로 채우되 단 한 자리만 비워 두고 수직 돌진하므로, 빈 자리로 정확히 이동해야 피할 수 있다',special:'survivalSafeGapRush',survival:true,viewShift:true});
+insertWaveAfter('chargerClock8',{title:'안전 통로 돌파',desc:'매우 좁은 전투영역 안에서 가로·세로 이동이 모두 가능하다. 화면 위에 학점 압박 드릴을 빽빽하게 한 줄로 채우되 단 한 자리만 비워 두고 수직 돌진하므로, 경계 안에서 빈 통로를 찾아 정확히 회피해야 한다',special:'survivalSafeGapRush',survival:true,viewShift:true});
 insertWaveAfter('boomerHex',{title:'외곽 레이저 5단 압축',desc:'좌우 화면 밖의 졸업 심사 포인터 드론이 정확히 5회의 동기화 레이저 포격을 수행한다. 매 포격이 끝날 때마다 전투영역이 크게 한 단계씩 축소되어 마지막에는 매우 좁은 공간에서 5번째 포격을 피해야 한다',special:'survivalOuterLaser',survival:true,viewShift:true});
 insertWaveAfter('snakeEscort24',{title:'이동 전투구역',desc:'작아진 전투영역 자체가 좌우로 이동한다. 졸업 검수 아이는 항상 프레임 바깥을 따라다니며 안쪽으로 조준탄을 쏘고, 플레이어는 움직이는 영역 안에서 살아남아야 한다',special:'survivalMovingZone',survival:true,viewShift:true});
 insertWaveAfter('linkStatic7',{title:'전기선 재배치 · 기하학 회피',desc:'진로방해 연결체가 전투영역 바깥에서 빠르게 재배치되며 X·수평·수직·다이아몬드·모래시계·별·십자 등 여러 기하학 전기선을 연속 형성한다. 예고선을 보고 빈 공간만 찾아 회피한다',special:'survivalElectricReposition',survival:true,viewShift:true});
@@ -1601,7 +1601,7 @@ function startWave(i,resetRun=false){
  else if(sp==='chargerSolo45')specialState={groups:0,timer:.35,totalGroups:15};
  else if(sp==='chargerRushMixed')specialState={groups:0,timer:.35,totalGroups:15,electricSpawned:false};
  else if(sp==='survivalHorizontalRush')initSurvivalWave(sp,{x:LX(70),y:405,w:660,h:155},{movementMode:'free',intro:3.08,viewDuration:1.45}); // PATCH090: free XY movement; shrinking bounds push the player inward via clampPlayerToCombatView(false).
- else if(sp==='survivalSafeGapRush')initSurvivalWave(sp,{x:LX(185),y:405,w:430,h:140},{movementMode:'xOnly',intro:1.5,viewDuration:1.35});
+ else if(sp==='survivalSafeGapRush')initSurvivalWave(sp,{x:LX(185),y:405,w:430,h:140},{movementMode:'free',intro:1.5,viewDuration:1.35});
  else if(sp==='survivalOuterLaser')initSurvivalWave(sp,{x:LX(45),y:80,w:710,h:810},{intro:1.6,viewDuration:1.45});
  else if(sp==='survivalMovingZone')initSurvivalWave(sp,{x:LX(175),y:205,w:450,h:610},{intro:1.7,viewDuration:1.5});
  else if(sp==='survivalElectricReposition')initSurvivalWave(sp,{x:LX(100),y:130,w:600,h:700},{intro:1.6,viewDuration:1.4});

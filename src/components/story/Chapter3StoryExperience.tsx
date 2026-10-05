@@ -136,7 +136,7 @@ const WAVES: WaveMeta[] = [
   { index: 6, title: "WAVE 7 · 좌우 교대 드릴 돌진", desc: "학점 압박 드릴 10기가 좌우 바깥에서 한 마리씩 교대로 진입해 조준 후 돌진", pattern: "chargerAlternate12" },
   { index: 7, title: "WAVE 8 · 미제출 폭주체 소규모 포위", desc: "미제출 폭주체 6기가 외곽에서 플레이어를 포위한 뒤 추적·자폭하고 6방향 파편을 방출", pattern: "suicide6" },
   { index: 8, title: "WAVE 9 · 시계방향 드릴 순환", desc: "학점 압박 드릴이 시계방향으로 순환 돌진하고, 4번째부터 중앙의 검수 아이 5기가 오각형 회전 사격으로 방해", pattern: "chargerClock8" },
-  { index: 9, title: "WAVE 10 · 안전 통로 돌파", desc: "매우 좁은 수평 전투영역에서 Y 이동이 잠긴다. 화면 위에 학점 압박 드릴을 빽빽하게 한 줄로 채우되 단 한 자리만 비워 두고 수직 돌진하므로, 빈 자리로 정확히 이동해야 피할 수 있다", pattern: "survivalSafeGapRush" },
+  { index: 9, title: "WAVE 10 · 안전 통로 돌파", desc: "매우 좁은 전투영역 안에서 가로·세로 이동이 모두 가능하다. 화면 위에 학점 압박 드릴을 빽빽하게 한 줄로 채우되 단 한 자리만 비워 두고 수직 돌진하므로, 경계 안에서 빈 통로를 찾아 정확히 회피해야 한다", pattern: "survivalSafeGapRush" },
   { index: 10, title: "WAVE 11 · 수정 마감 폭탄 배치", desc: "수정 마감 폭탄 5기가 상단·좌측·우측에서만 진입해 안전 간격으로 위치를 선점한 뒤 점멸 → 진동 → 폭발", pattern: "mine5" },
   { index: 11, title: "WAVE 12 · 수정 마감 폭탄 밀집", desc: "수정 마감 폭탄 9기가 상단·좌측·우측에서만 진입해 촘촘히 배치되고 이동 공간을 제한", pattern: "mine9" },
   { index: 12, title: "WAVE 13 · 수정안 큐브 분열 체험", desc: "대형 수정안 큐브 2기가 1→2→4→8로 연속 분열. 일부 단계만 사격하고 마지막 조각은 추적에 집중", pattern: "splitter2" },
@@ -168,6 +168,30 @@ const BOSS_SECTIONS = STORY_SECTIONS.filter((section) => section.ordinal >= 13 &
 
 
 const CHAPTER3_PROGRESS_KEY = "sky-strike-chapter3-story-progress-v1";
+
+// STORY_DATA item indices. BGM is treated as an interval state, not a one-shot cue:
+// jumping directly into any item restores the track that should own that story range.
+const CH3_SCENE6_START_INDEX = 62;
+const CH3_STRANGE_BGM_START_INDEX = 68;
+const CH3_CORRUPTION_TRACE_FADE_INDEX = 108;
+const CH3_CONTAMINATION_BGM_START_INDEX = 109;
+const CH3_WAVE_TRANSITION_INDEX = 150;
+const CH3_POST_WAVE_STRANGE_BGM_START_INDEX = 153;
+const CH3_CORE_PORTAL_INDEX = 172;
+const CH3_CORE_STORY_START_INDEX = 173;
+const CH3_DIGRION_BODY_BREAK_INDEX = 228;
+const CH3_LATE_STORY_START_INDEX = 229;
+const CH3_GRADUATION_DAY_INDEX = 292;
+
+function isChapter3OwnedBgm(track: string | null): boolean {
+  return track === "/audio/chapter3-daily-story-bgm.mp3"
+    || track === "/audio/chapter3-strange-event-bgm.mp3"
+    || track === "/audio/chapter3-contamination-event-bgm.mp3"
+    || track === "/audio/chapter3-wave-bgm.mp3"
+    || track === "/audio/chapter3-final-space-bgm.mp3"
+    || track === "/audio/chapter3-late-bgm.mp3"
+    || track === "/audio/final-ending-bgm.mp3";
+}
 
 type Chapter3SavedProgress = { index: number; sectionOrdinal: number };
 type Chapter3WaveHud = { hp: number; maxHp: number; bombs: number; powerLevel: number; waveIndex: number; totalWaves: number; enemies: number };
@@ -271,11 +295,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       ].forEach((property) => storyFrame.style.removeProperty(property));
     }
 
-    if (
-      sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3" ||
-      sfx.currentBgmTrack === "/audio/chapter3-final-space-bgm.mp3" ||
-      sfx.currentBgmTrack === "/audio/chapter3-late-bgm.mp3"
-    ) sfx.stopBgm();
+    if (isChapter3OwnedBgm(sfx.currentBgmTrack)) sfx.stopBgm();
     setFullscreenEffect(null);
     clearWaveRetryPromptTimer();
     setWaveActive(false);
@@ -370,6 +390,16 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
         if (message.type === "effect-start") {
           const effectId = message.detail?.effectId || "";
+          if (effectId === "combat-transition") {
+            sfx.fadeOutBgm(2800);
+          }
+          if (effectId === "teleport-core") {
+            sfx.fadeOutBgm(3600);
+          }
+          if (effectId === "digrion-body-break") {
+            // Scene 32: fade the core BGM during the body-destruction cinematic.
+            sfx.fadeOutBgm(4200);
+          }
           if (effectId === "battle-running") {
             setFullscreenEffect(null);
             launchWave(0, false, "story");
@@ -389,9 +419,61 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         }
 
         if (message.type === "progress-change") {
+          const storyIndex = Math.max(0, Math.floor(message.detail?.index ?? 0));
+
+          // Scene 1~4: user-supplied Chapter 3 daily BGM. Scene 6 begins by fading it out.
+          if (storyIndex < CH3_SCENE6_START_INDEX) {
+            sfx.startChapter3DailyBgm();
+          } else if (storyIndex === CH3_SCENE6_START_INDEX) {
+            sfx.startChapter3DailyBgm();
+            sfx.fadeOutBgm(2800);
+          }
+
+          // Scene 6 "뭐지 ……?" -> Scene 10 "피곤하니까..." keeps the strange-event BGM.
+          if (storyIndex >= CH3_STRANGE_BGM_START_INDEX && storyIndex < CH3_CORRUPTION_TRACE_FADE_INDEX) {
+            sfx.startChapter3StrangeEventBgm();
+          }
+          // Immediately after "피곤하니까 빨리 집 가서 자야겠다." the trace cinematic fades it out.
+          if (storyIndex === CH3_CORRUPTION_TRACE_FADE_INDEX) {
+            sfx.startChapter3StrangeEventBgm();
+            sfx.fadeOutBgm(2200);
+          }
+
+          // "저게 뭐지..?" starts the contamination BGM and keeps it through the pre-wave story.
+          if (storyIndex >= CH3_CONTAMINATION_BGM_START_INDEX && storyIndex < CH3_WAVE_TRANSITION_INDEX) {
+            sfx.startChapter3ContaminationEventBgm();
+          }
+          // STORY -> SHOOTING transition fades the current story BGM before wave BGM takes over.
+          if (storyIndex === CH3_WAVE_TRANSITION_INDEX) {
+            sfx.startChapter3ContaminationEventBgm();
+            sfx.fadeOutBgm(2800);
+          }
+
+          // Scene 16 onward restores the strange-event BGM until the core portal begins.
+          if (storyIndex >= CH3_POST_WAVE_STRANGE_BGM_START_INDEX && storyIndex < CH3_CORE_PORTAL_INDEX) {
+            sfx.startChapter3StrangeEventBgm();
+          }
+          if (storyIndex === CH3_CORE_PORTAL_INDEX) {
+            sfx.startChapter3StrangeEventBgm();
+            sfx.fadeOutBgm(3600);
+          }
+
+          // Direct scene jumps inside the core restore the intended core/late-game tracks.
+          if (storyIndex >= CH3_CORE_STORY_START_INDEX && storyIndex <= CH3_DIGRION_BODY_BREAK_INDEX) {
+            sfx.startChapter3FinalSpaceBgm();
+          }
+          if (storyIndex >= CH3_LATE_STORY_START_INDEX && storyIndex < CH3_GRADUATION_DAY_INDEX) {
+            sfx.startChapter3LateBgm();
+          }
+
+          // Scene 41 uses the supplied Chapter 3 daily track as the temporary graduation BGM.
+          if (storyIndex >= CH3_GRADUATION_DAY_INDEX) {
+            sfx.startChapter3DailyBgm();
+          }
+
           if (!storyIsTestJump) {
             writeChapter3Progress({
-              index: Math.max(0, Math.floor(message.detail?.index ?? 0)),
+              index: storyIndex,
               sectionOrdinal: Math.max(0, Math.floor(message.detail?.sectionOrdinal ?? 0)),
             });
           }
@@ -405,11 +487,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         if (message.type === "story-complete") {
           setFullscreenEffect(null);
           setWaveActive(false);
-          if (
-            sfx.currentBgmTrack === "/audio/final-ending-bgm.mp3" ||
-            sfx.currentBgmTrack === "/audio/chapter3-final-space-bgm.mp3" ||
-            sfx.currentBgmTrack === "/audio/chapter3-late-bgm.mp3"
-          ) sfx.stopBgm();
+          if (isChapter3OwnedBgm(sfx.currentBgmTrack)) sfx.stopBgm();
           if (storyIsTestJump) {
             returnToSelector();
           } else {

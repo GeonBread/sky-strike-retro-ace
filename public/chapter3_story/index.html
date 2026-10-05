@@ -3864,8 +3864,8 @@ window.STORY_DATA = {
       C3D.line("hobanwoo", "하……", "graduation_core_purified", "첨성대 코어 정상화", {right:"hobanwoo",pose:"dejected",left:"student_card"}),
       C3D.line("hobanwoo", "진짜 끝났다.", "graduation_core_purified", "첨성대 코어 정상화", {right:"hobanwoo",pose:"neutral",left:"student_card"}),
 
-      C3D.sec("장면 41. 졸업식 날", "graduation_day"),
-      C3D.fx("graduation-day-atmosphere", "graduation_day", 5200),
+      C3D.sec("장면 41. 졸업식 날", "black_screen"),
+      C3D.fx("graduation-day-atmosphere", "graduation_day", 7200),
       C3D.line("narrator", "그리고 두 달 뒤.", "graduation_day", "졸업식 날"),
       C3D.line("narrator", "호반우에게도 졸업식 날이 찾아왔다.", "graduation_day", "졸업식 날"),
       C3D.line("hobanwoo", "사람 진짜 많네.", "graduation_day", "졸업식 날", {right:"hobanwoo",pose:"neutral"}),
@@ -13862,6 +13862,14 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
 .c3-grad-bg088>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:none!important;transform:scale(1.005)}
 .c3-grad-bg088::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.03) 0%,rgba(0,0,0,.02) 54%,rgba(0,0,0,.5) 100%);pointer-events:none}
 .c3-grad-caption088{position:absolute;left:50%;bottom:8.5vh;z-index:2;min-width:min(680px,82vw);padding:17px 28px 19px;transform:translate(-50%,18px);opacity:0;text-align:center;text-shadow:0 3px 16px rgba(0,0,0,.8);animation:c3GradCaptionIn088 .85s 2s cubic-bezier(.2,.78,.2,1) forwards}
+.c3-grad-day-intro088{position:absolute;inset:0;overflow:hidden;background:#000;color:#fff;isolation:isolate}
+.c3-grad-day-photo088{position:absolute;inset:0;z-index:1;opacity:0;background:#000;animation:c3GradDayPhoto088 1s 5s ease forwards}
+.c3-grad-day-photo088 img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.005)}
+.c3-grad-day-photo088::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.02) 54%,rgba(0,0,0,.42));pointer-events:none}
+.c3-grad-day-title088{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:#000;opacity:0;animation:c3GradDayTitle088 2s 3s ease both}
+.c3-grad-day-title088 strong{color:#fff;font:1000 clamp(42px,7vw,92px)/1.08 "Noto Sans KR",sans-serif;letter-spacing:-.04em;text-shadow:0 0 24px rgba(255,255,255,.12)}
+@keyframes c3GradDayTitle088{0%{opacity:0}12%,82%{opacity:1}100%{opacity:0}}
+@keyframes c3GradDayPhoto088{to{opacity:1}}
 .c3-grad-caption088 small{display:block;margin-bottom:8px;color:#f1c96b;font:900 12px/1.2 "Noto Sans KR",sans-serif;letter-spacing:.22em}
 .c3-grad-caption088 strong{display:block;color:#fff;font:1000 clamp(34px,4.3vw,68px)/1.08 "Noto Sans KR",sans-serif;letter-spacing:-.045em}
 .c3-grad-caption088 span{display:block;margin-top:10px;color:rgba(255,255,255,.9);font:800 clamp(14px,1.35vw,21px)/1.45 "Noto Sans KR",sans-serif}
@@ -13870,9 +13878,9 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
 <script id="chapter3-patch-088-graduation-fullscreen-script">
 (() => {
   window.STORY_CUSTOM_EFFECTS['graduation-day-atmosphere'] = ({ layer }) => c3Mount(layer, `
-    <div class="c3-grad-bg088">
-      <img src="assets/chapter3/backgrounds/graduation_ceremony_entrance.png" alt="경북대학교 학위수여식 입구">
-      <div class="c3-grad-caption088"><small>FEBRUARY 21 · 2031</small><strong>졸업식 날</strong><span>경북대학교 · 학위수여식</span></div>
+    <div class="c3-grad-day-intro088">
+      <div class="c3-grad-day-title088"><strong>졸업식 날</strong></div>
+      <div class="c3-grad-day-photo088"><img src="assets/chapter3/backgrounds/graduation_ceremony_entrance.png" alt="경북대학교 학위수여식 입구"></div>
     </div>`);
 
   window.STORY_CUSTOM_EFFECTS['graduation-ceremony-background'] = ({ layer }) => c3Mount(layer, `
