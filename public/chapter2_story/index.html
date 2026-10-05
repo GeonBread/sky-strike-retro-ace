@@ -9586,7 +9586,12 @@ window.STORY_DATA = {
         "statusLabel": "핵심 오염원 출현",
         "left": "student_card",
         "right": "hobanwoo",
-        "bossNameReveal": true
+        "highlights": [
+          {
+            "text": "팀플 블랙홀 무임승차자",
+            "color": "#b779ff"
+          }
+        ]
       },
       {
         "speaker": "hobanwoo",
@@ -9764,7 +9769,7 @@ window.STORY_DATA = {
       {
         "type": "custom-effect",
         "effect": "boss-arrival-background-title",
-        "duration": 4300,
+        "duration": 6600,
         "scene": "boss_arena"
       },
       {
@@ -10015,7 +10020,7 @@ window.STORY_DATA = {
       {
         "type": "custom-effect",
         "effect": "boss-emergence",
-        "duration": 6500,
+        "duration": 7600,
         "scene": "boss_arena"
       },
       {
@@ -12445,7 +12450,7 @@ window.STORY_CUSTOM_EFFECTS['boss-emergence'] = ({ layer }) => c2MakeLayer(layer
     <div class="c2-boss-emergence-shock second"></div>
     <div class="c2-boss-emergence-energy-beams">${Array.from({length:10}, (_,i)=>`<span style="--i:${i}"></span>`).join('')}</div>
     <div class="c2-boss-emergence-runes">${Array.from({length:12}, (_,i)=>`<span style="--i:${i}"></span>`).join('')}</div>
-    <div class="c2-boss-emergence-dust">${Array.from({length:28}, (_,i)=>`<span style="--i:${i}"></span>`).join('')}</div>
+    <div class="c2-boss-emergence-dust">${Array.from({length:34}, (_,i)=>`<span style="--i:${i}"></span>`).join('')}</div>
     <div class="c2-boss-emergence-boss-wrap"><img src="assets/chapter2/illustrations/ill_boss_phase1.png" alt="책임의 블랙홀 무임승차자" class="c2-boss-emergence-boss" /></div>
     <div class="c2-boss-emergence-title">
       <small>CHAPTER 2 · BOSS</small>
@@ -12453,43 +12458,43 @@ window.STORY_CUSTOM_EFFECTS['boss-emergence'] = ({ layer }) => c2MakeLayer(layer
       <b>팀플 블랙홀 무임승차자</b>
     </div>
     <style>
-      .c2-boss-emergence-blackhole{position:absolute;inset:0;overflow:hidden;background:#020208}
-      .c2-boss-emergence-bg{position:absolute;inset:-6%;background:url('assets/chapter2/backgrounds/bg_ch2_blackhole_corrupt.png') center/cover no-repeat;filter:brightness(.18) saturate(.78) blur(14px);transform:scale(1.18);animation:c2BossEmergenceBg 4.2s ease both}
-      .c2-boss-emergence-blackhole:before{content:'';position:absolute;inset:-12%;background:radial-gradient(circle at 50% 50%,rgba(170,99,255,.30),transparent 18%),radial-gradient(circle at 50% 50%,rgba(88,32,170,.28),transparent 34%),radial-gradient(circle at 50% 50%,rgba(0,0,0,.96),transparent 62%);opacity:.96;animation:c2BossEmergenceTint 4.2s ease both}
-      .c2-boss-emergence-void{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.05) 0 12%,rgba(0,0,0,.88) 28%,rgba(0,0,0,0) 64%);mix-blend-mode:multiply;animation:c2BossEmergenceVoid 4.2s ease both}
-      .c2-boss-emergence-vortex{position:absolute;left:50%;top:50%;width:min(74vw,74vh);aspect-ratio:1/1;border-radius:50%;transform:translate(-50%,-50%) scale(.05);background:radial-gradient(circle at 50% 50%,rgba(6,6,12,1) 0 18%,rgba(70,24,128,.94) 21%,rgba(28,12,62,.88) 33%,rgba(8,5,14,.72) 44%,rgba(0,0,0,0) 65%);filter:blur(1px);box-shadow:0 0 0 1px rgba(234,214,255,.18),0 0 42px rgba(128,72,255,.32),0 0 130px rgba(65,19,130,.52);animation:c2BossEmergenceVortex 4.2s cubic-bezier(.2,.72,.2,1) both}
-      .c2-boss-emergence-ring{position:absolute;left:50%;top:50%;width:min(82vw,82vh);aspect-ratio:1/1;border-radius:50%;transform:translate(-50%,-50%) scale(.25);border:2px solid rgba(230,214,255,.42);opacity:0;mix-blend-mode:screen;box-shadow:0 0 18px rgba(182,126,255,.24)}
-      .c2-boss-emergence-ring.ring-a{animation:c2BossEmergenceRingA 4.2s ease-out both}
-      .c2-boss-emergence-ring.ring-b{animation:c2BossEmergenceRingB 4.2s ease-out both}
-      .c2-boss-emergence-ring.ring-c{animation:c2BossEmergenceRingC 4.2s ease-out both}
-      .c2-boss-emergence-shock{position:absolute;left:50%;top:50%;width:10%;aspect-ratio:1/1;border-radius:50%;transform:translate(-50%,-50%);border:3px solid rgba(255,230,166,.92);opacity:0;animation:c2BossEmergenceShock 4.2s ease-out both}
-      .c2-boss-emergence-shock.second{border-color:rgba(196,144,255,.88);animation:c2BossEmergenceShock2 4.2s ease-out both}
-      .c2-boss-emergence-energy-beams,.c2-boss-emergence-runes,.c2-boss-emergence-dust{position:absolute;inset:0}
-      .c2-boss-emergence-energy-beams span{position:absolute;left:50%;top:50%;width:4px;height:min(28vh,240px);transform-origin:50% 0%;border-radius:999px;background:linear-gradient(180deg,rgba(255,242,210,.95),rgba(182,120,255,.82) 40%,rgba(0,0,0,0));opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(-6%) scaleY(.2);filter:blur(.2px);animation:c2BossEmergenceBeam 4.2s ease-out both}
-      .c2-boss-emergence-runes span{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border:2px solid rgba(241,234,255,.72);border-radius:3px;opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-28vh) rotate(45deg) scale(.3);box-shadow:0 0 14px rgba(189,125,255,.34);animation:c2BossEmergenceRune 4.2s ease-out calc(var(--i)*.03s) both}
-      .c2-boss-emergence-dust span{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:radial-gradient(circle,rgba(255,233,184,.98),rgba(201,128,255,.24) 60%,rgba(0,0,0,0) 72%);opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*12.857deg)) translateY(0) scale(.18);animation:c2BossEmergenceDust 4s ease-out calc(var(--i)*.04s) both}
-      .c2-boss-emergence-title{position:absolute;z-index:20;left:50%;bottom:5.5%;transform:translate(-50%,22px) scale(.92);width:min(92vw,980px);display:grid;justify-items:center;gap:4px;text-align:center;opacity:0;color:#fff;text-shadow:0 4px 26px #000,0 0 24px rgba(183,121,255,.62);animation:c2BossEmergenceTitle 6.5s ease both}
-      .c2-boss-emergence-title small{font-size:clamp(10px,1vw,15px);letter-spacing:.44em;color:#d7b5ff;font-weight:1000}
-      .c2-boss-emergence-title strong{font-size:clamp(18px,2vw,30px);letter-spacing:.14em;color:#efe5ff;font-weight:900}
-      .c2-boss-emergence-title b{font-size:clamp(38px,5.4vw,78px);line-height:1.03;font-weight:1000;letter-spacing:.04em;background:linear-gradient(180deg,#fff 0%,#edd6ff 38%,#b779ff 72%,#fff0b0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 12px rgba(255,255,255,.22)) drop-shadow(0 0 28px rgba(183,121,255,.62))}
-      .c2-boss-emergence-boss-wrap{position:absolute;left:50%;top:52%;width:min(58vw,540px);transform:translate(-50%,-50%) scale(.12);opacity:0;filter:drop-shadow(0 0 30px rgba(76,24,150,.78)) drop-shadow(0 12px 34px rgba(0,0,0,.62));animation:c2BossEmergenceBoss 4.2s cubic-bezier(.2,.82,.2,1) both}
+      .c2-boss-emergence-blackhole{position:absolute;inset:0;overflow:hidden;background:#020208;isolation:isolate}
+      .c2-boss-emergence-bg{position:absolute;inset:-6%;background:url('assets/chapter2/backgrounds/bg_ch2_blackhole_corrupt.png') center/cover no-repeat;filter:brightness(.18) saturate(.78) blur(14px);transform:scale(1.18);animation:c2BossEmergenceBg 7.6s ease both}
+      .c2-boss-emergence-blackhole:before{content:'';position:absolute;z-index:1;inset:-12%;background:radial-gradient(circle at 50% 50%,rgba(170,99,255,.30),transparent 18%),radial-gradient(circle at 50% 50%,rgba(88,32,170,.28),transparent 34%),radial-gradient(circle at 50% 50%,rgba(0,0,0,.96),transparent 62%);opacity:.96;animation:c2BossEmergenceTint 7.6s ease both}
+      .c2-boss-emergence-void{position:absolute;z-index:2;inset:0;background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.05) 0 12%,rgba(0,0,0,.88) 28%,rgba(0,0,0,0) 64%);mix-blend-mode:multiply;animation:c2BossEmergenceVoid 7.6s ease both}
+      .c2-boss-emergence-vortex{position:absolute;z-index:3;left:50%;top:50%;width:min(74vw,74vh);aspect-ratio:1/1;border-radius:50%;transform:translate(-50%,-50%) scale(.05);background:radial-gradient(circle at 50% 50%,rgba(6,6,12,1) 0 18%,rgba(70,24,128,.94) 21%,rgba(28,12,62,.88) 33%,rgba(8,5,14,.72) 44%,rgba(0,0,0,0) 65%);filter:blur(1px);box-shadow:0 0 0 1px rgba(234,214,255,.18),0 0 42px rgba(128,72,255,.32),0 0 130px rgba(65,19,130,.52);animation:c2BossEmergenceVortex 7.6s cubic-bezier(.2,.72,.2,1) both}
+      .c2-boss-emergence-ring{position:absolute;z-index:4;left:50%;top:50%;width:min(82vw,82vh);aspect-ratio:1/1;border-radius:50%;transform:translate(-50%,-50%) scale(.25);border:2px solid rgba(230,214,255,.42);opacity:0;mix-blend-mode:screen;box-shadow:0 0 18px rgba(182,126,255,.24)}
+      .c2-boss-emergence-ring.ring-a{animation:c2BossEmergenceRingA 7.6s ease-out both}
+      .c2-boss-emergence-ring.ring-b{animation:c2BossEmergenceRingB 7.6s ease-out both}
+      .c2-boss-emergence-ring.ring-c{animation:c2BossEmergenceRingC 7.6s ease-out both}
+      .c2-boss-emergence-shock{position:absolute;z-index:5;left:50%;top:50%;width:10%;aspect-ratio:1/1;border-radius:50%;transform:translate(-50%,-50%);border:3px solid rgba(255,230,166,.92);opacity:0;animation:c2BossEmergenceShock 7.6s ease-out both}
+      .c2-boss-emergence-shock.second{border-color:rgba(196,144,255,.88);animation:c2BossEmergenceShock2 7.6s ease-out both}
+      .c2-boss-emergence-energy-beams,.c2-boss-emergence-runes,.c2-boss-emergence-dust{position:absolute;z-index:6;inset:0}
+      .c2-boss-emergence-energy-beams span{position:absolute;left:50%;top:50%;width:4px;height:min(28vh,240px);transform-origin:50% 0%;border-radius:999px;background:linear-gradient(180deg,rgba(255,242,210,.98),rgba(182,120,255,.88) 40%,rgba(0,0,0,0));opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(-6%) scaleY(.2);filter:blur(.2px);animation:c2BossEmergenceBeam 7.6s ease-out both}
+      .c2-boss-emergence-runes span{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border:2px solid rgba(241,234,255,.78);border-radius:3px;opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-28vh) rotate(45deg) scale(.3);box-shadow:0 0 14px rgba(189,125,255,.44);animation:c2BossEmergenceRune 7.6s ease-out calc(var(--i)*.03s) both}
+      .c2-boss-emergence-dust span{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:radial-gradient(circle,rgba(255,245,216,1),rgba(201,128,255,.42) 56%,rgba(0,0,0,0) 74%);opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*10.588deg)) translateY(0) scale(.18);animation:c2BossEmergenceDust 7.6s ease-out calc(var(--i)*.035s) both}
+      .c2-boss-emergence-boss-wrap{position:absolute;z-index:8;left:50%;top:54%;width:min(58vw,540px);transform:translate(-50%,-50%) scale(.12);opacity:0;filter:drop-shadow(0 0 30px rgba(76,24,150,.78)) drop-shadow(0 12px 34px rgba(0,0,0,.62));animation:c2BossEmergenceBoss 7.6s cubic-bezier(.2,.82,.2,1) both}
       .c2-boss-emergence-boss{display:block;width:100%;height:auto;object-fit:contain}
-      .c2-boss-emergence-caption{position:absolute;left:50%;bottom:7.2%;transform:translateX(-50%);width:min(82vw,900px);padding:.78rem 1.18rem;border-radius:999px;background:rgba(6,8,18,.68);border:1px solid rgba(255,255,255,.18);color:#f4f6fb;font-size:clamp(14px,1.45vw,20px);letter-spacing:.04em;text-align:center;opacity:0;animation:c2BossEmergenceCaption 4.2s ease both}
-      @keyframes c2BossEmergenceBg{0%{transform:scale(1.26);filter:brightness(.06) saturate(.6) blur(22px)}28%{filter:brightness(.15) saturate(.75) blur(12px)}62%{transform:scale(1.18);filter:brightness(.24) saturate(.86) blur(5px)}100%{transform:scale(1.12);filter:brightness(.42) saturate(.96) blur(0)}}
-      @keyframes c2BossEmergenceTint{0%{opacity:0}12%{opacity:1}100%{opacity:.78}}
-      @keyframes c2BossEmergenceVoid{0%{opacity:0;transform:scale(.75)}34%{opacity:.95}100%{opacity:1;transform:scale(1.08)}}
-      @keyframes c2BossEmergenceVortex{0%{transform:translate(-50%,-50%) scale(.04) rotate(0deg);opacity:0}16%{opacity:.42}38%{opacity:1}66%{transform:translate(-50%,-50%) scale(1.05) rotate(190deg)}100%{transform:translate(-50%,-50%) scale(1.22) rotate(320deg);opacity:.96}}
-      @keyframes c2BossEmergenceRingA{0%{opacity:0;transform:translate(-50%,-50%) scale(.08)}22%{opacity:.86}100%{opacity:0;transform:translate(-50%,-50%) scale(1.34)}}
-      @keyframes c2BossEmergenceRingB{0%,18%{opacity:0;transform:translate(-50%,-50%) scale(.14)}36%{opacity:.82}100%{opacity:0;transform:translate(-50%,-50%) scale(1.58)}}
-      @keyframes c2BossEmergenceRingC{0%,34%{opacity:0;transform:translate(-50%,-50%) scale(.18)}52%{opacity:.72}100%{opacity:0;transform:translate(-50%,-50%) scale(1.9)}}
-      @keyframes c2BossEmergenceShock{0%,46%{opacity:0;transform:translate(-50%,-50%) scale(.12)}56%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(4.8)}}
-      @keyframes c2BossEmergenceShock2{0%,58%{opacity:0;transform:translate(-50%,-50%) scale(.2)}68%{opacity:.88}100%{opacity:0;transform:translate(-50%,-50%) scale(6.1)}}
-      @keyframes c2BossEmergenceBeam{0%,18%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(0) scaleY(.1)}30%{opacity:.94}100%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(-18%) scaleY(1.16)}}
-      @keyframes c2BossEmergenceRune{0%,20%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-12vh) rotate(45deg) scale(.16)}42%{opacity:.92}100%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-38vh) rotate(200deg) scale(1.05)}}
-      @keyframes c2BossEmergenceDust{0%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*12.857deg)) translateY(0) scale(.16)}22%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*12.857deg)) translateY(calc(-240px - var(--i)*5px)) scale(1)}}
-      @keyframes c2BossEmergenceTitle{0%,68%{opacity:0;transform:translate(-50%,22px) scale(.9);filter:blur(8px)}74%{opacity:1;transform:translate(-50%,-2px) scale(1.035);filter:blur(0)}79%,98%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)}100%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)}}
-      @keyframes c2BossEmergenceBoss{0%{opacity:0;transform:translate(-50%,-42%) scale(.08) rotate(-10deg)}24%{opacity:.25}52%{opacity:.92}70%{transform:translate(-50%,-51%) scale(1.16) rotate(2deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}}
-      @keyframes c2BossEmergenceCaption{0%,62%{opacity:0;transform:translateX(-50%) translateY(16px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+      .c2-boss-emergence-title{position:absolute;z-index:20;left:50%;top:5.2%;bottom:auto;transform:translate(-50%,-18px) scale(.96);width:min(92vw,1080px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;padding:14px 28px 18px;border-radius:20px;text-align:center;opacity:0;color:#fff;background:linear-gradient(180deg,rgba(3,1,10,.94),rgba(10,3,24,.68),rgba(3,1,10,.20));border:1px solid rgba(236,216,255,.20);box-shadow:0 18px 46px rgba(0,0,0,.42),0 0 36px rgba(161,82,255,.16);text-shadow:0 4px 26px #000,0 0 30px rgba(207,164,255,.9);animation:c2BossEmergenceTitle 7.6s ease both}
+      .c2-boss-emergence-title:before,.c2-boss-emergence-title:after{content:'';display:block;width:min(660px,72vw);height:2px;background:linear-gradient(90deg,transparent,rgba(228,199,255,.22),#fff3cf,rgba(195,137,255,.7),transparent);box-shadow:0 0 14px rgba(207,161,255,.65)}
+      .c2-boss-emergence-title small{font-size:clamp(11px,.9vw,15px);line-height:1.15;letter-spacing:.38em;color:#f5eaff;font-weight:1000;text-shadow:0 0 9px #fff,0 0 22px rgba(196,139,255,.82)}
+      .c2-boss-emergence-title strong{font-size:clamp(19px,1.72vw,31px);line-height:1.12;letter-spacing:.14em;color:#fff;font-weight:1000;text-shadow:0 0 7px #fff,0 0 18px rgba(230,199,255,.96),0 0 34px rgba(167,88,255,.78),0 4px 16px #000}
+      .c2-boss-emergence-title b{font-size:clamp(40px,5.05vw,78px);line-height:1.02;font-weight:1000;letter-spacing:.045em;white-space:nowrap;background:none;color:#fffaf0;-webkit-text-fill-color:#fffaf0;-webkit-text-stroke:1px rgba(255,255,255,.55);text-shadow:0 0 5px #fff,0 0 13px #fff,0 0 26px rgba(226,184,255,1),0 0 48px rgba(161,75,255,.98),0 6px 20px rgba(0,0,0,1);filter:none}
+      @keyframes c2BossEmergenceBg{0%{transform:scale(1.26);filter:brightness(.06) saturate(.6) blur(22px)}25%{filter:brightness(.16) saturate(.76) blur(10px)}55%{transform:scale(1.16);filter:brightness(.34) saturate(.94) blur(2px)}76%{transform:scale(1.13);filter:brightness(.42) saturate(1.02) blur(0)}100%{transform:scale(1.10);filter:brightness(.38) saturate(1.04) blur(0)}}
+      @keyframes c2BossEmergenceTint{0%{opacity:0}12%{opacity:1}58%{opacity:.78}100%{opacity:.70}}
+      @keyframes c2BossEmergenceVoid{0%{opacity:0;transform:scale(.75)}30%{opacity:.95}64%{opacity:1;transform:scale(1.08)}82%{opacity:.88;transform:scale(1.12)}100%{opacity:1;transform:scale(1.16)}}
+      @keyframes c2BossEmergenceVortex{0%{transform:translate(-50%,-50%) scale(.04) rotate(0deg);opacity:0}16%{opacity:.42}38%{opacity:1}60%{transform:translate(-50%,-50%) scale(1.05) rotate(220deg)}78%{transform:translate(-50%,-50%) scale(1.17) rotate(430deg);opacity:1}100%{transform:translate(-50%,-50%) scale(1.23) rotate(680deg);opacity:.96}}
+      @keyframes c2BossEmergenceRingA{0%{opacity:0;transform:translate(-50%,-50%) scale(.08)}20%{opacity:.86}52%{opacity:0;transform:translate(-50%,-50%) scale(1.34)}65%{opacity:0;transform:translate(-50%,-50%) scale(.66)}72%{opacity:.52}100%{opacity:0;transform:translate(-50%,-50%) scale(1.62)}}
+      @keyframes c2BossEmergenceRingB{0%,16%{opacity:0;transform:translate(-50%,-50%) scale(.14)}32%{opacity:.82}58%{opacity:0;transform:translate(-50%,-50%) scale(1.58)}68%{opacity:.36;transform:translate(-50%,-50%) scale(.9)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.86)}}
+      @keyframes c2BossEmergenceRingC{0%,30%{opacity:0;transform:translate(-50%,-50%) scale(.18)}46%{opacity:.72}64%{opacity:0;transform:translate(-50%,-50%) scale(1.9)}74%{opacity:.28;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.05)}}
+      @keyframes c2BossEmergenceShock{0%,42%{opacity:0;transform:translate(-50%,-50%) scale(.12)}50%{opacity:.95}63%{opacity:0;transform:translate(-50%,-50%) scale(4.8)}100%{opacity:0}}
+      @keyframes c2BossEmergenceShock2{0%,52%{opacity:0;transform:translate(-50%,-50%) scale(.2)}60%{opacity:.88}72%{opacity:0;transform:translate(-50%,-50%) scale(6.1)}100%{opacity:0}}
+      @keyframes c2BossEmergenceBeam{0%,14%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(0) scaleY(.1)}28%{opacity:.94}54%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(-18%) scaleY(1.16)}64%{opacity:.16;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg)) translateY(-8%) scaleY(.5)}76%{opacity:.82}100%{opacity:.12;transform:translate(-50%,-50%) rotate(calc(var(--i)*36deg + 24deg)) translateY(-22%) scaleY(1.08)}}
+      @keyframes c2BossEmergenceRune{0%,18%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg)) translateY(-12vh) rotate(45deg) scale(.16)}38%{opacity:.92}58%{opacity:.24}72%{opacity:.72;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg + 90deg)) translateY(-30vh) rotate(180deg) scale(.82)}100%{opacity:.15;transform:translate(-50%,-50%) rotate(calc(var(--i)*30deg + 190deg)) translateY(-38vh) rotate(300deg) scale(1.05)}}
+      @keyframes c2BossEmergenceDust{0%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*10.588deg)) translateY(0) scale(.16)}18%{opacity:1}52%{opacity:.18;transform:translate(-50%,-50%) rotate(calc(var(--i)*10.588deg + 80deg)) translateY(calc(-180px - var(--i)*3px)) scale(.8)}66%{opacity:.72}100%{opacity:0;transform:translate(-50%,-50%) rotate(calc(var(--i)*10.588deg + 220deg)) translateY(calc(-290px - var(--i)*4px)) scale(1.08)}}
+      @keyframes c2BossEmergenceTitle{0%,56%{opacity:0;transform:translate(-50%,-18px) scale(.96);filter:blur(7px)}60.5%{opacity:1;transform:translate(-50%,0) scale(1.02);filter:blur(0)}64%,100%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)}}
+      @keyframes c2BossEmergenceBoss{0%{opacity:0;transform:translate(-50%,-42%) scale(.08) rotate(-10deg)}22%{opacity:.25}44%{opacity:.92}56%{transform:translate(-50%,-51%) scale(1.14) rotate(2deg)}64%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}76%{transform:translate(-50%,-50.8%) scale(1.012) rotate(-.4deg)}88%{transform:translate(-50%,-49.4%) scale(1.008) rotate(.35deg)}100%{opacity:1;transform:translate(-50%,-50.4%) scale(1.01) rotate(0deg)}}
+      @media(max-width:900px),(max-height:720px){.c2-boss-emergence-title{top:2.5%;width:min(94vw,820px);padding:9px 14px 11px;gap:4px}.c2-boss-emergence-title b{font-size:clamp(31px,5vw,54px)}.c2-boss-emergence-title strong{font-size:clamp(15px,1.8vw,23px)}}
     </style>
   </div>`);
 
@@ -12804,12 +12809,10 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
   const sceneInfo = c2GetSceneInfo(sceneKey) || {};
   const bg = c2GetSceneBackground(sceneKey);
   const localCleanup = c2MakeLayer(layer, '<div class="c2-boss-arrival-parent-placeholder"></div>');
+  const duration = 6600;
 
-  // The story itself is rendered inside a portrait iframe. A fixed element inside that
-  // iframe only fills the iframe, so it can never create a true browser-wide arrival.
-  // Render this one arrival shot in the parent document, then shrink it exactly onto
-  // the iframe rectangle before removing it. The underlying story already has the same
-  // scene background, so the final hand-off is visually continuous.
+  // 책임의 블랙홀 최초 입장: 약 3초 동안 확대된 맵을 천천히 훑은 뒤
+  // 카메라가 한 번에 빠지면서 전체 배경을 공개하고, 그 다음 LOCATION 텍스트를 띄운다.
   try {
     if (window.parent && window.parent !== window && window.parent.document && window.frameElement) {
       const parentWindow = window.parent;
@@ -12836,7 +12839,7 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
         width: `${parentWindow.innerWidth}px`,
         height: `${parentWindow.innerHeight}px`,
         overflow: 'hidden',
-        background: '#090a0d',
+        background: '#080812',
         isolation: 'isolate',
         transformOrigin: 'center center',
       });
@@ -12844,25 +12847,25 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
       const background = parentDocument.createElement('div');
       Object.assign(background.style, {
         position: 'absolute',
-        inset: '-2%',
+        inset: '0',
         zIndex: '0',
         backgroundImage: resolvedBg ? `url("${resolvedBg.replace(/"/g, '%22')}")` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
         opacity: '1',
-        transform: 'scale(1)',
+        willChange: 'transform, filter',
+        transformOrigin: 'center center',
       });
 
-      const dim = parentDocument.createElement('div');
-      Object.assign(dim.style, {
+      const vignette = parentDocument.createElement('div');
+      Object.assign(vignette.style, {
         position: 'absolute',
         inset: '0',
         zIndex: '1',
         pointerEvents: 'none',
-        opacity: '0',
-        background: 'linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.03) 42%,rgba(0,0,0,.58) 82%)',
-        boxShadow: 'inset 0 0 130px rgba(0,0,0,.78), inset 0 -150px 120px rgba(0,0,0,.52)',
+        background: 'radial-gradient(circle at 50% 48%, transparent 18%, rgba(5,2,12,.12) 50%, rgba(0,0,0,.68) 100%), linear-gradient(180deg,rgba(9,4,18,.20),transparent 35%,rgba(0,0,0,.36))',
+        boxShadow: 'inset 0 0 150px rgba(0,0,0,.62)',
       });
 
       const copy = parentDocument.createElement('div');
@@ -12871,65 +12874,72 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
         zIndex: '2',
         left: '50%',
         top: '50%',
-        transform: 'translate(-50%,-50%) translateY(12px)',
-        width: 'min(86%, 760px)',
-        padding: '0 24px',
+        transform: 'translate(-50%,-50%) translateY(18px)',
+        width: 'min(88%, 900px)',
+        padding: '22px 30px 26px',
+        borderRadius: '22px',
         color: '#fff',
         textAlign: 'center',
-        textShadow: '0 3px 16px rgba(0,0,0,.92), 0 0 28px rgba(0,0,0,.72)',
+        background: 'linear-gradient(180deg,rgba(4,1,12,.08),rgba(4,1,12,.50),rgba(4,1,12,.08))',
+        textShadow: '0 4px 24px rgba(0,0,0,.96), 0 0 34px rgba(188,128,255,.46)',
         opacity: '0',
         fontFamily: '"Courier New", "Noto Sans KR", monospace',
       });
       const small = parentDocument.createElement('small');
-      small.textContent = 'LOCATION';
-      Object.assign(small.style, { display: 'block', marginBottom: '10px', fontSize: 'clamp(13px,1.5vw,19px)', fontWeight: '950', letterSpacing: '.28em', color: '#ffd77f' });
+      small.textContent = 'LOCATION · CHAPTER 2';
+      Object.assign(small.style, { display: 'block', marginBottom: '12px', fontSize: 'clamp(13px,1.45vw,20px)', fontWeight: '950', letterSpacing: '.30em', color: '#ffe7a8', textShadow: '0 0 16px rgba(255,222,137,.52)' });
       const strong = parentDocument.createElement('strong');
       strong.textContent = sceneInfo.title || '책임의 블랙홀';
-      Object.assign(strong.style, { display: 'block', fontSize: 'clamp(38px,5.6vw,72px)', fontWeight: '1000', letterSpacing: '-.04em', lineHeight: '1.04' });
+      Object.assign(strong.style, { display: 'block', fontSize: 'clamp(42px,6vw,80px)', fontWeight: '1000', letterSpacing: '-.035em', lineHeight: '1.02', color: '#fff', textShadow: '0 0 12px rgba(255,255,255,.38),0 0 32px rgba(192,132,255,.50),0 5px 24px rgba(0,0,0,.95)' });
       const span = parentDocument.createElement('span');
       span.textContent = sceneInfo.subtitle || '팀플 블랙홀 무임승차자';
-      Object.assign(span.style, { display: 'block', marginTop: '12px', fontSize: 'clamp(17px,2.15vw,27px)', fontWeight: '800', color: 'rgba(255,255,255,.94)' });
+      Object.assign(span.style, { display: 'block', marginTop: '13px', fontSize: 'clamp(18px,2.2vw,29px)', fontWeight: '850', color: '#ead7ff', textShadow: '0 0 18px rgba(184,113,255,.54),0 3px 14px rgba(0,0,0,.96)' });
       copy.append(small, strong, span);
-      frame.append(background, dim, copy);
+      frame.append(background, vignette, copy);
       overlay.append(frame);
       parentDocument.body.appendChild(overlay);
 
-      const duration = 4300;
       const frameAnimation = frame.animate([
-        { offset: 0, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 0, transform: 'scale(1.035)' },
-        { offset: .10, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 1, transform: 'scale(1)', easing: 'cubic-bezier(.2,.82,.22,1)' },
-        { offset: .58, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 1, transform: 'scale(1)', easing: 'cubic-bezier(.2,.82,.22,1)' },
-        { offset: .88, left: `${targetRect.left}px`, top: `${targetRect.top}px`, width: `${targetRect.width}px`, height: `${targetRect.height}px`, opacity: 1, transform: 'scale(1)', easing: 'cubic-bezier(.2,.82,.22,1)' },
-        { offset: 1, left: `${targetRect.left}px`, top: `${targetRect.top}px`, width: `${targetRect.width}px`, height: `${targetRect.height}px`, opacity: 1, transform: 'scale(1)' },
+        { offset: 0, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 0 },
+        { offset: .045, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 1 },
+        { offset: .88, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 1 },
+        { offset: 1, left: `${targetRect.left}px`, top: `${targetRect.top}px`, width: `${targetRect.width}px`, height: `${targetRect.height}px`, opacity: 1, easing: 'cubic-bezier(.18,.84,.22,1)' },
       ], { duration, fill: 'both' });
 
       const bgAnimation = background.animate([
-        { offset: 0, filter: 'none', transform: 'scale(1)' },
-        { offset: .58, filter: 'none', transform: 'scale(1)' },
-        { offset: .88, filter: 'saturate(.9) brightness(.76) contrast(1.05)', transform: 'scale(1.075)' },
-        { offset: 1, filter: 'saturate(.9) brightness(.76) contrast(1.05)', transform: 'scale(1.075)' },
-      ], { duration, fill: 'both', easing: 'ease' });
+        { offset: 0, transform: 'scale(1.62) translate3d(-6%, 3%, 0)', filter: 'brightness(.78) saturate(.92) contrast(1.08)' },
+        { offset: .17, transform: 'scale(1.58) translate3d(5%, -3.5%, 0)', filter: 'brightness(.86) saturate(.98) contrast(1.08)' },
+        { offset: .33, transform: 'scale(1.50) translate3d(-4%, -2%, 0)', filter: 'brightness(.92) saturate(1.02) contrast(1.07)' },
+        { offset: .45, transform: 'scale(1.42) translate3d(4%, 2%, 0)', filter: 'brightness(.98) saturate(1.04) contrast(1.05)' },
+        { offset: .49, transform: 'scale(1.36) translate3d(1.5%, 0, 0)', filter: 'brightness(1) saturate(1.04) contrast(1.04)' },
+        { offset: .515, transform: 'scale(1) translate3d(0, 0, 0)', filter: 'brightness(1.06) saturate(1.03) contrast(1.02)', easing: 'cubic-bezier(.12,.86,.18,1)' },
+        { offset: .88, transform: 'scale(1) translate3d(0, 0, 0)', filter: 'brightness(1.03) saturate(1.02) contrast(1.02)' },
+        { offset: 1, transform: 'scale(1.075) translate3d(0, 0, 0)', filter: 'saturate(.9) brightness(.76) contrast(1.05)' },
+      ], { duration, fill: 'both', easing: 'ease-in-out' });
 
-      const dimAnimation = dim.animate([
-        { offset: 0, opacity: 0 },
-        { offset: .58, opacity: 0 },
-        { offset: .88, opacity: 1 },
-        { offset: 1, opacity: 1 },
+      const vignetteAnimation = vignette.animate([
+        { offset: 0, opacity: .72 },
+        { offset: .45, opacity: .55 },
+        { offset: .515, opacity: .12 },
+        { offset: .58, opacity: .24 },
+        { offset: .86, opacity: .30 },
+        { offset: 1, opacity: .72 },
       ], { duration, fill: 'both', easing: 'ease' });
 
       const copyAnimation = copy.animate([
-        { offset: 0, opacity: 0, transform: 'translate(-50%,-50%) translateY(12px)' },
-        { offset: .12, opacity: 0, transform: 'translate(-50%,-50%) translateY(12px)' },
-        { offset: .24, opacity: 1, transform: 'translate(-50%,-50%) translateY(0)' },
-        { offset: .50, opacity: 1, transform: 'translate(-50%,-50%) translateY(0)' },
-        { offset: .58, opacity: 0, transform: 'translate(-50%,-50%) translateY(-10px)' },
-        { offset: 1, opacity: 0, transform: 'translate(-50%,-50%) translateY(-10px)' },
+        { offset: 0, opacity: 0, transform: 'translate(-50%,-50%) translateY(18px) scale(.96)', filter: 'blur(6px)' },
+        { offset: .545, opacity: 0, transform: 'translate(-50%,-50%) translateY(18px) scale(.96)', filter: 'blur(6px)' },
+        { offset: .60, opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1.02)', filter: 'blur(0)' },
+        { offset: .66, opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1)', filter: 'blur(0)' },
+        { offset: .84, opacity: 1, transform: 'translate(-50%,-50%) translateY(0) scale(1)', filter: 'blur(0)' },
+        { offset: .89, opacity: 0, transform: 'translate(-50%,-50%) translateY(-10px) scale(1.01)', filter: 'blur(2px)' },
+        { offset: 1, opacity: 0, transform: 'translate(-50%,-50%) translateY(-10px) scale(1.01)', filter: 'blur(2px)' },
       ], { duration, fill: 'both', easing: 'ease' });
 
       return () => {
         frameAnimation.cancel();
         bgAnimation.cancel();
-        dimAnimation.cancel();
+        vignetteAnimation.cancel();
         copyAnimation.cancel();
         overlay.remove();
         localCleanup();
@@ -12952,26 +12962,26 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
         <div class="c2-boss-arrival-combined-bg"${bg ? ` style="background-image:url('${c2Escape(bg)}')"` : ''}></div>
         <div class="c2-boss-arrival-combined-dim"></div>
         <div class="c2-boss-arrival-combined-copy">
-          <small>LOCATION</small>
+          <small>LOCATION · CHAPTER 2</small>
           <strong>${c2Escape(sceneInfo.title || '책임의 블랙홀')}</strong>
           <span>${c2Escape(sceneInfo.subtitle || '팀플 블랙홀 무임승차자')}</span>
         </div>
       </div>
     </div>
     <style>
-      .c2-boss-arrival-combined{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#000;animation:c2BossArrivalOuter 4.3s linear both}
-      .c2-boss-arrival-combined-frame{position:absolute;left:0;top:0;width:100vw;height:100dvh;overflow:hidden;background:#090a0d;isolation:isolate;animation:c2BossArrivalFrame 4.3s cubic-bezier(.2,.82,.22,1) both}
-      .c2-boss-arrival-combined-bg{position:absolute;inset:-2%;z-index:0;background-size:cover;background-position:center center;background-repeat:no-repeat;filter:none;opacity:1;transform:scale(1);animation:c2BossArrivalBackgroundMatch 4.3s ease both}
-      .c2-boss-arrival-combined-dim{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;background:linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.03) 42%,rgba(0,0,0,.58) 82%);box-shadow:inset 0 0 130px rgba(0,0,0,.78),inset 0 -150px 120px rgba(0,0,0,.52);animation:c2BossArrivalDimMatch 4.3s ease both}
-      .c2-boss-arrival-combined-copy{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%) translateY(12px);width:min(86%,760px);padding:0 24px;color:#fff;text-align:center;text-shadow:0 3px 16px rgba(0,0,0,.92),0 0 28px rgba(0,0,0,.72);opacity:0;animation:c2BossArrivalCombinedCopy 4.3s ease both}
-      .c2-boss-arrival-combined-copy small{display:block;margin-bottom:10px;font-size:clamp(13px,1.5vw,19px);font-weight:950;letter-spacing:.28em;color:#ffd77f}
-      .c2-boss-arrival-combined-copy strong{display:block;font-size:clamp(38px,5.6vw,72px);font-weight:1000;letter-spacing:-.04em;line-height:1.04}
-      .c2-boss-arrival-combined-copy span{display:block;margin-top:12px;font-size:clamp(17px,2.15vw,27px);font-weight:800;color:rgba(255,255,255,.94)}
-      @keyframes c2BossArrivalOuter{0%,58%{background:#000}88%,100%{background:rgba(0,0,0,0)}}
-      @keyframes c2BossArrivalFrame{0%{left:0;top:0;width:100vw;height:100dvh;opacity:0;transform:scale(1.035)}10%,58%{left:0;top:0;width:100vw;height:100dvh;opacity:1;transform:scale(1)}88%,100%{left:var(--c2-arrive-left);top:var(--c2-arrive-top);width:var(--c2-arrive-width);height:var(--c2-arrive-height);opacity:1;transform:scale(1)}}
-      @keyframes c2BossArrivalBackgroundMatch{0%,58%{filter:none;transform:scale(1)}88%,100%{filter:saturate(.9) brightness(.76) contrast(1.05);transform:scale(1.075)}}
-      @keyframes c2BossArrivalDimMatch{0%,58%{opacity:0}88%,100%{opacity:1}}
-      @keyframes c2BossArrivalCombinedCopy{0%,12%{opacity:0;transform:translate(-50%,-50%) translateY(12px)}24%,50%{opacity:1;transform:translate(-50%,-50%) translateY(0)}58%,100%{opacity:0;transform:translate(-50%,-50%) translateY(-10px)}}
+      .c2-boss-arrival-combined{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#000;animation:c2BossArrivalOuter 6.6s linear both}
+      .c2-boss-arrival-combined-frame{position:absolute;left:0;top:0;width:100vw;height:100dvh;overflow:hidden;background:#080812;isolation:isolate;animation:c2BossArrivalFrame 6.6s cubic-bezier(.2,.82,.22,1) both}
+      .c2-boss-arrival-combined-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center center;background-repeat:no-repeat;opacity:1;transform-origin:center center;animation:c2BossArrivalBackgroundSweep 6.6s ease-in-out both}
+      .c2-boss-arrival-combined-dim{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(circle at 50% 48%,transparent 18%,rgba(5,2,12,.12) 50%,rgba(0,0,0,.68) 100%),linear-gradient(180deg,rgba(9,4,18,.20),transparent 35%,rgba(0,0,0,.36));box-shadow:inset 0 0 150px rgba(0,0,0,.62);animation:c2BossArrivalDimMatch 6.6s ease both}
+      .c2-boss-arrival-combined-copy{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%) translateY(18px);width:min(88%,900px);padding:22px 30px 26px;border-radius:22px;color:#fff;text-align:center;background:linear-gradient(180deg,rgba(4,1,12,.08),rgba(4,1,12,.50),rgba(4,1,12,.08));text-shadow:0 4px 24px rgba(0,0,0,.96),0 0 34px rgba(188,128,255,.46);opacity:0;animation:c2BossArrivalCombinedCopy 6.6s ease both}
+      .c2-boss-arrival-combined-copy small{display:block;margin-bottom:12px;font-size:clamp(13px,1.45vw,20px);font-weight:950;letter-spacing:.30em;color:#ffe7a8;text-shadow:0 0 16px rgba(255,222,137,.52)}
+      .c2-boss-arrival-combined-copy strong{display:block;font-size:clamp(42px,6vw,80px);font-weight:1000;letter-spacing:-.035em;line-height:1.02;color:#fff;text-shadow:0 0 12px rgba(255,255,255,.38),0 0 32px rgba(192,132,255,.50),0 5px 24px rgba(0,0,0,.95)}
+      .c2-boss-arrival-combined-copy span{display:block;margin-top:13px;font-size:clamp(18px,2.2vw,29px);font-weight:850;color:#ead7ff;text-shadow:0 0 18px rgba(184,113,255,.54),0 3px 14px rgba(0,0,0,.96)}
+      @keyframes c2BossArrivalOuter{0%,88%{background:#000}100%{background:rgba(0,0,0,0)}}
+      @keyframes c2BossArrivalFrame{0%{left:0;top:0;width:100vw;height:100dvh;opacity:0}4.5%,88%{left:0;top:0;width:100vw;height:100dvh;opacity:1}100%{left:var(--c2-arrive-left);top:var(--c2-arrive-top);width:var(--c2-arrive-width);height:var(--c2-arrive-height);opacity:1}}
+      @keyframes c2BossArrivalBackgroundSweep{0%{transform:scale(1.62) translate3d(-6%,3%,0);filter:brightness(.78) saturate(.92) contrast(1.08)}17%{transform:scale(1.58) translate3d(5%,-3.5%,0);filter:brightness(.86) saturate(.98) contrast(1.08)}33%{transform:scale(1.50) translate3d(-4%,-2%,0);filter:brightness(.92) saturate(1.02) contrast(1.07)}45%{transform:scale(1.42) translate3d(4%,2%,0);filter:brightness(.98) saturate(1.04) contrast(1.05)}49%{transform:scale(1.36) translate3d(1.5%,0,0);filter:brightness(1) saturate(1.04) contrast(1.04)}51.5%{transform:scale(1) translate3d(0,0,0);filter:brightness(1.06) saturate(1.03) contrast(1.02)}88%{transform:scale(1);filter:brightness(1.03) saturate(1.02) contrast(1.02)}100%{transform:scale(1.075);filter:saturate(.9) brightness(.76) contrast(1.05)}}
+      @keyframes c2BossArrivalDimMatch{0%{opacity:.72}45%{opacity:.55}51.5%{opacity:.12}58%{opacity:.24}86%{opacity:.30}100%{opacity:.72}}
+      @keyframes c2BossArrivalCombinedCopy{0%,54.5%{opacity:0;transform:translate(-50%,-50%) translateY(18px) scale(.96);filter:blur(6px)}60%{opacity:1;transform:translate(-50%,-50%) translateY(0) scale(1.02);filter:blur(0)}66%,84%{opacity:1;transform:translate(-50%,-50%) translateY(0) scale(1);filter:blur(0)}89%,100%{opacity:0;transform:translate(-50%,-50%) translateY(-10px) scale(1.01);filter:blur(2px)}}
     </style>`);
 };
 
@@ -15298,16 +15308,37 @@ document.head.appendChild(c2Style);
     if (effectId === 'boss-star-recovery' && String(item?.mode || '') === 'reveal') {
       updateScene('boss_arena_purified', { force: true, suppressFlash: true });
     }
-    // 모든 지속형 연출은 먼저 브라우저 전체 화면에서 재생하고,
-    // 뒤이어 대사와 함께 유지할 필요가 있을 때만 story-stage persistent overlay로 넘깁니다.
+    // Google Drive / Word처럼 대사 위에서도 전체화면을 유지해야 하는 연출은
+    // 종료 시 DOM을 지웠다가 persistent layer에 다시 그리지 않는다.
+    // 최초 전체화면 DOM을 그대로 유지하고 cleanup 소유권만 persistent 상태로 넘긴다.
     const persistOverlayAfterOpening = Number(item?.persistDialogueCount || 0) > 0;
+    const keepOriginalFullscreenDom = persistOverlayAfterOpening && (
+      effectId === 'folder-snapshot' || effectId === 'word-crash'
+    );
+    if (keepOriginalFullscreenDom) {
+      clearTimer('effectTimer');
+      if (typeof state.persistentEffectCleanup === 'function') {
+        try { state.persistentEffectCleanup(); } catch (error) { console.error(error); }
+      }
+      state.persistentEffectCleanup = state.activeEffectCleanup;
+      state.activeEffectCleanup = null;
+      state.persistentDialoguesRemaining = Math.max(0, Number(item.persistDialogueCount || 0));
+      state.effectRunning = false;
+      state.currentEffectItem = null;
+      state.currentEffectId = '';
+      if (effectId === 'word-crash') el.globalEffectLayer.setAttribute('aria-hidden', 'true');
+      el.stage.classList.remove('is-cinematic-effect', 'is-location-title-intro');
+      el.stage.classList.add('has-persistent-overlay');
+      hooks.onEffectEnd?.({ effectId, item, api });
+      state.index += 1;
+      showCurrent();
+      return;
+    }
     if (persistOverlayAfterOpening) {
       cleanupActiveEffect();
       clearPersistentOverlay();
-      const useGlobalPersistentOverlay = effectId === 'folder-snapshot' || effectId === 'word-crash';
-      const persistentLayer = useGlobalPersistentOverlay ? el.globalPersistentOverlay : el.persistentOverlay;
+      const persistentLayer = el.persistentOverlay;
       persistentLayer.setAttribute('aria-hidden', 'false');
-      if (useGlobalPersistentOverlay) el.persistentOverlay.setAttribute('aria-hidden', 'true');
       el.stage.classList.add('has-persistent-overlay');
       state.persistentDialoguesRemaining = Math.max(0, Number(item.persistDialogueCount || 0));
       const handler = customEffects[effectId];
@@ -15437,28 +15468,24 @@ function runCustomEffect(item) {
     }
     const handler = customEffects[effectId];
     const wantsPersistent = itemKeepsPersistentOverlay(item, effectId);
-    const isPersistentOpening = wantsPersistent;
-    const isPersistent = wantsPersistent && !isPersistentOpening;
-    const useGlobalLayer = isPersistentOpening || !isPersistent;
-    const targetLayer = isPersistent ? el.persistentOverlay : el.globalEffectLayer;
+    const keepOriginalFullscreenDom = wantsPersistent && (
+      effectId === 'folder-snapshot' || effectId === 'word-crash'
+    );
+    const targetLayer = keepOriginalFullscreenDom && effectId === 'folder-snapshot'
+      ? el.globalPersistentOverlay
+      : el.globalEffectLayer;
 
-    if (useGlobalLayer) {
-      el.globalEffectLayer.setAttribute('aria-hidden', 'false');
-    } else if (!isPersistent) {
-      el.globalEffectLayer.setAttribute('aria-hidden', 'true');
-    }
-
-    if (isPersistent) {
+    if (keepOriginalFullscreenDom && effectId === 'folder-snapshot') {
       clearPersistentOverlay();
-      el.persistentOverlay.setAttribute('aria-hidden', 'false');
-      el.stage.classList.add('has-persistent-overlay');
-      state.persistentDialoguesRemaining = Math.max(0, Number(item.persistDialogueCount || 0));
+      el.globalPersistentOverlay.setAttribute('aria-hidden', 'false');
+      el.globalEffectLayer.setAttribute('aria-hidden', 'true');
+    } else {
+      el.globalEffectLayer.setAttribute('aria-hidden', 'false');
     }
 
     if (typeof handler === 'function') {
       const cleanup = handler({ layer: targetLayer, item, api, state: getState() });
-      if (isPersistent) state.persistentEffectCleanup = typeof cleanup === 'function' ? cleanup : null;
-      else state.activeEffectCleanup = cleanup;
+      state.activeEffectCleanup = typeof cleanup === 'function' ? cleanup : null;
     } else {
       console.warn(`[StorySystem] 등록되지 않은 커스텀 연출: ${effectId}`);
     }

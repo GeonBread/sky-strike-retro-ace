@@ -7,6 +7,7 @@ export class AudioSystem {
   currentBgmTrack: string | null = null;
   isPlayingBgm = false;
   private bgmGestureRetry: ((event: Event) => void) | null = null;
+  private bgmFadeRaf: number | null = null;
 
   bgmVol = 0.5;
   sfxVol = 0.8;
@@ -65,6 +66,42 @@ export class AudioSystem {
       // 브라우저 자동재생 정책으로 새 Audio 재생이 막힐 수 있다. 다음 입력에서 같은 트랙을 재시도한다.
       this.armBgmGestureRetry();
     });
+  }
+
+
+  private cancelBgmFade() {
+    if (this.bgmFadeRaf === null) return;
+    window.cancelAnimationFrame(this.bgmFadeRaf);
+    this.bgmFadeRaf = null;
+  }
+
+  fadeOutBgm(durationMs = 3000) {
+    const element = this.bgmElement;
+    if (!element) return;
+
+    this.cancelBgmFade();
+    const duration = Math.max(1, durationMs);
+    const startVolume = element.volume;
+    const startedAt = performance.now();
+
+    const step = (now: number) => {
+      if (this.bgmElement !== element) {
+        this.bgmFadeRaf = null;
+        return;
+      }
+      const progress = Math.min(1, (now - startedAt) / duration);
+      element.volume = Math.max(0, startVolume * (1 - progress));
+      if (progress < 1) {
+        this.bgmFadeRaf = window.requestAnimationFrame(step);
+        return;
+      }
+      this.bgmFadeRaf = null;
+      element.volume = 0;
+      element.pause();
+      this.isPlayingBgm = false;
+    };
+
+    this.bgmFadeRaf = window.requestAnimationFrame(step);
   }
 
   setVolumes(bgm: number, sfx: number) {
@@ -826,6 +863,7 @@ export class AudioSystem {
   stopBgm() {
     this.isPlayingBgm = false;
     this.clearBgmGestureRetry();
+    this.cancelBgmFade();
     if (this.bgmElement) {
       this.bgmElement.pause();
       this.bgmElement.currentTime = 0;

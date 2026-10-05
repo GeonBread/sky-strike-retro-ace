@@ -99,10 +99,12 @@ const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
 const STORY_SEGMENT = "chapter2_full";
 const CHAPTER2_WAVE_COUNT = 20;
 // STORY_DATA 기준: "비어 있는 공유 폴더" section-marker가 index 53,
+// 날짜 경과 time-card가 index 54, 빈 공유 폴더 화면 뒤 첫 대사가 index 57,
 // Word 자동 저장 실패 직후 "(뭐.. 뭐야!)" 대사가 index 112,
 // 일반 오염 전투 section-marker가 index 140, 정화 끝 section-marker가 index 144,
 // "책임의 블랙홀" 프리보스 연출이 index 240에서 시작한다.
-const CHAPTER2_STRUGGLE_BGM_START_INDEX = 53;
+const CHAPTER2_DAILY_BGM_FADE_INDEX = 54;
+const CHAPTER2_STRUGGLE_BGM_START_INDEX = 57;
 const CHAPTER2_CONTAMINATION_BGM_START_INDEX = 112;
 const CHAPTER2_CONTAMINATION_BGM_END_INDEX = 140;
 const CHAPTER2_STRUGGLE_BGM_RESUME_INDEX = 144;
@@ -242,6 +244,16 @@ export function Chapter2StoryExperience({
       if (data.type === "ready") {
         setReady(true);
         window.setTimeout(() => postCommand("requestNavigationTargets"), 20);
+        // Chapter 2 프롤로그부터 "비어 있는 공유 폴더"의 날짜 경과 연출 전까지는
+        // Chapter 1 초반과 같은 일상 BGM을 사용한다. 날짜 연출로 바로 복원하는 경우에도
+        // 먼저 같은 트랙을 준비해 자연스럽게 페이드아웃할 수 있게 한다.
+        if (
+          !resumeBossPendingRef.current
+          && !resumeWavePendingRef.current
+          && (resumeIndex === null || resumeIndex <= CHAPTER2_DAILY_BGM_FADE_INDEX)
+        ) {
+          sfx.startChapter1DailyBgm();
+        }
         if (restoredRef.current) return;
         restoredRef.current = true;
         if (resumeBossPendingRef.current) {
@@ -291,7 +303,22 @@ export function Chapter2StoryExperience({
         if (Number.isInteger(storyIndex)) setCurrentStoryIndex(storyIndex);
 
         if (phase === "story") {
-          // "비어 있는 공유 폴더"부터 Word 자동 저장 실패 연출까지는 잘 안 풀리는 상황 BGM을 유지한다.
+          // 프롤로그부터 "비어 있는 공유 폴더" 날짜 경과 직전까지는 Chapter 1 초반의 일상 BGM을 공유한다.
+          if (Number.isInteger(storyIndex) && storyIndex < CHAPTER2_DAILY_BGM_FADE_INDEX) {
+            sfx.startChapter1DailyBgm();
+          }
+
+          // "비어 있는 공유 폴더"의 첫 날짜 경과 연출이 시작되면 일상 BGM을 천천히 지운다.
+          // 이어지는 빈 폴더 화면은 무음으로 두고, 첫 실제 대사(index 57)에서 상황 BGM을 시작한다.
+          if (
+            storyIndex === CHAPTER2_DAILY_BGM_FADE_INDEX
+            && data.effectId === "time-card"
+          ) {
+            sfx.startChapter1DailyBgm();
+            sfx.fadeOutBgm(3600);
+          }
+
+          // "비어 있는 공유 폴더"의 첫 대사부터 Word 자동 저장 실패 연출까지는 잘 안 풀리는 상황 BGM을 유지한다.
           // 오염 발생 전투가 끝난 뒤 "정화 끝" 장면부터 #241 전까지도 같은 곡으로 복귀한다.
           if (
             Number.isInteger(storyIndex)
