@@ -451,9 +451,53 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
         ['first-purification-dialogue', 'firstPurification'],
         ['decision-dialogue', 'decision']
       ];
-      const startIndex = orderedFlowSegments.findIndex(([id]) => id === previewId);
+      const orderedSegmentIds = orderedFlowSegments.map(([, segmentId]) => segmentId);
+      const detailedPreviewPoints = {
+        'detail-p1-corruption': { segment: 'prologue', text: '하지만 어느 날,' },
+        'detail-p1-fragment-chaos': { segment: 'prologue', text: '출석 확인은 끝없는 추적으로,' },
+        'detail-p1-admission': { segment: 'prologue', previewStyle: 'admission-hold-fit' },
+        'detail-p1-hobanwoo-intro': { segment: 'prologue', text: '아무것도 모르는 한 신입생 역시,' },
+        'detail-p1-notice-repeat': { segment: 'notice', text: '알림을 확인할 때까지 반복 전송합니다!' },
+        'detail-p1-login-otp': { segment: 'login', text: 'OTP 인증에 실패했습니다.' },
+        'detail-p1-login-denied': { segment: 'login', text: '허가되지 않은 학생입니다.' },
+        'detail-p1-room-lost': { segment: 'room', text: '목적지를 찾을 수 없습니다.' },
+        'detail-p1-attendance-check': { segment: 'attendance', text: '출석을 확인합니다.' },
+        'detail-p1-attendance-trap': { segment: 'attendance', text: '읽지 않은 공지가 남아 있습니다!' },
+        'detail-p1-escape-run': { segment: 'attendanceEscape', effect: 'attendance-escape-run-in' },
+        'detail-p1-force-attendance': { segment: 'attendanceEscape', text: '강제 출석 인증 진행합니다.' },
+        'detail-p1-stamp-charge': { segment: 'attendanceEscape', effect: 'attendance-drone-charge' },
+        'detail-p1-stamp-flight': { segment: 'attendanceEscape', effect: 'attendance-stamp-flight-blackout' },
+        'detail-p1-purify-beam': { segment: 'attendanceEscape', effect: 'attendance-student-card-purification' },
+        'detail-p1-card-speaks': { segment: 'firstPurification', text: '오염 파편……' },
+        'detail-p1-energy-absorb': { segment: 'firstPurification', effect: 'first-purification-absorb' },
+        'detail-p1-contamination-explain': { segment: 'firstPurification', text: '오염 진행 중…….' },
+        'detail-p1-core-link': { segment: 'firstPurification', text: '첨성대 코어……', occurrence: 0 },
+        'detail-p1-energy-explain': { segment: 'firstPurification', text: '정화 에너지……', occurrence: 1 },
+        'detail-p1-decision': { segment: 'firstPurification', text: '그럼 일단 저 녀석들을 정화해서,' }
+      };
 
-      if (startIndex >= 0 || previewId === 'first-purification-cinematic') {
+      const locateDetailedIndex = (items, point) => {
+        if (!Array.isArray(items) || !items.length) return 0;
+        if (point.effect) {
+          const index = items.findIndex(item => item?.effect === point.effect);
+          return index >= 0 ? index : 0;
+        }
+        if (point.previewStyle) {
+          const index = items.findIndex(item => item?.previewStyle === point.previewStyle);
+          return index >= 0 ? index : 0;
+        }
+        if (point.text) {
+          const matches = [];
+          items.forEach((item, index) => {
+            if (String(item?.text || '') === point.text) matches.push(index);
+          });
+          const occurrence = Math.max(0, Number(point.occurrence) || 0);
+          return matches[occurrence] ?? matches[0] ?? 0;
+        }
+        return Math.max(0, Number(point.index) || 0);
+      };
+
+      const beginContinuousStory = (segmentIds, firstItemIndex = 0) => {
         unlockDialogueAudio();
         clearFlowTimers();
         hideSceneSelector();
@@ -462,12 +506,46 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
         resetGameState();
         gameLayer.hidden = true;
         storyStage.classList.remove('is-game-mode');
+        const [firstSegmentId, ...remainingSegmentIds] = segmentIds;
+        const firstItems = storySegments[firstSegmentId] || [];
+        const safeFirstIndex = Math.max(0, firstItemIndex);
+        let firstSlice = firstItems.slice(safeFirstIndex);
+        if (firstSlice[0] && !firstSlice[0]?.scene) {
+          let inheritedScene = null;
+          for (let index = safeFirstIndex - 1; index >= 0; index -= 1) {
+            if (firstItems[index]?.scene) {
+              inheritedScene = firstItems[index].scene;
+              break;
+            }
+          }
+          if (inheritedScene) {
+            firstSlice = [{ ...firstSlice[0], scene: { ...inheritedScene } }, ...firstSlice.slice(1)];
+          }
+        }
+        storySegments.__selectedFlowContinuation = [
+          ...firstSlice,
+          ...remainingSegmentIds.flatMap(segmentId => storySegments[segmentId] || [])
+        ];
+        beginStory('__selectedFlowContinuation', 'finish', { forceFullScene: true });
+      };
 
+      const detailedPoint = detailedPreviewPoints[previewId];
+      if (detailedPoint) {
+        const segmentPosition = orderedSegmentIds.indexOf(detailedPoint.segment);
+        if (segmentPosition >= 0) {
+          const sourceItems = storySegments[detailedPoint.segment] || [];
+          const firstItemIndex = locateDetailedIndex(sourceItems, detailedPoint);
+          beginContinuousStory(orderedSegmentIds.slice(segmentPosition), firstItemIndex);
+          return;
+        }
+      }
+
+      const startIndex = orderedFlowSegments.findIndex(([id]) => id === previewId);
+      if (startIndex >= 0 || previewId === 'first-purification-cinematic') {
         const selectedSegments = previewId === 'first-purification-cinematic'
           ? ['firstPurificationCinematic', 'firstPurification', 'decision']
           : orderedFlowSegments.slice(startIndex).map(([, segmentId]) => segmentId);
-        storySegments.__selectedFlowContinuation = selectedSegments.flatMap(segmentId => storySegments[segmentId] || []);
-        beginStory('__selectedFlowContinuation', 'finish', { forceFullScene: true });
+        beginContinuousStory(selectedSegments, 0);
         return;
       }
 
@@ -490,14 +568,113 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   };`;
   const flowPreviewHook = `    preview: playSelectedPreview,
     resumeFlowPreview: previewId => {
+      unlockDialogueAudio();
+      clearFlowTimers();
+      hideSceneSelector();
+      activePreviewId = null;
+      endPanel.hidden = true;
+      resetGameState();
+      gameLayer.hidden = true;
+      storyStage.classList.remove('is-game-mode');
+
+      const detailedPreviewPoints = {
+        'detail-p2-core-signal': { segment: 'energy100Dialogue', text: '현실 좌표……', completion: 'startBossIntro' },
+        'detail-p2-core-travel': { segment: 'energy100Dialogue', text: '이동 기능?', completion: 'startBossIntro' },
+        'detail-p2-portal-create': { segment: 'energy100Dialogue', text: '포탈……', completion: 'startBossIntro' },
+        'detail-p2-enter-portal': { segment: 'energy100Dialogue', text: '여기까지 왔는데 안 들어갈 수도 없지.', completion: 'startBossIntro' },
+        'detail-p2-core-inside': { segment: 'bossIntro', text: '여기가 코어 영역이구나……', completion: 'startBossBattle' },
+        'detail-p2-gatekeeper-entrance': { segment: 'bossIntro', effect: 'gatekeeper-entrance', completion: 'startBossBattle' },
+        'detail-p2-star-signal': { segment: 'bossIntro', text: '별 신호……', completion: 'startBossBattle' },
+        'detail-p2-eligibility': { segment: 'bossIntro', text: '비인가 정화 활동을 감지했습니다.', completion: 'startBossBattle' },
+        'detail-p2-failure-list': { segment: 'bossIntro', text: '강의실 탐색 실패 가능성 존재.', completion: 'startBossBattle' },
+        'detail-p2-boss-decision': { segment: 'bossIntro', text: '빨리 이곳을 정화해야겠어!', completion: 'startBossBattle' },
+        'detail-p2-card-recovery': { segment: 'starRecovery', text: '첨성대 코어……', completion: 'startLateBackgroundPurification' },
+        'detail-p2-next-signal': { segment: 'starRecovery', text: '캠퍼스 내……', completion: 'startLateBackgroundPurification' }
+      };
+
+      const locateDetailedIndex = (items, point) => {
+        if (!Array.isArray(items) || !items.length) return 0;
+        if (point.effect) {
+          const index = items.findIndex(item => item?.effect === point.effect);
+          return index >= 0 ? index : 0;
+        }
+        if (point.text) {
+          const index = items.findIndex(item => String(item?.text || '') === point.text);
+          return index >= 0 ? index : 0;
+        }
+        return Math.max(0, Number(point.index) || 0);
+      };
+
+      const beginSegmentSlice = point => {
+        const sourceItems = storySegments[point.segment] || [];
+        const firstItemIndex = locateDetailedIndex(sourceItems, point);
+        let selectedItems = sourceItems.slice(firstItemIndex);
+        if (selectedItems[0] && !selectedItems[0]?.scene) {
+          let inheritedScene = null;
+          for (let index = firstItemIndex - 1; index >= 0; index -= 1) {
+            if (sourceItems[index]?.scene) {
+              inheritedScene = sourceItems[index].scene;
+              break;
+            }
+          }
+          if (inheritedScene) {
+            selectedItems = [{ ...selectedItems[0], scene: { ...inheritedScene } }, ...selectedItems.slice(1)];
+          }
+        }
+        storySegments.__selectedDetailContinuation = selectedItems;
+        beginStory('__selectedDetailContinuation', point.completion, { forceFullScene: true, preserveScene: false });
+      };
+
+      if (previewId === 'energy100-dialogue') {
+        startEnergy100BlackDialogueSequence();
+        return;
+      }
+      if (previewId === 'boss-dialogue') {
+        beginStory('bossIntro', 'startBossBattle', { forceFullScene: true });
+        return;
+      }
+      if (previewId === 'boss-purification-dialogue') {
+        beginStory('bossPurification', 'startBossAftermathStarRecovery', { forceFullScene: true, preserveScene: true });
+        return;
+      }
+      if (previewId === 'star-recovery-dialogue') {
+        startStarRevealCinematic('startStarAbsorption');
+        return;
+      }
+      if (previewId === 'chapter-end-dialogue') {
+        beginStory('chapterEnd', 'finish', { forceFullScene: true });
+        return;
+      }
+
+      if (previewId === 'detail-p2-core-entry') {
+        startBossEntryCinematic('startBossBattle');
+        return;
+      }
+      if (previewId === 'detail-p2-star-reveal') {
+        startStarRevealCinematic('startStarAbsorption');
+        return;
+      }
+      if (previewId === 'detail-p2-star-absorb') {
+        startStarRecoveryCinematic('startLateBackgroundPurification');
+        return;
+      }
+      if (previewId === 'detail-p2-system-restore') {
+        startSystemRestoreCinematic();
+        return;
+      }
+      if (previewId === 'detail-p2-return-campus') {
+        startStory21BackgroundIntro('finish');
+        return;
+      }
+
+      const detailedPoint = detailedPreviewPoints[previewId];
+      if (detailedPoint) {
+        beginSegmentSlice(detailedPoint);
+        return;
+      }
+
       playSelectedPreview(previewId);
       activePreviewId = null;
-
-      if (previewId === 'boss-dialogue') {
-        storyCompletionAction = 'startBossBattle';
-      } else if (previewId === 'chapter-end-dialogue') {
-        storyCompletionAction = 'finish';
-      }
     }
   };`;
 

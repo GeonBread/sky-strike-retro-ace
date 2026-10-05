@@ -1141,28 +1141,87 @@ function Chapter1StoryExperience({
         </button>
         {showJumpMenu && (
           <aside className="chapter1-story-test-panel" aria-label="챕터 1 스토리 테스트 이동">
-            <div className="chapter1-story-test-title">CHAPTER 1 TEST</div>
+            <div className="chapter1-story-test-title">CHAPTER 1 TEST · 세부 장면 이동</div>
             <div className="chapter1-story-test-group">
-              <strong>전반부 스토리</strong>
-              <button onClick={() => jumpToPreview(1, "full-flow")}>처음부터</button>
-              <button onClick={() => jumpToPreview(1, "prologue-dialogue")}>프롤로그</button>
-              <button onClick={() => jumpToPreview(1, "entrance-dialogue")}>입학식</button>
-              <button onClick={() => jumpToPreview(1, "notice-dialogue")}>공지 폭주</button>
-              <button onClick={() => jumpToPreview(1, "room-dialogue")}>강의실 혼선</button>
-              <button onClick={() => jumpToPreview(1, "login-dialogue")}>로그인 감시</button>
-              <button onClick={() => jumpToPreview(1, "attendance-dialogue")}>출석 드론</button>
-              <button onClick={() => jumpToPreview(1, "first-purification-dialogue")}>첫 정화</button>
+              <strong>프롤로그 · 입학식</strong>
+              <button onClick={() => jumpToPreview(1, "full-flow", true)}>처음부터</button>
+              <button onClick={() => jumpToPreview(1, "prologue-dialogue", true)}>프롤로그 처음</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-corruption", true)}>오염 시작</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-fragment-chaos", true)}>오염 파편 폭주</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-admission", true)}>입학식 배경 공개</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-hobanwoo-intro", true)}>호반우 소개</button>
+              <button onClick={() => jumpToPreview(1, "entrance-dialogue", true)}>입학식 직후 대사</button>
+              <button onClick={() => jumpToPreview(1, "opening-credits-cinematic", true)}>오프닝 크레딧</button>
             </div>
+
             <div className="chapter1-story-test-group">
-              <strong>전투·후반부</strong>
-              <button onClick={() => jumpToPreview(2, "decision-dialogue")}>전투 결심</button>
+              <strong>학교 시스템 이상 현상</strong>
+              <button onClick={() => jumpToPreview(1, "notice-dialogue", true)}>공지 드론 등장</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-notice-repeat", true)}>반복 공지</button>
+              <button onClick={() => jumpToPreview(1, "login-dialogue", true)}>로그인 인증 시작</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-login-otp", true)}>OTP 인증 실패</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-login-denied", true)}>접근 차단</button>
+              <button onClick={() => jumpToPreview(1, "room-dialogue", true)}>강의실 좌표 안내</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-room-lost", true)}>목적지 탐색 실패</button>
+            </div>
+
+            <div className="chapter1-story-test-group">
+              <strong>출석드론 · 첫 정화</strong>
+              <button onClick={() => jumpToPreview(1, "attendance-dialogue", true)}>출석드론 장면 처음</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-attendance-check", true)}>“출석을 확인합니다”</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-attendance-trap", true)}>학사 시스템에 포위</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-escape-run", true)}>비상계단 추격</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-force-attendance", true)}>강제 출석 인증</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-stamp-charge", true)}>출석탄 충전</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-stamp-flight", true)}>출석탄 발사</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-purify-beam", true)}>학생증 첫 정화 빔</button>
+              <button onClick={() => jumpToPreview(1, "first-purification-dialogue", true)}>첫 정화 후 대화</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-card-speaks", true)}>학생증 첫 발화</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-energy-absorb", true)}>정화 에너지 회수</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-contamination-explain", true)}>오염 파편 설명</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-core-link", true)}>학생증·코어 연결</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-energy-explain", true)}>정화 에너지 설명</button>
+              <button onClick={() => jumpToPreview(1, "detail-p1-decision", true)}>전투 결심</button>
+            </div>
+
+            <div className="chapter1-story-test-group">
+              <strong>일반 웨이브</strong>
               <button onClick={openWaveGuide}>전투 가이드</button>
               <button className="is-combat" onClick={jumpToWave}>실제 웨이브 시작</button>
               <button onClick={jumpToPurification}>정화율 100% 연출</button>
+            </div>
+
+            <div className="chapter1-story-test-group">
+              <strong>100% 충전 · 코어 진입</strong>
+              <button onClick={() => jumpToPreview(2, "energy100-dialogue", true)}>100% 충전 후 대화</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-core-signal", true)}>핵심 오염 신호</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-core-travel", true)}>코어 이동 기능</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-portal-create", true)}>포탈 생성 시작</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-enter-portal", true)}>포탈 진입 결심</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-core-entry", true)}>학사 코어 진입 연출</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-core-inside", true)}>코어 내부 첫 대화</button>
+            </div>
+
+            <div className="chapter1-story-test-group">
+              <strong>게이트키퍼 대면 · 보스</strong>
+              <button onClick={() => jumpToPreview(2, "detail-p2-gatekeeper-entrance", true)}>게이트키퍼 등장</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-star-signal", true)}>내부의 별 신호</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-eligibility", true)}>학생 자격 검증</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-failure-list", true)}>실패 가능성 압박</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-boss-decision", true)}>보스전 직전 결심</button>
               <button className="is-combat" onClick={jumpToBoss}>실제 보스 시작</button>
-              <button onClick={() => jumpToPreview(2, "boss-purification-dialogue")}>보스 격파 후 정화</button>
-              <button onClick={() => jumpToPreview(2, "star-recovery-dialogue")}>별 회수</button>
-              <button onClick={() => jumpToPreview(2, "chapter-end-dialogue", true)}>챕터 엔딩</button>
+            </div>
+
+            <div className="chapter1-story-test-group">
+              <strong>보스 격파 · 엔딩</strong>
+              <button onClick={() => jumpToPreview(2, "boss-purification-dialogue", true)}>보스 정화 대사</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-star-reveal", true)}>두 별 등장 연출</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-star-absorb", true)}>별 흡수 연출</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-card-recovery", true)}>학생증 기능 복구</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-next-signal", true)}>추가 오염 신호</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-system-restore", true)}>학사 시스템 정상화</button>
+              <button onClick={() => jumpToPreview(2, "detail-p2-return-campus", true)}>본관 귀환 연출</button>
+              <button onClick={() => jumpToPreview(2, "chapter-end-dialogue", true)}>챕터 엔딩 대사</button>
             </div>
           </aside>
         )}
