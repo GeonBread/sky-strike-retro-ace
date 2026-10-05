@@ -1956,8 +1956,14 @@ window.STORY_HOOKS = {
       subtitle: item?.subtitle || ''
     });
   },
-  onEffectEnd({ effectId, api }) {
-    chapter2PostBridge('effect-end', { effectId, state: chapter2BridgeState(api) });
+  onEffectEnd({ effectId, item, api }) {
+    const persistentFullscreen = Number(item?.persistDialogueCount || 0) > 0
+      && (effectId === 'folder-snapshot' || effectId === 'word-crash');
+    chapter2PostBridge('effect-end', {
+      effectId,
+      persistentFullscreen,
+      state: chapter2BridgeState(api)
+    });
     chapter2PostBridge('progress', { state: chapter2BridgeState(api) });
   },
   onIntegrationGate({ gateId, item, api }) {
@@ -14401,6 +14407,7 @@ document.head.appendChild(c2Style);
     activeEffectCleanup: null,
     persistentEffectCleanup: null,
     persistentDialoguesRemaining: 0,
+    persistentFullscreenActive: false,
     effectRunning: false,
     currentEffectItem: null,
     currentEffectId: '',
@@ -14685,12 +14692,14 @@ document.head.appendChild(c2Style);
   }
 
   function clearPersistentOverlay() {
+    const hadPersistentFullscreen = Boolean(state.persistentFullscreenActive);
     restoreDialogueLayerHome();
     if (typeof state.persistentEffectCleanup === 'function') {
       try { state.persistentEffectCleanup(); } catch (error) { console.error(error); }
     }
     state.persistentEffectCleanup = null;
     state.persistentDialoguesRemaining = 0;
+    state.persistentFullscreenActive = false;
     if (typeof el.persistentOverlay.__finishAnimation === 'function') {
       delete el.persistentOverlay.__finishAnimation;
     }
@@ -14699,6 +14708,9 @@ document.head.appendChild(c2Style);
     el.globalPersistentOverlay.replaceChildren();
     el.globalPersistentOverlay.setAttribute('aria-hidden', 'true');
     el.stage.classList.remove('has-persistent-overlay');
+    if (hadPersistentFullscreen) {
+      chapter2PostBridge('persistent-fullscreen-state', { active: false });
+    }
   }
 
 
@@ -15323,6 +15335,8 @@ document.head.appendChild(c2Style);
       state.persistentEffectCleanup = state.activeEffectCleanup;
       state.activeEffectCleanup = null;
       state.persistentDialoguesRemaining = Math.max(0, Number(item.persistDialogueCount || 0));
+      state.persistentFullscreenActive = true;
+      chapter2PostBridge('persistent-fullscreen-state', { active: true, effectId });
       state.effectRunning = false;
       state.currentEffectItem = null;
       state.currentEffectId = '';

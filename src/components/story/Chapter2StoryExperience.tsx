@@ -58,6 +58,8 @@ interface Chapter2BridgeMessage {
   subtitle?: string;
   code?: string;
   navigation?: Chapter2StoryNavigation;
+  persistentFullscreen?: boolean;
+  active?: boolean;
 }
 
 interface Chapter2IntegrationGate {
@@ -283,8 +285,17 @@ export function Chapter2StoryExperience({
         return;
       }
 
+      if (data.type === "persistent-fullscreen-state") {
+        setStoryFullscreenEffectActive(Boolean(data.active));
+        return;
+      }
+
       if (data.type === "effect-end") {
-        if (data.effectId && isChapter2FullscreenStoryEffect(data.effectId)) {
+        if (
+          data.effectId
+          && isChapter2FullscreenStoryEffect(data.effectId)
+          && !data.persistentFullscreen
+        ) {
           setStoryFullscreenEffectActive(false);
         }
         if (data.effectId === "boss-emergence") {
