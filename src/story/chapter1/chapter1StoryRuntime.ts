@@ -134,6 +134,11 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
         dialogueLayer.hidden = true;
         dialogueLayer.classList.remove('is-opening');
       }
+      window.__CHAPTER1_RESTORE_STORY_BGM__?.({
+        segmentId,
+        dialogueIndex,
+        items: currentDialogues
+      });
       return true;
     },
     setKills: value => {`;
@@ -170,6 +175,26 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       throw new Error('Chapter 1 admission BGM scene-preview hook was not found.');
     }
     normalized = normalized.replace(admissionBgmScenePreviewHook, admissionBgmScenePreviewUpgrade);
+  }
+
+  // Chapter 3 디그리온처럼 수강신청 게이트키퍼도 전용 대사창을 사용한다.
+  // 일반 몬스터가 gatekeeper 보이스를 공유하더라도 speaker/visual id가 실제 게이트키퍼일 때만 적용한다.
+  if (part === 2) {
+    const gatekeeperDialogueHook = `    dialogueLayer.classList.toggle('speaker-right', speakerCharacter.side === 'right');
+    currentText = item.text;`;
+    const gatekeeperDialogueUpgrade = `    dialogueLayer.classList.toggle('speaker-right', speakerCharacter.side === 'right');
+    const gatekeeperSpeakerId = String(item.speaker || '');
+    const gatekeeperVisualId = String(visualSpeakerId || '');
+    const isGatekeeperBossDialogue = gatekeeperSpeakerId === 'gatekeeper' || gatekeeperVisualId.startsWith('gatekeeper');
+    const isGatekeeperPurifiedDialogue = gatekeeperVisualId === 'gatekeeper_purified';
+    dialogueLayer.classList.toggle('is-gatekeeper-boss-dialogue', isGatekeeperBossDialogue);
+    dialogueLayer.classList.toggle('is-gatekeeper-purified-dialogue', isGatekeeperPurifiedDialogue);
+    dialogueBox.setAttribute('data-boss-dialogue', isGatekeeperBossDialogue ? 'gatekeeper' : '');
+    currentText = item.text;`;
+    if (!normalized.includes(gatekeeperDialogueHook)) {
+      throw new Error('Chapter 1 gatekeeper dialogue style hook was not found.');
+    }
+    normalized = normalized.replace(gatekeeperDialogueHook, gatekeeperDialogueUpgrade);
   }
 
   // 게이트키퍼 최초 등장 이펙트는 story-stage 폭 확장에 의존하지 않고 전체 뷰포트 호스트로 직접 이동시킨다.
@@ -699,6 +724,18 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   }
   normalized = normalized.replace(battleTransitionDeclaration, fullscreenBattleTransitionDeclaration);
 
+  // 보스 본게임 직전의 스토리 -> 게임 전환 화면은 시각 연출만 유지하고 별도 전환 효과음은 재생하지 않는다.
+  if (part === 2) {
+    const bossTransitionSoundHook = `    battleTransition.classList.add('is-active', 'is-boss');
+    playBossTransitionSound();`;
+    const bossTransitionSilent = `    battleTransition.classList.add('is-active', 'is-boss');
+    /* embedded Chapter 1: story -> boss game transition SFX disabled */`;
+    if (!normalized.includes(bossTransitionSoundHook)) {
+      throw new Error('Chapter 1 boss transition sound hook was not found.');
+    }
+    normalized = normalized.replace(bossTransitionSoundHook, bossTransitionSilent);
+  }
+
   // 100% 직후의 대사에서는 장소명을 띄우지 않는다. 실제로 입구 배경이 공개되는 순간에만 표시한다.
   const preEnergyLocationHook = `    showSceneBackgroundOnly(energy100ClosedEntranceScene);
     storyStage.classList.add('is-pre-energy-flight-in');`;
@@ -1121,6 +1158,142 @@ html.is-embedded-story .continue-indicator {
   right: 28px !important;
   bottom: 18px !important;
   font-size: 22px !important;
+}
+
+/* 수강신청 게이트키퍼 전용 대사창: Chapter 3 디그리온과 같은 별도 보스 UI 계층. */
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue {
+  --speaker-accent: #e60000 !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-box {
+  border-color: #b71818 !important;
+  background:
+    linear-gradient(90deg, rgba(255,53,53,.055) 0 1px, transparent 1px 28px),
+    linear-gradient(0deg, rgba(212,156,58,.04) 0 1px, transparent 1px 28px),
+    radial-gradient(circle at 12% 50%, rgba(230,0,0,.18), transparent 36%),
+    linear-gradient(180deg, rgba(24,3,5,.988), rgba(5,2,3,.997)) !important;
+  background-size: 28px 28px, 28px 28px, auto, auto !important;
+  box-shadow:
+    0 0 0 3px #130405,
+    0 0 0 6px #5c1115,
+    inset 0 0 0 1px rgba(255,225,186,.15),
+    inset 0 0 48px rgba(176,11,22,.16),
+    0 10px 0 #3a090c,
+    0 24px 56px rgba(0,0,0,.84),
+    0 0 24px rgba(235,28,37,.42),
+    0 0 64px rgba(151,13,23,.24) !important;
+  animation: chapter1GatekeeperBossBoxPulse 2.2s ease-in-out infinite alternate !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-box::before {
+  content: "" !important;
+  left: -12px !important;
+  top: -12px !important;
+  width: 46px !important;
+  height: 12px !important;
+  border: 0 !important;
+  border-left: 5px solid #ff3a3a !important;
+  border-top: 5px solid #d9a340 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: skewX(-24deg) !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-box::after {
+  content: "" !important;
+  right: -12px !important;
+  bottom: -12px !important;
+  width: 46px !important;
+  height: 12px !important;
+  border: 0 !important;
+  border-right: 5px solid #ff3a3a !important;
+  border-bottom: 5px solid #d9a340 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: skewX(-24deg) !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .speaker-tag {
+  min-width: 248px !important;
+  padding: 14px 22px 9px !important;
+  border-color: #210709 !important;
+  background: linear-gradient(180deg, #c21e25 0%, #6c0b10 58%, #310509 100%) !important;
+  box-shadow: 0 0 0 2px #e44949, 0 6px 0 #290609, 0 0 24px rgba(255,50,55,.52) !important;
+  color: #fff9f2 !important;
+  letter-spacing: .055em !important;
+  text-shadow: 1px 0 #ff4545, -1px 0 #d6a040, 0 0 10px rgba(255,207,146,.58), 2px 2px 0 #170304 !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .speaker-tag::before {
+  content: "CORE BOSS" !important;
+  position: absolute !important;
+  left: 18px !important;
+  top: 3px !important;
+  color: #ffd694 !important;
+  font: 1000 8px/1 "Noto Sans KR", system-ui, sans-serif !important;
+  letter-spacing: .30em !important;
+  opacity: .96 !important;
+  text-shadow: 0 0 8px rgba(255,132,56,.72) !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-marker {
+  font-size: 0 !important;
+  text-shadow: none !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-marker::before {
+  content: "◆" !important;
+  font-size: clamp(25px, 3vw, 39px) !important;
+  color: #ffd06c !important;
+  text-shadow: 0 0 7px #ffca61, 0 0 18px rgba(255,54,54,.92), 0 0 34px rgba(170,17,26,.7) !important;
+  animation: chapter1GatekeeperBossSigil 1.25s ease-in-out infinite alternate !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-text {
+  color: #fffaf5 !important;
+  font-weight: 950 !important;
+  letter-spacing: .01em !important;
+  text-shadow: 1px 0 0 rgba(255,65,65,.58), -1px 0 0 rgba(210,159,64,.58), 0 0 8px rgba(255,209,154,.22), 3px 3px 0 #090102 !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .continue-indicator {
+  color: #ffcd68 !important;
+  filter: drop-shadow(0 0 9px rgba(255,73,73,.92)) !important;
+}
+/* 정화된 게이트키퍼는 같은 전용 구조를 유지하면서 청백색 코어 상태로 변환. */
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper-purified-dialogue .dialogue-box {
+  border-color: #53c8eb !important;
+  background:
+    linear-gradient(90deg, rgba(99,220,255,.055) 0 1px, transparent 1px 28px),
+    linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 28px),
+    radial-gradient(circle at 12% 50%, rgba(61,204,246,.18), transparent 36%),
+    linear-gradient(180deg, rgba(3,18,25,.988), rgba(1,5,8,.997)) !important;
+  box-shadow:
+    0 0 0 3px #031015,
+    0 0 0 6px #174f62,
+    inset 0 0 0 1px rgba(224,251,255,.18),
+    inset 0 0 48px rgba(61,204,246,.15),
+    0 10px 0 #0a3240,
+    0 24px 56px rgba(0,0,0,.84),
+    0 0 24px rgba(83,200,235,.42),
+    0 0 64px rgba(61,159,200,.24) !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper-purified-dialogue .speaker-tag {
+  background: linear-gradient(180deg, #42bddd 0%, #17677d 58%, #092f3d 100%) !important;
+  box-shadow: 0 0 0 2px #7ce1ff, 0 6px 0 #082733, 0 0 24px rgba(83,200,235,.5) !important;
+  text-shadow: 1px 0 #aaf1ff, -1px 0 #4aaed0, 0 0 10px rgba(186,241,255,.62), 2px 2px 0 #031015 !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper-purified-dialogue .speaker-tag::before {
+  content: "CORE PURIFIED" !important;
+  color: #d9f8ff !important;
+  text-shadow: 0 0 8px rgba(83,200,235,.8) !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper-purified-dialogue .dialogue-marker::before {
+  color: #baf4ff !important;
+  text-shadow: 0 0 7px #baf4ff, 0 0 18px rgba(83,200,235,.9), 0 0 34px rgba(38,133,168,.7) !important;
+}
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper-purified-dialogue .continue-indicator {
+  color: #9beaff !important;
+  filter: drop-shadow(0 0 9px rgba(83,200,235,.92)) !important;
+}
+@keyframes chapter1GatekeeperBossBoxPulse {
+  from { filter: brightness(.98); }
+  to { filter: brightness(1.06); }
+}
+@keyframes chapter1GatekeeperBossSigil {
+  from { transform: scale(.92) rotate(-3deg); filter: brightness(.92); }
+  to { transform: scale(1.08) rotate(3deg); filter: brightness(1.28); }
 }
 
 /* 코어 포탈 진입 동안만 포탈용 스토리 스테이지를 브라우저 전체 화면으로 확장한다. */
@@ -2593,6 +2766,66 @@ export function createChapter1StoryRuntime({
   });
   localWindowValues.set("__CHAPTER1_START_CORE_INTERIOR_BGM__", () => {
     sfx.startChapter1CoreInteriorBgm();
+  });
+  localWindowValues.set("__CHAPTER1_RESTORE_STORY_BGM__", (rawPayload: unknown) => {
+    const payload = rawPayload && typeof rawPayload === "object"
+      ? rawPayload as Record<string, unknown>
+      : {};
+    const segmentId = typeof payload.segmentId === "string" ? payload.segmentId : "";
+    const dialogueIndex = Math.max(0, Math.floor(Number(payload.dialogueIndex) || 0));
+    const items = Array.isArray(payload.items)
+      ? payload.items as Array<Record<string, unknown>>
+      : [];
+
+    if (part === 1) {
+      let target: "daily" | "drone" | null = null;
+      if (["openingCredits", "entrance", "notice", "login", "room"].includes(segmentId)) {
+        target = "daily";
+      } else if (["attendanceEscape", "firstPurification", "decision"].includes(segmentId)) {
+        target = "drone";
+      } else if (segmentId === "attendance") {
+        const chaseIndex = items.findIndex((item) => String(item?.text ?? "").trim() === "출석을 확인합니다.");
+        target = chaseIndex >= 0 && dialogueIndex >= chaseIndex ? "drone" : "daily";
+      } else if (segmentId === "prologue" || segmentId === "intro" || segmentId.startsWith("__selected")) {
+        for (let index = 0; index <= Math.min(dialogueIndex, items.length - 1); index += 1) {
+          const item = items[index];
+          if (String(item?.previewStyle ?? "") === "admission-hold-fit") target = "daily";
+          if (String(item?.text ?? "").trim() === "출석을 확인합니다.") target = "drone";
+        }
+      }
+      if (target === "drone") sfx.startChapter1DroneChaseBgm();
+      else if (target === "daily") sfx.startChapter1DailyBgm();
+      return;
+    }
+
+    if (part === 2) {
+      if (segmentId === "energy100Dialogue") {
+        sfx.startBgmForPhase(1);
+        return;
+      }
+      if ([
+        "bossIntro",
+        "bossPurification",
+        "starReveal",
+        "starRecovery",
+        "systemRestore",
+        "chapterEnding",
+        "chapterEndSequence",
+        "chapterEnd"
+      ].includes(segmentId)) {
+        sfx.startChapter1CoreInteriorBgm();
+        return;
+      }
+      const seenItems = items.slice(0, Math.min(items.length, dialogueIndex + 1));
+      const isCoreScene = seenItems.some((item) => {
+        const scene = item?.scene;
+        if (!scene || typeof scene !== "object") return false;
+        const background = String((scene as Record<string, unknown>).background ?? "");
+        const title = String((scene as Record<string, unknown>).title ?? "");
+        return background.includes("academic_system") || title.includes("코어");
+      });
+      if (isCoreScene) sfx.startChapter1CoreInteriorBgm();
+    }
   });
 
   const executeScript = (source: string): void => {

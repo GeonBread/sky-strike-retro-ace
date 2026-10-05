@@ -1336,11 +1336,15 @@ function Chapter1StoryExperience({
             }}
             onChapter1BossComplete={() => {
               // 보스 런타임 내부에서 폭발 → 보스 상승 → 호반우 상승 → 암전 2초까지 모두 끝낸 뒤 호출됩니다.
-              // 별도의 캔버스 캡처/후처리 화면을 만들지 않아 다른 보스 이미지가 다시 나타나지 않습니다.
+              // GameCanvas가 언마운트될 때 engine.stop()이 보스 BGM을 정리하므로,
+              // 언마운트가 끝난 다음 학사 코어 내부 BGM을 다시 시작한 뒤 후속 스토리를 이어간다.
               setBossClearTransitionActive(false);
               setBossClearBackdrop(null);
               setPhase("story");
-              window.setTimeout(() => storyPlayerRef.current?.continueAfterBossClear(), 0);
+              window.setTimeout(() => {
+                sfx.startChapter1CoreInteriorBgm();
+                storyPlayerRef.current?.continueAfterBossClear();
+              }, 0);
             }}
             onChapter1CombatFailed={showCombatRetryPrompt}
             onChapter1CombatExitToMenu={leaveStoryCombatToMenu}
