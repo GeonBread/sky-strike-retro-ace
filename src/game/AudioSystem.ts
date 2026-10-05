@@ -539,7 +539,9 @@ export class AudioSystem {
 
   startChapter1DailyBgm() {
     const track = "/audio/chapter1-daily-bgm.mp3";
-    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
       return;
     }
 
@@ -555,7 +557,9 @@ export class AudioSystem {
 
   startChapter1DroneChaseBgm() {
     const track = "/audio/chapter1-drone-chase-bgm.mp3";
-    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
       return;
     }
 
@@ -571,7 +575,9 @@ export class AudioSystem {
 
   startChapter1CoreInteriorBgm() {
     const track = "/audio/chapter1-core-interior-bgm.mp3";
-    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
       return;
     }
 

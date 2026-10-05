@@ -50,6 +50,12 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     const item = currentDialogues[dialogueIndex];`;
   const autoRevealDialogueHook = `function typeCurrentLine() {
     const item = currentDialogues[dialogueIndex];
+    window.__CHAPTER1_RESTORE_STORY_BGM__?.({
+      segmentId: currentSegmentId,
+      dialogueIndex,
+      items: currentDialogues,
+      baseState: window.__CHAPTER1_STORY_BGM_BASE_STATE__ || ''
+    });
     if (item && !item.effectOnly && dialogueLayer.hidden) {
       dialogueLayer.hidden = false;
       dialogueLayer.classList.remove('is-opening');
@@ -58,6 +64,19 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     throw new Error('Chapter 1 dialogue line hook was not found.');
   }
   normalized = normalized.replace(typeCurrentLineHook, autoRevealDialogueHook);
+
+
+  const beginStoryBgmBaseHook = `    currentSegmentId = segmentId;
+    currentDialogues = storySegments[segmentId];`;
+  const beginStoryBgmBaseUpgrade = `    currentSegmentId = segmentId;
+    currentDialogues = storySegments[segmentId];
+    if (!String(segmentId).startsWith('__selected')) {
+      window.__CHAPTER1_STORY_BGM_BASE_STATE__ = '';
+    }`;
+  if (!normalized.includes(beginStoryBgmBaseHook)) {
+    throw new Error('Chapter 1 story BGM base-state hook was not found.');
+  }
+  normalized = normalized.replace(beginStoryBgmBaseHook, beginStoryBgmBaseUpgrade);
 
   // 출석체크 드론의 첫 경고 대사가 화면에 뜨는 정확한 순간부터 추적 BGM으로 전환한다.
   // 텍스트 자체를 기준으로 잡아 일반 진행과 TEST 이동 모두 같은 타이밍을 사용한다.
@@ -460,6 +479,12 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     const part1FlowPreviewHook = `    preview: playSelectedPreview,
     resumeFlowPreview: previewId => {
       if (previewId === 'full-flow') {
+        window.__CHAPTER1_STORY_BGM_BASE_STATE__ = 'none';
+        window.__CHAPTER1_RESTORE_STORY_BGM__?.({
+          segmentId: 'prologue',
+          dialogueIndex: 0,
+          items: storySegments.prologue || []
+        });
         restartFlow();
         return;
       }
@@ -534,6 +559,12 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
         const [firstSegmentId, ...remainingSegmentIds] = segmentIds;
         const firstItems = storySegments[firstSegmentId] || [];
         const safeFirstIndex = Math.max(0, firstItemIndex);
+        const inheritedBgmState = window.__CHAPTER1_RESTORE_STORY_BGM__?.({
+          segmentId: firstSegmentId,
+          dialogueIndex: safeFirstIndex,
+          items: firstItems
+        }) || 'none';
+        window.__CHAPTER1_STORY_BGM_BASE_STATE__ = inheritedBgmState;
         let firstSlice = firstItems.slice(safeFirstIndex);
         if (firstSlice[0] && !firstSlice[0]?.scene) {
           let inheritedScene = null;
@@ -602,6 +633,17 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
       gameLayer.hidden = true;
       storyStage.classList.remove('is-game-mode');
 
+      const restorePreviewBgm = (segmentId, dialogueIndex = 0) => {
+        const sourceItems = storySegments[segmentId] || [];
+        const inheritedBgmState = window.__CHAPTER1_RESTORE_STORY_BGM__?.({
+          segmentId,
+          dialogueIndex: Math.max(0, Number(dialogueIndex) || 0),
+          items: sourceItems
+        }) || 'none';
+        window.__CHAPTER1_STORY_BGM_BASE_STATE__ = inheritedBgmState;
+        return inheritedBgmState;
+      };
+
       const detailedPreviewPoints = {
         'detail-p2-core-signal': { segment: 'energy100Dialogue', text: '현실 좌표……', completion: 'startBossIntro' },
         'detail-p2-core-travel': { segment: 'energy100Dialogue', text: '이동 기능?', completion: 'startBossIntro' },
@@ -646,48 +688,59 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
             selectedItems = [{ ...selectedItems[0], scene: { ...inheritedScene } }, ...selectedItems.slice(1)];
           }
         }
+        restorePreviewBgm(point.segment, firstItemIndex);
         storySegments.__selectedDetailContinuation = selectedItems;
         beginStory('__selectedDetailContinuation', point.completion, { forceFullScene: true, preserveScene: false });
       };
 
       if (previewId === 'energy100-dialogue') {
+        restorePreviewBgm('energy100Dialogue', 0);
         startEnergy100BlackDialogueSequence();
         return;
       }
       if (previewId === 'boss-dialogue') {
+        restorePreviewBgm('bossIntro', 0);
         beginStory('bossIntro', 'startBossBattle', { forceFullScene: true });
         return;
       }
       if (previewId === 'boss-purification-dialogue') {
+        restorePreviewBgm('bossPurification', 0);
         beginStory('bossPurification', 'startBossAftermathStarRecovery', { forceFullScene: true, preserveScene: true });
         return;
       }
       if (previewId === 'star-recovery-dialogue') {
+        restorePreviewBgm('starRecovery', 0);
         startStarRevealCinematic('startStarAbsorption');
         return;
       }
       if (previewId === 'chapter-end-dialogue') {
+        restorePreviewBgm('chapterEnd', 0);
         beginStory('chapterEnd', 'finish', { forceFullScene: true });
         return;
       }
 
       if (previewId === 'detail-p2-core-entry') {
+        restorePreviewBgm('energy100Dialogue', 0);
         startBossEntryCinematic('startBossBattle');
         return;
       }
       if (previewId === 'detail-p2-star-reveal') {
+        restorePreviewBgm('bossPurification', 0);
         startStarRevealCinematic('startStarAbsorption');
         return;
       }
       if (previewId === 'detail-p2-star-absorb') {
+        restorePreviewBgm('starRecovery', 0);
         startStarRecoveryCinematic('startLateBackgroundPurification');
         return;
       }
       if (previewId === 'detail-p2-system-restore') {
+        restorePreviewBgm('systemRestore', 0);
         startSystemRestoreCinematic();
         return;
       }
       if (previewId === 'detail-p2-return-campus') {
+        restorePreviewBgm('chapterEnd', 0);
         startStory21BackgroundIntro('finish');
         return;
       }
@@ -2776,9 +2829,24 @@ export function createChapter1StoryRuntime({
     const items = Array.isArray(payload.items)
       ? payload.items as Array<Record<string, unknown>>
       : [];
+    const rawBaseState = typeof payload.baseState === "string" ? payload.baseState : "";
+    const baseState = (["daily", "drone", "core", "none"] as const).includes(rawBaseState as "daily" | "drone" | "core" | "none")
+      ? rawBaseState as "daily" | "drone" | "core" | "none"
+      : "none";
+
+    const applyBgmState = (state: "daily" | "drone" | "core" | "none") => {
+      if (state === "daily") sfx.startChapter1DailyBgm();
+      else if (state === "drone") sfx.startChapter1DroneChaseBgm();
+      else if (state === "core") sfx.startChapter1CoreInteriorBgm();
+      else sfx.stopBgm();
+      return state;
+    };
 
     if (part === 1) {
-      let target: "daily" | "drone" | null = null;
+      let target: "daily" | "drone" | "none" = segmentId.startsWith("__selected")
+        ? (baseState === "daily" || baseState === "drone" ? baseState : "none")
+        : "none";
+
       if (["openingCredits", "entrance", "notice", "login", "room"].includes(segmentId)) {
         target = "daily";
       } else if ([
@@ -2798,18 +2866,18 @@ export function createChapter1StoryRuntime({
           if (String(item?.text ?? "").trim() === "출석을 확인합니다.") target = "drone";
         }
       }
-      if (target === "drone") sfx.startChapter1DroneChaseBgm();
-      else if (target === "daily") sfx.startChapter1DailyBgm();
-      else sfx.stopBgm();
-      return;
+      return applyBgmState(target);
     }
 
     if (part === 2) {
-      // 이 구간은 정상 진행에서도 웨이브 전투가 끝난 뒤 BGM이 없는 상태다.
-      // 이어하기에서도 같은 상태를 유지하고, 포탈 통과 시점부터 코어 BGM을 재생한다.
+      if (segmentId.startsWith("__selected")) {
+        return applyBgmState(baseState);
+      }
+
+      // 웨이브 종료 후 포탈을 통과하기 전까지는 무음이다.
+      // 코어 내부 진입 연출의 기존 정확한 큐가 실행된 뒤부터 코어 BGM 상태가 유지된다.
       if (segmentId === "energy100Dialogue") {
-        sfx.stopBgm();
-        return;
+        return applyBgmState("none");
       }
       if ([
         "bossIntro",
@@ -2822,8 +2890,7 @@ export function createChapter1StoryRuntime({
         "chapterEndSequence",
         "chapterEnd"
       ].includes(segmentId)) {
-        sfx.startChapter1CoreInteriorBgm();
-        return;
+        return applyBgmState("core");
       }
       const seenItems = items.slice(0, Math.min(items.length, dialogueIndex + 1));
       const isCoreScene = seenItems.some((item) => {
@@ -2833,9 +2900,10 @@ export function createChapter1StoryRuntime({
         const title = String((scene as Record<string, unknown>).title ?? "");
         return background.includes("academic_system") || title.includes("코어");
       });
-      if (isCoreScene) sfx.startChapter1CoreInteriorBgm();
-      else sfx.stopBgm();
+      return applyBgmState(isCoreScene ? "core" : "none");
     }
+
+    return applyBgmState("none");
   });
 
   const executeScript = (source: string): void => {
