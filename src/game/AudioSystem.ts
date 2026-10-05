@@ -78,6 +78,9 @@ export class AudioSystem {
   fadeOutBgm(durationMs = 3000) {
     const element = this.bgmElement;
     if (!element) return;
+    // 같은 스토리 구간에서 복원 훅이 반복 호출되어도
+    // 이미 진행 중인 페이드 시간을 처음부터 다시 시작하지 않는다.
+    if (this.bgmFadeRaf !== null) return;
 
     this.cancelBgmFade();
     const duration = Math.max(1, durationMs);
@@ -540,6 +543,8 @@ export class AudioSystem {
   startChapter1DailyBgm() {
     const track = "/audio/chapter1-daily-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
       this.isPlayingBgm = true;
       if (this.bgmElement.paused) this.requestBgmPlayback();
       return;
@@ -558,6 +563,8 @@ export class AudioSystem {
   startChapter1DroneChaseBgm() {
     const track = "/audio/chapter1-drone-chase-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
       this.isPlayingBgm = true;
       if (this.bgmElement.paused) this.requestBgmPlayback();
       return;
@@ -576,6 +583,8 @@ export class AudioSystem {
   startChapter1CoreInteriorBgm() {
     const track = "/audio/chapter1-core-interior-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
       this.isPlayingBgm = true;
       if (this.bgmElement.paused) this.requestBgmPlayback();
       return;

@@ -767,6 +767,32 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   // 웨이브 정화 이후의 스토리 호출만 activePreviewId를 해제해 실제 연속 진행으로 취급한다.
   normalized = normalized.replace(debugPreviewHook, flowPreviewHook);
 
+  // 일반 몬스터 웨이브로 넘어가는 STORY -> SHOOTING 전환 연출 동안
+  // 현재 스토리 BGM을 서서히 줄여 전투 시작 전에 자연스럽게 무음이 되도록 한다.
+  const initialWaveBgmFadeHook = `  function startInitialBattleTransition() {
+    stopTyping();`;
+  const initialWaveBgmFadeUpgrade = `  function startInitialBattleTransition() {
+    stopTyping();
+    window.__CHAPTER1_FADE_OUT_BGM__?.(3000);`;
+  if (!normalized.includes(initialWaveBgmFadeHook)) {
+    throw new Error('Chapter 1 initial wave transition BGM fade hook was not found.');
+  }
+  normalized = normalized.replace(initialWaveBgmFadeHook, initialWaveBgmFadeUpgrade);
+
+  // Part 2의 학사 시스템 정상화가 끝난 뒤에는 코어 BGM을 페이드아웃하고,
+  // 본관 귀환 배경이 나타나는 순간 Chapter 1 일상 BGM을 다시 시작해 엔딩까지 유지한다.
+  if (part === 2) {
+    const returnCampusDailyBgmHook = `  function startStory21BackgroundIntro(nextCompletionAction = 'finish') {
+    stopTyping();`;
+    const returnCampusDailyBgmUpgrade = `  function startStory21BackgroundIntro(nextCompletionAction = 'finish') {
+    stopTyping();
+    window.__CHAPTER1_START_DAILY_BGM__?.();`;
+    if (!normalized.includes(returnCampusDailyBgmHook)) {
+      throw new Error('Chapter 1 return-campus daily BGM hook was not found.');
+    }
+    normalized = normalized.replace(returnCampusDailyBgmHook, returnCampusDailyBgmUpgrade);
+  }
+
   // 학생증은 오염 추적 직후 정상 문장으로 말하지 못하고 끊어진 단어만 출력한다.
   // 비상 통제 전환 레이어를 story-stage 밖으로 옮겨 컨테이너의 overflow와 비율 제한을 받지 않게 한다.
   const battleTransitionDeclaration = `  const battleTransition = document.getElementById('battleTransition');`;
@@ -2820,6 +2846,10 @@ export function createChapter1StoryRuntime({
   localWindowValues.set("__CHAPTER1_START_CORE_INTERIOR_BGM__", () => {
     sfx.startChapter1CoreInteriorBgm();
   });
+  localWindowValues.set("__CHAPTER1_FADE_OUT_BGM__", (rawDurationMs: unknown) => {
+    const durationMs = Math.max(1, Math.floor(Number(rawDurationMs) || 3000));
+    sfx.fadeOutBgm(durationMs);
+  });
   localWindowValues.set("__CHAPTER1_RESTORE_STORY_BGM__", (rawPayload: unknown) => {
     const payload = rawPayload && typeof rawPayload === "object"
       ? rawPayload as Record<string, unknown>
@@ -2879,16 +2909,25 @@ export function createChapter1StoryRuntime({
       if (segmentId === "energy100Dialogue") {
         return applyBgmState("none");
       }
+      if (segmentId === "postRestoreReaction") {
+        // 정상화 연출이 끝난 직후의 반응 대사부터 코어 BGM을 천천히 내린다.
+        // 대사 진행마다 복원 훅이 다시 호출되어도 이미 진행 중인 페이드는 AudioSystem에서 유지된다.
+        sfx.fadeOutBgm(2500);
+        return "none";
+      }
+      if ([
+        "chapterEnding",
+        "chapterEndSequence",
+        "chapterEnd"
+      ].includes(segmentId)) {
+        return applyBgmState("daily");
+      }
       if ([
         "bossIntro",
         "bossPurification",
         "starReveal",
         "starRecovery",
-        "postRestoreReaction",
-        "systemRestore",
-        "chapterEnding",
-        "chapterEndSequence",
-        "chapterEnd"
+        "systemRestore"
       ].includes(segmentId)) {
         return applyBgmState("core");
       }
