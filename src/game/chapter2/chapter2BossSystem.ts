@@ -376,7 +376,9 @@ export function startChapter2BossSystem(
   engine.stage = 2;
   engine.state = "PLAYING";
   runtime.core.start(options);
-  sfx.startBossBgm();
+  // Chapter 2 보스 전환 연출이 끝난 뒤 실제 보스 게임 화면/시스템이 시작되는 순간
+  // 전용 보스 BGM으로 교체한다. 스토리 프리보스 BGM은 이 지점 직전까지 유지된다.
+  sfx.startChapter2BossBgm();
   syncBossEntity(engine, runtime);
   clampPlayerToBossViewport(engine, runtime);
 }
