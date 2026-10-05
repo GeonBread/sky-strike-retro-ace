@@ -60,6 +60,8 @@ interface Chapter2BridgeMessage {
   navigation?: Chapter2StoryNavigation;
   persistentFullscreen?: boolean;
   active?: boolean;
+  reason?: string;
+  durationMs?: number;
 }
 
 interface Chapter2IntegrationGate {
@@ -107,9 +109,13 @@ const CHAPTER2_WAVE_COUNT = 20;
 // "책임의 블랙홀" 프리보스 연출이 index 240에서 시작한다.
 const CHAPTER2_DAILY_BGM_FADE_INDEX = 54;
 const CHAPTER2_STRUGGLE_BGM_START_INDEX = 57;
+const CHAPTER2_WORD_CRASH_INDEX = 111;
 const CHAPTER2_CONTAMINATION_BGM_START_INDEX = 112;
-const CHAPTER2_CONTAMINATION_BGM_END_INDEX = 140;
 const CHAPTER2_STRUGGLE_BGM_RESUME_INDEX = 144;
+const CHAPTER2_WAVE_TRANSITION_INDEX = 142;
+const CHAPTER2_MIDCHECK_CALENDAR_INDEX = 164;
+const CHAPTER2_MIDCHECK_DAILY_BGM_START_INDEX = 165;
+const CHAPTER2_BOSS_PORTAL_DEPARTURE_INDEX = 239;
 const CHAPTER2_PREBOSS_BGM_START_INDEX = 240;
 // STORY_DATA 기준: "발표" section-marker가 index 310 (#311)에서 시작한다.
 // 이 지점부터 Chapter 2 엔딩까지는 발표/엔딩 전용 BGM을 유지한다.
@@ -274,6 +280,12 @@ export function Chapter2StoryExperience({
         return;
       }
 
+      if (data.type === "bgm-fade-request") {
+        const durationMs = Number.isFinite(Number(data.durationMs)) ? Math.max(250, Number(data.durationMs)) : 3000;
+        sfx.fadeOutBgm(durationMs);
+        return;
+      }
+
       if (data.type === "test-key") {
         if (data.code === "F6") skipCurrentContext();
         else if (data.code === "F7") setShowJumpMenu((open) => !open);
@@ -336,15 +348,63 @@ export function Chapter2StoryExperience({
             && (
               (
                 storyIndex >= CHAPTER2_STRUGGLE_BGM_START_INDEX
-                && storyIndex < CHAPTER2_CONTAMINATION_BGM_START_INDEX
+                && storyIndex < CHAPTER2_WORD_CRASH_INDEX
               )
               || (
                 storyIndex >= CHAPTER2_STRUGGLE_BGM_RESUME_INDEX
-                && storyIndex < CHAPTER2_PREBOSS_BGM_START_INDEX
+                && storyIndex < CHAPTER2_MIDCHECK_CALENDAR_INDEX
               )
             )
           ) {
             sfx.startChapter2StruggleBgm();
+          }
+
+          // Word 저장 오류 연출로 바로 점프한 경우에도 직전 구간의 상황 BGM을 복원한다.
+          // 실제 첫 오류 알림창이 뜨는 순간에는 iframe에서 별도 fade 요청을 보내므로,
+          // effect 종료 후 같은 index의 progress가 들어와도 BGM을 다시 켜지 않는다.
+          if (
+            storyIndex === CHAPTER2_WORD_CRASH_INDEX
+            && data.effectId === "word-crash"
+          ) {
+            sfx.startChapter2StruggleBgm();
+          }
+
+          // 일반 오염 전투 전환 자체가 시작되면 현재 오염 BGM을 서서히 지운다.
+          // 테스트 메뉴로 전환 장면에 바로 진입해도 직전 구간 음악을 재현한 뒤 페이드한다.
+          if (
+            storyIndex === CHAPTER2_WAVE_TRANSITION_INDEX
+            && data.effectId === "combat-transition"
+            && data.title === "일반 오염 전투"
+          ) {
+            sfx.startChapter2ContaminationBgm();
+            sfx.fadeOutBgm(2800);
+          }
+
+          // 예정된 중간 점검의 캘린더가 나타나는 동안 기존 상황 BGM을 서서히 지운다.
+          if (
+            storyIndex === CHAPTER2_MIDCHECK_CALENDAR_INDEX
+            && data.effectId === "time-card"
+          ) {
+            sfx.startChapter2StruggleBgm();
+            sfx.fadeOutBgm(3600);
+          }
+
+          // 중간 점검의 첫 대사부터 책임의 블랙홀 이동 직전까지는 일상 BGM을 유지한다.
+          if (
+            Number.isInteger(storyIndex)
+            && storyIndex >= CHAPTER2_MIDCHECK_DAILY_BGM_START_INDEX
+            && storyIndex < CHAPTER2_BOSS_PORTAL_DEPARTURE_INDEX
+          ) {
+            sfx.startChapter1DailyBgm();
+          }
+
+          // 책임의 블랙홀로 실제 이동하는 포탈 연출에서는 일상 BGM을 천천히 끈다.
+          if (
+            storyIndex === CHAPTER2_BOSS_PORTAL_DEPARTURE_INDEX
+            && data.effectId === "core-portal-open"
+          ) {
+            sfx.startChapter1DailyBgm();
+            sfx.fadeOutBgm(3600);
           }
 
           // Word 자동 저장 실패 직후 #113 "(뭐.. 뭐야!)" 대사가 시작되는 순간
@@ -352,13 +412,18 @@ export function Chapter2StoryExperience({
           if (
             Number.isInteger(storyIndex)
             && storyIndex >= CHAPTER2_CONTAMINATION_BGM_START_INDEX
-            && storyIndex < CHAPTER2_CONTAMINATION_BGM_END_INDEX
+            && storyIndex < CHAPTER2_WAVE_TRANSITION_INDEX
           ) {
             sfx.startChapter2ContaminationBgm();
           }
 
-          // 스토리 #241: "책임의 블랙홀" 도착 연출이 시작되는 순간부터 보스 웨이브 전용 BGM으로 교체한다.
-          if (data.effectId === "boss-arrival-background-title") {
+          // 스토리 #241: "책임의 블랙홀" 도착부터 발표 장면 전까지는 프리보스 BGM을 유지한다.
+          // 중간 장면으로 직접 점프해도 해당 구간의 BGM 상태를 복원한다.
+          if (
+            Number.isInteger(storyIndex)
+            && storyIndex >= CHAPTER2_PREBOSS_BGM_START_INDEX
+            && storyIndex < CHAPTER2_PRESENTATION_ENDING_BGM_START_INDEX
+          ) {
             sfx.startChapter2PreBossBgm();
           }
 
@@ -837,6 +902,10 @@ export function Chapter2StoryExperience({
           </div>
           <div className="chapter2-story-boss-emergence-boss-wrap">
             <img src="/chapter2_story/assets/chapter2/illustrations/ill_boss_phase1.png" alt="팀플 블랙홀 무임승차자" />
+          </div>
+          <div className="chapter2-story-boss-emergence-title">
+            <small>CHAPTER 2 · BOSS</small>
+            <strong>팀플 블랙홀 무임승차자</strong>
           </div>
         </div>
       )}
