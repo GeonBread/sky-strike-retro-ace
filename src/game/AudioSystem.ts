@@ -532,6 +532,22 @@ export class AudioSystem {
     this.requestBgmPlayback();
   }
 
+  startChapter1CoreInteriorBgm() {
+    const track = "/audio/chapter1-core-interior-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.requestBgmPlayback();
+  }
+
   startChapter2StruggleBgm() {
     const track = "/audio/chapter2-struggle-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {

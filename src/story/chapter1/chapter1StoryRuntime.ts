@@ -706,45 +706,57 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     corePortalSequenceTimer = window.setTimeout(() => {
       currentSceneId = '';
       updateScene(bossInteriorPreviewScene, { silent: true });
+      window.__CHAPTER1_START_CORE_INTERIOR_BGM__?.();
       portal.classList.remove('is-opening', 'is-entering', 'is-traveling');
       portal.remove();
       corePortalOverlay = null;
       storyStage.classList.remove('is-core-portal-fullscreen');
       setBossEntryStageClass('');
 
-      /* 보스맵 도착 화면은 story-stage의 좌표계나 카메라 애니메이션을 사용하지 않는다.
-         document.body에 고정 전체화면 레이어를 직접 붙여 좌우 밀림 가능성을 제거한다. */
-      document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal').forEach(node => node.remove());
-      const arrivalOverlay = document.createElement('div');
-      arrivalOverlay.className = 'chapter1-boss-map-arrival-fullscreen';
-      arrivalOverlay.style.setProperty('--chapter1-boss-map-arrival-image', 'url(\"' + assetPath('bg_academic_system_corrupted.png') + '\")');
-
-      /* Chapter 3 코어 진입처럼 배경이 처음 공개되는 장면 전환 안에서 장소명을 함께 보여준다.
-         별도의 카메라 이동은 추가하지 않고 기존 4초 정지 화면 위에서 타이틀만 페이드 인/아웃한다. */
-      const arrivalTitle = document.createElement('div');
-      arrivalTitle.className = 'chapter1-boss-map-arrival-title';
-      const arrivalTitleKicker = document.createElement('small');
-      arrivalTitleKicker.textContent = 'LOCATION';
-      const arrivalTitleName = document.createElement('strong');
-      arrivalTitleName.textContent = bossInteriorPreviewScene.title || '학사 코어 영역';
-      const arrivalTitleSubtitle = document.createElement('span');
-      arrivalTitleSubtitle.textContent = bossInteriorPreviewScene.subtitle || '핵심 오염원 구역';
-      arrivalTitle.append(arrivalTitleKicker, arrivalTitleName, arrivalTitleSubtitle);
-      arrivalOverlay.appendChild(arrivalTitle);
-      document.body.appendChild(arrivalOverlay);
+      /* 포탈 통과 직후 약 3초간 학사 코어 내부가 흐릿하게 보이다가,
+         화면 중심에서부터 선명한 시야가 원형으로 바깥까지 확장된다. */
+      document.querySelectorAll('.chapter1-core-vision-reveal, .chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal').forEach(node => node.remove());
+      const coreVisionReveal = document.createElement('div');
+      coreVisionReveal.className = 'chapter1-core-vision-reveal';
+      coreVisionReveal.style.setProperty('--chapter1-core-vision-image', 'url(\"' + assetPath('bg_academic_system_corrupted.png') + '\")');
+      const coreVisionRing = document.createElement('div');
+      coreVisionRing.className = 'chapter1-core-vision-reveal-ring';
+      coreVisionReveal.appendChild(coreVisionRing);
+      document.body.appendChild(coreVisionReveal);
 
       corePortalSequenceTimer = window.setTimeout(() => {
-        corePortalSequenceTimer = null;
-        beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
+        coreVisionReveal.remove();
 
-        /* 전체화면 학사 코어 내부 장면에서 일반 스토리 화면으로 넘어갈 때 검정 페이드로 연결한다. */
-        const dialogueRevealOverlay = document.createElement('div');
-        dialogueRevealOverlay.className = 'chapter1-boss-map-dialogue-reveal';
-        document.body.appendChild(dialogueRevealOverlay);
-        arrivalOverlay.remove();
-        requestAnimationFrame(() => dialogueRevealOverlay.classList.add('is-revealing'));
-        window.setTimeout(() => dialogueRevealOverlay.remove(), 900);
-      }, 4000);
+        /* 시야가 완전히 열린 뒤 기존 학사 코어 맵/장소명 연출을 이어서 보여준다. */
+        const arrivalOverlay = document.createElement('div');
+        arrivalOverlay.className = 'chapter1-boss-map-arrival-fullscreen is-after-core-vision';
+        arrivalOverlay.style.setProperty('--chapter1-boss-map-arrival-image', 'url(\"' + assetPath('bg_academic_system_corrupted.png') + '\")');
+
+        const arrivalTitle = document.createElement('div');
+        arrivalTitle.className = 'chapter1-boss-map-arrival-title';
+        const arrivalTitleKicker = document.createElement('small');
+        arrivalTitleKicker.textContent = 'LOCATION';
+        const arrivalTitleName = document.createElement('strong');
+        arrivalTitleName.textContent = bossInteriorPreviewScene.title || '학사 코어 영역';
+        const arrivalTitleSubtitle = document.createElement('span');
+        arrivalTitleSubtitle.textContent = bossInteriorPreviewScene.subtitle || '핵심 오염원 구역';
+        arrivalTitle.append(arrivalTitleKicker, arrivalTitleName, arrivalTitleSubtitle);
+        arrivalOverlay.appendChild(arrivalTitle);
+        document.body.appendChild(arrivalOverlay);
+
+        corePortalSequenceTimer = window.setTimeout(() => {
+          corePortalSequenceTimer = null;
+          beginStory('bossIntro', bossIntroCompletionAction, { forceFullScene: true, preserveScene: true });
+
+          /* 전체화면 학사 코어 내부 장면에서 일반 스토리 화면으로 넘어갈 때 검정 페이드로 연결한다. */
+          const dialogueRevealOverlay = document.createElement('div');
+          dialogueRevealOverlay.className = 'chapter1-boss-map-dialogue-reveal';
+          document.body.appendChild(dialogueRevealOverlay);
+          arrivalOverlay.remove();
+          requestAnimationFrame(() => dialogueRevealOverlay.classList.add('is-revealing'));
+          window.setTimeout(() => dialogueRevealOverlay.remove(), 900);
+        }, 4000);
+      }, 3000);
     }, 8500);
   }`;
   if (!normalized.includes(corePortalEntryHook)) {
@@ -759,7 +771,7 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   const clearBossArrivalOverlayV2 = `  function clearBossEntrySequence() {
     bossEntrySequenceTimers.forEach(timer => window.clearTimeout(timer));
     bossEntrySequenceTimers = [];
-    document.querySelectorAll('.chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal').forEach(node => node.remove());`;
+    document.querySelectorAll('.chapter1-core-vision-reveal, .chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal').forEach(node => node.remove());`;
   if (normalized.includes(clearBossArrivalOverlayHook)) {
     normalized = normalized.replace(clearBossArrivalOverlayHook, clearBossArrivalOverlayV2);
   }
@@ -1350,6 +1362,107 @@ html.is-embedded-story .chapter1-core-portal-sparks::after { transform: rotate(1
 @keyframes chapter1CorePortalSurfaceShimmer {
   0% { opacity: .34; transform: translateX(-3%) skewY(-.8deg) scale(1.02); }
   100% { opacity: .8; transform: translateX(3%) skewY(.8deg) scale(1.06); }
+}
+
+/* 포탈 통과 직후 학사 코어 내부 시야 개방: 흐릿한 전체 장면 위에
+   선명한 중심 시야가 원형으로 퍼지며 약 3초에 걸쳐 전체 화면을 드러낸다. */
+html.is-embedded-story .chapter1-core-vision-reveal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100002 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  background: #020204 !important;
+  isolation: isolate;
+  animation: chapter1CoreVisionRevealContainer 3s linear both;
+}
+html.is-embedded-story .chapter1-core-vision-reveal::before,
+html.is-embedded-story .chapter1-core-vision-reveal::after {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  background-color: #050506;
+  background-image: var(--chapter1-core-vision-image);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}
+/* 바닥에는 처음부터 코어 내부가 있으나 초점이 전혀 맞지 않는 상태로 둔다. */
+html.is-embedded-story .chapter1-core-vision-reveal::before {
+  z-index: 0;
+  filter: blur(28px) brightness(.28) saturate(.62) contrast(.88);
+  transform: scale(1.1);
+  opacity: 1;
+  animation: chapter1CoreVisionBlurBase 3s cubic-bezier(.2,.72,.18,1) both;
+}
+/* 선명한 화면은 중심의 작은 원에서 시작해 바깥으로 확장된다. */
+html.is-embedded-story .chapter1-core-vision-reveal::after {
+  z-index: 1;
+  inset: 0;
+  filter: brightness(.98) saturate(1.08) contrast(1.04);
+  clip-path: circle(0% at 50% 50%);
+  animation: chapter1CoreVisionSharpSpread 3s cubic-bezier(.16,.72,.16,1) both;
+}
+html.is-embedded-story .chapter1-core-vision-reveal-ring {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: 12vmin;
+  height: 12vmin;
+  border-radius: 50%;
+  transform: translate(-50%,-50%) scale(.25);
+  border: 2px solid rgba(255,225,154,.82);
+  box-shadow:
+    0 0 18px rgba(255,244,211,.78),
+    0 0 48px rgba(191,124,38,.46),
+    inset 0 0 22px rgba(255,242,207,.38);
+  opacity: 0;
+  animation: chapter1CoreVisionFocusRing 3s cubic-bezier(.16,.72,.16,1) both;
+}
+html.is-embedded-story .chapter1-core-vision-reveal {
+  box-shadow: inset 0 0 16vw 4vw rgba(0,0,0,.88);
+}
+@keyframes chapter1CoreVisionRevealContainer {
+  0% { opacity: 0; }
+  7% { opacity: 1; }
+  94%,100% { opacity: 1; }
+}
+@keyframes chapter1CoreVisionBlurBase {
+  0% { filter: blur(34px) brightness(.16) saturate(.48) contrast(.82); transform: scale(1.14); }
+  24% { filter: blur(28px) brightness(.26) saturate(.62) contrast(.88); }
+  68% { filter: blur(18px) brightness(.46) saturate(.82) contrast(.94); }
+  100% { filter: blur(7px) brightness(.72) saturate(.96) contrast(1); transform: scale(1.03); }
+}
+@keyframes chapter1CoreVisionSharpSpread {
+  0%,8% { clip-path: circle(0% at 50% 50%); opacity: .18; }
+  20% { clip-path: circle(7% at 50% 50%); opacity: .72; }
+  48% { clip-path: circle(30% at 50% 50%); opacity: .94; }
+  76% { clip-path: circle(68% at 50% 50%); opacity: 1; }
+  100% { clip-path: circle(86vmax at 50% 50%); opacity: 1; }
+}
+@keyframes chapter1CoreVisionFocusRing {
+  0%,10% { opacity: 0; transform: translate(-50%,-50%) scale(.22); }
+  20% { opacity: .95; transform: translate(-50%,-50%) scale(.75); }
+  48% { opacity: .72; transform: translate(-50%,-50%) scale(4.8); }
+  78% { opacity: .28; transform: translate(-50%,-50%) scale(10.8); }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(17); }
+}
+
+/* 3초 시야 개방 직후에는 같은 배경을 유지한 채 장소명 연출만 이어 붙인다. */
+html.is-embedded-story .chapter1-boss-map-arrival-fullscreen.is-after-core-vision::before {
+  opacity: 1;
+  animation: none !important;
+}
+html.is-embedded-story .chapter1-boss-map-arrival-fullscreen.is-after-core-vision::after {
+  opacity: 0;
+  animation: chapter1BossMapArrivalAfterVisionBlackTransition 4s ease-in-out both !important;
+}
+@keyframes chapter1BossMapArrivalAfterVisionBlackTransition {
+  0%,72% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* 포탈 통과 직후 학사 코어 내부 장면: 카메라는 고정하고 검정 페이드로 장면 전환만 추가한다. */
@@ -2301,6 +2414,9 @@ export function createChapter1StoryRuntime({
   localWindowValues.set("__CHAPTER1_START_DRONE_CHASE_BGM__", () => {
     sfx.startChapter1DroneChaseBgm();
   });
+  localWindowValues.set("__CHAPTER1_START_CORE_INTERIOR_BGM__", () => {
+    sfx.startChapter1CoreInteriorBgm();
+  });
 
   const executeScript = (source: string): void => {
     const runner = new Function(
@@ -2353,7 +2469,7 @@ export function createChapter1StoryRuntime({
     locationOverlayTimer = null;
     locationOverlay.remove();
     document.querySelectorAll(
-      ".story-effect-layer.is-global-gatekeeper-entrance, .chapter1-core-portal-overlay, .chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal",
+      ".story-effect-layer.is-global-gatekeeper-entrance, .chapter1-core-portal-overlay, .chapter1-core-vision-reveal, .chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal",
     ).forEach((element) => element.remove());
     styleElement.remove();
     root.replaceChildren();
