@@ -550,7 +550,7 @@ export class AudioSystem {
     this.bgmElement.loop = true;
     this.bgmElement.volume = this.bgmVol;
     this.isPlayingBgm = true;
-    this.bgmElement.play().catch(() => {});
+    this.requestBgmPlayback();
   }
 
   startChapter1DroneChaseBgm() {
@@ -757,9 +757,7 @@ export class AudioSystem {
     this.bgmElement.loop = true;
     this.bgmElement.volume = this.bgmVol;
     this.isPlayingBgm = true;
-    this.bgmElement.play().catch(() => {
-      this.isPlayingBgm = false;
-    });
+    this.requestBgmPlayback();
     return;
     this.stopBgm();
     if (!this.ctx) return;

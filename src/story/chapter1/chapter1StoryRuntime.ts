@@ -2781,7 +2781,12 @@ export function createChapter1StoryRuntime({
       let target: "daily" | "drone" | null = null;
       if (["openingCredits", "entrance", "notice", "login", "room"].includes(segmentId)) {
         target = "daily";
-      } else if (["attendanceEscape", "firstPurification", "decision"].includes(segmentId)) {
+      } else if ([
+        "attendanceEscape",
+        "firstPurificationCinematic",
+        "firstPurification",
+        "decision"
+      ].includes(segmentId)) {
         target = "drone";
       } else if (segmentId === "attendance") {
         const chaseIndex = items.findIndex((item) => String(item?.text ?? "").trim() === "출석을 확인합니다.");
@@ -2795,12 +2800,15 @@ export function createChapter1StoryRuntime({
       }
       if (target === "drone") sfx.startChapter1DroneChaseBgm();
       else if (target === "daily") sfx.startChapter1DailyBgm();
+      else sfx.stopBgm();
       return;
     }
 
     if (part === 2) {
+      // 이 구간은 정상 진행에서도 웨이브 전투가 끝난 뒤 BGM이 없는 상태다.
+      // 이어하기에서도 같은 상태를 유지하고, 포탈 통과 시점부터 코어 BGM을 재생한다.
       if (segmentId === "energy100Dialogue") {
-        sfx.startBgmForPhase(1);
+        sfx.stopBgm();
         return;
       }
       if ([
@@ -2808,6 +2816,7 @@ export function createChapter1StoryRuntime({
         "bossPurification",
         "starReveal",
         "starRecovery",
+        "postRestoreReaction",
         "systemRestore",
         "chapterEnding",
         "chapterEndSequence",
@@ -2825,6 +2834,7 @@ export function createChapter1StoryRuntime({
         return background.includes("academic_system") || title.includes("코어");
       });
       if (isCoreScene) sfx.startChapter1CoreInteriorBgm();
+      else sfx.stopBgm();
     }
   });
 
