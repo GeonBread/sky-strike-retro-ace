@@ -166,6 +166,35 @@ const WAVES: WaveMeta[] = [
 
 const BOSS_SECTIONS = STORY_SECTIONS.filter((section) => section.ordinal >= 13 && section.ordinal <= 23);
 
+const FINAL_CREDITS_TOTAL_MS = 110_000;
+
+type FinalCreditSection = {
+  role: string;
+  label: string;
+  names: string[];
+};
+
+const FINAL_CREDIT_SECTIONS: FinalCreditSection[] = [
+  { role: "DIRECTOR", label: "감독", names: ["마건"] },
+  { role: "PROJECT LEAD", label: "총괄 기획", names: ["마건"] },
+  { role: "GAME DESIGN", label: "게임 기획", names: ["마건"] },
+  { role: "STORY & SCENARIO", label: "스토리 · 시나리오", names: ["마건"] },
+  { role: "WORLD DESIGN", label: "세계관 설정", names: ["마건"] },
+  { role: "BATTLE DESIGN", label: "전투 · 보스 · 패턴 기획", names: ["마건"] },
+  { role: "LEVEL DESIGN", label: "스테이지 · 몬스터 웨이브 설계", names: ["마건"] },
+  { role: "PROGRAMMING", label: "프로그래밍", names: ["마건"] },
+  { role: "GAME SYSTEM DEVELOPMENT", label: "게임 시스템 개발", names: ["마건"] },
+  { role: "STORY SYSTEM DEVELOPMENT", label: "스토리 시스템 개발", names: ["마건"] },
+  { role: "UI / UX DESIGN", label: "UI · UX 디자인", names: ["마건"] },
+  { role: "ART DIRECTION", label: "아트 디렉션", names: ["마건"] },
+  { role: "CHARACTER DESIGN", label: "캐릭터 디자인", names: ["마건"] },
+  { role: "MONSTER & BOSS DESIGN", label: "몬스터 · 보스 디자인", names: ["마건"] },
+  { role: "VISUAL EFFECTS", label: "비주얼 이펙트", names: ["마건"] },
+  { role: "SOUND DIRECTION", label: "사운드 기획 · 연출", names: ["마건"] },
+  { role: "MUSIC DIRECTION", label: "음악 기획 · 연출", names: ["마건"] },
+  { role: "LYRICS / COMPOSITION", label: "작사 · 작곡", names: ["마건"] },
+];
+
 
 const CHAPTER3_PROGRESS_KEY = "sky-strike-chapter3-story-progress-v1";
 
@@ -228,6 +257,10 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const [waveFailed, setWaveFailed] = useState(false);
   const [waveRetryPromptVisible, setWaveRetryPromptVisible] = useState(false);
   const waveRetryPromptTimerRef = useRef<number | null>(null);
+  const finalCreditsTimerRef = useRef<number | null>(null);
+  const finalCreditsActiveRef = useRef(false);
+  const [finalCreditsActive, setFinalCreditsActive] = useState(false);
+  const [finalCreditsRunKey, setFinalCreditsRunKey] = useState(0);
   const [waveRunKey, setWaveRunKey] = useState(0);
   const [waveStartIndex, setWaveStartIndex] = useState(0);
   const [waveSingle, setWaveSingle] = useState(false);
@@ -251,6 +284,11 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
       window.clearTimeout(waveRetryPromptTimerRef.current);
       waveRetryPromptTimerRef.current = null;
     }
+    if (finalCreditsTimerRef.current !== null) {
+      window.clearTimeout(finalCreditsTimerRef.current);
+      finalCreditsTimerRef.current = null;
+    }
+    finalCreditsActiveRef.current = false;
   }, []);
 
   const frameSrc = useMemo(
@@ -281,6 +319,39 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     }
   };
 
+  const clearFinalCreditsTimer = () => {
+    if (finalCreditsTimerRef.current !== null) {
+      window.clearTimeout(finalCreditsTimerRef.current);
+      finalCreditsTimerRef.current = null;
+    }
+  };
+
+  const beginFinalCredits = () => {
+    if (finalCreditsActiveRef.current) return;
+    finalCreditsActiveRef.current = true;
+    clearFinalCreditsTimer();
+    setFinalCreditsRunKey((key) => key + 1);
+    setFinalCreditsActive(true);
+    setWaveActive(false);
+    setFullscreenEffect("chapter-ending");
+    sfx.resumeAll();
+    sfx.startFinalEndingBgm();
+
+    finalCreditsTimerRef.current = window.setTimeout(() => {
+      finalCreditsTimerRef.current = null;
+      finalCreditsActiveRef.current = false;
+      setFinalCreditsActive(false);
+      setFullscreenEffect(null);
+      if (isChapter3OwnedBgm(sfx.currentBgmTrack)) sfx.stopBgm();
+      if (storyIsTestJump) {
+        returnToSelector();
+        return;
+      }
+      writeChapter3Progress({ index: 0, sectionOrdinal: 0 });
+      onComplete?.();
+    }, FINAL_CREDITS_TOTAL_MS);
+  };
+
   const returnToSelector = () => {
     /* PATCH086: the Chapter 3 story iframe may have been promoted to a browser-wide
        fixed layer by the persistent web-dialogue cinematic. Clear those inline
@@ -296,6 +367,9 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     }
 
     if (isChapter3OwnedBgm(sfx.currentBgmTrack)) sfx.stopBgm();
+    clearFinalCreditsTimer();
+    finalCreditsActiveRef.current = false;
+    setFinalCreditsActive(false);
     setFullscreenEffect(null);
     clearWaveRetryPromptTimer();
     setWaveActive(false);
@@ -309,6 +383,9 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   };
 
   const prepareStoryLaunch = (launch: StoryLaunch, testJump = true) => {
+    clearFinalCreditsTimer();
+    finalCreditsActiveRef.current = false;
+    setFinalCreditsActive(false);
     setFullscreenEffect(null);
     clearWaveRetryPromptTimer();
     setWaveActive(false);
@@ -406,7 +483,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
             return;
           }
           if (effectId === "chapter-ending") {
-            sfx.startFinalEndingBgm();
+            beginFinalCredits();
           }
           if (FULLSCREEN_EFFECTS.has(effectId)) setFullscreenEffect(effectId);
           return;
@@ -485,6 +562,10 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         }
 
         if (message.type === "story-complete") {
+          // The final credits own the end of Chapter 3. The iframe finishes its short
+          // handoff effect after 5.6 s, but the host must stay alive until the 1:50
+          // ending track and full credits sequence have completed.
+          if (finalCreditsActiveRef.current) return;
           setFullscreenEffect(null);
           setWaveActive(false);
           if (isChapter3OwnedBgm(sfx.currentBgmTrack)) sfx.stopBgm();
@@ -680,7 +761,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
   return (
     <section
-      className={`chapter3StoryExperience${fullscreenEffect ? " is-fullscreen-effect" : ""}${waveActive ? " is-wave-active" : ""}${screen === "selector" ? " is-selector-open" : ""}`}
+      className={`chapter3StoryExperience${fullscreenEffect ? " is-fullscreen-effect" : ""}${waveActive ? " is-wave-active" : ""}${screen === "selector" ? " is-selector-open" : ""}${finalCreditsActive ? " is-final-credits" : ""}`}
       data-chapter3-effect={fullscreenEffect || undefined}
       data-wave-paused={wavePaused ? "true" : undefined}
       aria-label="챕터 3"
@@ -692,8 +773,84 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         src={frameSrc}
         title="CHAPTER 3 — 졸업요건 최종전"
         allow="autoplay; fullscreen"
-        aria-hidden={screen === "selector" || screen === "wave"}
+        aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
       />
+
+      {finalCreditsActive && (
+        <div
+          key={`chapter3-final-credits-${finalCreditsRunKey}`}
+          className="chapter3FinalCreditsOverlay"
+          role="presentation"
+          aria-label="호반우의 졸업 대작전 최종 엔딩 크레딧"
+        >
+          <div className="chapter3FinalCreditsWhiteout" aria-hidden="true" />
+          <div className="chapter3FinalCreditsBlackout" aria-hidden="true" />
+
+          <div className="chapter3FinalCreditsLogoPhase" aria-hidden="true">
+            <img src="/chapter3_story/assets/story/common/ui/game_logo.png" alt="" />
+          </div>
+
+          <div className="chapter3FinalCreditsScrollViewport">
+            <div className="chapter3FinalCreditsTrack">
+              <header className="chapter3FinalCreditsHeading">
+                <small>FINAL CREDITS</small>
+                <strong>호반우의 졸업 대작전</strong>
+              </header>
+
+              {FINAL_CREDIT_SECTIONS.map((section) => (
+                <section className="chapter3FinalCreditSection" key={`${section.role}-${section.label}`}>
+                  <small>{section.role}</small>
+                  <h2>{section.label}</h2>
+                  {section.names.map((name) => <p key={name}>{name}</p>)}
+                </section>
+              ))}
+
+              <div className="chapter3FinalCreditsDivider" aria-hidden="true" />
+
+              <section className="chapter3FinalCreditSection is-tools">
+                <small>DEVELOPMENT TOOL</small>
+                <h2>개발 도구</h2>
+                <p>OpenAI ChatGPT</p>
+              </section>
+
+              <section className="chapter3FinalCreditSection is-tools">
+                <small>AI MUSIC TOOLS</small>
+                <h2>AI 음악 제작 도구</h2>
+                <p>Suno</p>
+                <p>Google Gemini</p>
+              </section>
+
+              <div className="chapter3FinalCreditsDivider" aria-hidden="true" />
+
+              <section className="chapter3FinalCreditSection is-support">
+                <small>SUPPORTED BY</small>
+                <h2>후원 · 지원</h2>
+                <p>경북대학교 기계공학부</p>
+                <p>Extreme Environment Transducer Laboratory</p>
+                <p>EETL</p>
+                <p className="chapter3FinalCreditsSupportName">정용록 교수님</p>
+              </section>
+
+              <section className="chapter3FinalCreditSection is-special">
+                <small>SPECIAL THANKS</small>
+                <h2>Special Thanks</h2>
+                <p>히아신스</p>
+              </section>
+            </div>
+          </div>
+
+          <div className="chapter3FinalCreditsThanks">
+            <div>
+              <p>그리고,</p>
+              <strong>이 게임을 끝까지 플레이해 주신<br />당신에게.</strong>
+              <span>THANK YOU FOR PLAYING</span>
+              <img src="/chapter3_story/assets/story/common/ui/game_logo.png" alt="호반우의 졸업 대작전" />
+              <small>DIRECTED &amp; CREATED BY · 마건</small>
+              <small>© 2026 마건</small>
+            </div>
+          </div>
+        </div>
+      )}
 
       {screen === "selector" && (
         <div className="chapter3DetailSelector" role="dialog" aria-modal="true" aria-label="챕터 3 테스트 구간 선택">

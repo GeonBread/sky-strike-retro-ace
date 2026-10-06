@@ -834,9 +834,10 @@ export class AudioSystem {
     this.bgmElement.loop = false;
     this.bgmElement.volume = this.bgmVol;
     this.isPlayingBgm = true;
-    this.bgmElement.play().catch(() => {
-      this.isPlayingBgm = false;
-    });
+    // The ending track starts from an iframe-driven cinematic message. If the
+    // browser no longer considers that message part of the user's last gesture,
+    // keep the track armed and retry on the next pointer/key input.
+    this.requestBgmPlayback();
   }
 
   startBossBgm() {

@@ -4545,15 +4545,8 @@ window.STORY_CUSTOM_EFFECTS['core-restore'] = ({ layer, api }) => {
 
 window.STORY_CUSTOM_EFFECTS['graduation-moment'] = ({ layer }) => c3Mount(layer, `<div class="ch3-graduation"><div class="cap">🎓</div><strong>경북대학교 졸업식</strong><p>몇 달 후 · 대학생활의 마지막 날</p></div>`);
 
-window.STORY_CUSTOM_EFFECTS['chapter-ending'] = ({ layer, item }) => c3Mount(layer, `
-  <div class="ch3-ending">
-    <img src="${c3Esc(item.logoSrc || 'assets/story/common/ui/game_logo.png')}" alt="호반우의 졸업 대작전">
-    <small>CHAPTER 3 CLEAR</small>
-    <strong>호반우, 졸업 성공!</strong>
-    <p>긍지의 별 회수 · 졸업의 별 회수</p>
-    <p>별 연결 상태 <b>6 / 6</b></p>
-    <em>CONGRATULATIONS! HOBANWOO GRADUATED FROM KNU</em>
-  </div>`);
+window.STORY_CUSTOM_EFFECTS['chapter-ending'] = ({ layer }) => c3Mount(layer, `
+  <div class="ch3-final-ending-handoff" aria-hidden="true"></div>`);
 
 window.STORY_CUSTOM_EFFECTS['phone-notice'] = ({ layer, item }) => c3Mount(layer, `
   <div class="ch3-phone-notice-wrap">
@@ -4850,9 +4843,9 @@ window.STORY_CUSTOM_EFFECTS['graduate-name-list'] = ({ layer, item }) => c3Mount
 window.STORY_CUSTOM_EFFECTS['diploma-screen'] = ({ layer, item }) => c3Mount(layer, `
   <div class="ch3-diploma ch3-diploma-image087"><img src="assets/chapter3/illustrations/hobanwoo_degree_certificate.png" alt="호반우의 경북대학교 학위증서"></div>`);
 
-/* Revised final card: no chapter-clear/result popup, only the story title and FIN as requested. */
-window.STORY_CUSTOM_EFFECTS['chapter-ending'] = ({ layer, item }) => c3Mount(layer, `
-  <div class="ch3-fin-card"><div class="six-dim-stars">${[1,2,3,4,5,6].map(()=>'<i></i>').join('')}</div><strong>${c3Esc(item.title||'호반우의 졸업 대작전')}</strong><span>${c3Esc(item.fin||'FIN')}</span></div>`);
+/* Final ending handoff: the React host now owns whiteout, logo, rolling credits, and completion timing. */
+window.STORY_CUSTOM_EFFECTS['chapter-ending'] = ({ layer }) => c3Mount(layer, `
+  <div class="ch3-final-ending-handoff" aria-hidden="true"></div>`);
 
 window.STORY_CUSTOM_EFFECTS['unfinished-work'] = ({ layer }) => c3Mount(layer, `
   <div class="ch3-unfinished"><small>미완료 항목</small><strong>현재 학기 진행 중</strong>
