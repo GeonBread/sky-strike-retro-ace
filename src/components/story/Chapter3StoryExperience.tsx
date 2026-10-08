@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { sfx } from "../../game/AudioSystem";
 import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProgress";
 import "../ui/hobanwooOverlayPanels.css";
+import "./chapter2StoryExperience.css";
 import "./chapter3StoryExperience.css";
 
 type Chapter3StoryExperienceProps = {
@@ -27,6 +28,7 @@ type Chapter3BridgeMessage = {
     paused?: boolean;
     index?: number;
     sectionOrdinal?: number;
+    code?: string;
   };
 };
 
@@ -285,8 +287,12 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     : 0;
   const currentStoryIndexRef = useRef(initialStoryIndex);
   const currentStorySectionOrdinalRef = useRef(initialStoryOrdinal);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex);
+  const [currentStorySectionOrdinal, setCurrentStorySectionOrdinal] = useState(initialStoryOrdinal);
 
   const [fullscreenEffect, setFullscreenEffect] = useState<string | null>(null);
+  const [chapter43LocationTransitionActive, setChapter43LocationTransitionActive] = useState(false);
+  const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [ready, setReady] = useState(false);
   const [screen, setScreen] = useState<Chapter3Screen>(initialCheckpointRef.current?.kind === "wave" ? "wave" : "story");
   const [selectorTab, setSelectorTab] = useState<Chapter3SelectorTab>("story");
@@ -308,7 +314,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [waveDeathCounts, setWaveDeathCounts] = useState<Record<number, number>>({});
   const [waveOrigin, setWaveOrigin] = useState<WaveOrigin>("story");
   const [storyIsTestJump, setStoryIsTestJump] = useState(false);
-  const [waveExitConfirm, setWaveExitConfirm] = useState(false);
+  const [exitConfirmMode, setExitConfirmMode] = useState<"story" | "wave" | null>(null);
   const [wavePaused, setWavePaused] = useState(false);
   const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: initialWaveIndex, totalWaves: WAVES.length, enemies: 0 });
 
@@ -373,6 +379,45 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
       { channel: "sky-strike-chapter3-wave-host", type, detail },
       window.location.origin,
     );
+  };
+
+  const openExitConfirm = (mode: "story" | "wave") => {
+    setExitConfirmMode(mode);
+    if (mode === "wave") {
+      setWavePaused(true);
+      postWaveCommand("set-paused", { paused: true });
+    } else {
+      postStoryCommand("set-exit-confirm", { open: true });
+    }
+  };
+
+  const closeExitConfirm = () => {
+    const mode = exitConfirmMode;
+    setExitConfirmMode(null);
+    if (mode === "wave") {
+      setWavePaused(false);
+      postWaveCommand("set-paused", { paused: false });
+      window.requestAnimationFrame(() => {
+        waveFrameRef.current?.focus({ preventScroll: true });
+        waveFrameRef.current?.contentWindow?.focus();
+      });
+    } else if (mode === "story") {
+      postStoryCommand("set-exit-confirm", { open: false });
+      window.requestAnimationFrame(() => frameRef.current?.contentWindow?.focus());
+    }
+  };
+
+  const leaveChapter3FromExitConfirm = () => {
+    const mode = exitConfirmMode;
+    if (!storyIsTestJump) {
+      if (mode === "wave") saveStoryCheckpoint(chapter3WaveCheckpoint(waveHud.waveIndex));
+      else saveStoryCheckpoint(chapter3StoryCheckpoint(currentStoryIndexRef.current));
+    }
+    if (mode === "wave") postWaveCommand("set-paused", { paused: false });
+    if (mode === "story") postStoryCommand("set-exit-confirm", { open: false });
+    setWavePaused(false);
+    setExitConfirmMode(null);
+    onExit?.();
   };
 
   const clearWaveRetryPromptTimer = () => {
@@ -440,9 +485,11 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setWaveRetryPromptVisible(false);
     setWaveReady(false);
     setFailedWaveIndex(null);
-    setWaveExitConfirm(false);
+    setExitConfirmMode(null);
     setWavePaused(false);
-    setScreen("selector");
+    setStoryIsTestJump(false);
+    setScreen("story");
+    setShowJumpMenu(true);
   };
 
   const prepareStoryLaunch = (launch: StoryLaunch, testJump = true) => {
@@ -456,9 +503,10 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setWaveRetryPromptVisible(false);
     setWaveReady(false);
     setFailedWaveIndex(null);
-    setWaveExitConfirm(false);
+    setExitConfirmMode(null);
     setWavePaused(false);
     setStoryIsTestJump(testJump);
+    setShowJumpMenu(false);
     setReady(false);
     setStoryLaunch(launch);
     setScreen("story");
@@ -472,6 +520,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const launchWave = (index: number, single: boolean, origin: WaveOrigin = "selector") => {
     const safeIndex = Math.max(0, Math.min(WAVES.length - 1, Math.floor(index)));
     setFullscreenEffect(null);
+    setShowJumpMenu(false);
     setWaveOrigin(origin);
     clearWaveRetryPromptTimer();
     setWaveFailed(false);
@@ -480,7 +529,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setWaveStartIndex(safeIndex);
     setWaveSingle(single);
     setFailedWaveIndex(null);
-    setWaveExitConfirm(false);
+    setExitConfirmMode(null);
     setWavePaused(false);
     setWaveHud({ hp: 3, maxHp: 3, bombs: 3, powerLevel: (waveDeathCounts[safeIndex] ?? 0) >= 3 ? 5 : 1, waveIndex: safeIndex, totalWaves: WAVES.length, enemies: 0 });
     if (origin === "story" && !storyIsTestJump) {
@@ -489,6 +538,25 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setWaveRunKey((key) => key + 1);
     setWaveActive(true);
     setScreen("wave");
+  };
+
+  const skipCurrentContext = () => {
+    if (waveActive || screen === "wave") {
+      const nextWave = Math.min(WAVES.length - 1, Math.max(waveStartIndex, waveHud.waveIndex) + 1);
+      if (nextWave > Math.max(waveStartIndex, waveHud.waveIndex)) launchWave(nextWave, false, "selector");
+      else returnToSelector();
+      return;
+    }
+    postStoryCommand("skip-current");
+  };
+
+  const jumpToNextMajorContext = () => {
+    if (waveActive || screen === "wave") {
+      launchBossFlow();
+      return;
+    }
+    const nextOrdinal = Math.min(STORY_SECTIONS.length - 1, currentStorySectionOrdinalRef.current + 1);
+    launchStorySection(nextOrdinal);
   };
 
   useEffect(() => {
@@ -544,6 +612,9 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
             // Scene 32: fade the core BGM during the body-destruction cinematic.
             sfx.fadeOutBgm(4200);
           }
+          if (effectId === "graduation-campus-return-fullscreen") {
+            setChapter43LocationTransitionActive(true);
+          }
           if (effectId === "battle-running") {
             setFullscreenEffect(null);
             launchWave(0, false, "story");
@@ -558,6 +629,9 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
         if (message.type === "effect-end") {
           const effectId = message.detail?.effectId || "";
+          if (effectId === "graduation-campus-return-fullscreen") {
+            setChapter43LocationTransitionActive(false);
+          }
           setFullscreenEffect((current) => (current === effectId ? null : current));
           return;
         }
@@ -618,10 +692,27 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
           const sectionOrdinal = Math.max(0, Math.floor(message.detail?.sectionOrdinal ?? 0));
           currentStoryIndexRef.current = storyIndex;
           currentStorySectionOrdinalRef.current = sectionOrdinal;
+          setCurrentStoryIndex(storyIndex);
+          setCurrentStorySectionOrdinal(sectionOrdinal);
           if (!storyIsTestJump) {
             writeChapter3Progress({ index: storyIndex, sectionOrdinal });
             saveStoryCheckpoint(chapter3StoryCheckpoint(storyIndex));
           }
+          return;
+        }
+
+        if (message.type === "escape-request") {
+          if (finalCreditsActiveRef.current) return;
+          if (exitConfirmMode === "story") closeExitConfirm();
+          else openExitConfirm("story");
+          return;
+        }
+
+        if (message.type === "test-key") {
+          const code = String(message.detail?.code || "");
+          if (code === "F6") skipCurrentContext();
+          else if (code === "F7") setShowJumpMenu((open) => !open);
+          else if (code === "F8") jumpToNextMajorContext();
           return;
         }
 
@@ -717,9 +808,8 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
         }
 
         if (message.type === "escape-request") {
-          setWavePaused(true);
-          setWaveExitConfirm(true);
-          postWaveCommand("set-paused", { paused: true });
+          if (exitConfirmMode === "wave") closeExitConfirm();
+          else openExitConfirm("wave");
           return;
         }
 
@@ -754,7 +844,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
           clearWaveRetryPromptTimer();
           setWaveRetryPromptVisible(false);
           setWaveFailed(false);
-          setWaveExitConfirm(false);
+          setExitConfirmMode(null);
           setWavePaused(false);
           setWaveActive(false);
           if (waveOrigin === "story") {
@@ -777,7 +867,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
               );
             }
           } else {
-            setScreen("selector");
+            returnToSelector();
           }
           return;
         }
@@ -795,7 +885,33 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onComplete, onExit, storyIsTestJump, storyLaunch, waveOrigin, waveStartIndex, waveHud.waveIndex]);
+  }, [onComplete, onExit, storyIsTestJump, storyLaunch, waveOrigin, waveStartIndex, waveHud.waveIndex, screen, waveActive, exitConfirmMode, currentStorySectionOrdinal]);
+
+  useEffect(() => {
+    const handleHostKeyboard = (event: KeyboardEvent) => {
+      if (finalCreditsActiveRef.current) return;
+      if (event.code === "Escape") {
+        if (exitConfirmMode) {
+          event.preventDefault();
+          closeExitConfirm();
+          return;
+        }
+        if (screen === "story" || screen === "wave" || waveActive) {
+          event.preventDefault();
+          openExitConfirm(waveActive || screen === "wave" ? "wave" : "story");
+        }
+        return;
+      }
+      if (event.code === "F6" || event.code === "F7" || event.code === "F8") {
+        event.preventDefault();
+        if (event.code === "F6") skipCurrentContext();
+        else if (event.code === "F7") setShowJumpMenu((open) => !open);
+        else jumpToNextMajorContext();
+      }
+    };
+    window.addEventListener("keydown", handleHostKeyboard, true);
+    return () => window.removeEventListener("keydown", handleHostKeyboard, true);
+  }, [exitConfirmMode, screen, waveActive, waveStartIndex, waveHud.waveIndex, currentStorySectionOrdinal]);
 
   const retryWave = () => {
     clearWaveRetryPromptTimer();
@@ -873,6 +989,17 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
         allow="autoplay; fullscreen"
         aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
       />
+
+      {chapter43LocationTransitionActive && (
+        <div className="chapter3FullscreenLocationTransition" aria-label="경북대학교 배경 전환">
+          <div className="chapter3FullscreenLocationBackground" />
+          <div className="chapter3FullscreenLocationVignette" />
+          <div className="chapter3FullscreenLocationCopy">
+            <small>LOCATION</small>
+            <strong>경북대학교</strong>
+          </div>
+        </div>
+      )}
 
       {finalCreditsActive && (
         <div
@@ -956,34 +1083,75 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
         </div>
       )}
 
-      {screen === "selector" && (
-        <div className="chapter3DetailSelector" role="dialog" aria-modal="true" aria-label="챕터 3 테스트 구간 선택">
-          <div className="chapter3DetailSelectorBackdrop" aria-hidden="true" />
-          <section className="chapter3DetailSelectorPanel">
-            <header className="chapter3DetailSelectorHeader">
-              <div><small>CHAPTER 3 · DIRECTION SELECT</small><h2>테스트할 구간을 선택하십시오</h2></div>
-              <p>챕터 2와 같은 방식으로 종류를 먼저 고른 뒤 실제 장면·웨이브·패턴을 직접 선택합니다.</p>
-            </header>
+      {ready && !exitConfirmMode && !waveFailed && !finalCreditsActive && (
+        <div className="chapter2-story-test-navigation chapter3-story-test-navigation" aria-label="챕터 3 진행 테스트 이동">
+          <div className="chapter2-story-test-toolbar">
+            <button type="button" className="chapter2-story-test-skip" onClick={skipCurrentContext}>
+              SKIP · F6
+            </button>
+            <button
+              type="button"
+              className="chapter2-story-test-toggle"
+              onClick={() => setShowJumpMenu((open) => !open)}
+            >
+              TEST 이동 · F7
+            </button>
+          </div>
 
-            <nav className="chapter3DetailTabs" aria-label="챕터 3 구간 종류">
-              <button type="button" className={selectorTab === "story" ? "active" : ""} onClick={() => setSelectorTab("story")}>스토리 <span>{STORY_SECTIONS.length}</span></button>
-              <button type="button" className={selectorTab === "wave" ? "active" : ""} onClick={() => setSelectorTab("wave")}>일반 웨이브 <span>{WAVES.length}</span></button>
-              <button type="button" className={selectorTab === "pattern" ? "active" : ""} onClick={() => setSelectorTab("pattern")}>웨이브 패턴 <span>{WAVES.length}</span></button>
-              <button type="button" className={selectorTab === "boss" ? "active" : ""} onClick={() => setSelectorTab("boss")}>보스 구간 <span>{BOSS_SECTIONS.length}</span></button>
-            </nav>
+          {showJumpMenu && (
+            <aside className="chapter2-story-test-panel" aria-label="챕터 3 원하는 위치로 이동">
+              <div className="chapter2-story-test-title">CHAPTER 3 TEST NAVIGATION</div>
+              <div className="chapter2-story-test-phase">
+                현재: {waveActive || screen === "wave" ? `WAVE ${waveHud.waveIndex + 1}` : `STORY #${currentStoryIndex + 1}`}
+              </div>
 
-            <div className="chapter3DetailGrid" data-tab={selectorTab}>
-              {selectorTab === "story" && renderStoryCards()}
-              {selectorTab === "wave" && renderWaveCards()}
-              {selectorTab === "pattern" && renderPatternCards()}
-              {selectorTab === "boss" && renderBossCards()}
-            </div>
+              <div className="chapter2-story-test-group">
+                <strong>스토리 구간</strong>
+                <button type="button" className={screen === "story" && currentStorySectionOrdinal === 0 ? "is-current" : ""} onClick={launchFullStory}>처음부터</button>
+                {STORY_SECTIONS.map((section) => (
+                  <button
+                    type="button"
+                    key={`chapter3-section-${section.ordinal}`}
+                    className={screen === "story" && currentStorySectionOrdinal === section.ordinal ? "is-current" : ""}
+                    onClick={() => launchStorySection(section.ordinal)}
+                  >
+                    {section.title}
+                  </button>
+                ))}
+              </div>
 
-            <footer className="chapter3DetailSelectorFooter">
-              <span>선택한 STORY는 해당 장면부터, WAVE/PATTERN은 해당 웨이브부터 시작하며 이후 흐름을 자동으로 계속 진행합니다.</span>
-              {onExit && <button type="button" onClick={onExit}>메인으로</button>}
-            </footer>
-          </section>
+              <div className="chapter2-story-test-group">
+                <strong>일반 몬스터 웨이브</strong>
+                <div className="chapter2-story-wave-grid">
+                  {WAVES.map((wave) => (
+                    <button
+                      type="button"
+                      key={`chapter3-wave-${wave.index}`}
+                      className={(waveActive || screen === "wave") && waveHud.waveIndex === wave.index ? "is-current is-combat" : "is-combat"}
+                      onClick={() => launchWave(wave.index, false, "selector")}
+                      title={wave.title}
+                    >
+                      {wave.index + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="chapter2-story-test-group">
+                <strong>보스 · 최종 정화 구간</strong>
+                <button type="button" className="is-boss" onClick={launchBossFlow}>보스 흐름 처음부터</button>
+                {BOSS_SECTIONS.map((section) => (
+                  <button type="button" className="is-boss" key={`chapter3-boss-${section.ordinal}`} onClick={() => launchStorySection(section.ordinal)}>
+                    {section.title}
+                  </button>
+                ))}
+              </div>
+
+              <p className="chapter2-story-test-help">
+                F6은 현재 구간을 스킵하고, F8은 다음 큰 구간으로 이동합니다. 장면과 웨이브 선택 방식은 챕터 2와 동일합니다.
+              </p>
+            </aside>
+          )}
         </div>
       )}
 
@@ -1059,55 +1227,20 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
       {screen === "story" && !ready && <div className="chapter3StoryLoading" aria-live="polite">CHAPTER 3 STORY LOADING</div>}
 
-      <button
-        className="chapter3StoryRouteSelect"
-        type="button"
-        onClick={returnToSelector}
-        aria-label="챕터 3 구간 선택으로 돌아가기"
-      >
-        구간 선택
-      </button>
-
-      {waveExitConfirm && (
+      {exitConfirmMode && (
         <div className="chapterGamePauseOverlay chapterStoryPauseOverlay" role="presentation">
           <section className="chapterGamePauseDialog chapterStoryPauseDialog" role="dialog" aria-modal="true" aria-label="스토리 중단 확인">
             <small>STORY PAUSED</small>
             <h2>스토리를 중단하시겠습니까?</h2>
             <p>진행 기록은 자동 저장됩니다.</p>
             <div className="chapterGamePauseActions isConfirm">
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => {
-                  setWaveExitConfirm(false);
-                  setWavePaused(false);
-                  postWaveCommand("set-paused", { paused: false });
-                  waveFrameRef.current?.contentWindow?.focus();
-                }}
-              >
-                계속하기
-              </button>
-              <button
-                type="button"
-                className="danger"
-                onClick={() => {
-                  setWaveExitConfirm(false);
-                  setWavePaused(false);
-                  postWaveCommand("set-paused", { paused: false });
-                  if (waveOrigin === "selector") {
-                    returnToSelector();
-                  } else {
-                    if (!storyIsTestJump) saveStoryCheckpoint(chapter3WaveCheckpoint(waveHud.waveIndex));
-                    onExit?.();
-                  }
-                }}
-              >
-                메인화면
-              </button>
+              <button type="button" className="secondary" onClick={closeExitConfirm}>계속하기</button>
+              <button type="button" className="danger" onClick={leaveChapter3FromExitConfirm}>메인화면</button>
             </div>
           </section>
         </div>
       )}
+
     </section>
   );
 }

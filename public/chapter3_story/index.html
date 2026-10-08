@@ -3879,7 +3879,7 @@ window.STORY_DATA = {
       C3D.line("narrator", "그렇게 대학생활의 마지막 날을 맞았다.", "ceremony_hall", "학위수여식"),
 
       C3D.sec("장면 43. 졸업식이 끝난 뒤", "graduation_campus"),
-      C3D.loc("graduation_campus", 1200),
+      C3D.loc("graduation_campus", 1800, {hostEffectId:"graduation-campus-return-fullscreen"}),
       C3D.line("hobanwoo", "이제 진짜 학교 끝이네.", "graduation_campus", "졸업식이 끝난 뒤", {right:"hobanwoo",pose:"neutral"}),
       C3D.line("hobanwoo", "좀 이상하긴 하다.", "graduation_campus", "졸업식이 끝난 뒤", {right:"hobanwoo",pose:"dejected"}),
       C3D.line("hobanwoo", "맨날 오던 곳인데..", "graduation_campus", "졸업식이 끝난 뒤", {right:"hobanwoo",pose:"neutral"}),
@@ -5504,7 +5504,8 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     activeSectionStart: 0,
     activeSectionTitle: '',
     sectionCurtain: null,
-    sectionCurtainTimer: null
+    sectionCurtainTimer: null,
+    hostExitConfirmOpen: false
   };
 
   const assetPath = file => {
@@ -5526,39 +5527,16 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   let dialogueVoiceTickCount = 0;
 
   const dialogueVoiceProfiles = {
-    hobanwoo: {
-      wave: 'square',
-      baseHz: 238,
-      pitchRangeHz: 34,
-      duration: 0.042,
-      gain: 0.030,
-      lowpassHz: 1850,
-      harmonicRatio: 2,
-      harmonicGain: 0.12,
-      attack: 0.003
-    },
-    narrator: {
-      wave: 'triangle',
-      baseHz: 154,
-      pitchRangeHz: 9,
-      duration: 0.050,
-      gain: 0.022,
-      lowpassHz: 1120,
-      harmonicRatio: 2,
-      harmonicGain: 0.08,
-      attack: 0.004
-    },
-    machine: {
-      wave: 'square',
-      baseHz: 132,
-      pitchRangeHz: 12,
-      duration: 0.052,
-      gain: 0.024,
-      lowpassHz: 980,
-      harmonicRatio: 1.5,
-      harmonicGain: 0.18,
-      attack: 0.004
-    }
+    hobanwoo: { wave:'square', baseHz:238, pitchRangeHz:34, duration:.042, gain:.030, lowpassHz:1850, harmonicRatio:2, harmonicGain:.12, attack:.003 },
+    minjae: { wave:'square', baseHz:204, pitchRangeHz:28, duration:.044, gain:.028, lowpassHz:1650, harmonicRatio:2, harmonicGain:.10, attack:.003 },
+    soyeon: { wave:'square', baseHz:282, pitchRangeHz:38, duration:.040, gain:.026, lowpassHz:2050, harmonicRatio:2, harmonicGain:.10, attack:.003 },
+    junho: { wave:'square', baseHz:188, pitchRangeHz:24, duration:.046, gain:.028, lowpassHz:1500, harmonicRatio:2, harmonicGain:.10, attack:.003 },
+    freshman: { wave:'square', baseHz:252, pitchRangeHz:34, duration:.042, gain:.026, lowpassHz:1900, harmonicRatio:2, harmonicGain:.10, attack:.003 },
+    student: { wave:'square', baseHz:224, pitchRangeHz:32, duration:.043, gain:.025, lowpassHz:1750, harmonicRatio:2, harmonicGain:.09, attack:.003 },
+    core: { wave:'sawtooth', baseHz:116, pitchRangeHz:12, duration:.060, gain:.019, lowpassHz:760, harmonicRatio:1.5, harmonicGain:.25, attack:.006 },
+    boss: { wave:'sawtooth', baseHz:86, pitchRangeHz:7, duration:.072, gain:.022, lowpassHz:620, harmonicRatio:2, harmonicGain:.22, attack:.007 },
+    narrator: { wave:'triangle', baseHz:154, pitchRangeHz:9, duration:.050, gain:.022, lowpassHz:1120, harmonicRatio:2, harmonicGain:.08, attack:.004 },
+    machine: { wave:'square', baseHz:132, pitchRangeHz:12, duration:.052, gain:.024, lowpassHz:980, harmonicRatio:1.5, harmonicGain:.18, attack:.004 }
   };
 
   function ensureDialogueAudio() {
@@ -5648,7 +5626,14 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
 
   function normalizeDialogueVoiceId(voiceId) {
     if (voiceId === 'hobanwoo') return 'hobanwoo';
-    if (voiceId === 'student_card' || voiceId === 'fragment' || voiceId === 'boss' || voiceId === 'machine') return 'machine';
+    if (voiceId === 'minjae') return 'minjae';
+    if (voiceId === 'soyeon') return 'soyeon';
+    if (voiceId === 'junho') return 'junho';
+    if (voiceId === 'freshman') return 'freshman';
+    if (voiceId === 'student' || /^student\d*$/.test(String(voiceId || ''))) return 'student';
+    if (voiceId === 'student_card') return 'core';
+    if (voiceId === 'digrion' || voiceId === 'boss') return 'boss';
+    if (voiceId === 'fragment' || voiceId === 'machine') return 'machine';
     return 'narrator';
   }
 
@@ -7438,6 +7423,16 @@ function runCustomEffect(item) {
       return;
     }
 
+    if (message.type === 'skip-current') {
+      skipCurrent();
+      return;
+    }
+
+    if (message.type === 'set-exit-confirm') {
+      state.hostExitConfirmOpen = Boolean(message.detail?.open);
+      return;
+    }
+
     if (message.type === 'wave-complete') {
       if (!state.effectRunning || state.currentEffectId !== 'battle-running') return;
       skipCurrent();
@@ -7489,6 +7484,20 @@ function runCustomEffect(item) {
   el.fullButton.addEventListener('click', playFullStory);
 
   window.addEventListener('keydown', event => {
+    if (event.code === 'F6' || event.code === 'F7' || event.code === 'F8') {
+      event.preventDefault();
+      hooks._emit?.('test-key', { code: event.code });
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      hooks._emit?.('escape-request', { index: state.index });
+      return;
+    }
+    if (state.hostExitConfirmOpen) {
+      event.preventDefault();
+      return;
+    }
     if (!el.jumpPanel.hidden) {
       if (event.key === 'Escape') closeJumpPanel();
       return;

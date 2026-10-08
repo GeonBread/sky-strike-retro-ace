@@ -578,7 +578,7 @@
 .chapter3StoryExperience > .chapterGamePauseOverlay.chapterStoryPauseOverlay{
   position:fixed;
   inset:0;
-  z-index:2147483645;
+  z-index:2147483647;
 }
 
 
@@ -885,3 +885,54 @@
   .chapter3FinalCreditsHeading { min-height: 30vh; }
   .chapter3FinalCreditsThanks span { letter-spacing: .12em; }
 }
+
+
+/* V7 · Scene 43 KNU return is rendered by the React host, outside the story iframe. */
+.chapter3FullscreenLocationTransition{
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  z-index:2147483200;
+  overflow:hidden;
+  pointer-events:none;
+  background:#050506;
+  animation:chapter3FullscreenLocationEnvelope 1.8s linear both;
+}
+.chapter3FullscreenLocationBackground{
+  position:absolute;
+  inset:-3%;
+  background-image:url('/chapter3_story/assets/chapter3/backgrounds/campus_day.png');
+  background-size:cover;
+  background-position:center center;
+  filter:brightness(.96) saturate(1.03) contrast(1.02);
+  transform:scale(1.045);
+  animation:chapter3FullscreenLocationCamera 1.8s cubic-bezier(.2,.78,.2,1) both;
+}
+.chapter3FullscreenLocationVignette{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.03) 38%,rgba(0,0,0,.42)),radial-gradient(circle at 50% 48%,transparent 22%,rgba(0,0,0,.58) 100%);
+}
+.chapter3FullscreenLocationCopy{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:min(900px,84vw);
+  min-height:190px;
+  display:grid;
+  place-content:center;
+  gap:10px;
+  text-align:center;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.72),rgba(0,0,0,.26) 52%,transparent 76%);
+  animation:chapter3FullscreenLocationCopy 1.8s cubic-bezier(.2,.86,.2,1) both;
+}
+.chapter3FullscreenLocationCopy small{color:#d6ad62;font-size:clamp(10px,1vw,14px);font-weight:1000;letter-spacing:.34em;}
+.chapter3FullscreenLocationCopy strong{color:#fff;font-size:clamp(32px,5vw,76px);font-weight:1000;letter-spacing:.04em;text-shadow:0 3px 24px rgba(0,0,0,.75);}
+@keyframes chapter3FullscreenLocationEnvelope{0%{opacity:0}12%,82%{opacity:1}100%{opacity:0}}
+@keyframes chapter3FullscreenLocationCamera{0%{transform:scale(1.08);filter:brightness(.55) saturate(.8)}35%{filter:brightness(1) saturate(1.05)}100%{transform:scale(1.01)}}
+@keyframes chapter3FullscreenLocationCopy{0%,14%{opacity:0;transform:translate(-50%,-46%) scale(.96)}32%,72%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-54%) scale(1.02)}}
+
+/* The Chapter 3 navigation now reuses Chapter 2's test-navigation layout and behavior. */
+.chapter3-story-test-navigation{z-index:2147483000;}
