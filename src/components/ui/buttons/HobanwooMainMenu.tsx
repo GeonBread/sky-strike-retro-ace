@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { sfx } from "../../../game/AudioSystem";
 import { HobanwooSpriteButton } from "./HobanwooSpriteButton";
 import "./hobanwooMainMenu.css";
@@ -12,6 +12,19 @@ type HobanwooMainMenuProps = {
   onShipSelect: () => void;
 };
 
+type MainMenuTimeBand = "day" | "evening" | "night" | "dawn";
+
+function resolveMainMenuTimeBand(date = new Date()): MainMenuTimeBand {
+  const hour = date.getHours();
+
+  // 07:00~16:59: 아침/오후, 17:00~19:59: 저녁,
+  // 20:00~03:59: 밤, 04:00~06:59: 새벽
+  if (hour >= 7 && hour < 17) return "day";
+  if (hour >= 17 && hour < 20) return "evening";
+  if (hour >= 4 && hour < 7) return "dawn";
+  return "night";
+}
+
 /**
  * 메인 화면 배경과 시작/메뉴 UI를 렌더링한다.
  * 도전 모드와 순위 메뉴는 제거하고 스토리/설정/기체 선택만 유지한다.
@@ -24,6 +37,23 @@ export function HobanwooMainMenu({
   onSettings,
   onShipSelect,
 }: HobanwooMainMenuProps) {
+  const [timeBand, setTimeBand] = useState<MainMenuTimeBand>(() => resolveMainMenuTimeBand());
+
+  useEffect(() => {
+    const syncTimeBand = () => setTimeBand(resolveMainMenuTimeBand());
+    const timer = window.setInterval(syncTimeBand, 60_000);
+
+    // 백그라운드 탭에서 오래 머문 뒤 돌아와도 즉시 현재 시간대로 맞춘다.
+    document.addEventListener("visibilitychange", syncTimeBand);
+    window.addEventListener("focus", syncTimeBand);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", syncTimeBand);
+      window.removeEventListener("focus", syncTimeBand);
+    };
+  }, []);
+
   useEffect(() => {
     sfx.startMenuBgm();
 
@@ -42,9 +72,11 @@ export function HobanwooMainMenu({
     <section
       className={[
         "hobanwooMainMenu",
+        `time-${timeBand}`,
         menuOpen ? "menu-open" : "start-screen",
         interactive ? "" : "is-inert",
       ].filter(Boolean).join(" ")}
+      data-time-band={timeBand}
       aria-label="메인 화면"
     >
       <div className="hobanwooMainMenuShade" />

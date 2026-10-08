@@ -1,4 +1,5 @@
 .hobanwooMainMenu {
+  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_bg.png");
   position: relative;
   width: 100%;
   height: 100svh;
@@ -6,7 +7,24 @@
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(0, 119, 236, 0.02), rgba(0, 0, 0, 0.1)),
-    url("/assets/backgrounds/main_menu_campus_bg.png") center center / cover no-repeat;
+    var(--hobanwoo-main-bg) center center / cover no-repeat;
+}
+
+/* V10 · 실제 기기 로컬 시간에 맞춘 메인 화면 캠퍼스 배경 */
+.hobanwooMainMenu.time-day {
+  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_bg.png");
+}
+
+.hobanwooMainMenu.time-evening {
+  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_evening.png");
+}
+
+.hobanwooMainMenu.time-night {
+  --hobanwoo-main-bg: url("/chapter3_story/assets/chapter3/backgrounds/campus_night.png");
+}
+
+.hobanwooMainMenu.time-dawn {
+  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_dawn.png");
 }
 
 .hobanwooMainMenuShade {
@@ -186,7 +204,7 @@
   .hobanwooMainMenu {
     background:
       linear-gradient(180deg, rgba(0, 119, 236, 0.02), rgba(0, 0, 0, 0.08)),
-      url("/assets/backgrounds/main_menu_campus_bg.png") center center / auto 100% no-repeat;
+      var(--hobanwoo-main-bg) center center / cover no-repeat;
   }
 
   .hobanwooSiteLogo {
