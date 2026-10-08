@@ -1,135 +1,309 @@
 .hobanwooShipSelectDim {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 120;
   display: grid;
   place-items: center;
   padding: 22px;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(5px);
+  background: rgba(2, 8, 23, 0.72);
+  backdrop-filter: blur(7px);
 }
 
 .hobanwooShipSelectPanel {
-  width: min(94vw, 760px);
-  border: 5px solid #050505;
+  width: min(94vw, 860px);
+  border: 5px solid #07152e;
   border-radius: 28px;
-  padding: clamp(18px, 3vw, 28px);
-  background: linear-gradient(180deg, #fff7df 0%, #f7dfb6 100%);
-  box-shadow: 0 0 0 3px #ffd86e, 0 28px 60px rgba(0, 0, 0, 0.48);
+  padding: clamp(20px, 3vw, 30px);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.42), transparent 20%),
+    linear-gradient(180deg, #fff9e9 0%, #f4ddb0 100%);
+  box-shadow:
+    inset 0 0 0 3px #fff8d7,
+    inset 0 0 0 8px #dcae4e,
+    0 30px 70px rgba(0, 0, 0, 0.55);
   color: #10233f;
 }
 
 .hobanwooShipSelectHeader {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
 }
 
 .hobanwooShipSelectEyebrow {
-  font-size: 12px;
-  font-weight: 1000;
+  margin-bottom: 3px;
   color: #b91c1c;
-  letter-spacing: 0.12em;
+  font: 1000 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.17em;
 }
 
 .hobanwooShipSelectHeader h2 {
   margin: 0;
-  font-size: clamp(30px, 5vw, 54px);
+  font-size: clamp(30px, 5vw, 52px);
   font-weight: 1000;
-  letter-spacing: -0.08em;
+  letter-spacing: -0.075em;
+}
+
+.hobanwooShipSelectHeader h2 span {
+  color: #7b5f37;
+  font-size: .38em;
+  font-weight: 900;
+  letter-spacing: .02em;
+  vertical-align: middle;
 }
 
 .hobanwooShipSelectClose {
-  border: 3px solid #050505;
+  border: 3px solid #07152e;
   border-radius: 999px;
-  background: #b91c1c;
+  background: linear-gradient(180deg, #c92334, #8d101f);
   color: #fff7df;
-  padding: 9px 14px;
-  font-weight: 900;
+  padding: 10px 15px;
+  font-weight: 1000;
   cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.14);
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.hobanwooShipSelectClose span {
+  font-size: .74em;
+  opacity: .78;
+}
+
+.hobanwooShipSelectClose:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
 }
 
 .hobanwooShipSelectDescription {
-  margin: 10px 0 20px;
-  font-weight: 800;
-  color: #334155;
+  margin: 10px 0 22px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #475569;
 }
 
 .hobanwooShipStyleGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .hobanwooShipStyleCard {
+  --accent: #f2b84b;
+  --accent-soft: #fff1b4;
+  --deep: #513105;
+  position: relative;
   display: grid;
   justify-items: center;
+  align-content: start;
   gap: 7px;
-  min-height: 190px;
-  border: 4px solid #050505;
-  border-radius: 22px;
-  padding: 18px 12px;
-  background: #fffaf0;
+  min-height: 246px;
+  overflow: hidden;
+  border: 4px solid #07152e;
+  border-radius: 23px;
+  padding: 16px 12px 15px;
+  background:
+    radial-gradient(circle at 50% -5%, var(--accent-soft), transparent 42%),
+    linear-gradient(180deg, #fffef8 0%, #f7f1df 100%);
   color: #10233f;
   cursor: pointer;
-  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.72),
+    0 10px 18px rgba(10, 24, 46, .12);
+  transform: translateY(0) scale(1);
+  transition:
+    transform 150ms ease,
+    filter 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.hobanwooShipStyleCard::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  height: 6px;
+  border-radius: 6px 6px 0 0;
+  background: var(--accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 72%, transparent);
+}
+
+.hobanwooShipStyleCard.style-science {
+  --accent: #13bde8;
+  --accent-soft: #c9f7ff;
+  --deep: #05526e;
+}
+
+.hobanwooShipStyleCard.style-humanities {
+  --accent: #d94c3d;
+  --accent-soft: #ffe0c7;
+  --deep: #762719;
+}
+
+.hobanwooShipStyleCard.style-arts {
+  --accent: #9a5ee8;
+  --accent-soft: #eadcff;
+  --deep: #52308b;
 }
 
 .hobanwooShipStyleCard:hover {
-  transform: translateY(-5px) scale(1.025);
-  filter: brightness(1.04);
+  transform: translateY(-6px) scale(1.025);
+  filter: brightness(1.025) saturate(1.06);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.8),
+    0 16px 26px rgba(10, 24, 46, .2),
+    0 0 26px color-mix(in srgb, var(--accent) 26%, transparent);
 }
 
 .hobanwooShipStyleCard.selected {
-  background: linear-gradient(180deg, #fee2e2, #fff7df);
-  box-shadow: inset 0 0 0 4px #ffd86e;
+  border-color: var(--deep);
+  box-shadow:
+    inset 0 0 0 4px var(--accent),
+    inset 0 0 0 7px rgba(255,255,255,.74),
+    0 16px 28px rgba(10, 24, 46, .22),
+    0 0 30px color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.hobanwooShipStyleTopline {
+  color: var(--deep);
+  font: 1000 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .15em;
 }
 
 .hobanwooShipStyleIcon {
-  width: 58px;
-  height: 58px;
+  width: 66px;
+  height: 66px;
   display: grid;
   place-items: center;
-  border-radius: 18px;
-  border: 3px solid #050505;
-  background: linear-gradient(180deg, #ffd86e, #f59e0b);
-  color: #ffffff;
-  font-size: 28px;
+  margin: 3px 0 1px;
+  border-radius: 19px;
+  border: 3px solid #07152e;
+  background: linear-gradient(145deg, var(--accent-soft), var(--accent));
+  color: #fff;
+  font-size: 30px;
   font-weight: 1000;
-  text-shadow: 1px 2px 0 rgba(0,0,0,0.35);
+  text-shadow: 1px 2px 0 rgba(0,0,0,.3);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.45);
 }
 
 .hobanwooShipStyleTitle {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 1000;
   letter-spacing: -0.08em;
 }
 
 .hobanwooShipStyleSubtitle {
+  color: var(--deep);
+  font-size: 13px;
+  font-weight: 1000;
+}
+
+.hobanwooShipStyleDetail {
   min-height: 34px;
-  color: #475569;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.35;
+  color: #526071;
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.45;
 }
 
 .hobanwooShipStyleLevel {
-  margin-top: 5px;
+  margin-top: 4px;
   border-radius: 999px;
   background: #10233f;
   color: #fff7df;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 900;
+  padding: 6px 11px;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+}
+
+.hobanwooShipStyleSelectedMark {
+  margin-top: 3px;
+  min-height: 15px;
+  color: var(--deep);
+  font-size: 10px;
+  font-weight: 1000;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.hobanwooShipStyleCard.selected .hobanwooShipStyleSelectedMark {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (max-width: 760px) {
+  .hobanwooShipSelectDim {
+    padding: 12px;
+  }
+
+  .hobanwooShipSelectPanel {
+    width: min(96vw, 520px);
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 18px;
+  }
+
+  .hobanwooShipSelectHeader h2 {
+    font-size: 34px;
+  }
+
+  .hobanwooShipSelectClose {
+    padding: 8px 11px;
+    font-size: 12px;
+  }
+
   .hobanwooShipStyleGrid {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .hobanwooShipStyleCard {
-    min-height: 132px;
+    min-height: 150px;
+    grid-template-columns: 62px 1fr auto;
+    grid-template-rows: auto auto auto;
+    justify-items: start;
+    align-items: center;
+    text-align: left;
+    padding: 13px 14px;
+  }
+
+  .hobanwooShipStyleTopline {
+    grid-column: 2 / 4;
+    grid-row: 1;
+  }
+
+  .hobanwooShipStyleIcon {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    width: 54px;
+    height: 54px;
+    margin: 0;
+  }
+
+  .hobanwooShipStyleTitle {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 24px;
+  }
+
+  .hobanwooShipStyleSubtitle {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .hobanwooShipStyleDetail {
+    grid-column: 2 / 4;
+    grid-row: 3;
+    min-height: 0;
+  }
+
+  .hobanwooShipStyleLevel,
+  .hobanwooShipStyleSelectedMark {
+    display: none;
   }
 }

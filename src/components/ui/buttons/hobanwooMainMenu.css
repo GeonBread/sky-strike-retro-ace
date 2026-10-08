@@ -290,3 +290,194 @@
     margin-bottom: calc(-1 * clamp(30px, 5vh, 42px));
   }
 }
+
+/* =========================================================
+   V8 · 메인 메뉴 단순화
+   - 스토리 / 설정 / 기체 선택만 표시
+   - 기존 PNG 투명 여백을 음수 margin으로 겹치던 레이아웃을 제거
+   - 기체 선택 버튼의 hit area를 별도 레이어로 고정해 설정 hover 중첩 방지
+   ========================================================= */
+.hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
+  top: clamp(138px, 17vh, 176px) !important;
+  width: min(92vw, 430px) !important;
+  gap: clamp(9px, 1.15vh, 15px) !important;
+  overflow: visible;
+}
+
+.hobanwooMainButtonColumnV8 > .hobanwooButtonWrap,
+.hobanwooMainButtonColumnV8 > .hobanwooTempShipButton,
+.hobanwooMainButtonColumnV8 > .hobanwooShipSelectButton {
+  margin: 0 !important;
+}
+
+.hobanwooMainButtonColumnV8 > .hobanwooButtonWrap {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  pointer-events: auto;
+}
+
+.hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(1),
+.hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(2) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton {
+  position: relative;
+  z-index: 2;
+}
+
+.hobanwooShipSelectButton {
+  position: relative;
+  z-index: 20;
+  isolation: isolate;
+  width: clamp(236px, 28vw, 360px);
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: 50px 1fr 26px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 15px 10px 13px;
+  overflow: hidden;
+  border: 4px solid #07152e;
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.34), transparent 32%),
+    linear-gradient(135deg, #fff5ca 0%, #ffd76d 45%, #f0a62f 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.85),
+    inset 0 0 0 6px rgba(119,70,8,.25),
+    0 10px 18px rgba(2, 13, 31, .28),
+    0 0 0 2px rgba(255, 219, 105, .18);
+  color: #0b1d38;
+  cursor: pointer;
+  text-align: left;
+  transform: translateY(0) scale(1);
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    filter 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.hobanwooShipSelectButtonGlow {
+  position: absolute;
+  inset: -35% -20%;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(255,255,255,.72), transparent 22%),
+    linear-gradient(110deg, transparent 34%, rgba(255,255,255,.52) 48%, transparent 61%);
+  transform: translateX(-42%);
+  opacity: .7;
+  transition: transform 420ms ease, opacity 180ms ease;
+}
+
+.hobanwooShipSelectButton:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.018);
+  filter: saturate(1.08) brightness(1.03);
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.95),
+    inset 0 0 0 6px rgba(119,70,8,.22),
+    0 14px 22px rgba(2, 13, 31, .32),
+    0 0 24px rgba(255, 205, 73, .38);
+}
+
+.hobanwooShipSelectButton:hover:not(:disabled) .hobanwooShipSelectButtonGlow {
+  transform: translateX(48%);
+  opacity: .95;
+}
+
+.hobanwooShipSelectButton:active:not(:disabled) {
+  transform: translateY(1px) scale(.992);
+  filter: brightness(.98);
+}
+
+.hobanwooShipSelectButton:focus-visible {
+  outline: 4px solid #fff0a8;
+  outline-offset: 5px;
+}
+
+.hobanwooShipSelectButton:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.hobanwooShipSelectButtonIcon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 3px solid #07152e;
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 38% 30%, #fff8cf 0 8%, transparent 9%),
+    linear-gradient(145deg, #223c69, #07152e);
+  color: #ffd65d;
+  font-size: 27px;
+  font-weight: 1000;
+  text-shadow: 0 0 10px rgba(255,215,91,.85);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.08);
+}
+
+.hobanwooShipSelectButtonCopy {
+  display: grid;
+  min-width: 0;
+  line-height: 1;
+}
+
+.hobanwooShipSelectButtonCopy small {
+  margin-bottom: 4px;
+  color: #8d3c00;
+  font: 1000 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .17em;
+}
+
+.hobanwooShipSelectButtonCopy strong {
+  font-size: clamp(23px, 2.5vw, 31px);
+  font-weight: 1000;
+  letter-spacing: -.075em;
+}
+
+.hobanwooShipSelectButtonCopy em {
+  margin-top: 5px;
+  color: #65410b;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: -.02em;
+}
+
+.hobanwooShipSelectButtonArrow {
+  color: #7d3a00;
+  font-size: 38px;
+  font-weight: 1000;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 760px) {
+  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
+    top: clamp(130px, 16vh, 155px) !important;
+    width: min(94vw, 360px) !important;
+    gap: 8px !important;
+  }
+
+  .hobanwooShipSelectButton {
+    width: min(80vw, 310px);
+    min-height: 74px;
+    grid-template-columns: 44px 1fr 22px;
+    gap: 9px;
+    padding: 9px 12px;
+  }
+
+  .hobanwooShipSelectButtonIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+    font-size: 23px;
+  }
+
+  .hobanwooShipSelectButtonCopy strong {
+    font-size: 24px;
+  }
+}

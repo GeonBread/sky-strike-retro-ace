@@ -1479,13 +1479,29 @@ function Chapter1StoryExperience({
   );
 }
 
-function OptionSlider({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+function OptionSlider({
+  labelKo,
+  labelEn,
+  hint,
+  value,
+  onChange,
+}: {
+  labelKo: string;
+  labelEn: string;
+  hint: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
   return (
-    <label className="mb-3 block">
-      <div className="mb-1 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">
-        <span>{label}</span>
-        <span>{Math.round(value * 100)}%</span>
+    <label className="hobanwooOptionRow">
+      <div className="hobanwooOptionLabelRow">
+        <span className="hobanwooOptionLabel">
+          <strong>{labelKo}</strong>
+          <small>({labelEn})</small>
+        </span>
+        <span className="hobanwooOptionValue">{Math.round(value * 100)}%</span>
       </div>
+      <p>{hint}</p>
       <input
         type="range"
         min={0}
@@ -1493,7 +1509,7 @@ function OptionSlider({ label, value, onChange }: { label: string; value: number
         step={0.05}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-cyan-400"
+        aria-label={`${labelKo} (${labelEn})`}
       />
     </label>
   );
@@ -1543,7 +1559,10 @@ function StoryChapterSelector({
                 type="button"
                 className={["storyChapterCard", cleared ? "isCleared" : "", checkpoint ? "hasCheckpoint" : "", !unlocked ? "isLocked" : ""].filter(Boolean).join(" ")}
                 disabled={!unlocked}
-                onClick={() => onSelect(chapter)}
+                onClick={() => {
+                  sfx.uiClick();
+                  onSelect(chapter);
+                }}
               >
                 <span className="chapterNo">CHAPTER {chapter}</span>
                 <strong>{title}</strong>
@@ -1553,7 +1572,16 @@ function StoryChapterSelector({
             );
           })}
         </div>
-        <button type="button" className="storyChapterClose" onClick={onClose}>닫기</button>
+        <button
+          type="button"
+          className="storyChapterClose"
+          onClick={() => {
+            sfx.uiClick();
+            onClose();
+          }}
+        >
+          닫기
+        </button>
       </section>
     </div>
   );
@@ -1886,18 +1914,6 @@ export default function App() {
             setShowShipSelect(false);
             handleOpenStoryChapterSelect();
           }}
-          onScoreMode={() => {
-            setShowOptions(false);
-            setShowShipSelect(false);
-            handleStartGame();
-          }}
-          onRanking={() => {
-            setMainMenuOpen(true);
-            setShowOptions(false);
-            setShowShipSelect(false);
-            setLeaderboardReturnState("MENU");
-            setGameState("LEADERBOARD");
-          }}
           onSettings={() => {
             setShowShipSelect(false);
             setShowOptions((prev) => !prev);
@@ -1909,17 +1925,68 @@ export default function App() {
         />
 
         {menuInteractive && showOptions && (
-          <div className="hobanwooOptionsPanel absolute right-4 top-4 z-40 w-[min(92vw,320px)] rounded-2xl border p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="font-mono text-sm font-black text-slate-100">OPTIONS</div>
-              <button onClick={() => setShowOptions(false)} className="text-xs font-mono text-slate-500 hover:text-slate-200">CLOSE</button>
+          <section className="hobanwooOptionsPanel hobanwooOptionsPanelV8" aria-label="게임 설정">
+            <header className="hobanwooOptionsHeader">
+              <div>
+                <small>GAME SETTINGS</small>
+                <h2>설정 <span>(Options)</span></h2>
+                <p>게임의 음악과 효과음 크기를 조절합니다.</p>
+              </div>
+              <button
+                type="button"
+                className="hobanwooOptionsClose"
+                onClick={() => {
+                  sfx.uiClick();
+                  setShowOptions(false);
+                }}
+              >
+                닫기 <span>(Close)</span>
+              </button>
+            </header>
+
+            <div className="hobanwooOptionsSection">
+              <div className="hobanwooOptionsSectionTitle">
+                <strong>오디오</strong>
+                <span>(Audio)</span>
+              </div>
+
+              <OptionSlider
+                labelKo="배경음악 음량"
+                labelEn="BGM Volume"
+                hint="스토리와 전투에서 재생되는 배경음악의 크기"
+                value={settings.bgmVolume}
+                onChange={(value) => updateSettings({ bgmVolume: value })}
+              />
+              <OptionSlider
+                labelKo="전체 효과음 음량"
+                labelEn="SFX Volume"
+                hint="버튼, 폭발, 전투 효과음을 포함한 전체 효과음 크기"
+                value={settings.sfxVolume}
+                onChange={(value) => updateSettings({ sfxVolume: value })}
+              />
+              <OptionSlider
+                labelKo="플레이어 사격음"
+                labelEn="Player Shot Volume"
+                hint="플레이어가 탄환을 발사할 때 나는 소리"
+                value={settings.playerShootVolume}
+                onChange={(value) => updateSettings({ playerShootVolume: value })}
+              />
+              <OptionSlider
+                labelKo="적 피격음"
+                labelEn="Enemy Hit Volume"
+                hint="적이나 보스가 공격에 맞을 때 나는 소리"
+                value={settings.enemyHitVolume}
+                onChange={(value) => updateSettings({ enemyHitVolume: value })}
+              />
+              <OptionSlider
+                labelKo="아이템 획득음"
+                labelEn="Item Pickup Volume"
+                hint="강화 아이템이나 보상을 획득할 때 나는 소리"
+                value={settings.itemVolume}
+                onChange={(value) => updateSettings({ itemVolume: value })}
+              />
             </div>
-            <OptionSlider label="BGM" value={settings.bgmVolume} onChange={(value) => updateSettings({ bgmVolume: value })} />
-            <OptionSlider label="SFX" value={settings.sfxVolume} onChange={(value) => updateSettings({ sfxVolume: value })} />
-            <OptionSlider label="Player Shot" value={settings.playerShootVolume} onChange={(value) => updateSettings({ playerShootVolume: value })} />
-            <OptionSlider label="Enemy Hit" value={settings.enemyHitVolume} onChange={(value) => updateSettings({ enemyHitVolume: value })} />
-            <OptionSlider label="Item Pickup" value={settings.itemVolume} onChange={(value) => updateSettings({ itemVolume: value })} />
-          </div>
+          </section>
         )}
 
         {menuInteractive && showShipSelect && (

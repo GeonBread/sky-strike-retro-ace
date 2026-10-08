@@ -1,4 +1,5 @@
 import { type CSSProperties, useState } from "react";
+import { sfx } from "../../../game/AudioSystem";
 import "./hobanwooSpriteButton.css";
 
 type ButtonState = "normal" | "hover" | "pressed" | "disabled" | "selected";
@@ -6,8 +7,6 @@ type ButtonState = "normal" | "hover" | "pressed" | "disabled" | "selected";
 export type HobanwooButtonVariant =
   | "gameStart"
   | "redesignStoryMode"
-  | "redesignScoreMode"
-  | "redesignRanking"
   | "redesignSettings"
   | "pauseContinue"
   | "mainMenu"
@@ -57,16 +56,6 @@ const variantMap: Record<HobanwooButtonVariant, VariantMeta> = {
     label: "스토리 모드",
     size: "main",
     normal: "story-mode.png",
-  },
-  redesignScoreMode: {
-    label: "도전 모드",
-    size: "main",
-    normal: "challenge-mode.png",
-  },
-  redesignRanking: {
-    label: "순위",
-    size: "sub",
-    normal: "ranking.png",
   },
   redesignSettings: {
     label: "설정",
@@ -166,6 +155,7 @@ export function HobanwooSpriteButton({
   const handleClick = () => {
     if (disabled) return;
 
+    sfx.uiClick();
     setClicked(false);
     requestAnimationFrame(() => setClicked(true));
     createParticles();

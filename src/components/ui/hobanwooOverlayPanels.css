@@ -339,3 +339,212 @@
   letter-spacing: -0.045em;
   white-space: nowrap;
 }
+
+/* =========================================================
+   V8 · 메인 메뉴 설정 패널
+   - 한국어 항목명 + 영어 조절 항목 병기
+   - 설명/수치/슬라이더를 한 묶음으로 보여주는 구조
+   ========================================================= */
+.hobanwooOptionsPanel.hobanwooOptionsPanelV8 {
+  position: fixed !important;
+  top: 50% !important;
+  right: clamp(18px, 4vw, 56px) !important;
+  z-index: 130 !important;
+  width: min(92vw, 470px) !important;
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+  transform: translateY(-50%);
+  padding: 24px !important;
+  border: 5px solid #07152e !important;
+  border-radius: 26px !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.45), transparent 16%),
+    linear-gradient(180deg, #fffaf0 0%, #f4dfb6 100%) !important;
+  box-shadow:
+    inset 0 0 0 3px #fff8dd,
+    inset 0 0 0 8px #d9ad4b,
+    0 30px 70px rgba(0, 8, 28, .5) !important;
+  color: #0a1c3a !important;
+}
+
+.hobanwooOptionsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.hobanwooOptionsHeader > div {
+  min-width: 0;
+}
+
+.hobanwooOptionsHeader > div > small {
+  display: block;
+  margin-bottom: 3px;
+  color: #c81f30;
+  font: 1000 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .18em;
+}
+
+.hobanwooOptionsHeader h2 {
+  margin: 0;
+  color: #0a1c3a;
+  font-size: clamp(30px, 4.4vw, 44px);
+  font-weight: 1000;
+  line-height: 1;
+  letter-spacing: -.07em;
+}
+
+.hobanwooOptionsHeader h2 span {
+  color: #755d38;
+  font-size: .38em;
+  letter-spacing: .01em;
+  vertical-align: middle;
+}
+
+.hobanwooOptionsHeader p {
+  margin: 9px 0 0;
+  color: #5c6777;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.hobanwooOptionsClose {
+  flex: 0 0 auto;
+  border: 3px solid #07152e;
+  border-radius: 999px;
+  padding: 9px 13px;
+  background: linear-gradient(180deg, #c92334, #8b101d);
+  color: #fff9eb;
+  font-size: 12px;
+  font-weight: 1000;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.13);
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.hobanwooOptionsClose span {
+  font-size: .75em;
+  opacity: .78;
+}
+
+.hobanwooOptionsClose:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.hobanwooOptionsSection {
+  padding: 16px;
+  border: 3px solid #0b1d38;
+  border-radius: 18px;
+  background: rgba(255,255,255,.48);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.64);
+}
+
+.hobanwooOptionsSectionTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding-bottom: 9px;
+  border-bottom: 2px solid rgba(10,28,58,.15);
+}
+
+.hobanwooOptionsSectionTitle strong {
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.hobanwooOptionsSectionTitle span {
+  color: #7a6650;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+}
+
+.hobanwooOptionRow {
+  display: block;
+  margin: 0 0 14px;
+  padding: 11px 12px 10px;
+  border: 2px solid rgba(10,28,58,.12);
+  border-radius: 13px;
+  background: rgba(255,253,246,.82);
+}
+
+.hobanwooOptionRow:last-child {
+  margin-bottom: 0;
+}
+
+.hobanwooOptionLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hobanwooOptionLabel {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.hobanwooOptionLabel strong {
+  color: #10233f;
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.hobanwooOptionLabel small {
+  color: #76634c;
+  font: 900 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .02em;
+}
+
+.hobanwooOptionValue {
+  flex: 0 0 auto;
+  min-width: 48px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #10233f;
+  color: #fff7df;
+  font: 1000 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-align: center;
+}
+
+.hobanwooOptionRow p {
+  margin: 5px 0 9px;
+  color: #687486;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.hobanwooOptionsPanelV8 .hobanwooOptionRow input[type="range"] {
+  width: 100%;
+  height: 8px;
+  accent-color: #c81f30;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .hobanwooOptionsPanel.hobanwooOptionsPanelV8 {
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    width: min(94vw, 470px) !important;
+    max-height: 90vh;
+    padding: 18px !important;
+    transform: translate(-50%, -50%);
+  }
+
+  .hobanwooOptionsHeader h2 {
+    font-size: 34px;
+  }
+
+  .hobanwooOptionsSection {
+    padding: 12px;
+  }
+}

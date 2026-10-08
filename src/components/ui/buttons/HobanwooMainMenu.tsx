@@ -8,23 +8,19 @@ type HobanwooMainMenuProps = {
   onMenuOpenChange: (open: boolean) => void;
   interactive?: boolean;
   onStoryMode: () => void;
-  onScoreMode: () => void;
-  onRanking: () => void;
   onSettings: () => void;
   onShipSelect: () => void;
 };
 
 /**
- * 메인 화면 배경과 시작/모드 선택 UI를 렌더링한다.
- * menuOpen은 App에서 관리하므로 랭킹이나 게임 화면을 다녀와도 열린 메뉴 상태가 유지된다.
+ * 메인 화면 배경과 시작/메뉴 UI를 렌더링한다.
+ * 도전 모드와 순위 메뉴는 제거하고 스토리/설정/기체 선택만 유지한다.
  */
 export function HobanwooMainMenu({
   menuOpen,
   onMenuOpenChange,
   interactive = true,
   onStoryMode,
-  onScoreMode,
-  onRanking,
   onSettings,
   onShipSelect,
 }: HobanwooMainMenuProps) {
@@ -60,7 +56,6 @@ export function HobanwooMainMenu({
         draggable={false}
       />
 
-      {/* 같은 로고 엘리먼트의 크기와 위치를 전환해 자연스러운 모핑처럼 보이게 한다. */}
       <div className="hobanwooMainLogoStage" aria-hidden={false}>
         <img
           className="hobanwooMainLogo"
@@ -82,7 +77,7 @@ export function HobanwooMainMenu({
       </div>
 
       <div
-        className="hobanwooMainButtonColumn"
+        className="hobanwooMainButtonColumn hobanwooMainButtonColumnV8"
         aria-hidden={!menuOpen}
       >
         <HobanwooSpriteButton
@@ -90,32 +85,32 @@ export function HobanwooMainMenu({
           disabled={!menuOpen}
           onClick={onStoryMode}
         />
-        <HobanwooSpriteButton
-          variant="redesignScoreMode"
-          disabled={!menuOpen}
-          onClick={onScoreMode}
-        />
-        <HobanwooSpriteButton
-          variant="redesignRanking"
-          disabled={!menuOpen}
-          onClick={onRanking}
-        />
+
         <HobanwooSpriteButton
           variant="redesignSettings"
           disabled={!menuOpen}
           onClick={onSettings}
         />
+
         <button
           type="button"
-          className="hobanwooTempShipButton"
+          className="hobanwooShipSelectButton"
           disabled={!menuOpen}
-          onClick={onShipSelect}
+          onClick={() => {
+            sfx.uiClick();
+            onShipSelect();
+          }}
         >
-          <span className="hobanwooTempShipIcon">✦</span>
-          <span>기체 선택</span>
+          <span className="hobanwooShipSelectButtonGlow" aria-hidden="true" />
+          <span className="hobanwooShipSelectButtonIcon" aria-hidden="true">✦</span>
+          <span className="hobanwooShipSelectButtonCopy">
+            <small>SHIP SELECT</small>
+            <strong>기체 선택</strong>
+            <em>이과 · 문과 · 예체능</em>
+          </span>
+          <span className="hobanwooShipSelectButtonArrow" aria-hidden="true">›</span>
         </button>
       </div>
-
     </section>
   );
 }

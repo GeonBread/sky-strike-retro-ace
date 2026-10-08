@@ -136,6 +136,42 @@ export class AudioSystem {
     }
   }
 
+  /** 공통 UI 버튼을 눌렀을 때 사용하는 짧고 선명한 클릭음. */
+  uiClick() {
+    this.init();
+    if (!this.ctx || !this.sfxVolumeParams || this.sfxVol <= 0) return;
+
+    if (this.ctx.state === "suspended") {
+      this.ctx.resume().catch(() => {});
+    }
+
+    const now = this.ctx.currentTime;
+
+    const body = this.ctx.createOscillator();
+    const bodyGain = this.ctx.createGain();
+    body.type = "square";
+    body.frequency.setValueAtTime(760, now);
+    body.frequency.exponentialRampToValueAtTime(430, now + 0.055);
+    bodyGain.gain.setValueAtTime(0.045, now);
+    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.065);
+    body.connect(bodyGain);
+    bodyGain.connect(this.sfxVolumeParams);
+    body.start(now);
+    body.stop(now + 0.07);
+
+    const tick = this.ctx.createOscillator();
+    const tickGain = this.ctx.createGain();
+    tick.type = "sine";
+    tick.frequency.setValueAtTime(1480, now);
+    tick.frequency.exponentialRampToValueAtTime(920, now + 0.035);
+    tickGain.gain.setValueAtTime(0.022, now);
+    tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+    tick.connect(tickGain);
+    tickGain.connect(this.sfxVolumeParams);
+    tick.start(now);
+    tick.stop(now + 0.05);
+  }
+
   playOscillator(freq: number, type: OscillatorType, duration: number, slideFreq?: number, gainScale = 1) {
     if (!this.ctx || !this.sfxVolumeParams) return;
     if (gainScale <= 0) return;
