@@ -1288,7 +1288,8 @@ html.is-embedded-story .dialogue-layer.is-student-card-dialogue .speaker-tag {
   text-shadow: 0 0 8px rgba(255,247,185,.82), 2px 2px 0 #332304 !important;
 }
 html.is-embedded-story .dialogue-layer.is-student-card-dialogue .speaker-tag::before {
-  content: "STUDENT ID" !important;
+  content: none !important;
+  display: none !important;
   position: absolute !important;
   left: 18px !important;
   top: 3px !important;
@@ -1362,7 +1363,7 @@ html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-box
 }
 html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .speaker-tag {
   min-width: 248px !important;
-  padding: 14px 22px 9px !important;
+  padding: 9px 22px !important;
   border-color: #210709 !important;
   background: linear-gradient(180deg, #c21e25 0%, #6c0b10 58%, #310509 100%) !important;
   box-shadow: 0 0 0 2px #e44949, 0 6px 0 #290609, 0 0 24px rgba(255,50,55,.52) !important;
@@ -1371,7 +1372,8 @@ html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .speaker-tag 
   text-shadow: 1px 0 #ff4545, -1px 0 #d6a040, 0 0 10px rgba(255,207,146,.58), 2px 2px 0 #170304 !important;
 }
 html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .speaker-tag::before {
-  content: "CORE BOSS" !important;
+  content: none !important;
+  display: none !important;
   position: absolute !important;
   left: 18px !important;
   top: 3px !important;
@@ -1426,9 +1428,8 @@ html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper
   text-shadow: 1px 0 #aaf1ff, -1px 0 #4aaed0, 0 0 10px rgba(186,241,255,.62), 2px 2px 0 #031015 !important;
 }
 html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper-purified-dialogue .speaker-tag::before {
-  content: "CORE PURIFIED" !important;
-  color: #d9f8ff !important;
-  text-shadow: 0 0 8px rgba(83,200,235,.8) !important;
+  content: none !important;
+  display: none !important;
 }
 html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper-purified-dialogue .dialogue-marker::before {
   color: #baf4ff !important;
@@ -2919,6 +2920,13 @@ export function createChapter1StoryRuntime({
     sfx.startChapter1CoreInteriorBgm();
   });
   localWindowValues.set("__CHAPTER1_FADE_OUT_BGM__", (rawDurationMs: unknown) => {
+    // Story BGM fades are only valid while the visible story runtime is actually
+    // performing a STORY -> combat/cinematic transition. When a saved wave/boss
+    // checkpoint is resumed, the hidden StoryPlayer is still mounted in the
+    // background; any late fade request from that hidden runtime must never touch
+    // the combat BGM that has just started.
+    const storyPlayerHost = root.closest<HTMLElement>(".chapter1-story-player");
+    if (storyPlayerHost?.classList.contains("is-hidden")) return;
     const durationMs = Math.max(1, Math.floor(Number(rawDurationMs) || 3000));
     sfx.fadeOutBgm(durationMs);
   });

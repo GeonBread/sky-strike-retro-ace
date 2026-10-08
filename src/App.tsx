@@ -801,7 +801,6 @@ function Chapter1StoryExperience({
   const bossClearTransitionTimerRef = useRef<number | null>(null);
   const combatRetryPromptTimerRef = useRef<number | null>(null);
   const storyEndingFadeTimerRef = useRef<number | null>(null);
-  const bossAftermathPendingRef = useRef(false);
   const [part, setPart] = useState<1 | 2>(() => initialCheckpointRef.current?.kind === "story" ? initialCheckpointRef.current.part : initialCheckpointRef.current ? 2 : 1);
   const [phase, setPhase] = useState<Chapter1StoryPhase>(() => {
     if (initialCheckpointRef.current?.kind === "wave") return "wave";
@@ -836,20 +835,6 @@ function Chapter1StoryExperience({
     if (combatRetryPromptTimerRef.current !== null) window.clearTimeout(combatRetryPromptTimerRef.current);
     if (storyEndingFadeTimerRef.current !== null) window.clearTimeout(storyEndingFadeTimerRef.current);
   }, []);
-
-  useEffect(() => {
-    if (phase !== "story" || !bossAftermathPendingRef.current) return;
-
-    // 보스 GameCanvas의 unmount cleanup(engine.stop -> stopBgm)이 끝난 뒤에만
-    // 코어 BGM을 다시 시작해야 cleanup이 새 BGM을 끄는 경쟁 조건이 생기지 않는다.
-    bossAftermathPendingRef.current = false;
-    const aftermathTimer = window.setTimeout(() => {
-      sfx.startChapter1CoreInteriorBgm();
-      storyPlayerRef.current?.continueAfterBossClear();
-    }, 0);
-
-    return () => window.clearTimeout(aftermathTimer);
-  }, [phase]);
 
   const captureCurrentStoryCheckpoint = (): StoryCheckpoint | null => {
     if (phase === "boss" || phase === "phase2-dialogue") {
@@ -968,12 +953,27 @@ function Chapter1StoryExperience({
   }, [phase, part, currentWaveIndex, storyPauseOpen]);
 
   useEffect(() => {
-    const handlePageHide = () => {
-      persistCurrentStoryCheckpoint();
+    const persistBeforeLeaving = () => persistCurrentStoryCheckpoint();
+    const handlePageHide = () => persistBeforeLeaving();
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") persistBeforeLeaving();
     };
     window.addEventListener("pagehide", handlePageHide);
-    return () => window.removeEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [phase, part, currentWaveIndex]);
+
+  useEffect(() => {
+    if (phase !== "story" || storyPauseOpen) return;
+    // Chapter 1 already restores story/wave/boss checkpoints. Autosave the visible
+    // dialogue cursor as well so even a browser/tab interruption resumes from the
+    // most recently displayed line, not merely the last explicit pause/menu action.
+    const timer = window.setInterval(() => persistCurrentStoryCheckpoint(), 750);
+    return () => window.clearInterval(timer);
+  }, [phase, part, storyPauseOpen]);
 
   useEffect(() => {
     if (phase !== "wave-guide" || waveGuideVisualReady) return;
@@ -1351,12 +1351,15 @@ function Chapter1StoryExperience({
             }}
             onChapter1BossComplete={() => {
               // 보스 런타임 내부에서 폭발 → 보스 상승 → 호반우 상승 → 암전 2초까지 모두 끝낸 뒤 호출됩니다.
-              // 후속 코어 BGM/스토리는 phase 전환 commit 이후 effect에서 시작한다.
-              // 그래야 GameCanvas unmount의 engine.stop()이 새 코어 BGM을 다시 끄지 않는다.
+              // GameCanvas가 언마운트될 때 engine.stop()이 보스 BGM을 정리하므로,
+              // 언마운트가 끝난 다음 학사 코어 내부 BGM을 다시 시작한 뒤 후속 스토리를 이어간다.
               setBossClearTransitionActive(false);
               setBossClearBackdrop(null);
-              bossAftermathPendingRef.current = true;
               setPhase("story");
+              window.setTimeout(() => {
+                sfx.startChapter1CoreInteriorBgm();
+                storyPlayerRef.current?.continueAfterBossClear();
+              }, 0);
             }}
             onChapter1CombatFailed={showCombatRetryPrompt}
             onChapter1CombatExitToMenu={leaveStoryCombatToMenu}
@@ -1848,6 +1851,7 @@ export default function App() {
       return (
         <Chapter3StoryExperience
           onExit={() => setGameState("MENU")}
+          resumeCheckpoint={selectedStoryCheckpoint}
           onComplete={() => {
             setStoryProgress(markStoryChapterCleared(3));
             setSelectedStoryCheckpoint(null);

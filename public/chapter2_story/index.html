@@ -15269,8 +15269,14 @@ document.head.appendChild(c2Style);
     el.dialogueLayer.classList.toggle('speaker-right', speaker.side === 'right');
     const isTeamBlackholeDialogue = speakerId === 'boss';
     const isStudentCardDialogue = speakerId === 'student_card';
+    const isMinjaeDialogue = speakerId === 'minjae';
+    const isSoyeonDialogue = speakerId === 'soyeon';
+    const isJunhoDialogue = speakerId === 'junho';
     el.dialogueLayer.classList.toggle('is-team-blackhole-boss-dialogue', isTeamBlackholeDialogue);
     el.dialogueLayer.classList.toggle('is-student-card-dialogue', isStudentCardDialogue);
+    el.dialogueLayer.classList.toggle('is-minjae-dialogue', isMinjaeDialogue);
+    el.dialogueLayer.classList.toggle('is-soyeon-dialogue', isSoyeonDialogue);
+    el.dialogueLayer.classList.toggle('is-junho-dialogue', isJunhoDialogue);
     el.dialogueBox.setAttribute('data-boss-dialogue', isTeamBlackholeDialogue ? 'team-blackhole' : '');
     el.dialogueText.classList.remove('is-boss-name-reveal');
     if (item.bossNameReveal) {
@@ -16197,8 +16203,8 @@ function runCustomEffect(item) {
 }
 .dialogue-layer.is-team-blackhole-boss-dialogue .dialogue-box::before{content:"";left:-12px;top:-12px;width:44px;height:12px;border:0;border-left:5px solid #ffc467;border-top:5px solid #cb7cff;background:transparent;box-shadow:none;transform:skewX(-24deg)}
 .dialogue-layer.is-team-blackhole-boss-dialogue .dialogue-box::after{content:"";right:-12px;bottom:-12px;width:44px;height:12px;border:0;border-right:5px solid #ffc467;border-bottom:5px solid #cb7cff;background:transparent;box-shadow:none;transform:skewX(-24deg)}
-.dialogue-layer.is-team-blackhole-boss-dialogue .speaker-tag{min-width:300px;padding:14px 22px 9px;border-color:#261132!important;background:linear-gradient(180deg,#9250d0 0%,#572078 58%,#260b34 100%)!important;box-shadow:0 0 0 2px #c57aff,0 6px 0 #2b0d39,0 0 26px rgba(190,101,255,.6)!important;color:#fff;letter-spacing:.045em;text-shadow:0 0 9px rgba(239,206,255,.88),2px 2px 0 #130618!important}
-.dialogue-layer.is-team-blackhole-boss-dialogue .speaker-tag::before{content:"CORRUPTION BOSS";position:absolute;left:18px;top:3px;color:#ffe1aa;font:1000 8px/1 "Noto Sans KR",system-ui,sans-serif;letter-spacing:.28em;opacity:.95;text-shadow:0 0 8px rgba(255,190,97,.8)}
+.dialogue-layer.is-team-blackhole-boss-dialogue .speaker-tag{min-width:300px;padding:9px 22px;border-color:#261132!important;background:linear-gradient(180deg,#9250d0 0%,#572078 58%,#260b34 100%)!important;box-shadow:0 0 0 2px #c57aff,0 6px 0 #2b0d39,0 0 26px rgba(190,101,255,.6)!important;color:#fff;letter-spacing:.045em;text-shadow:0 0 9px rgba(239,206,255,.88),2px 2px 0 #130618!important}
+.dialogue-layer.is-team-blackhole-boss-dialogue .speaker-tag::before{content:none!important;display:none!important}
 .dialogue-layer.is-team-blackhole-boss-dialogue .dialogue-marker{font-size:0!important;color:#d491ff!important;text-shadow:none!important}
 .dialogue-layer.is-team-blackhole-boss-dialogue .dialogue-marker::before{content:"◈";font-size:clamp(25px,3vw,39px);color:#efc9ff;text-shadow:0 0 8px #dc9eff,0 0 20px rgba(183,83,255,.96),0 0 36px rgba(116,29,174,.72);animation:c2TeamBlackholeSigil 1.25s ease-in-out infinite alternate}
 .dialogue-layer.is-team-blackhole-boss-dialogue .dialogue-text{color:#fffaff!important;font-weight:950!important;letter-spacing:.014em!important;text-shadow:1px 0 0 rgba(219,145,255,.6),-1px 0 0 rgba(255,191,95,.34),0 0 8px rgba(216,169,255,.32),3px 3px 0 #060208!important}
@@ -16222,11 +16228,41 @@ function runCustomEffect(item) {
 .dialogue-layer.is-student-card-dialogue .dialogue-box::before{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:13px 0 0 -3px #ffe58a,0 13px 0 -3px #ffe58a!important}
 .dialogue-layer.is-student-card-dialogue .dialogue-box::after{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:-13px 0 0 -3px #ffe58a,0 -13px 0 -3px #ffe58a!important}
 .dialogue-layer.is-student-card-dialogue .speaker-tag{border-color:#5b4710!important;background:linear-gradient(180deg,#f0c941 0%,#a67e16 62%,#5b4207 100%)!important;box-shadow:0 0 0 2px #ffe477,0 6px 0 #3e2d06,0 0 24px rgba(255,213,72,.52)!important;color:#fffce8!important;text-shadow:0 0 8px rgba(255,247,185,.82),2px 2px 0 #332304!important}
-.dialogue-layer.is-student-card-dialogue .speaker-tag::before{content:"STUDENT ID";position:absolute;left:18px;top:3px;color:#fff0a0;font:1000 8px/1 "Noto Sans KR",system-ui,sans-serif;letter-spacing:.30em;opacity:.95;text-shadow:0 0 8px rgba(255,213,72,.72)}
+.dialogue-layer.is-student-card-dialogue .speaker-tag::before{content:none!important;display:none!important}
 .dialogue-layer.is-student-card-dialogue .dialogue-marker{color:#ffe06a!important;text-shadow:0 0 8px rgba(255,217,74,.9)!important}
 .dialogue-layer.is-student-card-dialogue .dialogue-text{color:#fffdf2!important;text-shadow:0 0 7px rgba(255,222,95,.18),3px 3px 0 #090701!important}
 .dialogue-layer.is-student-card-dialogue .continue-indicator{color:#ffe06a!important;filter:drop-shadow(0 0 8px rgba(255,213,72,.92))!important}
 </style>
 
+
+<style id="chapter2-team-friend-dialogue-style">
+/* Minjae / Soyeon / Junho each get a calm character-colored dialogue frame.
+   No extra English eyebrow text is used; only the actual Korean speaker name is shown. */
+.dialogue-layer.is-minjae-dialogue{--speaker-accent:#57b87d}
+.dialogue-layer.is-soyeon-dialogue{--speaker-accent:#d487b4}
+.dialogue-layer.is-junho-dialogue{--speaker-accent:#9486e7}
+.dialogue-layer.is-minjae-dialogue .dialogue-box,
+.dialogue-layer.is-soyeon-dialogue .dialogue-box,
+.dialogue-layer.is-junho-dialogue .dialogue-box{
+  background:linear-gradient(180deg,rgba(11,16,19,.985),rgba(3,5,7,.997))!important;
+  box-shadow:0 0 0 3px #090d0f,0 0 0 6px color-mix(in srgb,var(--speaker-accent) 46%,#171a1d),inset 0 0 38px color-mix(in srgb,var(--speaker-accent) 10%,transparent),0 12px 0 #090b0d,0 24px 52px rgba(0,0,0,.76),0 0 28px color-mix(in srgb,var(--speaker-accent) 30%,transparent)!important;
+  border-color:var(--speaker-accent)!important
+}
+.dialogue-layer.is-minjae-dialogue .dialogue-box::before,
+.dialogue-layer.is-minjae-dialogue .dialogue-box::after{background:#57b87d!important;border-color:#244f35!important}
+.dialogue-layer.is-soyeon-dialogue .dialogue-box::before,
+.dialogue-layer.is-soyeon-dialogue .dialogue-box::after{background:#d487b4!important;border-color:#603d52!important}
+.dialogue-layer.is-junho-dialogue .dialogue-box::before,
+.dialogue-layer.is-junho-dialogue .dialogue-box::after{background:#9486e7!important;border-color:#443d6e!important}
+.dialogue-layer.is-minjae-dialogue .speaker-tag{background:linear-gradient(180deg,#5ab77d,#2d724c 64%,#173b29)!important;border-color:#173b29!important;box-shadow:0 0 0 2px #7dd49b,0 6px 0 #102b1d,0 0 20px rgba(87,184,125,.42)!important}
+.dialogue-layer.is-soyeon-dialogue .speaker-tag{background:linear-gradient(180deg,#d58ab5,#925475 64%,#4e2b3e)!important;border-color:#4e2b3e!important;box-shadow:0 0 0 2px #efabd0,0 6px 0 #3b2030,0 0 20px rgba(212,135,180,.42)!important}
+.dialogue-layer.is-junho-dialogue .speaker-tag{background:linear-gradient(180deg,#9486e7,#5c52a4 64%,#302b61)!important;border-color:#302b61!important;box-shadow:0 0 0 2px #b5aaff,0 6px 0 #242047,0 0 20px rgba(148,134,231,.44)!important}
+.dialogue-layer.is-minjae-dialogue .dialogue-marker,.dialogue-layer.is-minjae-dialogue .continue-indicator{color:#73d496!important}
+.dialogue-layer.is-soyeon-dialogue .dialogue-marker,.dialogue-layer.is-soyeon-dialogue .continue-indicator{color:#efa6ce!important}
+.dialogue-layer.is-junho-dialogue .dialogue-marker,.dialogue-layer.is-junho-dialogue .continue-indicator{color:#b7acff!important}
+.dialogue-layer.is-minjae-dialogue .dialogue-text,
+.dialogue-layer.is-soyeon-dialogue .dialogue-text,
+.dialogue-layer.is-junho-dialogue .dialogue-text{color:#fff!important;text-shadow:0 0 7px color-mix(in srgb,var(--speaker-accent) 16%,transparent),3px 3px 0 #050607!important}
+</style>
 </body>
 </html>

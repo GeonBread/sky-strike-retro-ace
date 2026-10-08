@@ -626,12 +626,13 @@
   100%{background:rgba(0,0,0,1)}
 }
 
-/* FINAL CREDITS 2026-10-06
-   0-4 s   : final scene slowly whites out
-   4-6 s   : hold full white
-   6-11 s  : hard cut to black + game logo
-   11-95 s : rolling credits
-   95-110 s: final thank-you card */
+/* FINAL CREDITS 2026-10-08
+   0-4 s    : final scene slowly whites out
+   4-6 s    : hold full white
+   6-8.7 s  : black hold
+   8.7-11 s : game logo appears at the requested point in the song
+   11-95 s  : the SAME logo begins rolling upward with the credits
+   95-110 s : final thank-you card */
 .chapter3StoryExperience.is-final-credits .chapter3StoryRouteSelect,
 .chapter3StoryExperience.is-final-credits .chapter3StoryLoading,
 .chapter3StoryExperience.is-final-credits .chapter3DetailSelector,
@@ -684,31 +685,6 @@
   100% { opacity: 1; }
 }
 
-.chapter3FinalCreditsLogoPhase {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  pointer-events: none;
-  animation: chapter3FinalLogoPhase 5s ease-in-out 6s both;
-}
-
-.chapter3FinalCreditsLogoPhase img {
-  width: min(720px, 72vw);
-  max-height: 42vh;
-  object-fit: contain;
-  filter: drop-shadow(0 16px 34px rgba(255,255,255,.08));
-}
-
-@keyframes chapter3FinalLogoPhase {
-  0% { opacity: 0; transform: scale(.965); }
-  12% { opacity: 1; transform: scale(1); }
-  82% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.015); }
-}
-
 .chapter3FinalCreditsScrollViewport {
   position: absolute;
   inset: 0;
@@ -716,26 +692,42 @@
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  animation: chapter3FinalCreditsWindow 84s linear 11s both;
+  /* Song time 8.7 s: reveal the lead logo. Keep the track stationary until
+     the main roll starts at 11 s so the exact same logo can rise with it. */
+  animation: chapter3FinalCreditsWindow 86.3s linear 8.7s both;
 }
 
 .chapter3FinalCreditsTrack {
   width: min(900px, 88vw);
   margin: 0 auto;
   text-align: center;
-  transform: translateY(100vh);
+  transform: translateY(0);
   animation: chapter3FinalCreditsRoll 84s linear 11s both;
+}
+
+.chapter3FinalCreditsLeadLogo {
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 8vh 4vw;
+}
+
+.chapter3FinalCreditsLeadLogo img {
+  width: min(720px, 72vw);
+  max-height: 42vh;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 34px rgba(255,255,255,.08));
 }
 
 @keyframes chapter3FinalCreditsWindow {
   0% { opacity: 0; }
-  1.5%, 96% { opacity: 1; }
+  .6%, 99% { opacity: 1; }
   100% { opacity: 0; }
 }
 
 @keyframes chapter3FinalCreditsRoll {
-  from { transform: translateY(100vh); }
-  to { transform: translateY(calc(-100% - 20vh)); }
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-100% - 12vh)); }
 }
 
 .chapter3FinalCreditsHeading {

@@ -153,6 +153,19 @@ function chapter2CheckpointFromState(state: Chapter2StoryStateMessage | undefine
   };
 }
 
+function chapter2CheckpointFromIndex(index: number): StoryCheckpoint {
+  return {
+    version: 1,
+    chapter: 2,
+    kind: "story",
+    part: 1,
+    segment: STORY_SEGMENT,
+    dialogueIndex: Math.max(0, Math.floor(index)),
+    completionAction: "chapter2-item-index",
+    savedAt: Date.now(),
+  };
+}
+
 function chapter2WaveCheckpoint(waveIndex: number): StoryCheckpoint {
   return {
     version: 1,
@@ -248,6 +261,23 @@ export function Chapter2StoryExperience({
     currentWaveIndexRef.current = safeIndex;
     setCurrentWaveIndex(safeIndex);
     saveStoryCheckpoint(chapter2WaveCheckpoint(safeIndex));
+  };
+
+  const persistCurrentLocation = () => {
+    if (phase === "boss" || phase === "boss-intro" || phase === "boss-blackout") {
+      saveStoryCheckpoint(chapter2BossCheckpoint());
+      return;
+    }
+    if (phase !== "story") {
+      persistWaveCheckpoint(currentWaveIndexRef.current);
+      return;
+    }
+    saveStoryCheckpoint(chapter2CheckpointFromIndex(currentStoryIndex));
+  };
+
+  const exitStoryToMenu = () => {
+    persistCurrentLocation();
+    onMenu();
   };
 
   useEffect(() => {
@@ -604,14 +634,29 @@ export function Chapter2StoryExperience({
   }, []);
 
   useEffect(() => {
-    const handlePageHide = () => {
-      if (phase === "boss" || phase === "boss-intro" || phase === "boss-blackout") saveStoryCheckpoint(chapter2BossCheckpoint());
-      else if (phase !== "story") persistWaveCheckpoint(currentWaveIndexRef.current);
-      else postCommand("requestState");
+    const persistBeforeLeaving = () => {
+      if (phase === "boss" || phase === "boss-intro" || phase === "boss-blackout") {
+        saveStoryCheckpoint(chapter2BossCheckpoint());
+      } else if (phase !== "story") {
+        persistWaveCheckpoint(currentWaveIndexRef.current);
+      } else {
+        // progress messages already autosave each line; this direct write is a
+        // synchronous safety net for page close/tab hide where a requestState
+        // postMessage may not get a chance to round-trip before unloading.
+        saveStoryCheckpoint(chapter2CheckpointFromIndex(currentStoryIndex));
+      }
+    };
+    const handlePageHide = () => persistBeforeLeaving();
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") persistBeforeLeaving();
     };
     window.addEventListener("pagehide", handlePageHide);
-    return () => window.removeEventListener("pagehide", handlePageHide);
-  }, [phase]);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [phase, currentStoryIndex]);
 
   const issueWaveControl = (action: "skip" | "jump", waveIndex?: number) => {
     const command: Chapter2WaveControlCommand = {
@@ -1139,7 +1184,7 @@ export function Chapter2StoryExperience({
               전투 연결을 준비하고 있습니다.
             </p>
             <div className="chapter2-integration-actions">
-              <button type="button" className="secondary" onClick={onMenu}>메인 화면</button>
+              <button type="button" className="secondary" onClick={exitStoryToMenu}>메인 화면</button>
               <button
                 type="button"
                 className="primary"
@@ -1163,7 +1208,7 @@ export function Chapter2StoryExperience({
             <p>진행 기록은 자동 저장됩니다.</p>
             <div className="chapterGamePauseActions isConfirm">
               <button type="button" className="secondary" onClick={() => setExitConfirmOpen(false)}>계속하기</button>
-              <button type="button" className="danger" onClick={onMenu}>메인화면</button>
+              <button type="button" className="danger" onClick={exitStoryToMenu}>메인화면</button>
             </div>
           </section>
         </div>

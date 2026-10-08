@@ -6556,8 +6556,14 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     el.dialogueLayer.classList.toggle('speaker-right', speaker.side === 'right');
     const isDigrionBossDialogue = speakerId === 'digrion' || speakerId === 'digrion_spirit';
     const isStudentCardDialogue = speakerId === 'student_card';
+    const isMinjaeDialogue = speakerId === 'minjae';
+    const isSoyeonDialogue = speakerId === 'soyeon';
+    const isJunhoDialogue = speakerId === 'junho';
     el.dialogueLayer.classList.toggle('is-digrion-boss-dialogue101', isDigrionBossDialogue);
     el.dialogueLayer.classList.toggle('is-student-card-dialogue', isStudentCardDialogue);
+    el.dialogueLayer.classList.toggle('is-minjae-dialogue', isMinjaeDialogue);
+    el.dialogueLayer.classList.toggle('is-soyeon-dialogue', isSoyeonDialogue);
+    el.dialogueLayer.classList.toggle('is-junho-dialogue', isJunhoDialogue);
     el.dialogueBox.setAttribute('data-boss-dialogue', isDigrionBossDialogue ? 'digrion' : '');
 
     const wasClosed = !state.dialogueOpen;
@@ -14068,7 +14074,7 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
 }
 .dialogue-layer.is-digrion-boss-dialogue101 .speaker-tag{
   min-width:250px;
-  padding:14px 22px 9px;
+  padding:9px 22px;
   border-color:#21102e!important;
   background:linear-gradient(180deg,#7e2ec5 0%,#431265 58%,#22092f 100%)!important;
   box-shadow:
@@ -14080,15 +14086,8 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
   text-shadow:1px 0 #ff4779,-1px 0 #7d5cff,0 0 10px rgba(220,174,255,.75),2px 2px 0 #130617!important;
 }
 .dialogue-layer.is-digrion-boss-dialogue101 .speaker-tag::before{
-  content:"FINAL BOSS";
-  position:absolute;
-  left:18px;
-  top:3px;
-  color:#ffd0e2;
-  font:1000 8px/1 "Noto Sans KR",system-ui,sans-serif;
-  letter-spacing:.32em;
-  opacity:.9;
-  text-shadow:0 0 8px rgba(255,73,126,.8);
+  content:none!important;
+  display:none!important;
 }
 .dialogue-layer.is-digrion-boss-dialogue101 .dialogue-marker{
   color:#ca7dff!important;
@@ -14146,11 +14145,31 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
 .dialogue-layer.is-student-card-dialogue .dialogue-box::before{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:13px 0 0 -3px #ffe58a,0 13px 0 -3px #ffe58a!important}
 .dialogue-layer.is-student-card-dialogue .dialogue-box::after{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:-13px 0 0 -3px #ffe58a,0 -13px 0 -3px #ffe58a!important}
 .dialogue-layer.is-student-card-dialogue .speaker-tag{border-color:#5b4710!important;background:linear-gradient(180deg,#f0c941 0%,#a67e16 62%,#5b4207 100%)!important;box-shadow:0 0 0 2px #ffe477,0 6px 0 #3e2d06,0 0 24px rgba(255,213,72,.52)!important;color:#fffce8!important;text-shadow:0 0 8px rgba(255,247,185,.82),2px 2px 0 #332304!important}
-.dialogue-layer.is-student-card-dialogue .speaker-tag::before{content:"STUDENT ID";position:absolute;left:18px;top:3px;color:#fff0a0;font:1000 8px/1 "Noto Sans KR",system-ui,sans-serif;letter-spacing:.30em;opacity:.95;text-shadow:0 0 8px rgba(255,213,72,.72)}
+.dialogue-layer.is-student-card-dialogue .speaker-tag::before{content:none!important;display:none!important}
 .dialogue-layer.is-student-card-dialogue .dialogue-marker{color:#ffe06a!important;text-shadow:0 0 8px rgba(255,217,74,.9)!important}
 .dialogue-layer.is-student-card-dialogue .dialogue-text{color:#fffdf2!important;text-shadow:0 0 7px rgba(255,222,95,.18),3px 3px 0 #090701!important}
 .dialogue-layer.is-student-card-dialogue .continue-indicator{color:#ffe06a!important;filter:drop-shadow(0 0 8px rgba(255,213,72,.92))!important}
 </style>
 
+
+<style id="chapter3-team-friend-dialogue-style">
+/* Team 4 character-specific dialogue frames. Keep the actual Korean name only. */
+.dialogue-layer.is-minjae-dialogue{--speaker-accent:#57b87d}
+.dialogue-layer.is-soyeon-dialogue{--speaker-accent:#d487b4}
+.dialogue-layer.is-junho-dialogue{--speaker-accent:#9486e7}
+.dialogue-layer.is-minjae-dialogue .dialogue-box{border-color:#57b87d!important;background:radial-gradient(circle at 12% 50%,rgba(87,184,125,.14),transparent 36%),linear-gradient(180deg,rgba(8,20,14,.988),rgba(2,6,4,.997))!important;box-shadow:0 0 0 3px #07110c,0 0 0 6px #28583b,inset 0 0 42px rgba(87,184,125,.11),0 10px 0 #173923,0 24px 54px rgba(0,0,0,.8),0 0 28px rgba(87,184,125,.34)!important}
+.dialogue-layer.is-soyeon-dialogue .dialogue-box{border-color:#d487b4!important;background:radial-gradient(circle at 12% 50%,rgba(212,135,180,.14),transparent 36%),linear-gradient(180deg,rgba(24,10,18,.988),rgba(7,2,5,.997))!important;box-shadow:0 0 0 3px #150910,0 0 0 6px #623c53,inset 0 0 42px rgba(212,135,180,.11),0 10px 0 #422638,0 24px 54px rgba(0,0,0,.8),0 0 28px rgba(212,135,180,.34)!important}
+.dialogue-layer.is-junho-dialogue .dialogue-box{border-color:#9486e7!important;background:radial-gradient(circle at 12% 50%,rgba(148,134,231,.15),transparent 36%),linear-gradient(180deg,rgba(13,11,28,.988),rgba(4,3,9,.997))!important;box-shadow:0 0 0 3px #0d0b18,0 0 0 6px #49416f,inset 0 0 42px rgba(148,134,231,.12),0 10px 0 #302b54,0 24px 54px rgba(0,0,0,.8),0 0 28px rgba(148,134,231,.36)!important}
+.dialogue-layer.is-minjae-dialogue .dialogue-box::before,.dialogue-layer.is-minjae-dialogue .dialogue-box::after{background:#57b87d!important;border-color:#244f35!important}
+.dialogue-layer.is-soyeon-dialogue .dialogue-box::before,.dialogue-layer.is-soyeon-dialogue .dialogue-box::after{background:#d487b4!important;border-color:#603d52!important}
+.dialogue-layer.is-junho-dialogue .dialogue-box::before,.dialogue-layer.is-junho-dialogue .dialogue-box::after{background:#9486e7!important;border-color:#443d6e!important}
+.dialogue-layer.is-minjae-dialogue .speaker-tag{background:linear-gradient(180deg,#5ab77d,#2d724c 64%,#173b29)!important;border-color:#173b29!important;box-shadow:0 0 0 2px #7dd49b,0 6px 0 #102b1d,0 0 20px rgba(87,184,125,.42)!important}
+.dialogue-layer.is-soyeon-dialogue .speaker-tag{background:linear-gradient(180deg,#d58ab5,#925475 64%,#4e2b3e)!important;border-color:#4e2b3e!important;box-shadow:0 0 0 2px #efabd0,0 6px 0 #3b2030,0 0 20px rgba(212,135,180,.42)!important}
+.dialogue-layer.is-junho-dialogue .speaker-tag{background:linear-gradient(180deg,#9486e7,#5c52a4 64%,#302b61)!important;border-color:#302b61!important;box-shadow:0 0 0 2px #b5aaff,0 6px 0 #242047,0 0 20px rgba(148,134,231,.44)!important}
+.dialogue-layer.is-minjae-dialogue .dialogue-marker,.dialogue-layer.is-minjae-dialogue .continue-indicator{color:#73d496!important}
+.dialogue-layer.is-soyeon-dialogue .dialogue-marker,.dialogue-layer.is-soyeon-dialogue .continue-indicator{color:#efa6ce!important}
+.dialogue-layer.is-junho-dialogue .dialogue-marker,.dialogue-layer.is-junho-dialogue .continue-indicator{color:#b7acff!important}
+.dialogue-layer.is-minjae-dialogue .dialogue-text,.dialogue-layer.is-soyeon-dialogue .dialogue-text,.dialogue-layer.is-junho-dialogue .dialogue-text{color:#fff!important;font-weight:900!important;text-shadow:3px 3px 0 #050607!important}
+</style>
 </body>
 </html>

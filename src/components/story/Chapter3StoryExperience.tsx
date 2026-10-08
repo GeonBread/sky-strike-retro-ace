@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Shield } from "lucide-react";
 import { sfx } from "../../game/AudioSystem";
+import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProgress";
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter3StoryExperience.css";
 
 type Chapter3StoryExperienceProps = {
   onExit?: () => void;
   onComplete?: () => void;
+  resumeCheckpoint?: StoryCheckpoint | null;
 };
 
 type Chapter3BridgeMessage = {
@@ -243,16 +245,54 @@ function writeChapter3Progress(progress: Chapter3SavedProgress): void {
   window.localStorage.setItem(CHAPTER3_PROGRESS_KEY, JSON.stringify(progress));
 }
 
-export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExperienceProps) {
+function chapter3StoryCheckpoint(index: number): StoryCheckpoint {
+  return {
+    version: 1,
+    chapter: 3,
+    kind: "story",
+    part: 1,
+    segment: "chapter3_full",
+    dialogueIndex: Math.max(0, Math.floor(index)),
+    completionAction: "chapter3-item-index",
+    savedAt: Date.now(),
+  };
+}
+
+function chapter3WaveCheckpoint(waveIndex: number): StoryCheckpoint {
+  return {
+    version: 1,
+    chapter: 3,
+    kind: "wave",
+    waveIndex: Math.max(0, Math.floor(waveIndex)),
+    savedAt: Date.now(),
+  };
+}
+
+export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }: Chapter3StoryExperienceProps) {
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const waveFrameRef = useRef<HTMLIFrameElement | null>(null);
+  const legacyProgressRef = useRef(readChapter3Progress());
+  const initialCheckpointRef = useRef<StoryCheckpoint | null>(
+    resumeCheckpoint?.chapter === 3 ? resumeCheckpoint : null,
+  );
+  const resumedWaveCheckpointRef = useRef(initialCheckpointRef.current?.kind === "wave");
+  const initialStoryIndex = initialCheckpointRef.current?.kind === "story"
+    ? Math.max(0, Math.floor(initialCheckpointRef.current.dialogueIndex))
+    : legacyProgressRef.current.index;
+  const initialStoryOrdinal = legacyProgressRef.current.sectionOrdinal;
+  const initialWaveIndex = initialCheckpointRef.current?.kind === "wave"
+    ? Math.max(0, Math.floor(initialCheckpointRef.current.waveIndex))
+    : 0;
+  const currentStoryIndexRef = useRef(initialStoryIndex);
+  const currentStorySectionOrdinalRef = useRef(initialStoryOrdinal);
+
   const [fullscreenEffect, setFullscreenEffect] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [screen, setScreen] = useState<Chapter3Screen>("story");
+  const [screen, setScreen] = useState<Chapter3Screen>(initialCheckpointRef.current?.kind === "wave" ? "wave" : "story");
   const [selectorTab, setSelectorTab] = useState<Chapter3SelectorTab>("story");
-  const [storyLaunch, setStoryLaunch] = useState<StoryLaunch>(() => { const saved = readChapter3Progress(); return { kind: "resume", index: saved.index, ordinal: saved.sectionOrdinal }; });
+  const [storyLaunch, setStoryLaunch] = useState<StoryLaunch>({ kind: "resume", index: initialStoryIndex, ordinal: initialStoryOrdinal });
   const [storyLaunchSerial, setStoryLaunchSerial] = useState(0);
-  const [waveActive, setWaveActive] = useState(false);
+  const [waveActive, setWaveActive] = useState(initialCheckpointRef.current?.kind === "wave");
   const [waveReady, setWaveReady] = useState(false);
   const [waveFailed, setWaveFailed] = useState(false);
   const [waveRetryPromptVisible, setWaveRetryPromptVisible] = useState(false);
@@ -261,8 +301,8 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const finalCreditsActiveRef = useRef(false);
   const [finalCreditsActive, setFinalCreditsActive] = useState(false);
   const [finalCreditsRunKey, setFinalCreditsRunKey] = useState(0);
-  const [waveRunKey, setWaveRunKey] = useState(0);
-  const [waveStartIndex, setWaveStartIndex] = useState(0);
+  const [waveRunKey, setWaveRunKey] = useState(initialCheckpointRef.current?.kind === "wave" ? 1 : 0);
+  const [waveStartIndex, setWaveStartIndex] = useState(initialWaveIndex);
   const [waveSingle, setWaveSingle] = useState(false);
   const [failedWaveIndex, setFailedWaveIndex] = useState<number | null>(null);
   const [waveDeathCounts, setWaveDeathCounts] = useState<Record<number, number>>({});
@@ -270,7 +310,7 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const [storyIsTestJump, setStoryIsTestJump] = useState(false);
   const [waveExitConfirm, setWaveExitConfirm] = useState(false);
   const [wavePaused, setWavePaused] = useState(false);
-  const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: 0, totalWaves: WAVES.length, enemies: 0 });
+  const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: initialWaveIndex, totalWaves: WAVES.length, enemies: 0 });
 
   useEffect(() => {
     if (!waveActive) return;
@@ -290,6 +330,29 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
     }
     finalCreditsActiveRef.current = false;
   }, []);
+
+  useEffect(() => {
+    const persistCurrentLocation = () => {
+      if (storyIsTestJump || finalCreditsActiveRef.current) return;
+      if (waveActive && waveOrigin === "story") {
+        saveStoryCheckpoint(chapter3WaveCheckpoint(waveHud.waveIndex));
+        return;
+      }
+      if (screen === "story") {
+        saveStoryCheckpoint(chapter3StoryCheckpoint(currentStoryIndexRef.current));
+      }
+    };
+    const handlePageHide = () => persistCurrentLocation();
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") persistCurrentLocation();
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [screen, storyIsTestJump, waveActive, waveOrigin, waveHud.waveIndex]);
 
   const frameSrc = useMemo(
     () => `/chapter3_story/index.html?hostSelector=1&run=${storyLaunchSerial}`,
@@ -407,18 +470,22 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
   const launchBossFlow = () => prepareStoryLaunch({ kind: "continue-from-section", ordinal: 13 }, true);
 
   const launchWave = (index: number, single: boolean, origin: WaveOrigin = "selector") => {
+    const safeIndex = Math.max(0, Math.min(WAVES.length - 1, Math.floor(index)));
     setFullscreenEffect(null);
     setWaveOrigin(origin);
     clearWaveRetryPromptTimer();
     setWaveFailed(false);
     setWaveRetryPromptVisible(false);
     setWaveReady(false);
-    setWaveStartIndex(index);
+    setWaveStartIndex(safeIndex);
     setWaveSingle(single);
     setFailedWaveIndex(null);
     setWaveExitConfirm(false);
     setWavePaused(false);
-    setWaveHud({ hp: 3, maxHp: 3, bombs: 3, powerLevel: (waveDeathCounts[index] ?? 0) >= 3 ? 5 : 1, waveIndex: index, totalWaves: WAVES.length, enemies: 0 });
+    setWaveHud({ hp: 3, maxHp: 3, bombs: 3, powerLevel: (waveDeathCounts[safeIndex] ?? 0) >= 3 ? 5 : 1, waveIndex: safeIndex, totalWaves: WAVES.length, enemies: 0 });
+    if (origin === "story" && !storyIsTestJump) {
+      saveStoryCheckpoint(chapter3WaveCheckpoint(safeIndex));
+    }
     setWaveRunKey((key) => key + 1);
     setWaveActive(true);
     setScreen("wave");
@@ -548,11 +615,12 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
             sfx.startChapter3DailyBgm();
           }
 
+          const sectionOrdinal = Math.max(0, Math.floor(message.detail?.sectionOrdinal ?? 0));
+          currentStoryIndexRef.current = storyIndex;
+          currentStorySectionOrdinalRef.current = sectionOrdinal;
           if (!storyIsTestJump) {
-            writeChapter3Progress({
-              index: storyIndex,
-              sectionOrdinal: Math.max(0, Math.floor(message.detail?.sectionOrdinal ?? 0)),
-            });
+            writeChapter3Progress({ index: storyIndex, sectionOrdinal });
+            saveStoryCheckpoint(chapter3StoryCheckpoint(storyIndex));
           }
           return;
         }
@@ -632,15 +700,19 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         }
 
         if (message.type === "hud-state") {
+          const activeWaveIndex = Math.max(0, Math.floor(message.detail?.waveIndex ?? waveStartIndex));
           setWaveHud({
             hp: Math.max(0, Math.floor(message.detail?.hp ?? 3)),
             maxHp: Math.max(1, Math.floor(message.detail?.maxHp ?? 3)),
             bombs: Math.max(0, Math.floor(message.detail?.bombs ?? 3)),
             powerLevel: Math.max(1, Math.min(5, Math.floor(message.detail?.powerLevel ?? 1))),
-            waveIndex: Math.max(0, Math.floor(message.detail?.waveIndex ?? waveStartIndex)),
+            waveIndex: activeWaveIndex,
             totalWaves: Math.max(1, Math.floor(message.detail?.totalWaves ?? WAVES.length)),
             enemies: Math.max(0, Math.floor(message.detail?.enemies ?? 0)),
           });
+          if (waveOrigin === "story" && !storyIsTestJump) {
+            saveStoryCheckpoint(chapter3WaveCheckpoint(activeWaveIndex));
+          }
           return;
         }
 
@@ -658,6 +730,9 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
         if (message.type === "wave-failed") {
           const failedWave = Math.max(0, Math.floor(message.detail?.waveIndex ?? waveStartIndex));
+          if (waveOrigin === "story" && !storyIsTestJump) {
+            saveStoryCheckpoint(chapter3WaveCheckpoint(failedWave));
+          }
           setFailedWaveIndex(failedWave);
           setWaveDeathCounts((counts) => ({
             ...counts,
@@ -683,11 +758,24 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
           setWavePaused(false);
           setWaveActive(false);
           if (waveOrigin === "story") {
-            setScreen("story");
-            frameRef.current?.contentWindow?.postMessage(
-              { channel: "sky-strike-chapter3-host", type: "wave-complete" },
-              window.location.origin,
-            );
+            if (resumedWaveCheckpointRef.current) {
+              // A page/session resumed directly inside combat, so the hidden story iframe
+              // was never paused at its original battle gate. Continue from the first
+              // post-wave story item explicitly instead of sending a resume signal to
+              // an iframe that has no paused gate state.
+              resumedWaveCheckpointRef.current = false;
+              const postWaveIndex = CH3_POST_WAVE_STRANGE_BGM_START_INDEX;
+              const postWaveOrdinal = 11;
+              writeChapter3Progress({ index: postWaveIndex, sectionOrdinal: postWaveOrdinal });
+              saveStoryCheckpoint(chapter3StoryCheckpoint(postWaveIndex));
+              prepareStoryLaunch({ kind: "resume", index: postWaveIndex, ordinal: postWaveOrdinal }, false);
+            } else {
+              setScreen("story");
+              frameRef.current?.contentWindow?.postMessage(
+                { channel: "sky-strike-chapter3-host", type: "wave-complete" },
+                window.location.origin,
+              );
+            }
           } else {
             setScreen("selector");
           }
@@ -695,15 +783,19 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
         }
 
         if (message.type === "exit-request") {
-          if (waveOrigin === "selector") returnToSelector();
-          else onExit?.();
+          if (waveOrigin === "selector") {
+            returnToSelector();
+          } else {
+            if (!storyIsTestJump) saveStoryCheckpoint(chapter3WaveCheckpoint(waveHud.waveIndex));
+            onExit?.();
+          }
         }
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onComplete, onExit, storyIsTestJump, storyLaunch, waveOrigin, waveStartIndex]);
+  }, [onComplete, onExit, storyIsTestJump, storyLaunch, waveOrigin, waveStartIndex, waveHud.waveIndex]);
 
   const retryWave = () => {
     clearWaveRetryPromptTimer();
@@ -792,12 +884,12 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
           <div className="chapter3FinalCreditsWhiteout" aria-hidden="true" />
           <div className="chapter3FinalCreditsBlackout" aria-hidden="true" />
 
-          <div className="chapter3FinalCreditsLogoPhase" aria-hidden="true">
-            <img src="/chapter3_story/assets/story/common/ui/game_logo.png" alt="" />
-          </div>
-
           <div className="chapter3FinalCreditsScrollViewport">
             <div className="chapter3FinalCreditsTrack">
+              <div className="chapter3FinalCreditsLeadLogo" aria-label="호반우의 졸업 대작전">
+                <img src="/chapter3_story/assets/story/common/ui/game_logo.png" alt="호반우의 졸업 대작전" />
+              </div>
+
               <header className="chapter3FinalCreditsHeading">
                 <small>FINAL CREDITS</small>
                 <strong>호반우의 졸업 대작전</strong>
@@ -943,7 +1035,20 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
                 <p>현재 웨이브의 처음부터 다시 시작합니다.</p>
                 {(waveDeathCounts[failedWaveIndex ?? waveStartIndex] ?? 0) >= 3 && <p className="chapter3WaveRetryBoost">반복 실패 보정 · 화력 레벨 5로 재시작</p>}
                 <div className="chapterGamePauseActions chapter3WaveRetryActions isConfirm">
-                  <button type="button" className="secondary" onClick={waveOrigin === "selector" ? returnToSelector : onExit}>아니오</button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => {
+                      if (waveOrigin === "selector") {
+                        returnToSelector();
+                      } else {
+                        if (!storyIsTestJump) saveStoryCheckpoint(chapter3WaveCheckpoint(failedWaveIndex ?? waveHud.waveIndex));
+                        onExit?.();
+                      }
+                    }}
+                  >
+                    아니오
+                  </button>
                   <button type="button" className="primary" onClick={retryWave}>예</button>
                 </div>
               </section>
@@ -989,8 +1094,12 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
                   setWaveExitConfirm(false);
                   setWavePaused(false);
                   postWaveCommand("set-paused", { paused: false });
-                  if (waveOrigin === "selector") returnToSelector();
-                  else onExit?.();
+                  if (waveOrigin === "selector") {
+                    returnToSelector();
+                  } else {
+                    if (!storyIsTestJump) saveStoryCheckpoint(chapter3WaveCheckpoint(waveHud.waveIndex));
+                    onExit?.();
+                  }
                 }}
               >
                 메인화면

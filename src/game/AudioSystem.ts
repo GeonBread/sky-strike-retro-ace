@@ -771,7 +771,15 @@ export class AudioSystem {
             ? "/audio/1phase%20bgm%20(Stellar%20Drift1).mp3"
             : "/audio/chapter1-wave-bgm.mp3";
 
-    if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      // A combat checkpoint can reopen the same wave track while a late story
+      // transition fade is still in flight. Direct combat resume owns the BGM now:
+      // cancel that fade and restore the configured volume instead of returning
+      // early and letting the freshly resumed wave music fade itself back out.
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
       return;
     }
 
