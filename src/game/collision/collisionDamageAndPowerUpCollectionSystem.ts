@@ -11,6 +11,7 @@ import { getHobanwooEnemyBulletHitRadiusSystem } from "../data/hobanwooEnemyBull
 import { spawnPlayerBulletHitEffectSystem } from "../effects/playerBulletHitEffectSystem";
 import { checkChapter1WaveCollisionsSystem } from "../chapter1/chapter1WaveCollisionSystem";
 import {
+  spawnChapter1EnemyDeathEffectSystem,
   spawnChapter1EnemyHitEffectSystem,
   spawnChapter1WaveBurstParticlesSystem,
 } from "../chapter1/chapter1WaveImpactSystem";
@@ -313,7 +314,9 @@ engine.bullets.forEach((b) => {
           }
           engine.awardScore(e.type === "assault_commander" ? 2500 : e.type === "tank" ? 300 : 100);
 
-          if (e.chapter1 || !!(e as any).chapter2BossSupport) {
+          if (e.chapter1) {
+            spawnChapter1EnemyDeathEffectSystem(engine, e);
+          } else if (!!(e as any).chapter2BossSupport) {
             spawnChapter1WaveBurstParticlesSystem(
               engine,
               e.x + e.width / 2,
@@ -373,12 +376,16 @@ engine.enemies.forEach((e) => {
   ) {
     if (e.type !== "boss" && e.type !== "assault_commander") {
       engine.deactivateEnemy(e);
-      engine.spawnExplosion(
-        e.x + e.width / 2,
-        e.y + e.height / 2,
-        "#f43f5e",
-        15,
-      );
+      if (e.chapter1) {
+        spawnChapter1EnemyDeathEffectSystem(engine, e);
+      } else {
+        engine.spawnExplosion(
+          e.x + e.width / 2,
+          e.y + e.height / 2,
+          "#f43f5e",
+          15,
+        );
+      }
     }
     engine.triggerPlayerHit();
   }

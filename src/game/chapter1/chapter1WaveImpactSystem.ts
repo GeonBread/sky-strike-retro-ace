@@ -11,6 +11,24 @@ const TAU = Math.PI * 2;
 const MAX_IMPACT_PARTICLES = 240;
 const MAX_VANISH_EFFECTS = 80;
 
+const CHAPTER1_ENEMY_DEATH_COLORS = [
+  "#54e0ff",
+  "#ffd783",
+  "#7adfff",
+  "#ffe06a",
+  "#bd89ff",
+  "#b4ef70",
+  "#ff5b68",
+  "#67e4ff",
+  "#ff7fb5",
+  "#78bfff",
+] as const;
+
+function chapter1EnemyDeathColor(enemy: any): string {
+  const index = Math.max(0, Math.min(CHAPTER1_ENEMY_DEATH_COLORS.length - 1, Number(enemy?.chapter1?.index) || 0));
+  return CHAPTER1_ENEMY_DEATH_COLORS[index];
+}
+
 function runtimeOf(engine: any): Chapter1WaveRuntime {
   if (!engine.chapter1Wave) engine.chapter1Wave = createChapter1WaveRuntime();
   return engine.chapter1Wave;
@@ -85,6 +103,7 @@ export function spawnChapter1EnemyDeathPulseSystem(
   y: number,
   color: string,
   radius: number,
+  deathStyle = false,
 ): void {
   const runtime = runtimeOf(engine);
   runtime.pulseEffects.push({
@@ -94,7 +113,53 @@ export function spawnChapter1EnemyDeathPulseSystem(
     radius,
     age: 0,
     life: 0.48,
+    deathStyle,
   });
+}
+
+/**
+ * Chapter 3 일반 몬스터 사망 연출과 같은 파티클/충격파/화면 진동을 Chapter 1 적에 적용합니다.
+ */
+export function spawnChapter1EnemyDeathEffectSystem(engine: any, enemy: any): void {
+  const runtime = runtimeOf(engine);
+  const x = enemy.x + enemy.width / 2;
+  const y = enemy.y + enemy.height / 2;
+  const color = chapter1EnemyDeathColor(enemy);
+  const visualSize = Math.max(Number(enemy.width) || 0, Number(enemy.height) || 0);
+  const isSmall = visualSize <= 72 || Number(enemy?.chapter1?.index) === 5;
+  const count = isSmall ? 14 : 22;
+  const speed = isSmall ? 190 : 260;
+  const available = Math.max(0, MAX_IMPACT_PARTICLES - runtime.impactParticles.length);
+  const actualCount = Math.min(count, available);
+
+  for (let index = 0; index < actualCount; index += 1) {
+    const angle = rand(0, TAU);
+    const particleSpeed = rand(speed * 0.35, speed);
+    runtime.impactParticles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * particleSpeed,
+      vy: Math.sin(angle) * particleSpeed,
+      age: 0,
+      life: rand(0.2, 0.48),
+      size: rand(1.5, 4.2),
+      color,
+      shape: particleSpeed > 120 ? "streak" : "diamond",
+      spin: rand(-8, 8),
+      phase: rand(0, TAU),
+      deathStyle: true,
+    });
+  }
+
+  spawnChapter1EnemyDeathPulseSystem(
+    engine,
+    x,
+    y,
+    color,
+    Math.max(12, visualSize * 0.375),
+    true,
+  );
+  engine.screenShakeIntensity = Math.max(engine.screenShakeIntensity ?? 0, isSmall ? 1.25 : 2.6);
 }
 
 export function spawnChapter1EnemyHitEffectSystem(
@@ -173,8 +238,13 @@ export function updateChapter1WaveImpactEffectsSystem(engine: any, dt: number): 
     particle.age += dt;
     particle.x += particle.vx * dt;
     particle.y += particle.vy * dt;
-    particle.vx *= Math.pow(0.975, dt * 60);
-    particle.vy *= Math.pow(0.975, dt * 60);
+    if (particle.deathStyle) {
+      particle.vx *= Math.pow(0.2, dt);
+      particle.vy *= Math.pow(0.2, dt);
+    } else {
+      particle.vx *= Math.pow(0.975, dt * 60);
+      particle.vy *= Math.pow(0.975, dt * 60);
+    }
   }
   runtime.impactParticles = runtime.impactParticles.filter((particle) => particle.age < particle.life);
 
@@ -220,11 +290,13 @@ export function renderChapter1WaveImpactEffectsSystem(engine: any): void {
     const alpha = 1 - progress;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.globalCompositeOperation = "screen";
     ctx.strokeStyle = effect.color;
-    ctx.shadowColor = effect.color;
-    ctx.shadowBlur = 8 * alpha;
     ctx.lineWidth = 5;
+    if (!effect.deathStyle) {
+      ctx.globalCompositeOperation = "screen";
+      ctx.shadowColor = effect.color;
+      ctx.shadowBlur = 8 * alpha;
+    }
     ctx.beginPath();
     ctx.arc(effect.x, effect.y, effect.radius + effect.age * 90, 0, TAU);
     ctx.stroke();
@@ -239,7 +311,24 @@ export function renderChapter1WaveImpactEffectsSystem(engine: any): void {
     ctx.strokeStyle = particle.color;
     ctx.globalCompositeOperation = "screen";
     const speed = Math.hypot(particle.vx, particle.vy);
-    if (particle.shape === "streak" || speed > 120) {
+    if (particle.deathStyle) {
+      if (particle.shape === "streak" || speed > 120) {
+        const divisor = speed || 1;
+        const nx = particle.vx / divisor;
+        const ny = particle.vy / divisor;
+        const length = Math.max(5, Math.min(18, speed * 0.035));
+        ctx.lineWidth = Math.max(1, particle.size);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(particle.x, particle.y);
+        ctx.lineTo(particle.x - nx * length, particle.y - ny * length);
+        ctx.stroke();
+      } else {
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(Math.PI * 0.25 + particle.age * (particle.spin ?? 0) + (particle.phase ?? 0));
+        ctx.fillRect(-particle.size / 2, -particle.size / 2, particle.size, particle.size);
+      }
+    } else if (particle.shape === "streak" || speed > 120) {
       const divisor = speed || 1;
       const nx = particle.vx / divisor;
       const ny = particle.vy / divisor;

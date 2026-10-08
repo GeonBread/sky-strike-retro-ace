@@ -15268,7 +15268,9 @@ document.head.appendChild(c2Style);
     el.speakerTag.textContent = item.speakerName || speaker.name || speakerId;
     el.dialogueLayer.classList.toggle('speaker-right', speaker.side === 'right');
     const isTeamBlackholeDialogue = speakerId === 'boss';
+    const isStudentCardDialogue = speakerId === 'student_card';
     el.dialogueLayer.classList.toggle('is-team-blackhole-boss-dialogue', isTeamBlackholeDialogue);
+    el.dialogueLayer.classList.toggle('is-student-card-dialogue', isStudentCardDialogue);
     el.dialogueBox.setAttribute('data-boss-dialogue', isTeamBlackholeDialogue ? 'team-blackhole' : '');
     el.dialogueText.classList.remove('is-boss-name-reveal');
     if (item.bossNameReveal) {
@@ -16203,6 +16205,27 @@ function runCustomEffect(item) {
 .dialogue-layer.is-team-blackhole-boss-dialogue .continue-indicator{color:#dca7ff!important;filter:drop-shadow(0 0 9px rgba(195,99,255,.95))!important}
 @keyframes c2TeamBlackholeBoxPulse{from{filter:brightness(.98)}to{filter:brightness(1.07)}}
 @keyframes c2TeamBlackholeSigil{from{transform:scale(.92) rotate(-4deg);filter:brightness(.92)}to{transform:scale(1.08) rotate(4deg);filter:brightness(1.3)}}
+</style>
+
+<style id="chapter2-student-card-dialogue-style">
+/* Shared student-card dialogue presentation: warm yellow signal glow, separate from boss UI. */
+.dialogue-layer.is-student-card-dialogue{--speaker-accent:#ffd85a}
+.dialogue-layer.is-student-card-dialogue .dialogue-box{
+  border-color:#d5ad32!important;
+  background:
+    linear-gradient(90deg,rgba(255,218,82,.052) 0 1px,transparent 1px 24px),
+    radial-gradient(circle at 12% 50%,rgba(255,214,70,.16),transparent 36%),
+    linear-gradient(180deg,rgba(24,20,7,.988),rgba(5,4,1,.997))!important;
+  background-size:24px 24px,auto,auto!important;
+  box-shadow:0 0 0 3px #171304,0 0 0 6px #66521a,inset 0 0 0 1px rgba(255,245,192,.18),inset 0 0 46px rgba(255,208,55,.12),0 10px 0 #49370c,0 24px 54px rgba(0,0,0,.82),0 0 24px rgba(255,210,63,.42),0 0 58px rgba(232,176,31,.20)!important
+}
+.dialogue-layer.is-student-card-dialogue .dialogue-box::before{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:13px 0 0 -3px #ffe58a,0 13px 0 -3px #ffe58a!important}
+.dialogue-layer.is-student-card-dialogue .dialogue-box::after{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:-13px 0 0 -3px #ffe58a,0 -13px 0 -3px #ffe58a!important}
+.dialogue-layer.is-student-card-dialogue .speaker-tag{border-color:#5b4710!important;background:linear-gradient(180deg,#f0c941 0%,#a67e16 62%,#5b4207 100%)!important;box-shadow:0 0 0 2px #ffe477,0 6px 0 #3e2d06,0 0 24px rgba(255,213,72,.52)!important;color:#fffce8!important;text-shadow:0 0 8px rgba(255,247,185,.82),2px 2px 0 #332304!important}
+.dialogue-layer.is-student-card-dialogue .speaker-tag::before{content:"STUDENT ID";position:absolute;left:18px;top:3px;color:#fff0a0;font:1000 8px/1 "Noto Sans KR",system-ui,sans-serif;letter-spacing:.30em;opacity:.95;text-shadow:0 0 8px rgba(255,213,72,.72)}
+.dialogue-layer.is-student-card-dialogue .dialogue-marker{color:#ffe06a!important;text-shadow:0 0 8px rgba(255,217,74,.9)!important}
+.dialogue-layer.is-student-card-dialogue .dialogue-text{color:#fffdf2!important;text-shadow:0 0 7px rgba(255,222,95,.18),3px 3px 0 #090701!important}
+.dialogue-layer.is-student-card-dialogue .continue-indicator{color:#ffe06a!important;filter:drop-shadow(0 0 8px rgba(255,213,72,.92))!important}
 </style>
 
 </body>

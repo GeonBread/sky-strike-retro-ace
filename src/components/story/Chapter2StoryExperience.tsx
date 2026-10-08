@@ -251,6 +251,18 @@ export function Chapter2StoryExperience({
   };
 
   useEffect(() => {
+    const inBossBgmPhase = phase === "boss-intro" || phase === "boss" || phase === "boss-blackout";
+    if (inBossBgmPhase) {
+      // The boss engine also requests this track, but normal story progression reaches
+      // the React boss-intro phase before that engine is mounted. Own the interval here
+      // so the dedicated boss music is guaranteed to start during natural progression.
+      sfx.startChapter2BossBgm();
+      return;
+    }
+    if (sfx.currentBgmTrack === "/audio/chapter2-boss-bgm.mp3") sfx.stopBgm();
+  }, [phase]);
+
+  useEffect(() => {
     const handleMessage = (event: MessageEvent<Chapter2BridgeMessage>) => {
       if (event.source !== iframeRef.current?.contentWindow) return;
       const data = event.data;

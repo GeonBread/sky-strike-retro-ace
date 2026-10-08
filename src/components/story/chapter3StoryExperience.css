@@ -509,6 +509,11 @@
 }
 
 
+
+.chapter3WaveFrame:focus {
+  outline: none;
+}
+
 /* PATCH 089: Chapter 3 bomb HUD uses the exact Chapter 1 bomb icon geometry.
    Keep the already-correct Chapter 3 lower-right position. */
 .chapter3WaveHudBottomRight{
@@ -788,6 +793,19 @@
 
 .chapter3FinalCreditSection.is-support .chapter3FinalCreditsSupportName {
   margin-top: 22px;
+}
+
+.chapter3FinalCreditSection.is-rights {
+  padding-top: 5vh;
+  padding-bottom: 5vh;
+}
+
+.chapter3FinalCreditSection.is-rights p {
+  max-width: 760px;
+  font-size: clamp(17px, 1.35vw, 24px);
+  line-height: 1.7;
+  font-weight: 700;
+  color: rgba(255,255,255,.9);
 }
 
 .chapter3FinalCreditSection.is-special {

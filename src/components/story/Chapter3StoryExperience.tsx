@@ -584,6 +584,12 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
 
         if (message.type === "ready") {
           setWaveReady(true);
+          // The iframe has just become the active combat surface. Focus it immediately
+          // so WASD/arrow input works without requiring an initial mouse click.
+          window.requestAnimationFrame(() => {
+            waveFrameRef.current?.focus({ preventScroll: true });
+            waveFrameRef.current?.contentWindow?.focus();
+          });
           return;
         }
 
@@ -831,6 +837,12 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
                 <p className="chapter3FinalCreditsSupportName">정용록 교수님</p>
               </section>
 
+              <section className="chapter3FinalCreditSection is-rights">
+                <small>RIGHTS &amp; PERMISSIONS</small>
+                <h2>저작권 · 사용 허가</h2>
+                <p>호반우 캐릭터 및 경북대학교 관련 저작물·표장은<br />사용 허가를 받아 제작되었습니다.</p>
+              </section>
+
               <section className="chapter3FinalCreditSection is-special">
                 <small>SPECIAL THANKS</small>
                 <h2>Special Thanks</h2>
@@ -891,6 +903,13 @@ export function Chapter3StoryExperience({ onExit, onComplete }: Chapter3StoryExp
             className="chapter3WaveFrame"
             src={waveSrc}
             title="CHAPTER 3 일반 오염 몬스터 정화 전투"
+            tabIndex={0}
+            onLoad={() => {
+              window.requestAnimationFrame(() => {
+                waveFrameRef.current?.focus({ preventScroll: true });
+                waveFrameRef.current?.contentWindow?.focus();
+              });
+            }}
           />
           {!waveReady && !waveFailed && <div className="chapter3WaveLoading">CHAPTER 3 COMBAT LOADING</div>}
         </div>

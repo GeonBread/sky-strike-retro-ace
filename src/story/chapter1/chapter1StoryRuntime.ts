@@ -216,6 +216,16 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
     normalized = normalized.replace(gatekeeperDialogueHook, gatekeeperDialogueUpgrade);
   }
 
+  // 학생증 발화는 챕터 1·2·3 공통의 노란빛 전용 대사창을 사용한다.
+  // Part 2의 게이트키퍼 스타일 주입 이후에 적용해 보스 전용 클래스와 서로 덮어쓰지 않게 한다.
+  const studentCardDialogueClassHook = `    dialogueLayer.classList.toggle('speaker-right', speakerCharacter.side === 'right');`;
+  const studentCardDialogueClassUpgrade = `    dialogueLayer.classList.toggle('speaker-right', speakerCharacter.side === 'right');
+    dialogueLayer.classList.toggle('is-student-card-dialogue', String(item.speaker || '') === 'student_card');`;
+  if (!normalized.includes(studentCardDialogueClassHook)) {
+    throw new Error('Chapter 1 student-card dialogue hook was not found.');
+  }
+  normalized = normalized.replace(studentCardDialogueClassHook, studentCardDialogueClassUpgrade);
+
   // 게이트키퍼 최초 등장 이펙트는 story-stage 폭 확장에 의존하지 않고 전체 뷰포트 호스트로 직접 이동시킨다.
   if (part === 2) {
     const storyEffectLayerDeclarationHook = `  const storyEffectLayer = document.getElementById('storyEffectLayer');`;
@@ -1237,6 +1247,68 @@ html.is-embedded-story .continue-indicator {
   right: 28px !important;
   bottom: 18px !important;
   font-size: 22px !important;
+}
+
+/* 학생증 전용 대사창: 챕터 1·2·3 공통의 노란빛 학생 인증 UI. */
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue {
+  --speaker-accent: #ffd85a !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .dialogue-box {
+  border-color: #d5ad32 !important;
+  background:
+    linear-gradient(90deg, rgba(255,218,82,.052) 0 1px, transparent 1px 24px),
+    radial-gradient(circle at 12% 50%, rgba(255,214,70,.16), transparent 36%),
+    linear-gradient(180deg, rgba(24,20,7,.988), rgba(5,4,1,.997)) !important;
+  background-size: 24px 24px, auto, auto !important;
+  box-shadow:
+    0 0 0 3px #171304,
+    0 0 0 6px #66521a,
+    inset 0 0 0 1px rgba(255,245,192,.18),
+    inset 0 0 46px rgba(255,208,55,.12),
+    0 10px 0 #49370c,
+    0 24px 54px rgba(0,0,0,.82),
+    0 0 24px rgba(255,210,63,.42),
+    0 0 58px rgba(232,176,31,.20) !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .dialogue-box::before {
+  background: #f0c33b !important;
+  border-color: #5e4a14 !important;
+  box-shadow: 13px 0 0 -3px #ffe58a, 0 13px 0 -3px #ffe58a !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .dialogue-box::after {
+  background: #f0c33b !important;
+  border-color: #5e4a14 !important;
+  box-shadow: -13px 0 0 -3px #ffe58a, 0 -13px 0 -3px #ffe58a !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .speaker-tag {
+  border-color: #5b4710 !important;
+  background: linear-gradient(180deg, #f0c941 0%, #a67e16 62%, #5b4207 100%) !important;
+  box-shadow: 0 0 0 2px #ffe477, 0 6px 0 #3e2d06, 0 0 24px rgba(255,213,72,.52) !important;
+  color: #fffce8 !important;
+  text-shadow: 0 0 8px rgba(255,247,185,.82), 2px 2px 0 #332304 !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .speaker-tag::before {
+  content: "STUDENT ID" !important;
+  position: absolute !important;
+  left: 18px !important;
+  top: 3px !important;
+  color: #fff0a0 !important;
+  font: 1000 8px/1 "Noto Sans KR", system-ui, sans-serif !important;
+  letter-spacing: .30em !important;
+  opacity: .95 !important;
+  text-shadow: 0 0 8px rgba(255,213,72,.72) !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .dialogue-marker {
+  color: #ffe06a !important;
+  text-shadow: 0 0 8px rgba(255,217,74,.9) !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .dialogue-text {
+  color: #fffdf2 !important;
+  text-shadow: 0 0 7px rgba(255,222,95,.18), 3px 3px 0 #090701 !important;
+}
+html.is-embedded-story .dialogue-layer.is-student-card-dialogue .continue-indicator {
+  color: #ffe06a !important;
+  filter: drop-shadow(0 0 8px rgba(255,213,72,.92)) !important;
 }
 
 /* 수강신청 게이트키퍼 전용 대사창: Chapter 3 디그리온과 같은 별도 보스 UI 계층. */

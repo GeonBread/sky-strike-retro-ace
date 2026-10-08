@@ -152,6 +152,9 @@ export interface Chapter1WaveImpactParticle {
   size: number;
   color: string;
   shape: "diamond" | "streak";
+  spin?: number;
+  phase?: number;
+  deathStyle?: boolean;
 }
 
 export interface Chapter1WaveVanishEffect {
@@ -171,6 +174,7 @@ export interface Chapter1WavePulseEffect {
   radius: number;
   age: number;
   life: number;
+  deathStyle?: boolean;
 }
 
 export interface Chapter1DeferredAction {

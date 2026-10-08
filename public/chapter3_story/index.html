@@ -3460,7 +3460,7 @@ window.STORY_SCENES = {
   campus_autumn_3weeks: { chapter:'CHAPTER 3', title:'가을의 경북대학교', subtitle:'종강까지 3주 전', background:'chapter3/backgrounds/campus_autumn_3weeks_v97.png', position:'center center', tint:'rgba(116,78,24,.06)' },
   graduation_day: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'졸업식', background:'chapter3/backgrounds/graduation_ceremony_entrance.png', position:'center center', tint:'rgba(22,14,5,.04)' },
   ceremony_hall: { chapter:'CHAPTER 3', title:'경북대학교 학위수여식장', subtitle:'2030학년도 전기 학위수여식', background:'chapter3/backgrounds/graduation_ceremony_hall.png', position:'center center', tint:'rgba(8,8,10,.06)' },
-  graduation_campus: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'졸업식이 끝난 뒤', background:'chapter3/backgrounds/graduation_ceremony_entrance.png', position:'center center', tint:'rgba(20,12,5,.05)' },
+  graduation_campus: { chapter:'CHAPTER 3', title:'경북대학교', subtitle:'졸업식이 끝난 뒤', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(20,12,5,.08)' },
   cheomseongdae_graduation: { chapter:'CHAPTER 3', title:'경북대학교 캠퍼스', subtitle:'마지막 대화', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(24,14,6,.18)' },
   campus_spring: { chapter:'EPILOGUE', title:'경북대학교 캠퍼스', subtitle:'새로운 학기', background:'chapter3/backgrounds/campus_day.png', position:'center center', tint:'rgba(8,18,10,.08)' }
 };
@@ -6555,7 +6555,9 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     el.speakerTag.textContent = item.speakerName || speaker.name || speakerId;
     el.dialogueLayer.classList.toggle('speaker-right', speaker.side === 'right');
     const isDigrionBossDialogue = speakerId === 'digrion' || speakerId === 'digrion_spirit';
+    const isStudentCardDialogue = speakerId === 'student_card';
     el.dialogueLayer.classList.toggle('is-digrion-boss-dialogue101', isDigrionBossDialogue);
+    el.dialogueLayer.classList.toggle('is-student-card-dialogue', isStudentCardDialogue);
     el.dialogueBox.setAttribute('data-boss-dialogue', isDigrionBossDialogue ? 'digrion' : '');
 
     const wasClosed = !state.dialogueOpen;
@@ -14127,6 +14129,27 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
   from{filter:drop-shadow(0 0 0 rgba(174,70,255,0));}
   to{filter:drop-shadow(0 0 3px rgba(174,70,255,.34));}
 }
+</style>
+
+<style id="chapter3-student-card-dialogue-style">
+/* Shared student-card dialogue presentation: warm yellow signal glow, separate from boss UI. */
+.dialogue-layer.is-student-card-dialogue{--speaker-accent:#ffd85a}
+.dialogue-layer.is-student-card-dialogue .dialogue-box{
+  border-color:#d5ad32!important;
+  background:
+    linear-gradient(90deg,rgba(255,218,82,.052) 0 1px,transparent 1px 24px),
+    radial-gradient(circle at 12% 50%,rgba(255,214,70,.16),transparent 36%),
+    linear-gradient(180deg,rgba(24,20,7,.988),rgba(5,4,1,.997))!important;
+  background-size:24px 24px,auto,auto!important;
+  box-shadow:0 0 0 3px #171304,0 0 0 6px #66521a,inset 0 0 0 1px rgba(255,245,192,.18),inset 0 0 46px rgba(255,208,55,.12),0 10px 0 #49370c,0 24px 54px rgba(0,0,0,.82),0 0 24px rgba(255,210,63,.42),0 0 58px rgba(232,176,31,.20)!important
+}
+.dialogue-layer.is-student-card-dialogue .dialogue-box::before{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:13px 0 0 -3px #ffe58a,0 13px 0 -3px #ffe58a!important}
+.dialogue-layer.is-student-card-dialogue .dialogue-box::after{background:#f0c33b!important;border-color:#5e4a14!important;box-shadow:-13px 0 0 -3px #ffe58a,0 -13px 0 -3px #ffe58a!important}
+.dialogue-layer.is-student-card-dialogue .speaker-tag{border-color:#5b4710!important;background:linear-gradient(180deg,#f0c941 0%,#a67e16 62%,#5b4207 100%)!important;box-shadow:0 0 0 2px #ffe477,0 6px 0 #3e2d06,0 0 24px rgba(255,213,72,.52)!important;color:#fffce8!important;text-shadow:0 0 8px rgba(255,247,185,.82),2px 2px 0 #332304!important}
+.dialogue-layer.is-student-card-dialogue .speaker-tag::before{content:"STUDENT ID";position:absolute;left:18px;top:3px;color:#fff0a0;font:1000 8px/1 "Noto Sans KR",system-ui,sans-serif;letter-spacing:.30em;opacity:.95;text-shadow:0 0 8px rgba(255,213,72,.72)}
+.dialogue-layer.is-student-card-dialogue .dialogue-marker{color:#ffe06a!important;text-shadow:0 0 8px rgba(255,217,74,.9)!important}
+.dialogue-layer.is-student-card-dialogue .dialogue-text{color:#fffdf2!important;text-shadow:0 0 7px rgba(255,222,95,.18),3px 3px 0 #090701!important}
+.dialogue-layer.is-student-card-dialogue .continue-indicator{color:#ffe06a!important;filter:drop-shadow(0 0 8px rgba(255,213,72,.92))!important}
 </style>
 
 </body>

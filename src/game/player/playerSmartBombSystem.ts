@@ -8,6 +8,7 @@
 import { Particle } from "../entities";
 import { sfx } from "../AudioSystem";
 import { getChapter1BossViewportProjection } from "../chapter1/chapter1BossViewportProjection";
+import { spawnChapter1EnemyDeathEffectSystem } from "../chapter1/chapter1WaveImpactSystem";
 
 type PlayerBombRuntime = any;
 
@@ -90,7 +91,11 @@ export function updatePlayerSmartBombSystem(engine: PlayerBombRuntime, dt: numbe
 
     e.hp = 0;
     engine.deactivateEnemy(e);
-    engine.spawnExplosion(ex, ey, "#ffe66f", 12);
+    if (e.chapter1) {
+      spawnChapter1EnemyDeathEffectSystem(engine, e);
+    } else {
+      engine.spawnExplosion(ex, ey, "#ffe66f", 12);
+    }
     engine.awardScore(100);
   });
 
