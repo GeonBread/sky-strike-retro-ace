@@ -541,3 +541,103 @@
     min-height: 72px;
   }
 }
+
+/* =========================================================
+   V9.2 · 메인 화면 로고 / 3버튼 시각 레이아웃 재조정
+   - PNG의 투명 캔버스 때문에 CSS gap보다 실제 시각 간격이 좁아 보이던 문제를
+     버튼별 시각 여백으로 보정합니다.
+   - 로고와 메뉴가 겹쳐 보이지 않도록 로고는 조금 작게, 메뉴는 아래로 이동합니다.
+   ========================================================= */
+.hobanwooMainMenu.menu-open .hobanwooMainLogoStage {
+  top: clamp(12px, 1.6vh, 18px) !important;
+}
+
+.hobanwooMainMenu.menu-open .hobanwooMainLogo {
+  width: clamp(108px, 18vw, 120px) !important;
+}
+
+.hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
+  top: clamp(166px, 21.2vh, 190px) !important;
+  width: min(92vw, 420px) !important;
+  gap: 0 !important;
+}
+
+/* 보이는 스토리 버튼과 설정 버튼 사이에 실제 여백 확보 */
+.hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(1) {
+  margin: 0 0 clamp(18px, 2.2vh, 24px) 0 !important;
+}
+
+/* 설정 버튼과 기체 선택 사이에도 같은 리듬의 여백 확보 */
+.hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(2) {
+  margin: 0 0 clamp(16px, 2vh, 22px) 0 !important;
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode {
+  width: min(88vw, 380px) !important;
+  height: clamp(82px, 10.2vh, 96px) !important;
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
+  width: min(82vw, 350px) !important;
+  height: clamp(78px, 9.5vh, 90px) !important;
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooShipSelectButton {
+  width: min(84vw, 350px) !important;
+  min-height: 78px !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 760px) {
+  .hobanwooMainMenu.menu-open .hobanwooMainLogoStage {
+    top: 10px !important;
+  }
+
+  .hobanwooMainMenu.menu-open .hobanwooMainLogo {
+    width: clamp(102px, 20vw, 116px) !important;
+  }
+
+  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
+    top: clamp(154px, 20vh, 174px) !important;
+    width: min(94vw, 370px) !important;
+    gap: 0 !important;
+  }
+
+  .hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(1) {
+    margin-bottom: 18px !important;
+  }
+
+  .hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(2) {
+    margin-bottom: 16px !important;
+  }
+
+  .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode {
+    width: min(88vw, 360px) !important;
+    height: 88px !important;
+  }
+
+  .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
+    width: min(80vw, 330px) !important;
+    height: 82px !important;
+  }
+
+  .hobanwooMainButtonColumnV8 .hobanwooShipSelectButton {
+    width: min(82vw, 340px) !important;
+    min-height: 76px !important;
+  }
+}
+
+@media (max-height: 650px) {
+  .hobanwooMainMenu.menu-open .hobanwooMainLogo {
+    width: 100px !important;
+  }
+
+  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
+    top: 136px !important;
+  }
+
+  .hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(1),
+  .hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(2) {
+    margin-bottom: 12px !important;
+  }
+}
