@@ -460,19 +460,35 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     }, FINAL_CREDITS_TOTAL_MS);
   };
 
-  const returnToSelector = () => {
-    /* PATCH086: the Chapter 3 story iframe may have been promoted to a browser-wide
-       fixed layer by the persistent web-dialogue cinematic. Clear those inline
-       !important styles synchronously before opening the selector, otherwise the
-       selector is rendered but remains visually buried behind the iframe. */
+  const resetStoryFramePresentation = () => {
+    // Some Chapter 3 cinematics temporarily promote the story iframe with inline
+    // !important positioning. A direct TEST jump to combat must scrub that state
+    // synchronously or the old story surface can remain visible beside the wave.
     const storyFrame = frameRef.current;
-    if (storyFrame) {
-      [
-        "position", "inset", "left", "top", "right", "bottom",
-        "width", "height", "min-width", "min-height", "max-width", "max-height",
-        "margin", "transform", "z-index", "opacity", "visibility", "display", "aspect-ratio"
-      ].forEach((property) => storyFrame.style.removeProperty(property));
-    }
+    if (!storyFrame) return;
+    [
+      "position", "inset", "left", "top", "right", "bottom",
+      "width", "height", "min-width", "min-height", "max-width", "max-height",
+      "margin", "transform", "z-index", "opacity", "visibility", "display",
+      "pointer-events", "aspect-ratio"
+    ].forEach((property) => storyFrame.style.removeProperty(property));
+  };
+
+  const hideStoryFrameForWave = () => {
+    resetStoryFramePresentation();
+    const storyFrame = frameRef.current;
+    if (!storyFrame) return;
+    storyFrame.style.setProperty("display", "none", "important");
+    storyFrame.style.setProperty("opacity", "0", "important");
+    storyFrame.style.setProperty("pointer-events", "none", "important");
+  };
+
+  const restoreStoryFrameForStory = () => {
+    resetStoryFramePresentation();
+  };
+
+  const returnToSelector = () => {
+    restoreStoryFrameForStory();
 
     if (isChapter3OwnedBgm(sfx.currentBgmTrack)) sfx.stopBgm();
     clearFinalCreditsTimer();
@@ -493,6 +509,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   };
 
   const prepareStoryLaunch = (launch: StoryLaunch, testJump = true) => {
+    restoreStoryFrameForStory();
     clearFinalCreditsTimer();
     finalCreditsActiveRef.current = false;
     setFinalCreditsActive(false);
@@ -519,6 +536,9 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
   const launchWave = (index: number, single: boolean, origin: WaveOrigin = "selector") => {
     const safeIndex = Math.max(0, Math.min(WAVES.length - 1, Math.floor(index)));
+    // Hide the story iframe immediately before React commits the wave state. This
+    // prevents the old left-side story panel from lingering during direct TEST jumps.
+    hideStoryFrameForWave();
     setFullscreenEffect(null);
     setShowJumpMenu(false);
     setWaveOrigin(origin);
@@ -860,6 +880,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
               saveStoryCheckpoint(chapter3StoryCheckpoint(postWaveIndex));
               prepareStoryLaunch({ kind: "resume", index: postWaveIndex, ordinal: postWaveOrdinal }, false);
             } else {
+              restoreStoryFrameForStory();
               setScreen("story");
               frameRef.current?.contentWindow?.postMessage(
                 { channel: "sky-strike-chapter3-host", type: "wave-complete" },

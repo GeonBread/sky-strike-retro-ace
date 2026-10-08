@@ -136,7 +136,7 @@ export class AudioSystem {
     }
   }
 
-  /** 공통 UI 버튼을 눌렀을 때 사용하는 짧고 선명한 클릭음. */
+  /** 공통 UI 버튼용 기계식 "딸깍" 클릭음. */
   uiClick() {
     this.init();
     if (!this.ctx || !this.sfxVolumeParams || this.sfxVol <= 0) return;
@@ -146,30 +146,60 @@ export class AudioSystem {
     }
 
     const now = this.ctx.currentTime;
+    const makeClickBurst = (when: number, duration: number, highpassHz: number, gain: number) => {
+      if (!this.ctx || !this.sfxVolumeParams) return;
+      const length = Math.max(8, Math.floor(this.ctx.sampleRate * duration));
+      const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < length; i += 1) {
+        const t = i / Math.max(1, length - 1);
+        const envelope = Math.pow(1 - t, 4.5);
+        data[i] = (Math.random() * 2 - 1) * envelope;
+      }
 
-    const body = this.ctx.createOscillator();
-    const bodyGain = this.ctx.createGain();
-    body.type = "square";
-    body.frequency.setValueAtTime(760, now);
-    body.frequency.exponentialRampToValueAtTime(430, now + 0.055);
-    bodyGain.gain.setValueAtTime(0.045, now);
-    bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.065);
-    body.connect(bodyGain);
-    bodyGain.connect(this.sfxVolumeParams);
-    body.start(now);
-    body.stop(now + 0.07);
+      const source = this.ctx.createBufferSource();
+      const filter = this.ctx.createBiquadFilter();
+      const burstGain = this.ctx.createGain();
+      source.buffer = buffer;
+      filter.type = "highpass";
+      filter.frequency.setValueAtTime(highpassHz, when);
+      filter.Q.setValueAtTime(0.7, when);
+      burstGain.gain.setValueAtTime(gain, when);
+      burstGain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+      source.connect(filter);
+      filter.connect(burstGain);
+      burstGain.connect(this.sfxVolumeParams);
+      source.start(when);
+    };
 
+    // First, a dry plastic/metal "딸" transient.
+    makeClickBurst(now, 0.009, 1900, 0.14);
     const tick = this.ctx.createOscillator();
     const tickGain = this.ctx.createGain();
-    tick.type = "sine";
-    tick.frequency.setValueAtTime(1480, now);
-    tick.frequency.exponentialRampToValueAtTime(920, now + 0.035);
-    tickGain.gain.setValueAtTime(0.022, now);
-    tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+    tick.type = "square";
+    tick.frequency.setValueAtTime(1850, now);
+    tick.frequency.exponentialRampToValueAtTime(1120, now + 0.012);
+    tickGain.gain.setValueAtTime(0.028, now);
+    tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.016);
     tick.connect(tickGain);
     tickGain.connect(this.sfxVolumeParams);
     tick.start(now);
-    tick.stop(now + 0.05);
+    tick.stop(now + 0.018);
+
+    // Then a slightly lower, softer "깍" latch sound a few milliseconds later.
+    const latchAt = now + 0.026;
+    makeClickBurst(latchAt, 0.013, 760, 0.095);
+    const latch = this.ctx.createOscillator();
+    const latchGain = this.ctx.createGain();
+    latch.type = "triangle";
+    latch.frequency.setValueAtTime(620, latchAt);
+    latch.frequency.exponentialRampToValueAtTime(360, latchAt + 0.022);
+    latchGain.gain.setValueAtTime(0.036, latchAt);
+    latchGain.gain.exponentialRampToValueAtTime(0.0001, latchAt + 0.028);
+    latch.connect(latchGain);
+    latchGain.connect(this.sfxVolumeParams);
+    latch.start(latchAt);
+    latch.stop(latchAt + 0.03);
   }
 
   playOscillator(freq: number, type: OscillatorType, duration: number, slideFreq?: number, gainScale = 1) {

@@ -481,3 +481,63 @@
     font-size: 24px;
   }
 }
+
+/* =========================================================
+   V9 · 메인 메뉴 3버튼 간격 재조정
+   - PNG 자체의 투명 상하 여백은 고정 높이 hit box 안에서만 렌더링
+   - 보이는 버튼과 실제 마우스 영역이 겹치지 않으면서 조밀하게 정렬
+   ========================================================= */
+.hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
+  top: clamp(126px, 15.5vh, 158px) !important;
+  gap: clamp(2px, .35vh, 5px) !important;
+}
+
+.hobanwooMainButtonColumnV8 > .hobanwooButtonWrap {
+  margin: 0 !important;
+  min-height: 0;
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode,
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
+  height: clamp(76px, 9.2vh, 88px);
+  overflow: visible;
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode {
+  width: clamp(230px, 28vw, 390px);
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
+  width: clamp(210px, 25vw, 340px);
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode img,
+.hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100% !important;
+  max-width: none;
+  transform: translate(-50%, -50%);
+}
+
+.hobanwooMainButtonColumnV8 .hobanwooShipSelectButton {
+  margin-top: 0 !important;
+  min-height: 76px;
+}
+
+@media (max-width: 760px) {
+  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
+    top: clamp(118px, 14.5vh, 145px) !important;
+    gap: 2px !important;
+  }
+
+  .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode,
+  .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
+    height: clamp(72px, 9vh, 82px);
+  }
+
+  .hobanwooMainButtonColumnV8 .hobanwooShipSelectButton {
+    min-height: 72px;
+  }
+}

@@ -1492,6 +1492,8 @@ function OptionSlider({
   value: number;
   onChange: (value: number) => void;
 }) {
+  const percent = Math.round(value * 100);
+
   return (
     <label className="hobanwooOptionRow">
       <div className="hobanwooOptionLabelRow">
@@ -1499,7 +1501,7 @@ function OptionSlider({
           <strong>{labelKo}</strong>
           <small>({labelEn})</small>
         </span>
-        <span className="hobanwooOptionValue">{Math.round(value * 100)}%</span>
+        <span className="hobanwooOptionValue">{percent}%</span>
       </div>
       <p>{hint}</p>
       <input
@@ -1508,6 +1510,9 @@ function OptionSlider({
         max={1}
         step={0.05}
         value={value}
+        style={{
+          background: `linear-gradient(90deg, #c92334 0%, #c92334 ${percent}%, #efe2c8 ${percent}%, #efe2c8 100%)`,
+        }}
         onChange={(event) => onChange(Number(event.target.value))}
         aria-label={`${labelKo} (${labelEn})`}
       />
@@ -1908,7 +1913,7 @@ export default function App() {
         <HobanwooMainMenu
           menuOpen={mainMenuOpen}
           onMenuOpenChange={setMainMenuOpen}
-          interactive={menuInteractive}
+          interactive={menuInteractive && !showOptions && !showShipSelect && !showStoryChapterSelect}
           onStoryMode={() => {
             setShowOptions(false);
             setShowShipSelect(false);
@@ -1925,68 +1930,86 @@ export default function App() {
         />
 
         {menuInteractive && showOptions && (
-          <section className="hobanwooOptionsPanel hobanwooOptionsPanelV8" aria-label="게임 설정">
-            <header className="hobanwooOptionsHeader">
-              <div>
-                <small>GAME SETTINGS</small>
-                <h2>설정 <span>(Options)</span></h2>
-                <p>게임의 음악과 효과음 크기를 조절합니다.</p>
-              </div>
-              <button
-                type="button"
-                className="hobanwooOptionsClose"
-                onClick={() => {
-                  sfx.uiClick();
-                  setShowOptions(false);
-                }}
-              >
-                닫기 <span>(Close)</span>
-              </button>
-            </header>
+          <div
+            className="hobanwooOptionsOverlay"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target !== event.currentTarget) return;
+              sfx.uiClick();
+              setShowOptions(false);
+            }}
+          >
+            <section
+              className="hobanwooOptionsPanel hobanwooOptionsPanelV8"
+              role="dialog"
+              aria-modal="true"
+              aria-label="게임 설정"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <header className="hobanwooOptionsHeader">
+                <div>
+                  <small>GAME SETTINGS</small>
+                  <h2>설정 <span>(Options)</span></h2>
+                  <p>게임의 음악과 효과음 크기를 조절합니다.</p>
+                </div>
+                <button
+                  type="button"
+                  className="hobanwooOptionsClose"
+                  onClick={() => {
+                    sfx.uiClick();
+                    setShowOptions(false);
+                  }}
+                >
+                  닫기 <span>(Close)</span>
+                </button>
+              </header>
 
-            <div className="hobanwooOptionsSection">
-              <div className="hobanwooOptionsSectionTitle">
-                <strong>오디오</strong>
-                <span>(Audio)</span>
-              </div>
+              <div className="hobanwooOptionsBody">
+                <div className="hobanwooOptionsSection">
+                  <div className="hobanwooOptionsSectionTitle">
+                    <strong>오디오</strong>
+                    <span>(Audio)</span>
+                  </div>
 
-              <OptionSlider
-                labelKo="배경음악 음량"
-                labelEn="BGM Volume"
-                hint="스토리와 전투에서 재생되는 배경음악의 크기"
-                value={settings.bgmVolume}
-                onChange={(value) => updateSettings({ bgmVolume: value })}
-              />
-              <OptionSlider
-                labelKo="전체 효과음 음량"
-                labelEn="SFX Volume"
-                hint="버튼, 폭발, 전투 효과음을 포함한 전체 효과음 크기"
-                value={settings.sfxVolume}
-                onChange={(value) => updateSettings({ sfxVolume: value })}
-              />
-              <OptionSlider
-                labelKo="플레이어 사격음"
-                labelEn="Player Shot Volume"
-                hint="플레이어가 탄환을 발사할 때 나는 소리"
-                value={settings.playerShootVolume}
-                onChange={(value) => updateSettings({ playerShootVolume: value })}
-              />
-              <OptionSlider
-                labelKo="적 피격음"
-                labelEn="Enemy Hit Volume"
-                hint="적이나 보스가 공격에 맞을 때 나는 소리"
-                value={settings.enemyHitVolume}
-                onChange={(value) => updateSettings({ enemyHitVolume: value })}
-              />
-              <OptionSlider
-                labelKo="아이템 획득음"
-                labelEn="Item Pickup Volume"
-                hint="강화 아이템이나 보상을 획득할 때 나는 소리"
-                value={settings.itemVolume}
-                onChange={(value) => updateSettings({ itemVolume: value })}
-              />
-            </div>
-          </section>
+                  <OptionSlider
+                    labelKo="배경음악 음량"
+                    labelEn="BGM Volume"
+                    hint="스토리와 전투에서 재생되는 배경음악의 크기"
+                    value={settings.bgmVolume}
+                    onChange={(value) => updateSettings({ bgmVolume: value })}
+                  />
+                  <OptionSlider
+                    labelKo="전체 효과음 음량"
+                    labelEn="SFX Volume"
+                    hint="버튼, 폭발, 전투 효과음을 포함한 전체 효과음 크기"
+                    value={settings.sfxVolume}
+                    onChange={(value) => updateSettings({ sfxVolume: value })}
+                  />
+                  <OptionSlider
+                    labelKo="플레이어 사격음"
+                    labelEn="Player Shot Volume"
+                    hint="플레이어가 탄환을 발사할 때 나는 소리"
+                    value={settings.playerShootVolume}
+                    onChange={(value) => updateSettings({ playerShootVolume: value })}
+                  />
+                  <OptionSlider
+                    labelKo="적 피격음"
+                    labelEn="Enemy Hit Volume"
+                    hint="적이나 보스가 공격에 맞을 때 나는 소리"
+                    value={settings.enemyHitVolume}
+                    onChange={(value) => updateSettings({ enemyHitVolume: value })}
+                  />
+                  <OptionSlider
+                    labelKo="아이템 획득음"
+                    labelEn="Item Pickup Volume"
+                    hint="강화 아이템이나 보상을 획득할 때 나는 소리"
+                    value={settings.itemVolume}
+                    onChange={(value) => updateSettings({ itemVolume: value })}
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
         )}
 
         {menuInteractive && showShipSelect && (

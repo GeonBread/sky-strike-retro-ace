@@ -169,6 +169,7 @@ export function HobanwooSpriteButton({
         className={[
           "hobanwooSpriteButton",
           `size-${resolvedSize}`,
+          `variant-${variant}`,
           clicked ? "clicked" : "",
           selected ? "selected" : "",
           className,
