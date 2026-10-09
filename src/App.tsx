@@ -34,6 +34,7 @@ import {
 } from "./game/chapter1/chapter1WaveVisualTuning";
 
 const MAX_HP = 3;
+const GAME_GITHUB_URL = "https://github.com/magun/sky-strike_-retro-ace";
 
 interface StoryResult {
   outcome: "cleared" | "failed";
@@ -1744,6 +1745,7 @@ export default function App() {
   const { gameState, setGameState, stats, settings, updateSettings, shipColor, setShipColor, shipStyle, setShipStyle } = useAppStore();
   const [leaderboardReturnState, setLeaderboardReturnState] = useState<GameState>("MENU");
   const [showOptions, setShowOptions] = useState(false);
+  const [showProductionInfo, setShowProductionInfo] = useState(false);
   const [playerName, setPlayerName] = useState(() => getSavedPlayerName());
   const [playerId] = useState(() => getOrCreatePlayerId());
   const [storyResult, setStoryResult] = useState<StoryResult | null>(null);
@@ -1913,19 +1915,27 @@ export default function App() {
         <HobanwooMainMenu
           menuOpen={mainMenuOpen}
           onMenuOpenChange={setMainMenuOpen}
-          interactive={menuInteractive && !showOptions && !showShipSelect && !showStoryChapterSelect}
+          interactive={menuInteractive && !showOptions && !showShipSelect && !showStoryChapterSelect && !showProductionInfo}
           onStoryMode={() => {
             setShowOptions(false);
             setShowShipSelect(false);
+            setShowProductionInfo(false);
             handleOpenStoryChapterSelect();
           }}
           onSettings={() => {
             setShowShipSelect(false);
+            setShowProductionInfo(false);
             setShowOptions((prev) => !prev);
           }}
           onShipSelect={() => {
             setShowOptions(false);
+            setShowProductionInfo(false);
             setShowShipSelect(true);
+          }}
+          onProductionInfo={() => {
+            setShowOptions(false);
+            setShowShipSelect(false);
+            setShowProductionInfo(true);
           }}
         />
 
@@ -2007,6 +2017,97 @@ export default function App() {
                     onChange={(value) => updateSettings({ itemVolume: value })}
                   />
                 </div>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {menuInteractive && showProductionInfo && (
+          <div
+            className="hobanwooProductionInfoOverlay"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target !== event.currentTarget) return;
+              sfx.uiClick();
+              setShowProductionInfo(false);
+            }}
+          >
+            <section
+              className="hobanwooProductionInfoPanel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="제작 정보"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <header className="hobanwooProductionInfoHeader">
+                <div>
+                  <small>PRODUCTION INFORMATION</small>
+                  <h2>제작 정보</h2>
+                  <p>호반우의 졸업 대작전 제작 및 권리 정보를 안내합니다.</p>
+                </div>
+                <button
+                  type="button"
+                  className="hobanwooProductionInfoClose"
+                  onClick={() => {
+                    sfx.uiClick();
+                    setShowProductionInfo(false);
+                  }}
+                >
+                  닫기 <span>(Close)</span>
+                </button>
+              </header>
+
+              <div className="hobanwooProductionInfoBody">
+                <section className="hobanwooProductionInfoCard emphasis">
+                  <small>DIRECTED & CREATED BY</small>
+                  <h3>제작자</h3>
+                  <strong>마건</strong>
+                  <p>기획 · 감독 · 시나리오 · 게임 디자인 · 전투 디자인 · 프로그래밍 · UI/UX · 아트 및 사운드 연출</p>
+                </section>
+
+                <div className="hobanwooProductionInfoGrid">
+                  <section className="hobanwooProductionInfoCard">
+                    <small>DEVELOPMENT TOOL</small>
+                    <h3>개발 도구</h3>
+                    <strong>OpenAI ChatGPT</strong>
+                  </section>
+                  <section className="hobanwooProductionInfoCard">
+                    <small>AI MUSIC TOOLS</small>
+                    <h3>음악 제작 도구</h3>
+                    <strong>Suno · Google Gemini</strong>
+                  </section>
+                  <section className="hobanwooProductionInfoCard">
+                    <small>SUPPORTED BY</small>
+                    <h3>후원 · 지원</h3>
+                    <strong>경북대학교 기계공학부 EETL</strong>
+                    <p>Extreme Environment Transducer Laboratory</p>
+                    <p>정용록 교수님</p>
+                  </section>
+                  <section className="hobanwooProductionInfoCard">
+                    <small>SPECIAL THANKS</small>
+                    <h3>Special Thanks</h3>
+                    <strong>히아신스</strong>
+                  </section>
+                </div>
+
+                <section className="hobanwooProductionInfoCard rights">
+                  <small>RIGHTS & PERMISSIONS</small>
+                  <h3>저작권 · 사용 허가</h3>
+                  <p>호반우 캐릭터 및 경북대학교 관련 저작물·표장은 사용 허가를 받아 제작되었습니다.</p>
+                  <p className="copyright">© 2026 마건. All Rights Reserved.</p>
+                </section>
+
+                <a
+                  className="hobanwooProductionGithubLink"
+                  href={GAME_GITHUB_URL}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  onClick={() => sfx.uiClick()}
+                >
+                  <span>GITHUB REPOSITORY</span>
+                  <strong>게임 소스 코드 보기</strong>
+                  <code>sky-strike_-retro-ace ↗</code>
+                </a>
               </div>
             </section>
           </div>

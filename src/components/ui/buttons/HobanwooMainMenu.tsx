@@ -10,9 +10,18 @@ type HobanwooMainMenuProps = {
   onStoryMode: () => void;
   onSettings: () => void;
   onShipSelect: () => void;
+  onProductionInfo: () => void;
 };
 
 type MainMenuTimeBand = "day" | "evening" | "night" | "dawn";
+
+type MainMenuArtButtonProps = {
+  src: string;
+  label: string;
+  tone: "story" | "settings" | "ship" | "production";
+  disabled: boolean;
+  onClick: () => void;
+};
 
 function resolveMainMenuTimeBand(date = new Date()): MainMenuTimeBand {
   const hour = date.getHours();
@@ -25,9 +34,33 @@ function resolveMainMenuTimeBand(date = new Date()): MainMenuTimeBand {
   return "night";
 }
 
+function MainMenuArtButton({
+  src,
+  label,
+  tone,
+  disabled,
+  onClick,
+}: MainMenuArtButtonProps) {
+  return (
+    <button
+      type="button"
+      className={`hobanwooMainArtButton tone-${tone}`}
+      disabled={disabled}
+      aria-label={label}
+      onClick={() => {
+        if (disabled) return;
+        sfx.uiClick();
+        onClick();
+      }}
+    >
+      <img src={src} alt="" draggable={false} />
+    </button>
+  );
+}
+
 /**
  * 메인 화면 배경과 시작/메뉴 UI를 렌더링한다.
- * 도전 모드와 순위 메뉴는 제거하고 스토리/설정/기체 선택만 유지한다.
+ * 메인 메뉴는 스토리 모드 / 설정 / 기체 선택 / 제작 정보 네 항목으로 구성한다.
  */
 export function HobanwooMainMenu({
   menuOpen,
@@ -36,6 +69,7 @@ export function HobanwooMainMenu({
   onStoryMode,
   onSettings,
   onShipSelect,
+  onProductionInfo,
 }: HobanwooMainMenuProps) {
   const [timeBand, setTimeBand] = useState<MainMenuTimeBand>(() => resolveMainMenuTimeBand());
 
@@ -43,7 +77,6 @@ export function HobanwooMainMenu({
     const syncTimeBand = () => setTimeBand(resolveMainMenuTimeBand());
     const timer = window.setInterval(syncTimeBand, 60_000);
 
-    // 백그라운드 탭에서 오래 머문 뒤 돌아와도 즉시 현재 시간대로 맞춘다.
     document.addEventListener("visibilitychange", syncTimeBand);
     window.addEventListener("focus", syncTimeBand);
 
@@ -109,39 +142,37 @@ export function HobanwooMainMenu({
       </div>
 
       <div
-        className="hobanwooMainButtonColumn hobanwooMainButtonColumnV8"
+        className="hobanwooMainButtonColumn hobanwooMainButtonColumnV11"
         aria-hidden={!menuOpen}
       >
-        <HobanwooSpriteButton
-          variant="redesignStoryMode"
+        <MainMenuArtButton
+          src="/assets/ui/buttons/main_menu_story_mode_v11.png"
+          label="스토리 모드"
+          tone="story"
           disabled={!menuOpen}
           onClick={onStoryMode}
         />
-
-        <HobanwooSpriteButton
-          variant="redesignSettings"
+        <MainMenuArtButton
+          src="/assets/ui/buttons/main_menu_settings_v11.png"
+          label="설정"
+          tone="settings"
           disabled={!menuOpen}
           onClick={onSettings}
         />
-
-        <button
-          type="button"
-          className="hobanwooShipSelectButton"
+        <MainMenuArtButton
+          src="/assets/ui/buttons/main_menu_ship_select_v11.png"
+          label="기체 선택"
+          tone="ship"
           disabled={!menuOpen}
-          onClick={() => {
-            sfx.uiClick();
-            onShipSelect();
-          }}
-        >
-          <span className="hobanwooShipSelectButtonGlow" aria-hidden="true" />
-          <span className="hobanwooShipSelectButtonIcon" aria-hidden="true">✦</span>
-          <span className="hobanwooShipSelectButtonCopy">
-            <small>SHIP SELECT</small>
-            <strong>기체 선택</strong>
-            <em>이과 · 문과 · 예체능</em>
-          </span>
-          <span className="hobanwooShipSelectButtonArrow" aria-hidden="true">›</span>
-        </button>
+          onClick={onShipSelect}
+        />
+        <MainMenuArtButton
+          src="/assets/ui/buttons/main_menu_production_info_v11.png"
+          label="제작 정보"
+          tone="production"
+          disabled={!menuOpen}
+          onClick={onProductionInfo}
+        />
       </div>
     </section>
   );

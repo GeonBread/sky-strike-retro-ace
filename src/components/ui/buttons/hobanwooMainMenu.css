@@ -659,3 +659,132 @@
     margin-bottom: 12px !important;
   }
 }
+
+/* =========================================================
+   V11 · 첨부 제작 버튼 4종 메인 메뉴
+   - 스토리 모드 / 설정 / 기체 선택 / 제작 정보 PNG를 원본 비율 그대로 사용한다.
+   - 각 버튼은 독립 hit area를 가지며 서로 겹치지 않는다.
+   ========================================================= */
+.hobanwooMainMenu.menu-open .hobanwooMainLogoStage {
+  top: clamp(10px, 1.4vh, 16px) !important;
+}
+
+.hobanwooMainMenu.menu-open .hobanwooMainLogo {
+  width: clamp(104px, 17vw, 120px) !important;
+}
+
+.hobanwooMainButtonColumn.hobanwooMainButtonColumnV11 {
+  top: clamp(136px, 17.5vh, 166px) !important;
+  width: min(92vw, 430px) !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(8px, 1.05vh, 12px) !important;
+  overflow: visible;
+}
+
+.hobanwooMainArtButton {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  isolation: isolate;
+  transform: translateY(0) scale(1);
+  transform-origin: center;
+  transition:
+    transform 150ms cubic-bezier(.2,.82,.2,1),
+    filter 150ms ease;
+}
+
+.hobanwooMainArtButton img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 10px 12px rgba(2, 13, 31, .28));
+}
+
+.hobanwooMainArtButton.tone-story {
+  width: min(86vw, 330px);
+}
+
+.hobanwooMainArtButton.tone-settings {
+  width: min(70vw, 252px);
+}
+
+.hobanwooMainArtButton.tone-ship {
+  width: min(82vw, 310px);
+}
+
+.hobanwooMainArtButton.tone-production {
+  width: min(76vw, 282px);
+}
+
+.hobanwooMainArtButton:hover:not(:disabled) {
+  z-index: 4;
+  transform: translateY(-3px) scale(1.022);
+  filter: brightness(1.06) saturate(1.06);
+}
+
+.hobanwooMainArtButton:active:not(:disabled) {
+  transform: translateY(1px) scale(.985);
+  filter: brightness(.98);
+}
+
+.hobanwooMainArtButton:focus-visible {
+  outline: 4px solid #ffe27a;
+  outline-offset: 4px;
+  border-radius: 22px;
+}
+
+.hobanwooMainArtButton:disabled {
+  pointer-events: none;
+  opacity: .5;
+}
+
+.hobanwooMainMenu.is-inert .hobanwooMainArtButton {
+  pointer-events: none !important;
+}
+
+@media (max-width: 760px) {
+  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV11 {
+    top: clamp(130px, 16.8vh, 154px) !important;
+    width: min(94vw, 380px) !important;
+    gap: 8px !important;
+  }
+
+  .hobanwooMainArtButton.tone-story { width: min(86vw, 314px); }
+  .hobanwooMainArtButton.tone-settings { width: min(69vw, 238px); }
+  .hobanwooMainArtButton.tone-ship { width: min(81vw, 294px); }
+  .hobanwooMainArtButton.tone-production { width: min(74vw, 266px); }
+}
+
+@media (max-height: 720px) {
+  .hobanwooMainMenu.menu-open .hobanwooMainLogo {
+    width: 96px !important;
+  }
+
+  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV11 {
+    top: 116px !important;
+    gap: 5px !important;
+  }
+
+  .hobanwooMainArtButton.tone-story { width: min(80vw, 286px); }
+  .hobanwooMainArtButton.tone-settings { width: min(64vw, 220px); }
+  .hobanwooMainArtButton.tone-ship { width: min(76vw, 270px); }
+  .hobanwooMainArtButton.tone-production { width: min(69vw, 246px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hobanwooMainArtButton {
+    transition: none;
+  }
+}

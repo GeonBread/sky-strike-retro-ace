@@ -768,3 +768,269 @@
     padding: 14px 13px 17px;
   }
 }
+
+/* =========================================================
+   V11 · 제작 정보 (Production Information)
+   ========================================================= */
+.hobanwooProductionInfoOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 3vw, 28px);
+  background: rgba(2, 9, 22, .78);
+  backdrop-filter: blur(8px) brightness(.72);
+  -webkit-backdrop-filter: blur(8px) brightness(.72);
+}
+
+.hobanwooProductionInfoPanel {
+  width: min(94vw, 760px);
+  max-height: min(88vh, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 5px solid #07152e;
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.95), rgba(247,239,214,.98)),
+    #fff8e8;
+  box-shadow:
+    inset 0 0 0 3px #f0bf3e,
+    inset 0 0 0 8px rgba(27, 92, 46, .22),
+    0 30px 80px rgba(0, 0, 0, .64);
+  color: #0a1c3a;
+}
+
+.hobanwooProductionInfoHeader {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: clamp(24px, 4vw, 34px) clamp(22px, 4vw, 38px) 20px;
+  border-bottom: 2px solid rgba(10, 28, 58, .16);
+  background:
+    linear-gradient(110deg, rgba(24, 132, 62, .12), transparent 48%),
+    linear-gradient(180deg, #fffdf5, #fbf0d5);
+}
+
+.hobanwooProductionInfoHeader small,
+.hobanwooProductionInfoCard small,
+.hobanwooProductionGithubLink > span {
+  display: block;
+  color: #178443;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: .16em;
+}
+
+.hobanwooProductionInfoHeader h2 {
+  margin: 3px 0 4px;
+  color: #0a1c3a;
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: 1000;
+  letter-spacing: -.065em;
+}
+
+.hobanwooProductionInfoHeader p {
+  margin: 0;
+  color: #5d6778;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hobanwooProductionInfoClose {
+  flex: 0 0 auto;
+  min-width: 98px;
+  padding: 10px 13px;
+  border: 3px solid #07152e;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf5, #ecd9aa);
+  box-shadow: inset 0 0 0 2px #f4c74f;
+  color: #0a1c3a;
+  font-size: 14px;
+  font-weight: 1000;
+  cursor: pointer;
+}
+
+.hobanwooProductionInfoClose span {
+  display: block;
+  margin-top: 2px;
+  color: #6d7380;
+  font-size: 9px;
+  letter-spacing: .05em;
+}
+
+.hobanwooProductionInfoClose:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.hobanwooProductionInfoBody {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(18px, 3vw, 26px) clamp(18px, 3vw, 30px) clamp(24px, 4vw, 34px);
+  scrollbar-color: #1b7f43 #eadab2;
+}
+
+.hobanwooProductionInfoCard {
+  border: 2px solid rgba(10, 28, 58, .16);
+  border-radius: 18px;
+  padding: 17px 18px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.82), rgba(250,244,226,.92));
+  box-shadow: 0 7px 16px rgba(10, 28, 58, .07);
+}
+
+.hobanwooProductionInfoCard.emphasis {
+  margin-bottom: 14px;
+  border-color: rgba(205, 145, 20, .45);
+  background:
+    linear-gradient(135deg, rgba(255, 220, 95, .2), transparent 48%),
+    linear-gradient(180deg, #fffdf5, #f7e9bf);
+}
+
+.hobanwooProductionInfoCard h3 {
+  margin: 3px 0 7px;
+  color: #0b2850;
+  font-size: 17px;
+  font-weight: 1000;
+  letter-spacing: -.04em;
+}
+
+.hobanwooProductionInfoCard strong {
+  display: block;
+  color: #0d1d36;
+  font-size: clamp(20px, 3vw, 27px);
+  font-weight: 1000;
+  line-height: 1.2;
+  word-break: keep-all;
+}
+
+.hobanwooProductionInfoCard p {
+  margin: 8px 0 0;
+  color: #596477;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.hobanwooProductionInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hobanwooProductionInfoCard.rights {
+  margin-top: 12px;
+  border-color: rgba(175, 35, 48, .32);
+  background:
+    linear-gradient(135deg, rgba(216, 39, 55, .08), transparent 44%),
+    #fffaf1;
+}
+
+.hobanwooProductionInfoCard.rights small {
+  color: #b52031;
+}
+
+.hobanwooProductionInfoCard .copyright {
+  margin-top: 11px;
+  color: #15223a;
+  font-weight: 1000;
+}
+
+.hobanwooProductionGithubLink {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 16px;
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 3px solid #07152e;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(72, 255, 142, .17), transparent 34%),
+    linear-gradient(135deg, #13273f, #07152e);
+  box-shadow:
+    inset 0 0 0 2px rgba(76, 215, 121, .32),
+    0 9px 18px rgba(2, 13, 31, .24);
+  color: #fff;
+  text-decoration: none;
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.hobanwooProductionGithubLink > span {
+  grid-column: 1 / -1;
+  color: #6ff39a;
+}
+
+.hobanwooProductionGithubLink strong {
+  font-size: clamp(20px, 3vw, 27px);
+  font-weight: 1000;
+  letter-spacing: -.04em;
+}
+
+.hobanwooProductionGithubLink code {
+  color: #d9e6f6;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.hobanwooProductionGithubLink:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 0 0 2px rgba(76, 215, 121, .54),
+    0 14px 24px rgba(2, 13, 31, .31),
+    0 0 24px rgba(69, 225, 118, .18);
+}
+
+.hobanwooProductionGithubLink:focus-visible {
+  outline: 4px solid #ffd86e;
+  outline-offset: 4px;
+}
+
+@media (max-width: 620px) {
+  .hobanwooProductionInfoOverlay {
+    padding: 10px;
+  }
+
+  .hobanwooProductionInfoPanel {
+    width: 96vw;
+    max-height: 90vh;
+    border-radius: 22px;
+  }
+
+  .hobanwooProductionInfoHeader {
+    align-items: center;
+    padding: 22px 18px 17px;
+  }
+
+  .hobanwooProductionInfoHeader p {
+    display: none;
+  }
+
+  .hobanwooProductionInfoClose {
+    min-width: 82px;
+    padding: 8px 10px;
+  }
+
+  .hobanwooProductionInfoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .hobanwooProductionGithubLink {
+    grid-template-columns: 1fr;
+  }
+
+  .hobanwooProductionGithubLink code {
+    margin-top: 5px;
+    white-space: normal;
+  }
+}
