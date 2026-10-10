@@ -1,6 +1,8 @@
 {
-  "name": "Retro Pixel Shooter Deluxe",
-  "description": "A classic 2D retro arcade shooter with responsive controls, boss battles, power-ups, daily challenges, and local progression.",
+  "name": "호반우의 졸업 대작전",
+  "description": "경북대학교 마스코트 호반우와 함께하는 스토리 기반 슈팅 게임",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

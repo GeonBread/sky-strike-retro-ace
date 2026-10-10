@@ -902,7 +902,7 @@
 .chapter3FullscreenLocationBackground{
   position:absolute;
   inset:-3%;
-  background-image:url('/chapter3_story/assets/chapter3/backgrounds/campus_day.png');
+  background-image:url('/assets/chapter3/story/backgrounds/campus_day.png');
   background-size:cover;
   background-position:center center;
   filter:brightness(.96) saturate(1.03) contrast(1.02);

@@ -116,7 +116,7 @@ export function HobanwooMainMenu({
 
       <img
         className="hobanwooSiteLogo"
-        src="/assets/ui/logos/site-logo.png"
+        src="/assets/common/ui/logos/site-logo.png"
         alt="호반우 게임 사이트"
         draggable={false}
       />
@@ -124,7 +124,7 @@ export function HobanwooMainMenu({
       <div className="hobanwooMainLogoStage" aria-hidden={false}>
         <img
           className="hobanwooMainLogo"
-          src="/assets/story/chapter1/ui/game_logo.png"
+          src="/assets/chapter1/story/ui/game_logo.png"
           alt="호반우의 졸업 대작전"
           draggable={false}
         />
@@ -146,28 +146,28 @@ export function HobanwooMainMenu({
         aria-hidden={!menuOpen}
       >
         <MainMenuArtButton
-          src="/assets/ui/buttons/main_menu_story_mode_v11.png"
+          src="/assets/common/ui/buttons/main_menu_story_mode_v11.png"
           label="스토리 모드"
           tone="story"
           disabled={!menuOpen}
           onClick={onStoryMode}
         />
         <MainMenuArtButton
-          src="/assets/ui/buttons/main_menu_settings_v11.png"
+          src="/assets/common/ui/buttons/main_menu_settings_v11.png"
           label="설정"
           tone="settings"
           disabled={!menuOpen}
           onClick={onSettings}
         />
         <MainMenuArtButton
-          src="/assets/ui/buttons/main_menu_ship_select_v11.png"
+          src="/assets/common/ui/buttons/main_menu_ship_select_v11.png"
           label="기체 선택"
           tone="ship"
           disabled={!menuOpen}
           onClick={onShipSelect}
         />
         <MainMenuArtButton
-          src="/assets/ui/buttons/main_menu_production_info_v11.png"
+          src="/assets/common/ui/buttons/main_menu_production_info_v11.png"
           label="제작 정보"
           tone="production"
           disabled={!menuOpen}

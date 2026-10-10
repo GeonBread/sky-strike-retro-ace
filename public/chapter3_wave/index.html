@@ -262,7 +262,7 @@ const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const norm=(x,y)=>{const d=Math.hypot(x,y)||1;return{x:x/d,y:y/d}};
 const angleDiff=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
 
-const lifeShieldSprite066 = active => `<img class="embeddedLifeShield" src="assets/ui/${active ? 'life_shield_active_ch1.png' : 'life_shield_inactive_ch1.png'}" width="34" height="37" alt="" aria-hidden="true" draggable="false">`;
+const lifeShieldSprite066 = active => `<img class="embeddedLifeShield" src="/assets/chapter3/combat/waves/ui/${active ? 'life_shield_active_ch1.png' : 'life_shield_inactive_ch1.png'}" width="34" height="37" alt="" aria-hidden="true" draggable="false">`;
 let lastLifeHp066=-1,lastLifeMax066=-1;
 function renderEmbeddedLifeHud066(){
   if(!EMBEDDED || !embeddedLifeHud) return;
@@ -307,27 +307,27 @@ const FINAL_MONSTERS=[
 ];
 
 const MONSTER_SPRITES={
- drone:'assets/enemies_final/inspection_eye.png',
- laser:'assets/enemies_final/review_pointer.png',
- snake:'assets/enemies_final/document_panel.png',
- boomer:'assets/enemies_final/file_carrier.png',
- charger:'assets/enemies_final/credit_drill.png',
- splitter:'assets/enemies_final/revision_cube.png',
- tractor:'assets/enemies_final/requirement_tow.png',
- mine:'assets/enemies_final/deadline_bomb.png',
- suicide:'assets/enemies_final/unsubmitted_rampage.png',
- swarm:'assets/enemies_final/incomplete_swarm.png',
- linker:'assets/enemies_final/career_block_linker.png',
- gravity:'assets/enemies_final/employment_pressure_absorber.png',
- branch:'assets/enemies_final/career_branch_variant.png'
+ drone:'/assets/chapter3/combat/waves/enemies/inspection_eye.png',
+ laser:'/assets/chapter3/combat/waves/enemies/review_pointer.png',
+ snake:'/assets/chapter3/combat/waves/enemies/document_panel.png',
+ boomer:'/assets/chapter3/combat/waves/enemies/file_carrier.png',
+ charger:'/assets/chapter3/combat/waves/enemies/credit_drill.png',
+ splitter:'/assets/chapter3/combat/waves/enemies/revision_cube.png',
+ tractor:'/assets/chapter3/combat/waves/enemies/requirement_tow.png',
+ mine:'/assets/chapter3/combat/waves/enemies/deadline_bomb.png',
+ suicide:'/assets/chapter3/combat/waves/enemies/unsubmitted_rampage.png',
+ swarm:'/assets/chapter3/combat/waves/enemies/incomplete_swarm.png',
+ linker:'/assets/chapter3/combat/waves/enemies/career_block_linker.png',
+ gravity:'/assets/chapter3/combat/waves/enemies/employment_pressure_absorber.png',
+ branch:'/assets/chapter3/combat/waves/enemies/career_branch_variant.png'
 };
 const FX_SPRITES={
- boomer:'assets/fx_paper_boomerang.png',
- split:'assets/fx_split_shard.png',
- orb:'assets/fx_blue_orb.png',
- crystal:'assets/fx_crystal_shard.png',
- pod:'assets/fx_green_pod.png',
- hook:'assets/fx_hook.png'
+ boomer:'/assets/chapter3/combat/waves/fx/fx_paper_boomerang.png',
+ split:'/assets/chapter3/combat/waves/fx/fx_split_shard.png',
+ orb:'/assets/chapter3/combat/waves/fx/fx_blue_orb.png',
+ crystal:'/assets/chapter3/combat/waves/fx/fx_crystal_shard.png',
+ pod:'/assets/chapter3/combat/waves/fx/fx_green_pod.png',
+ hook:'/assets/chapter3/combat/waves/fx/fx_hook.png'
 };
 const spriteCache={};
 const glowCache=new Map();
@@ -344,16 +344,16 @@ function preloadSprite(path){
  const img=new Image();img.src=path;spriteCache[path]=img;return img;
 }
 const CHAPTER1_BG_PATHS=[
- '/assets/backgrounds/chapter1_parallax_layer_1.png',
- '/assets/backgrounds/chapter1_parallax_layer_2.png',
- '/assets/backgrounds/chapter1_parallax_layer_3.png'
+ '/assets/common/backgrounds/chapter1_parallax_layer_1.png',
+ '/assets/common/backgrounds/chapter1_parallax_layer_2.png',
+ '/assets/common/backgrounds/chapter1_parallax_layer_3.png'
 ];
 const CHAPTER1_BG_IMAGES=CHAPTER1_BG_PATHS.map(preloadSprite);
-const HOBANWOO_PLAYER_SPRITE='/assets/player/hobanu_player.png';
+const HOBANWOO_PLAYER_SPRITE='/assets/common/player/hobanu_player.png';
 const PLAYER_SHOT_SPRITES=[
- '/assets/bullets/player/science_gear.png',
- '/assets/bullets/player/science_atom.png',
- '/assets/bullets/player/science_formula_v_ir.png'
+ '/assets/common/player/bullets/science_gear.png',
+ '/assets/common/player/bullets/science_atom.png',
+ '/assets/common/player/bullets/science_formula_v_ir.png'
 ];
 preloadSprite(HOBANWOO_PLAYER_SPRITE);PLAYER_SHOT_SPRITES.forEach(preloadSprite);
 function drawSprite(path,x,y,w,h,rot=0,alpha=1,glow=null){

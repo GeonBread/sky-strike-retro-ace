@@ -24,16 +24,16 @@ const ENEMY_AURA_COLORS = [
 ] as const;
 
 const BULLET_PATHS = [
-  "/assets/chapter1/waves/bullets/bullet_01_attendance_stamp.png",
-  "/assets/chapter1/waves/bullets/bullet_02_absence_stamp.png",
-  "/assets/chapter1/waves/bullets/bullet_03_bell.png",
-  "/assets/chapter1/waves/bullets/bullet_04_student_id.png",
-  "/assets/chapter1/waves/bullets/bullet_05_password_lock.png",
-  "/assets/chapter1/waves/bullets/bullet_06_cltr_chip.png",
-  "/assets/chapter1/waves/bullets/bullet_07_schedule_conflict.png",
-  "/assets/chapter1/waves/bullets/bullet_08_zero_seat.png",
-  "/assets/chapter1/waves/bullets/bullet_09_course_cart.png",
-  "/assets/chapter1/waves/bullets/bullet_10_arrow.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_01_attendance_stamp.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_02_absence_stamp.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_03_bell.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_04_student_id.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_05_password_lock.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_06_cltr_chip.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_07_schedule_conflict.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_08_zero_seat.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_09_course_cart.png",
+  "/assets/chapter1/combat/waves/bullets/bullet_10_arrow.png",
 ] as const;
 const BULLET_DRAW_SIZES: readonly (readonly [number, number])[] = [
   [30, 30],

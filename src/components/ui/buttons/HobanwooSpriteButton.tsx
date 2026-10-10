@@ -44,7 +44,7 @@ type Particle = {
   dy: number;
 };
 
-const BASE_PATH = "/assets/ui/buttons/";
+const BASE_PATH = "/assets/common/ui/buttons/";
 
 const variantMap: Record<HobanwooButtonVariant, VariantMeta> = {
   gameStart: {

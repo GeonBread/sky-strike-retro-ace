@@ -78,7 +78,7 @@ button { color: inherit; }
 }
 .background-stack { z-index: -10; }
 .scene-background {
-  background-image: url("../assets/bg_placeholder.svg");
+  background-image: url("./assets/chapter3/story/legacy/bg_placeholder.svg");
   background-size: cover;
   background-position: var(--scene-background-position, center center);
   opacity: 0;
@@ -3331,10 +3331,10 @@ kbd {
           <figure class="portrait-frame has-frame-image" id="portraitFrame" aria-label="현재 발화자 초상화">
             <div class="portrait-viewport">
               <div class="portrait-backdrop" aria-hidden="true"></div>
-              <img id="speakerPortrait" class="speaker-portrait" src="assets/portrait_system.svg" alt="시스템 초상화" />
+              <img id="speakerPortrait" class="speaker-portrait" src="/assets/chapter3/story/legacy/portrait_system.svg" alt="시스템 초상화" />
               <span class="portrait-scanline" aria-hidden="true"></span>
             </div>
-            <img id="portraitFrameImage" class="portrait-frame-image" src="assets/frame_knu_default.svg" alt="" aria-hidden="true" />
+            <img id="portraitFrameImage" class="portrait-frame-image" src="/assets/chapter3/story/legacy/frame_knu_default.svg" alt="" aria-hidden="true" />
           </figure>
 
           <div class="dialogue-copy">
@@ -3548,11 +3548,11 @@ window.STORY_DATA = {
       C3D.line("narrator", "어느새 마지막 학기가 찾아왔다.", "black_screen", "마지막 학기의 시작"),
       C3D.line("narrator", "이제 졸업 준비를 해야 한다.", "black_screen", "마지막 학기의 시작"),
       C3D.line("narrator", "하지만 호반우에게 해야 할 일은 산더미였다.", "black_screen", "마지막 학기의 시작"),
-      C3D.fx("dialogue-reference-image", "black_screen", 240, {title:"",caption:"",image:"assets/chapter3/illustrations/job_postings_cards.png",persistDialogueCount:1,hideText:true}),
+      C3D.fx("dialogue-reference-image", "black_screen", 240, {title:"",caption:"",image:"/assets/chapter3/story/illustrations/job_postings_cards.png",persistDialogueCount:1,hideText:true}),
       C3D.line("narrator", "9월과 함께 시작된 하반기 채용.", "black_screen", "마지막 학기의 시작"),
-      C3D.fx("dialogue-reference-image", "black_screen", 240, {title:"",caption:"",image:"assets/chapter3/illustrations/cover_letters_pile.png",persistDialogueCount:1,hideText:true}),
+      C3D.fx("dialogue-reference-image", "black_screen", 240, {title:"",caption:"",image:"/assets/chapter3/story/illustrations/cover_letters_pile.png",persistDialogueCount:1,hideText:true}),
       C3D.line("narrator", "기업마다 다시 써야 하는 자기소개서에,", "black_screen", "마지막 학기의 시작"),
-      C3D.fx("dialogue-reference-image", "black_screen", 240, {title:"",caption:"",image:"assets/chapter3/illustrations/certificate_books_stack.png",persistDialogueCount:1,hideText:true}),
+      C3D.fx("dialogue-reference-image", "black_screen", 240, {title:"",caption:"",image:"/assets/chapter3/story/illustrations/certificate_books_stack.png",persistDialogueCount:1,hideText:true}),
       C3D.line("narrator", "미뤄두었던 자격증 준비까지..", "black_screen", "마지막 학기의 시작"),
 
       C3D.sec("장면 2. 할 게 왜 이렇게 많냐", "hobanwoo_room"),
@@ -3578,7 +3578,7 @@ window.STORY_DATA = {
       C3D.line("narrator", "중소, 중견, 대기업 가리지 않고 전부 지원을 했다.", "campus_day", "9월과 10월"),
       C3D.line("narrator", "그리고 열심히 자기소개서를 작성했다.", "campus_day", "9월과 10월"),
       C3D.fx("job-application-submit", "campus_day", 24600, {date:"09.27.",persistDialogueCount:2}),
-      C3D.fx("dialogue-reference-image", "campus_day", 240, {title:"",caption:"",image:"assets/chapter3/illustrations/certificate_study.png",persistDialogueCount:2,hideText:true}),
+      C3D.fx("dialogue-reference-image", "campus_day", 240, {title:"",caption:"",image:"/assets/chapter3/story/illustrations/certificate_study.png",persistDialogueCount:2,hideText:true}),
       C3D.line("narrator", "그리고 조금이라도 경쟁력을 갖추고자,", "campus_day", "9월과 10월"),
       C3D.line("narrator", "틈날때마다 자격증 공부도 했다.", "campus_day", "9월과 10월"),
       C3D.fx("recruitment-result", "campus_day", 3800, {date:"10.18.",result:"불합격",persistDialogueCount:5}),
@@ -4500,7 +4500,7 @@ window.STORY_CUSTOM_EFFECTS['boss-emergence'] = ({ layer }) => c3Mount(layer, `
     <div class="boss-vertical-beam"></div>
     <div class="boss-energy-arcs">${Array.from({length:12},(_,i)=>`<i style="--i:${i};--r:${20+(i*17)%34}deg;--d:${(i%6)*.09}s"></i>`).join('')}</div>
     <div class="boss-particles">${Array.from({length:42},(_,i)=>`<i style="--i:${i};--x:${6+(i*37)%88}%;--y:${8+(i*53)%84}%;--d:${(i%9)*.08}s"></i>`).join('')}</div>
-    <img class="boss-phase1-image" src="assets/chapter3/characters/digrion_phase1.png" alt="미졸업의 군주 디그리온">
+    <img class="boss-phase1-image" src="/assets/chapter3/story/characters/digrion_phase1.png" alt="미졸업의 군주 디그리온">
     <div class="boss-impact-flash"></div>
     <div class="boss-emergence-title">
       <div class="boss-title-kicker">FINAL BOSS</div>
@@ -4536,7 +4536,7 @@ window.STORY_CUSTOM_EFFECTS['six-stars'] = ({ layer }) => {
   return c3Mount(layer, `<div class="ch3-six-stars"><strong>여섯 별 최종 연결</strong><div class="ch3-star-row">${names.map(n=>`<div class="ch3-star-badge"><i></i><b>${n}의 별</b></div>`).join('')}</div><p>첨성대 코어 연결률 100% · 별 연결 상태 6 / 6</p></div>`);
 };
 
-window.STORY_CUSTOM_EFFECTS['final-blast'] = ({ layer }) => c3Mount(layer, `<div class="ch3-final-blast"><div class="beam"></div><strong>KNU STAR BLAZE</strong></div>`);
+window.STORY_CUSTOM_EFFECTS['final-blast'] = ({ layer }) => c3Mount(layer, `<div class="ch3-final-blast"><div class="beam"></div><strong>KNU GRADUATION OPERATION</strong></div>`);
 
 window.STORY_CUSTOM_EFFECTS['core-restore'] = ({ layer, api }) => {
   api.setMode('story');
@@ -4580,7 +4580,7 @@ window.STORY_CUSTOM_EFFECTS['student-card-reactivation'] = ({ layer, item }) => 
   const host=document.createElement('div');
   host.className='c3-card-reactivation-viewport-host';
   document.body.appendChild(host);
-  const cleanup=c3Mount(host,`<div class="ch3-card-activation-scene"><div class="ch3-card-activation-beam"></div><div class="ch3-card-activation-aura"></div><div class="ch3-card-activation-ring r1"></div><div class="ch3-card-activation-ring r2"></div><img class="ch3-card-activation-image" src="assets/chapter3/characters/student_card_main.png" alt="빛나는 학생증"><div class="ch3-card-activation-spark s1"></div><div class="ch3-card-activation-spark s2"></div><div class="ch3-card-activation-spark s3"></div><div class="ch3-card-activation-spark s4"></div></div>`,(root,later)=>{
+  const cleanup=c3Mount(host,`<div class="ch3-card-activation-scene"><div class="ch3-card-activation-beam"></div><div class="ch3-card-activation-aura"></div><div class="ch3-card-activation-ring r1"></div><div class="ch3-card-activation-ring r2"></div><img class="ch3-card-activation-image" src="/assets/chapter3/story/characters/student_card_main.png" alt="빛나는 학생증"><div class="ch3-card-activation-spark s1"></div><div class="ch3-card-activation-spark s2"></div><div class="ch3-card-activation-spark s3"></div><div class="ch3-card-activation-spark s4"></div></div>`,(root,later)=>{
     const scene=root.querySelector('.ch3-card-activation-scene');
     later(()=>scene?.classList.add('is-detected'),180);
   });
@@ -4668,19 +4668,19 @@ window.STORY_CUSTOM_EFFECTS['star-relight-one'] = ({ layer, item }) => c3Mount(l
   <div class="ch3-relight"><div class="ch3-relight-star"></div><strong>${c3Esc(item.star || '')}</strong><span>${c3Esc(item.text || '')}</span></div>`);
 
 window.STORY_CUSTOM_EFFECTS['system-title'] = ({ layer, item }) => c3Mount(layer, `
-  <div class="ch3-system-title"><small>SYSTEM</small><strong>${c3Esc(item.title || 'KNU STAR BLAZE')}</strong></div>`);
+  <div class="ch3-system-title"><small>SYSTEM</small><strong>${c3Esc(item.title || 'KNU GRADUATION OPERATION')}</strong></div>`);
 
 window.STORY_CUSTOM_EFFECTS['digrion-purify'] = ({ layer, item }) => c3Mount(layer, `
-  <div class="ch3-digrion-purify"><img src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태">${(item.words||[]).map((w,i)=>`<span style="left:${12+i*15}%;top:${16+(i%4)*16}%;animation-delay:${(i*.25).toFixed(2)}s">${c3Esc(w)}</span>`).join('')}</div>`);
+  <div class="ch3-digrion-purify"><img src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태">${(item.words||[]).map((w,i)=>`<span style="left:${12+i*15}%;top:${16+(i%4)*16}%;animation-delay:${(i*.25).toFixed(2)}s">${c3Esc(w)}</span>`).join('')}</div>`);
 
 window.STORY_CUSTOM_EFFECTS['digrion-fade'] = ({ layer }) => c3Mount(layer, `
-  <div class="ch3-digrion-fade"><img src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><strong>정화</strong></div>`);
+  <div class="ch3-digrion-fade"><img src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><strong>정화</strong></div>`);
 
 window.STORY_CUSTOM_EFFECTS['friends-cameo'] = ({ layer, item }) => c3Mount(layer, `
   <div class="ch3-friends-cameo"><strong>졸업식의 익숙한 얼굴들</strong><div>${(item.names||[]).map((n,i)=>`<span style="--i:${i}">${c3Esc(n)}</span>`).join('')}</div><p>멀리서 서로 손을 흔든 뒤 각자의 사람들에게 돌아갑니다.</p></div>`);
 
 window.STORY_CUSTOM_EFFECTS['student-card-shutdown'] = ({ layer }) => c3Mount(layer, `
-  <div class="ch3-card-shutdown"><img src="assets/chapter3/characters/student_card_main.png" alt="학생증"><div class="ch3-shutdown-stars">${[1,2,3,4,5,6].map(i=>`<i style="animation-delay:${(i*.35).toFixed(2)}s"></i>`).join('')}</div><strong>학생 인증 기능 종료</strong></div>`);
+  <div class="ch3-card-shutdown"><img src="/assets/chapter3/story/characters/student_card_main.png" alt="학생증"><div class="ch3-shutdown-stars">${[1,2,3,4,5,6].map(i=>`<i style="animation-delay:${(i*.35).toFixed(2)}s"></i>`).join('')}</div><strong>학생 인증 기능 종료</strong></div>`);
 
 /* ===== CHAPTER 3 REVISED STORY EFFECTS (2030-09 ~ 2031-03) ===== */
 window.STORY_CUSTOM_EFFECTS['semester-opening-title'] = ({ layer, item }) => c3Mount(layer, `
@@ -4700,7 +4700,7 @@ window.STORY_CUSTOM_EFFECTS['last-semester-visual'] = ({ layer, item }) => {
   }
   return c3Mount(layer, `<div class="ch3-last-semester-card kind-${c3Esc(kind)}">
     <div class="ch3-last-semester-bg"></div>
-    <img src="assets/characters/hobanwoo/hobanwoo_pose_${kind==='certificate'?'thinking':kind==='recruiting'?'neutral':'thinking'}.png" alt="호반우">
+    <img src="/assets/common/characters/hobanwoo/hobanwoo_pose_${kind==='certificate'?'thinking':kind==='recruiting'?'neutral':'thinking'}.png" alt="호반우">
     <section><small>LAST SEMESTER</small><strong>${c3Esc(item.title||'막학기')}</strong><div>${(item.lines||[]).map(x=>`<span>${c3Esc(x)}</span>`).join('')}</div></section>
   </div>`);
 };
@@ -4724,7 +4724,7 @@ window.STORY_CUSTOM_EFFECTS['application-status-glitch'] = ({ layer, item }) => 
   <div class="ch3-site-card ch3-application-card ${item.noise?'has-noise':''}"><header><b>기업 채용 페이지</b><span>지원 현황</span></header><main><small>${item.refresh?'새로고침':'지원 내역'}</small><strong class="from">${c3Esc(item.from||'지원서 제출 완료')}</strong><i>→</i><strong class="to ${String(item.to||'').includes('없음')?'is-bad':'is-good'}">${c3Esc(item.to||'지원 내역 없음')}</strong></main></div>`);
 
 window.STORY_CUSTOM_EFFECTS['student-id-auth'] = ({ layer, item }) => c3Mount(layer, `
-  <div class="ch3-id-auth ${item.ok?'is-ok':'is-bad'} ${item.noise?'has-noise':''}"><img src="assets/chapter3/characters/student_card_main.png" alt="학생증"><section><small>학생증 인증</small><strong>인증 중...</strong><b>${c3Esc(item.status||'등록되지 않은 사용자입니다.')}</b></section></div>`);
+  <div class="ch3-id-auth ${item.ok?'is-ok':'is-bad'} ${item.noise?'has-noise':''}"><img src="/assets/chapter3/story/characters/student_card_main.png" alt="학생증"><section><small>학생증 인증</small><strong>인증 중...</strong><b>${c3Esc(item.status||'등록되지 않은 사용자입니다.')}</b></section></div>`);
 
 window.STORY_CUSTOM_EFFECTS['purple-noise'] = ({ layer, item }) => {
   const pts=[[19,27,.05],[27,63,.22],[36,42,.31],[47,76,.13],[58,33,.39],[67,58,.08],[76,24,.28],[83,71,.45],[43,21,.17],[71,82,.35],[25,79,.41],[88,46,.12],[53,55,.26],[61,18,.48],[33,52,.36],[79,37,.2],[49,69,.43],[16,48,.3],[69,43,.14],[39,31,.47],[56,84,.24],[86,59,.38]];
@@ -4814,7 +4814,7 @@ window.STORY_CUSTOM_EFFECTS['boss-battle-transition'] = ({ layer, item, api }) =
 
 window.STORY_CUSTOM_EFFECTS['boss-transition'] = ({ layer, item, api }) => {
   api.setMode('story');
-  return c3Mount(layer, `<div class="ch3-boss-transition"><div class="energy"></div><img src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><small>PHASE ${c3Esc(item.phase||'2')} TRANSITION</small><strong>${c3Esc(item.title||'형태 변화')}</strong><span>${c3Esc(item.subtitle||'')}</span></div>`);
+  return c3Mount(layer, `<div class="ch3-boss-transition"><div class="energy"></div><img src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><small>PHASE ${c3Esc(item.phase||'2')} TRANSITION</small><strong>${c3Esc(item.title||'형태 변화')}</strong><span>${c3Esc(item.subtitle||'')}</span></div>`);
 };
 
 window.STORY_CUSTOM_EFFECTS['ui-collapse'] = ({ layer, api }) => {
@@ -4841,7 +4841,7 @@ window.STORY_CUSTOM_EFFECTS['graduate-name-list'] = ({ layer, item }) => c3Mount
   <div class="ch3-graduate-list"><small>졸업생 명단</small><div class="names"><span>김○○</span><span>박○○</span><b>${c3Esc(item.name||'호반우')}</b><span>이○○</span><span>최○○</span></div></div>`);
 
 window.STORY_CUSTOM_EFFECTS['diploma-screen'] = ({ layer, item }) => c3Mount(layer, `
-  <div class="ch3-diploma ch3-diploma-image087"><img src="assets/chapter3/illustrations/hobanwoo_degree_certificate.png" alt="호반우의 경북대학교 학위증서"></div>`);
+  <div class="ch3-diploma ch3-diploma-image087"><img src="/assets/chapter3/story/illustrations/hobanwoo_degree_certificate.png" alt="호반우의 경북대학교 학위증서"></div>`);
 
 /* Final ending handoff: the React host now owns whiteout, logo, rolling credits, and completion timing. */
 window.STORY_CUSTOM_EFFECTS['chapter-ending'] = ({ layer }) => c3Mount(layer, `
@@ -4971,7 +4971,7 @@ window.STORY_CUSTOM_EFFECTS['monthly-schedule'] = ({ layer, item }) => {
   });
 };
 
-window.STORY_CUSTOM_EFFECTS['recruiting-montage'] = ({layer,item}) => c3Mount(layer,`<div class="c3-recruiting-montage"><time>${c3Esc(item.date||'09.23.')}</time><section><small>KNU CAMPUS RECRUITING</small><strong>${c3Esc(item.title||'캠퍼스 리크루팅')}</strong><div class="booths"><i>기업 상담</i><i>직무 설명</i><i>채용 안내</i></div></section><img src="assets/characters/hobanwoo/hobanwoo_pose_neutral.png" alt="호반우"></div>`);
+window.STORY_CUSTOM_EFFECTS['recruiting-montage'] = ({layer,item}) => c3Mount(layer,`<div class="c3-recruiting-montage"><time>${c3Esc(item.date||'09.23.')}</time><section><small>KNU CAMPUS RECRUITING</small><strong>${c3Esc(item.title||'캠퍼스 리크루팅')}</strong><div class="booths"><i>기업 상담</i><i>직무 설명</i><i>채용 안내</i></div></section><img src="/assets/common/characters/hobanwoo/hobanwoo_pose_neutral.png" alt="호반우"></div>`);
 
 
 /* Responsive DOM-anchored mouse for site interaction scenes.
@@ -5346,7 +5346,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({layer}) => c3Mount(layer,
   <div class="energy-ripple r1"></div><div class="energy-ripple r2"></div>
   <div class="energy-mass"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="energy-core"></span></div>
   <div class="birth-flash"></div><div class="birth-shockwave"></div>
-  <div class="spawned-monsters"><img class="m1" src="assets/chapter3/monsters/birth_monster_1.png" alt="오염 개체 1"><img class="m2" src="assets/chapter3/monsters/birth_monster_2.png" alt="오염 개체 2"><img class="m3" src="assets/chapter3/monsters/birth_monster_3.png" alt="오염 개체 3"></div>
+  <div class="spawned-monsters"><img class="m1" src="/assets/chapter3/story/monsters/birth_monster_1.png" alt="오염 개체 1"><img class="m2" src="/assets/chapter3/story/monsters/birth_monster_2.png" alt="오염 개체 2"><img class="m3" src="/assets/chapter3/story/monsters/birth_monster_3.png" alt="오염 개체 3"></div>
 </div>`,(root,later)=>{
   const scene=root.querySelector('.c3-monster-birth-v3');
   later(()=>scene?.classList.add('start-gather'),120);
@@ -5359,9 +5359,9 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({layer}) => c3Mount(layer,
 
 window.STORY_CUSTOM_EFFECTS['unfinished-work'] = ({layer}) => c3Mount(layer,`<div class="c3-hologram-unfinished"><div class="projector"></div><section><small>미완료 항목</small><strong>최종 과제</strong><b>미제출</b></section></div>`);
 
-window.STORY_CUSTOM_EFFECTS['star-breakout'] = ({layer,item}) => c3Mount(layer,`<div class="c3-star-breakout" style="--star:${c3Esc(item.color||'#ffd45d')}"><img src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><div class="cracks"></div><div class="star">★</div><strong>${c3Esc(item.name||'별')}</strong><small>${c3Esc(item.count||'')}</small></div>`);
+window.STORY_CUSTOM_EFFECTS['star-breakout'] = ({layer,item}) => c3Mount(layer,`<div class="c3-star-breakout" style="--star:${c3Esc(item.color||'#ffd45d')}"><img src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><div class="cracks"></div><div class="star">★</div><strong>${c3Esc(item.name||'별')}</strong><small>${c3Esc(item.count||'')}</small></div>`);
 
-window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({layer}) => c3Mount(layer,`<div class="c3-digrion-body-break"><img src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><div class="crack-layer"></div><div class="purple-leaks"></div><div class="body-flash"></div><div class="spirit"><i></i><i></i><i></i></div></div>`,(root,later)=>{const scene=root.querySelector('.c3-digrion-body-break');later(()=>scene?.classList.add('cracking'),500);later(()=>scene?.classList.add('breaking'),2600);later(()=>scene?.classList.add('spirit-form'),4050)});
+window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({layer}) => c3Mount(layer,`<div class="c3-digrion-body-break"><img src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><div class="crack-layer"></div><div class="purple-leaks"></div><div class="body-flash"></div><div class="spirit"><i></i><i></i><i></i></div></div>`,(root,later)=>{const scene=root.querySelector('.c3-digrion-body-break');later(()=>scene?.classList.add('cracking'),500);later(()=>scene?.classList.add('breaking'),2600);later(()=>scene?.classList.add('spirit-form'),4050)});
 
 window.STORY_CUSTOM_EFFECTS['six-stars-hex'] = ({layer}) => {
   const names=['출석','과제','시험','팀플','긍지','졸업'];
@@ -7734,7 +7734,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
     <div class="energy-ripple r1"></div><div class="energy-ripple r2"></div>
     <div class="energy-mass"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="energy-core"></span></div>
     <div class="birth-flash"></div><div class="birth-shockwave"></div>
-    <div class="spawned-monsters"><img class="m1" src="assets/chapter3/monsters/birth_monster_1.png" alt="오염 개체 1"><img class="m2" src="assets/chapter3/monsters/birth_monster_2.png" alt="오염 개체 2"><img class="m3" src="assets/chapter3/monsters/birth_monster_3.png" alt="오염 개체 3"></div>
+    <div class="spawned-monsters"><img class="m1" src="/assets/chapter3/story/monsters/birth_monster_1.png" alt="오염 개체 1"><img class="m2" src="/assets/chapter3/story/monsters/birth_monster_2.png" alt="오염 개체 2"><img class="m3" src="/assets/chapter3/story/monsters/birth_monster_3.png" alt="오염 개체 3"></div>
   </div>`, (root, later) => {
     const scene = root.querySelector('.c3-monster-birth-v4');
     later(() => scene?.classList.add('start-gather'), 120);
@@ -8042,9 +8042,9 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 /* === CHAPTER3 PATCH 010 overrides === */
 (function(){
   const hiddenReferenceImages = new Set([
-    'assets/chapter3/illustrations/job_postings_cards.png',
-    'assets/chapter3/illustrations/cover_letters_pile.png',
-    'assets/chapter3/illustrations/certificate_books_stack.png'
+    '/assets/chapter3/story/illustrations/job_postings_cards.png',
+    '/assets/chapter3/story/illustrations/cover_letters_pile.png',
+    '/assets/chapter3/story/illustrations/certificate_books_stack.png'
   ]);
 
   window.STORY_CUSTOM_EFFECTS['dialogue-reference-image'] = ({ layer, item }) => c3Mount(layer, `
@@ -8575,7 +8575,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 .ch3-battle-running.is-digrion-core{
   background-image:
     linear-gradient(rgba(5,3,14,.22),rgba(5,3,14,.34)),
-    url('assets/chapter3/backgrounds/digrion_core.png') !important;
+    url('/assets/chapter3/story/backgrounds/digrion_core.png') !important;
   background-position:center center !important;
   background-size:cover !important;
   background-repeat:no-repeat !important;
@@ -8671,7 +8671,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   position:absolute;inset:-4%;
   background:
     linear-gradient(rgba(4,2,13,.12),rgba(4,2,13,.24)),
-    url('assets/chapter3/backgrounds/digrion_core.png') center/cover no-repeat;
+    url('/assets/chapter3/story/backgrounds/digrion_core.png') center/cover no-repeat;
   opacity:0;
   transform:scale(1.005);
   filter:brightness(.7) saturate(.92);
@@ -8728,7 +8728,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 }
 .ch3-boss-emerge-grand .boss-core-bg{
   position:absolute;inset:-5%;
-  background:linear-gradient(rgba(3,1,10,.42),rgba(9,2,20,.52)),url('assets/chapter3/backgrounds/digrion_core.png') center/cover no-repeat;
+  background:linear-gradient(rgba(3,1,10,.42),rgba(9,2,20,.52)),url('/assets/chapter3/story/backgrounds/digrion_core.png') center/cover no-repeat;
   transform:scale(1.09);filter:brightness(.48) saturate(1.08);transition:filter 1.6s ease,transform 4.6s cubic-bezier(.15,.75,.2,1);
 }
 .ch3-boss-emerge-grand.boss-reveal .boss-core-bg{filter:brightness(.8) saturate(1.16);transform:scale(1.025);}
@@ -9604,7 +9604,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       `--star-mid-rgb:${mid.join(',')}`
     ].join(';');
     return c3Mount(layer, `<div class="c3-star-breakout" style="${style}">
-      <img src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태">
+      <img src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태">
       <div class="cracks"></div>
       <div class="chapter3-star-reveal-field"></div>
       <div class="chapter3-star">
@@ -9850,11 +9850,11 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
   window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer }) => c3Mount(layer, `
     <div class="c3-digrion-ch12-purify">
-      <img class="purify-bg" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
+      <img class="purify-bg" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
       <div class="purify-vignette" aria-hidden="true"></div>
       <div class="boss-purify-afterglow" aria-hidden="true"></div>
       <div class="boss-purify-wrap" aria-hidden="true">
-        <img class="boss-purify-image" src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태">
+        <img class="boss-purify-image" src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태">
       </div>
       <div class="boss-purify-core" aria-hidden="true"></div>
       <div class="boss-purify-flood" aria-hidden="true"></div>
@@ -10104,7 +10104,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   /* Always reveal the absolute top edge of the supplied Digrion-core illustration before shrinking into the story frame. */
   window.STORY_CUSTOM_EFFECTS['teleport-core'] = ({ layer, api }) => c3Mount(layer, `
     <div class="c3-core-entry-027">
-      <div class="core-camera"><img src="assets/chapter3/backgrounds/digrion_core.png" alt="첨성대 코어 졸업 영역"></div>
+      <div class="core-camera"><img src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="첨성대 코어 졸업 영역"></div>
       <div class="core-black"></div><div class="core-portal" aria-hidden="true"></div>
       <div class="core-title"><small>FINAL AREA</small><strong>첨성대 코어 · 졸업 영역</strong><span>CHEOMSEONGDAE CORE · GRADUATION DOMAIN</span></div>
     </div>`, (root, later) => {
@@ -10155,9 +10155,9 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   /* Story-cinematic death only: centered visual-novel sprite -> golden purification -> shrink-away -> two fullscreen waves. */
   window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer }) => c3Mount(layer, `
     <div class="c3-digrion-story-death027">
-      <img class="death-bg" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
+      <img class="death-bg" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
       <div class="death-vignette"></div><div class="death-aura"></div>
-      <img class="death-boss" src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온">
+      <img class="death-boss" src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온">
       <div class="death-core"></div><div class="death-flash"></div>
     </div>`, (root) => {
       const waveA=document.createElement('div'); waveA.className='c3-story-death-wave027';
@@ -10368,7 +10368,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       return `<i style="--x0:${x0.toFixed(1)}px;--y0:${y0.toFixed(1)}px;--x1:${x1.toFixed(1)}px;--y1:${y1.toFixed(1)}px;--s:${size.toFixed(1)}px;--d:${delay.toFixed(3)}s"></i>`;
     }).join('');
     return c3Mount(layer, `<div class="c3-spirit-reveal029">
-      <img class="sr-bg" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="">
+      <img class="sr-bg" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="">
       <div class="sr-vignette"></div><div class="sr-beam"></div>
       <div class="sr-ring r1"></div><div class="sr-ring r2"></div><div class="sr-ring r3"></div>
       <div class="sr-particles">${particles}</div>
@@ -10644,7 +10644,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
         <div class="mb35-particles">${makeParticles(n)}</div>
         <div class="mb35-core"><i></i><b></b></div>
         <div class="mb35-burst"></div>
-        <img src="assets/chapter3/monsters/birth_monster_${n}.png" alt="오염 개체 ${n}">
+        <img src="/assets/chapter3/story/monsters/birth_monster_${n}.png" alt="오염 개체 ${n}">
       </div>`).join('')}
       <div class="mb35-screen-flash"></div>
     </div>`, (root, later) => {
@@ -10669,7 +10669,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   const spiritBody = (className='') => `<div class="c3-spirit-body35 ${className}"><div class="spirit-aura35"></div><div class="spirit-shell35"></div></div>`;
 
   window.STORY_CUSTOM_EFFECTS['purification-energy-form'] = ({ layer }) => c3Mount(layer, `<div class="c3-purify-form35">
-    <img class="pf35-bg" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="">
+    <img class="pf35-bg" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="">
     <div class="pf35-vignette"></div>
     <div class="pf35-star s1" style="--star:#ffd73c">★</div><div class="pf35-star s2" style="--star:#6fd7ff">★</div>
     <div class="pf35-star s3" style="--star:#79e36f">★</div><div class="pf35-star s4" style="--star:#ff9a43">★</div>
@@ -10688,7 +10688,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   });
 
   window.STORY_CUSTOM_EFFECTS['purification-launch'] = ({ layer }) => c3Mount(layer, `<div class="c3-purify-launch35">
-    <img class="pl35-bg" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="">
+    <img class="pl35-bg" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="">
     <div class="pl35-tunnel"></div><div class="pl35-vignette"></div>
     <div class="pl35-core"><i></i><b></b></div>
     <div class="pl35-beam"><i></i></div>
@@ -10703,7 +10703,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   });
 
   window.STORY_CUSTOM_EFFECTS['purification-collision'] = ({ layer }) => c3Mount(layer, `<div class="c3-purify-collision35">
-    <img class="pc35-bg" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="">
+    <img class="pc35-bg" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="">
     <div class="pc35-vignette"></div>
     <div class="pc35-gold"><i></i><b></b></div>
     ${spiritBody('pc35-spirit')}
@@ -10720,7 +10720,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   });
 
   window.STORY_CUSTOM_EFFECTS['purification-explosion'] = ({ layer }) => c3Mount(layer, `<div class="c3-purify-explosion35">
-    <img class="pe35-bg" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="">
+    <img class="pe35-bg" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="">
     <div class="pe35-vignette"></div>
     ${spiritBody('pe35-spirit')}
     <div class="pe35-gold-shell"></div>
@@ -10737,7 +10737,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
   window.STORY_CUSTOM_EFFECTS['student-card-shutdown'] = ({ layer }) => c3Mount(layer, `<div class="ch3-card-shutdown35">
     <div class="cs35-aura"></div>
-    <img src="assets/chapter3/characters/student_card_main.png" alt="학생증">
+    <img src="/assets/chapter3/story/characters/student_card_main.png" alt="학생증">
     <div class="cs35-ring"></div>
     <div class="cs35-flash"></div>
   </div>`, (root, later) => {
@@ -10941,11 +10941,11 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
   window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer, api }) => c3Mount(layer, `
     <div class="c3-digrion-story-death027 c3-digrion-story-death036">
-      <img class="death-bg death-bg-dark36" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
-      <img class="death-bg death-bg-clean36" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <img class="death-bg death-bg-dark36" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
+      <img class="death-bg death-bg-clean36" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
       <div class="death-purify-wash36"></div>
       <div class="death-vignette"></div><div class="death-aura"></div>
-      <img class="death-boss" src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온">
+      <img class="death-boss" src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온">
       <div class="death-core"></div><div class="death-flash"></div>
     </div>`, (root, later) => {
       const scene = root.querySelector('.c3-digrion-story-death036');
@@ -11031,7 +11031,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   }).join('');
 
   window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => c3Mount(layer, `<div class="c3-monster-birth38">
-    <img class="mb38-bg" src="assets/chapter3/backgrounds/campus_night.png" alt="">
+    <img class="mb38-bg" src="/assets/chapter3/story/backgrounds/campus_night.png" alt="">
     <div class="mb38-vignette"></div>
     <div class="mb38-sky-rift"><i class="r1"></i><i class="r2"></i><i class="r3"></i><b></b></div>
     <div class="mb38-column"></div>
@@ -11043,7 +11043,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       <div class="mb38-particles">${makeBirthParticles38(n)}</div>
       <div class="mb38-core"><i></i><b></b></div>
       <div class="mb38-burst"></div>
-      <img class="mb38-monster" src="assets/chapter3/monsters/birth_monster_${n}.png" alt="오염 개체 ${n}">
+      <img class="mb38-monster" src="/assets/chapter3/story/monsters/birth_monster_${n}.png" alt="오염 개체 ${n}">
     </div>`).join('')}
     <div class="mb38-screen-flash"></div>
   </div>`, (root, later) => {
@@ -11066,7 +11066,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   const spirit38 = (cls='') => `<div class="c3-spirit38 ${cls}"><div class="spirit38-aura"></div><div class="spirit38-body"><i></i></div></div>`;
 
   window.STORY_CUSTOM_EFFECTS['purification-collision'] = ({ layer }) => c3Mount(layer, `<div class="c3-purify-collision38">
-    <img class="pc38-bg" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="">
+    <img class="pc38-bg" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="">
     <div class="pc38-vignette"></div>
     ${spirit38('pc38-spirit')}
     <div class="pc38-beam"><span></span><i></i><b></b></div>
@@ -11093,7 +11093,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
     return `<i style="--x:${x}%;--y:${y}%;--s:${s}px;--d:${d}s"></i>`;
   }).join('');
   window.STORY_CUSTOM_EFFECTS['purification-explosion'] = ({ layer }) => c3Mount(layer, `<div class="c3-purify-aftermath38">
-    <img class="pa38-bg" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="">
+    <img class="pa38-bg" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="">
     <div class="pa38-bloom"></div><div class="pa38-wave"></div><div class="pa38-flash"></div>
     <div class="pa38-sparkles">${sparkle38}</div>
   </div>`, (root, later) => {
@@ -11105,12 +11105,12 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
   window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer, api }) => c3Mount(layer, `
     <div class="c3-digrion-story-death038">
-      <img class="death-bg38 death-bg-dark38" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
-      <img class="death-bg38 death-bg-clean38" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <img class="death-bg38 death-bg-dark38" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
+      <img class="death-bg38 death-bg-clean38" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
       <div class="death-vignette38"></div><div class="death-aura38"></div>
       <div class="death-rays38">${Array.from({length:20},(_,i)=>`<i style="--i:${i}"></i>`).join('')}</div>
       <div class="death-seal38 s1"></div><div class="death-seal38 s2"></div><div class="death-seal38 s3"></div>
-      <img class="death-boss38" src="assets/chapter3/characters/digrion_phase2_final.png" alt="디그리온">
+      <img class="death-boss38" src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온">
       <div class="death-cracks38"></div>
       <div class="death-shards38">${Array.from({length:34},(_,i)=>`<i style="--i:${i};--a:${(i*47)%360}deg"></i>`).join('')}</div>
       <div class="death-core38"></div><div class="death-flash38"></div><div class="death-purify-wash38"></div>
@@ -11519,11 +11519,11 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
         <i style="--x:52%;--y:69%;--w:18%;--h:29%;--tx:8vw;--ty:21vh;--r:-5deg"></i>
         <i style="--x:71%;--y:61%;--w:28%;--h:30%;--tx:20vw;--ty:16vh;--r:7deg"></i>
       </div>
-      <div class="rift-gate" aria-hidden="true"><img src="assets/chapter3/backgrounds/digrion_core.png" alt=""></div>
+      <div class="rift-gate" aria-hidden="true"><img src="/assets/chapter3/story/backgrounds/digrion_core.png" alt=""></div>
       <div class="depth-tunnel" aria-hidden="true">${Array.from({length:9},(_,i)=>`<i style="--s:${(.18+i*.065).toFixed(3)};--o:${(.26+i*.065).toFixed(3)};--rot:${((i-4)*1.7).toFixed(2)}deg;--rot-end:${((i-4)*-.7).toFixed(2)}deg;--d:${(i*.055).toFixed(3)}s"></i>`).join('')}</div>
       <div class="rift-labels" aria-hidden="true"><span class="l1">COORDINATE // UNBOUND</span><span class="l2">CORE VECTOR // LOCKED</span><span class="l3">STAR LINK // 4 OF 6</span><span class="l4">DOMAIN // GRADUATION</span></div>
       <div class="breach-flash"></div>
-      <div class="arrival-camera"><img src="assets/chapter3/backgrounds/digrion_core.png" alt="첨성대 코어 졸업 영역"></div>
+      <div class="arrival-camera"><img src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="첨성대 코어 졸업 영역"></div>
       <div class="arrival-vignette"></div>
       <div class="core-domain-title"><small>FINAL DOMAIN</small><strong>첨성대 코어 · 졸업 영역</strong><span>CHEOMSEONGDAE CORE · GRADUATION DOMAIN</span></div>
       <div class="core-transition-black" aria-hidden="true"></div>
@@ -12016,12 +12016,12 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
     ['M370 720 L458 655 L505 724 L472 846','.94s']
   ].map(([d,delay])=>`<path d="${d}" style="--d:${delay}"></path>`).join('');
   const rails041 = [30,38,45,55,62,70].map(x=>`<i style="--x:${x}%"></i>`).join('');
-  const bossSrc041='assets/chapter3/characters/digrion_phase2_final.png';
+  const bossSrc041='/assets/chapter3/story/characters/digrion_phase2_final.png';
 
   window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer, api }) => c3Mount(layer, `
     <div class="c3-digrion-body-finale041">
-      <img class="death-bg041 death-bg-dark041" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
-      <img class="death-bg041 death-bg-clean041" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <img class="death-bg041 death-bg-dark041" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
+      <img class="death-bg041 death-bg-clean041" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
       <div class="death-void041"></div>
       <div class="death-grid041"></div>
       <div class="death-horizon041"></div>
@@ -12186,7 +12186,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
 <script id="chapter3-patch-046-digrion-body-overkill-script">
 (() => {
-  const bossSrc='assets/chapter3/characters/digrion_phase2_final.png';
+  const bossSrc='/assets/chapter3/story/characters/digrion_phase2_final.png';
   const beamXs=[18,29,40,50,60,71,82];
   const beamHtml=beamXs.map(x=>`<i style="--x:${x}%"></i>`).join('');
   const crackPathsA=[
@@ -12254,8 +12254,8 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   }).join('');
   window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer, api }) => c3Mount(layer, `
     <div class="c3-digrion-body-overkill046">
-      <img class="ov-bg" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
-      <img class="ov-clean" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <img class="ov-bg" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
+      <img class="ov-clean" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
       <div class="ov-vignette"></div>
       <div class="ov-black"></div>
       <div class="ov-flash"></div>
@@ -12378,7 +12378,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
 <script id="chapter3-patch-047-digrion-body-purify-script">
 (() => {
-  const bossSrc='assets/chapter3/characters/digrion_phase2_final.png';
+  const bossSrc='/assets/chapter3/story/characters/digrion_phase2_final.png';
   const beamHtml=[18,30,40,50,60,70,82].map(x=>`<i style="--x:${x}%"></i>`).join('');
   const crackA=[
     ['M510 112 L486 206 L514 280 L472 372 L498 470 L460 572 L496 690 L478 856','.04s'],
@@ -12406,8 +12406,8 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   const sparkles=Array.from({length:40},(_,i)=>{const x=(10+(i*29)%80).toFixed(1)+'%'; const y=(18+(i*41)%60).toFixed(1)+'%'; const s=(3.0+(i%4)*1.1).toFixed(1)+'px'; const d=((i%13)*-.17).toFixed(2)+'s'; return `<i style="--x:${x};--y:${y};--s:${s};--d:${d}"></i>`;}).join('');
   window.STORY_CUSTOM_EFFECTS['digrion-body-break'] = ({ layer, api }) => c3Mount(layer, `
     <div class="c3-digrion-body-purify047" style="--bossMask:url('${bossSrc}')">
-      <img class="p-bg" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
-      <img class="p-clean" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <img class="p-bg" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
+      <img class="p-clean" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
       <div class="p-vignette"></div>
       <div class="p-black"></div>
       <div class="p-flash"></div>
@@ -12458,9 +12458,9 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 .c3-digrion-death048 .d48-ghost{z-index:3;opacity:0;mix-blend-mode:screen;filter:brightness(1.8) blur(1px)}
 /* The crack canvas itself is alpha-masked by Digrion's PNG, so no crack can exist outside the body silhouette. */
 .c3-digrion-death048 .d48-crack-mask{position:absolute;z-index:8;inset:0;pointer-events:none;opacity:0;
-  -webkit-mask-image:url("assets/chapter3/characters/digrion_phase2_final.png");
+  -webkit-mask-image:url("/assets/chapter3/story/characters/digrion_phase2_final.png");
   -webkit-mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-mode:alpha;
-  mask-image:url("assets/chapter3/characters/digrion_phase2_final.png");
+  mask-image:url("/assets/chapter3/story/characters/digrion_phase2_final.png");
   mask-size:contain;mask-position:center;mask-repeat:no-repeat;mask-mode:alpha;
 }
 .c3-digrion-death048 .d48-crack-mask svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
@@ -12534,7 +12534,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
 
 <script id="chapter3-patch-048-digrion-body-exact-script">
 (() => {
-  const boss='assets/chapter3/characters/digrion_phase2_final.png';
+  const boss='/assets/chapter3/story/characters/digrion_phase2_final.png';
   const major=[
     ['c1','M510 120 L488 250 L524 350 L476 468 L512 596 L478 748 L505 910'],
     ['c1','M350 260 L430 310 L402 402 L477 468'],
@@ -12560,8 +12560,8 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
   const sparkles=Array.from({length:52},(_,i)=>`<i style="--x:${8+(i*37)%85}%;--y:${12+(i*53)%72}%;--s:${(2.5+(i%5)*1.1).toFixed(1)}px;--d:${((i%17)*-.14).toFixed(2)}s;--dur:${(2.6+(i%7)*.23).toFixed(2)}s"></i>`).join('');
   window.STORY_CUSTOM_EFFECTS['digrion-body-break']=({layer,api})=>c3Mount(layer,`
     <div class="c3-digrion-death048">
-      <img class="d48-bg" src="assets/chapter3/backgrounds/digrion_core.png" alt="">
-      <img class="d48-clean" src="assets/chapter3/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
+      <img class="d48-bg" src="/assets/chapter3/story/backgrounds/digrion_core.png" alt="">
+      <img class="d48-clean" src="/assets/chapter3/story/backgrounds/graduation_core_purified.png" alt="정화된 첨성대 코어 졸업 영역">
       <div class="d48-vignette"></div>
       <div class="d48-body-stage">
         <img class="d48-ghost" src="${boss}" alt="">
@@ -12765,7 +12765,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
         <div class="sc-thread t1"></div><div class="sc-thread t2"></div><div class="sc-thread t3"></div>
         <div class="sc-star"><span class="sc-star-shape"></span><i class="sc-star-core"></i></div>
         <div class="sc-motes">${motes051()}</div>
-        <div class="sc-card-wrap"><div class="sc-card-aura"></div><img class="sc-card" src="assets/chapter3/characters/student_card_main.png" alt="학생증"></div>
+        <div class="sc-card-wrap"><div class="sc-card-aura"></div><img class="sc-card" src="/assets/chapter3/story/characters/student_card_main.png" alt="학생증"></div>
         <div class="sc-impact"></div><div class="sc-wave w1"></div><div class="sc-wave w2"></div><div class="sc-wave w3"></div>
         <div class="sc-after">${after051()}</div>
         <div class="sc-label"><strong>${c3Esc(item.name||'별')}</strong><span>STAR LINK · ${c3Esc(item.count||'')}</span></div>
@@ -12899,7 +12899,7 @@ window.STORY_CUSTOM_EFFECTS['first-monster-birth'] = ({ layer }) => {
       <div class="c3-star-card-absorb052" style="${style}">
         <div class="sc52-vignette"></div><div class="sc52-field"></div>
         <div class="sc52-stream s1"></div><div class="sc52-stream s2"></div><div class="sc52-stream s3"></div>
-        <div class="sc52-card-wrap"><div class="sc52-card-aura"></div><img class="sc52-card" src="assets/chapter3/characters/student_card_main.png" alt="학생증"></div>
+        <div class="sc52-card-wrap"><div class="sc52-card-aura"></div><img class="sc52-card" src="/assets/chapter3/story/characters/student_card_main.png" alt="학생증"></div>
         <div class="sc52-star"><span class="sc52-star-shape"></span><i class="sc52-star-core"></i></div>
         <div class="sc52-motes">${motes052()}</div>
         <div class="sc52-impact"></div><div class="sc52-wave w1"></div><div class="sc52-wave w2"></div><div class="sc52-wave w3"></div>
@@ -13890,12 +13890,12 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
   window.STORY_CUSTOM_EFFECTS['graduation-day-atmosphere'] = ({ layer }) => c3Mount(layer, `
     <div class="c3-grad-day-intro088">
       <div class="c3-grad-day-title088"><strong>졸업식 날</strong></div>
-      <div class="c3-grad-day-photo088"><img src="assets/chapter3/backgrounds/graduation_ceremony_entrance.png" alt="경북대학교 학위수여식 입구"></div>
+      <div class="c3-grad-day-photo088"><img src="/assets/chapter3/story/backgrounds/graduation_ceremony_entrance.png" alt="경북대학교 학위수여식 입구"></div>
     </div>`);
 
   window.STORY_CUSTOM_EFFECTS['graduation-ceremony-background'] = ({ layer }) => c3Mount(layer, `
     <div class="c3-grad-bg088">
-      <img src="assets/chapter3/backgrounds/graduation_ceremony_hall.png" alt="경북대학교 학위수여식장">
+      <img src="/assets/chapter3/story/backgrounds/graduation_ceremony_hall.png" alt="경북대학교 학위수여식장">
       <div class="c3-grad-caption088"><small>KYUNGPOOK NATIONAL UNIVERSITY</small><strong>학위수여식장</strong><span>경북대학교 대강당</span></div>
     </div>`);
 })();
@@ -14018,7 +14018,7 @@ body:has(.story-body-effect-host[data-persistent-dialogue="true"]) #storySection
 (() => {
   window.STORY_CUSTOM_EFFECTS['autumn-campus-location-transition'] = ({ layer, item }) => c3Mount(layer, `
     <div class="c3-autumn-location099" aria-label="${c3Esc(item.title || '가을의 경북대학교')}">
-      <img class="autumn-bg099" src="assets/chapter3/backgrounds/campus_autumn_3weeks_v97.png" alt="가을의 경북대학교 캠퍼스">
+      <img class="autumn-bg099" src="/assets/chapter3/story/backgrounds/campus_autumn_3weeks_v97.png" alt="가을의 경북대학교 캠퍼스">
       <div class="autumn-shade099"></div>
       <div class="autumn-copy099">
         <small>KYUNGPOOK NATIONAL UNIVERSITY</small>

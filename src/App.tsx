@@ -34,7 +34,7 @@ import {
 } from "./game/chapter1/chapter1WaveVisualTuning";
 
 const MAX_HP = 3;
-const GAME_GITHUB_URL = "https://github.com/magun/sky-strike_-retro-ace";
+const GAME_GITHUB_URL = "https://github.com/GeonBread/sky-strike-retro-ace";
 
 interface StoryResult {
   outcome: "cleared" | "failed";
@@ -1610,7 +1610,7 @@ function Chapter1ClearSequence({ onContinue, onMenu }: { onContinue: () => void;
       {phase === "opening" && (
         <div className="chapterClearOpeningSequence" aria-label="챕터 1 종료 오프닝 크레딧">
           <section className="chapterClearOpeningCard chapterClearOpeningLogoCard" aria-label="게임 로고">
-            <img className="chapterClearOpeningLogoImage" src="/assets/story/chapter1/ui/game_logo.png" alt="호반우의 졸업 대작전 게임 로고" />
+            <img className="chapterClearOpeningLogoImage" src="/assets/chapter1/story/ui/game_logo.png" alt="호반우의 졸업 대작전 게임 로고" />
           </section>
           <section className="chapterClearOpeningCard chapterClearOpeningMadeByCard" aria-label="제작자 크레딧">
             <small>DIRECTED AND CREATED</small>
@@ -1788,10 +1788,10 @@ export default function App() {
   };
 
   const handleShare = async () => {
-    const text = `StarBlaze에서 ${stats.highScore}점을 기록했습니다.`;
+    const text = `호반우의 졸업 대작전에서 ${stats.highScore}점을 기록했습니다.`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "StarBlaze", text, url: window.location.href });
+        await navigator.share({ title: "호반우의 졸업 대작전", text, url: window.location.href });
       } catch {}
     } else {
       await navigator.clipboard.writeText(text);
@@ -2106,7 +2106,7 @@ export default function App() {
                 >
                   <span>GITHUB REPOSITORY</span>
                   <strong>게임 소스 코드 보기</strong>
-                  <code>sky-strike_-retro-ace ↗</code>
+                  <code>hobanwoo-graduation-operation ↗</code>
                 </a>
               </div>
             </section>

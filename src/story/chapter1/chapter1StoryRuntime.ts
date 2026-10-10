@@ -1738,7 +1738,7 @@ html.is-embedded-story .chapter1-core-portal-window {
   background:
     radial-gradient(ellipse at 50% 42%, rgba(188,242,255,.22), transparent 34%),
     linear-gradient(rgba(5,9,24,.13), rgba(15,0,32,.26)),
-    url("/assets/story/chapter1/backgrounds/bg_academic_system_corrupted.png") center / 112% 112% no-repeat;
+    url("/assets/chapter1/story/backgrounds/bg_academic_system_corrupted.png") center / 112% 112% no-repeat;
   box-shadow:
     inset 0 0 82px rgba(0,0,0,.7),
     inset 0 0 34px rgba(157,235,255,.86),

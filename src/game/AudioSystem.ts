@@ -589,7 +589,7 @@ export class AudioSystem {
   }
 
   startMenuBgm() {
-    const track = "/audio/main-menu-bgm.m4a";
+    const track = "/assets/audio/common/main-menu-bgm.m4a";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -607,7 +607,7 @@ export class AudioSystem {
   }
 
   startChapter1DailyBgm() {
-    const track = "/audio/chapter1-daily-bgm.mp3";
+    const track = "/assets/audio/chapter1/chapter1-daily-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
       this.cancelBgmFade();
       this.bgmElement.volume = this.bgmVol;
@@ -627,7 +627,7 @@ export class AudioSystem {
   }
 
   startChapter1DroneChaseBgm() {
-    const track = "/audio/chapter1-drone-chase-bgm.mp3";
+    const track = "/assets/audio/chapter1/chapter1-drone-chase-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
       this.cancelBgmFade();
       this.bgmElement.volume = this.bgmVol;
@@ -647,7 +647,7 @@ export class AudioSystem {
   }
 
   startChapter1CoreInteriorBgm() {
-    const track = "/audio/chapter1-core-interior-bgm.mp3";
+    const track = "/assets/audio/chapter1/chapter1-core-interior-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
       this.cancelBgmFade();
       this.bgmElement.volume = this.bgmVol;
@@ -667,7 +667,7 @@ export class AudioSystem {
   }
 
   startChapter2StruggleBgm() {
-    const track = "/audio/chapter2-struggle-bgm.mp3";
+    const track = "/assets/audio/chapter2/chapter2-struggle-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -683,7 +683,7 @@ export class AudioSystem {
   }
 
   startChapter2ContaminationBgm() {
-    const track = "/audio/chapter2-contamination-bgm.mp3";
+    const track = "/assets/audio/chapter2/chapter2-contamination-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -699,7 +699,7 @@ export class AudioSystem {
   }
 
   startChapter2CoreContaminationSourceBgm() {
-    const track = "/audio/chapter2-core-contamination-source-bgm.mp3";
+    const track = "/assets/audio/chapter2/chapter2-core-contamination-source-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
       this.cancelBgmFade();
       this.bgmElement.volume = this.bgmVol;
@@ -719,7 +719,7 @@ export class AudioSystem {
   }
 
   startChapter2PreBossBgm() {
-    const track = "/audio/chapter2-preboss-bgm.mp3";
+    const track = "/assets/audio/chapter2/chapter2-preboss-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -735,7 +735,7 @@ export class AudioSystem {
   }
 
   startChapter2BossBgm() {
-    const track = "/audio/chapter2-boss-bgm.mp3";
+    const track = "/assets/audio/chapter2/chapter2-boss-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -751,7 +751,7 @@ export class AudioSystem {
   }
 
   startChapter2PresentationEndingBgm() {
-    const track = "/audio/chapter2-presentation-ending-bgm.mp3";
+    const track = "/assets/audio/chapter2/chapter2-presentation-ending-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -767,7 +767,7 @@ export class AudioSystem {
   }
 
   startChapter3DailyBgm() {
-    const track = "/audio/chapter3-daily-story-bgm.mp3";
+    const track = "/assets/audio/chapter3/chapter3-daily-story-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
       this.cancelBgmFade();
       this.bgmElement.volume = this.bgmVol;
@@ -787,7 +787,7 @@ export class AudioSystem {
   }
 
   startChapter3StrangeEventBgm() {
-    const track = "/audio/chapter3-strange-event-bgm.mp3";
+    const track = "/assets/audio/chapter3/chapter3-strange-event-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
       this.cancelBgmFade();
       this.bgmElement.volume = this.bgmVol;
@@ -807,7 +807,7 @@ export class AudioSystem {
   }
 
   startChapter3ContaminationEventBgm() {
-    const track = "/audio/chapter3-contamination-event-bgm.mp3";
+    const track = "/assets/audio/chapter3/chapter3-contamination-event-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement) {
       this.cancelBgmFade();
       this.bgmElement.volume = this.bgmVol;
@@ -830,12 +830,12 @@ export class AudioSystem {
     const chapter = Math.max(1, Math.floor(phase));
     const track =
       chapter >= 4
-        ? "/audio/3phase%20(Starfall%20Circuit).mp3"
+        ? "/assets/audio/common/3phase%20(Starfall%20Circuit).mp3"
         : chapter === 3
-          ? "/audio/chapter3-wave-bgm.mp3"
+          ? "/assets/audio/chapter3/chapter3-wave-bgm.mp3"
           : chapter === 2
-            ? "/audio/1phase%20bgm%20(Stellar%20Drift1).mp3"
-            : "/audio/chapter1-wave-bgm.mp3";
+            ? "/assets/audio/common/1phase%20bgm%20(Stellar%20Drift1).mp3"
+            : "/assets/audio/chapter1/chapter1-wave-bgm.mp3";
 
     if (this.currentBgmTrack === track && this.bgmElement) {
       // A combat checkpoint can reopen the same wave track while a late story
@@ -860,7 +860,7 @@ export class AudioSystem {
   }
 
   startChapter3FinalSpaceBgm() {
-    const track = "/audio/chapter3-final-space-bgm.mp3";
+    const track = "/assets/audio/chapter3/chapter3-final-space-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -878,7 +878,7 @@ export class AudioSystem {
   }
 
   startChapter3LateBgm() {
-    const track = "/audio/chapter3-late-bgm.mp3";
+    const track = "/assets/audio/chapter3/chapter3-late-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -896,7 +896,7 @@ export class AudioSystem {
   }
 
   startFinalEndingBgm() {
-    const track = "/audio/final-ending-bgm.mp3";
+    const track = "/assets/audio/chapter3/final-ending-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }
@@ -915,7 +915,7 @@ export class AudioSystem {
   }
 
   startBossBgm() {
-    const track = "/audio/2phase%20(Stellar%20Drift2).mp3";
+    const track = "/assets/audio/common/2phase%20(Stellar%20Drift2).mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {
       return;
     }

@@ -1,5 +1,5 @@
 .hobanwooMainMenu {
-  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_bg.png");
+  --hobanwoo-main-bg: url("/assets/common/backgrounds/main_menu_campus_bg.png");
   position: relative;
   width: 100%;
   height: 100svh;
@@ -12,19 +12,19 @@
 
 /* V10 · 실제 기기 로컬 시간에 맞춘 메인 화면 캠퍼스 배경 */
 .hobanwooMainMenu.time-day {
-  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_bg.png");
+  --hobanwoo-main-bg: url("/assets/common/backgrounds/main_menu_campus_bg.png");
 }
 
 .hobanwooMainMenu.time-evening {
-  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_evening.png");
+  --hobanwoo-main-bg: url("/assets/common/backgrounds/main_menu_campus_evening.png");
 }
 
 .hobanwooMainMenu.time-night {
-  --hobanwoo-main-bg: url("/chapter3_story/assets/chapter3/backgrounds/campus_night.png");
+  --hobanwoo-main-bg: url("/assets/chapter3/story/backgrounds/campus_night.png");
 }
 
 .hobanwooMainMenu.time-dawn {
-  --hobanwoo-main-bg: url("/assets/backgrounds/main_menu_campus_dawn.png");
+  --hobanwoo-main-bg: url("/assets/common/backgrounds/main_menu_campus_dawn.png");
 }
 
 .hobanwooMainMenuShade {

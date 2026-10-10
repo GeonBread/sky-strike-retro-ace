@@ -1,5 +1,5 @@
 {
-  "name": "react-example",
+  "name": "hobanwoo-graduation-operation",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -34,5 +34,6 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
-  }
+  },
+  "description": "경북대학교 마스코트 호반우와 함께하는 스토리 기반 슈팅 게임 「호반우의 졸업 대작전」"
 }

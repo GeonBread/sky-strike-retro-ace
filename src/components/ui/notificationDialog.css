@@ -14,7 +14,7 @@
   position: relative;
   width: min(94vw, 680px);
   aspect-ratio: 1448 / 1086;
-  background: url("/assets/ui/panels/notification-panel.png") center / 100% 100% no-repeat;
+  background: url("/assets/common/ui/panels/notification-panel.png") center / 100% 100% no-repeat;
   filter: drop-shadow(0 28px 48px rgba(0, 8, 28, 0.52));
   animation: hobanwooNotificationPop 180ms cubic-bezier(.2, .85, .25, 1);
 }

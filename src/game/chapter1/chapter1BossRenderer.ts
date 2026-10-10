@@ -13,8 +13,8 @@ import { CHAPTER1_STORY_PLAYER_VISUAL_WIDTH } from "./chapter1WaveVisualTuning";
 import { getChapter1BossViewportProjection } from "./chapter1BossViewportProjection";
 
 const PLAYER_IMAGE = new Image();
-PLAYER_IMAGE.src = "/assets/player/hobanu_player.png";
-const PLAYER_BULLET_BASE = "/assets/bullets/player/";
+PLAYER_IMAGE.src = "/assets/common/player/hobanu_player.png";
+const PLAYER_BULLET_BASE = "/assets/common/player/bullets/";
 const PLAYER_BULLET_CACHE = new Map<string, HTMLImageElement>();
 
 function runtimeOf(engine: any) {

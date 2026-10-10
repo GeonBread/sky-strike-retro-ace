@@ -77,7 +77,7 @@ export function LeaderboardPanel({ onBack }: LeaderboardPanelProps) {
       <section className="hobanwooLeaderboardFrame" aria-label="랭킹">
         <div className="hobanwooLeaderboardContent">
           <header className="hobanwooLeaderboardHeader">
-            <img src="/assets/ui/logos/site-logo.png" alt="" draggable={false} />
+            <img src="/assets/common/ui/logos/site-logo.png" alt="" draggable={false} />
             <div>
               <div className="hobanwooLeaderboardEyebrow">GRADUATION OPERATION</div>
               <h2>순위표</h2>

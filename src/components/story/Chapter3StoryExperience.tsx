@@ -217,13 +217,13 @@ const CH3_LATE_STORY_START_INDEX = 229;
 const CH3_GRADUATION_DAY_INDEX = 292;
 
 function isChapter3OwnedBgm(track: string | null): boolean {
-  return track === "/audio/chapter3-daily-story-bgm.mp3"
-    || track === "/audio/chapter3-strange-event-bgm.mp3"
-    || track === "/audio/chapter3-contamination-event-bgm.mp3"
-    || track === "/audio/chapter3-wave-bgm.mp3"
-    || track === "/audio/chapter3-final-space-bgm.mp3"
-    || track === "/audio/chapter3-late-bgm.mp3"
-    || track === "/audio/final-ending-bgm.mp3";
+  return track === "/assets/audio/chapter3/chapter3-daily-story-bgm.mp3"
+    || track === "/assets/audio/chapter3/chapter3-strange-event-bgm.mp3"
+    || track === "/assets/audio/chapter3/chapter3-contamination-event-bgm.mp3"
+    || track === "/assets/audio/chapter3/chapter3-wave-bgm.mp3"
+    || track === "/assets/audio/chapter3/chapter3-final-space-bgm.mp3"
+    || track === "/assets/audio/chapter3/chapter3-late-bgm.mp3"
+    || track === "/assets/audio/chapter3/final-ending-bgm.mp3";
 }
 
 type Chapter3SavedProgress = { index: number; sectionOrdinal: number };
@@ -322,7 +322,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     if (!waveActive) return;
     sfx.startBgmForPhase(3);
     return () => {
-      if (sfx.currentBgmTrack === "/audio/chapter3-wave-bgm.mp3") sfx.stopBgm();
+      if (sfx.currentBgmTrack === "/assets/audio/chapter3/chapter3-wave-bgm.mp3") sfx.stopBgm();
     };
   }, [waveActive]);
   useEffect(() => () => {
@@ -1035,7 +1035,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
           <div className="chapter3FinalCreditsScrollViewport">
             <div className="chapter3FinalCreditsTrack">
               <div className="chapter3FinalCreditsLeadLogo" aria-label="호반우의 졸업 대작전">
-                <img src="/chapter3_story/assets/story/common/ui/game_logo.png" alt="호반우의 졸업 대작전" />
+                <img src="/assets/common/story/ui/game_logo.png" alt="호반우의 졸업 대작전" />
               </div>
 
               <header className="chapter3FinalCreditsHeading">
@@ -1096,7 +1096,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
               <p>그리고,</p>
               <strong>이 게임을 끝까지 플레이해 주신<br />당신에게.</strong>
               <span>THANK YOU FOR PLAYING</span>
-              <img src="/chapter3_story/assets/story/common/ui/game_logo.png" alt="호반우의 졸업 대작전" />
+              <img src="/assets/common/story/ui/game_logo.png" alt="호반우의 졸업 대작전" />
               <small>DIRECTED &amp; CREATED BY · 마건</small>
               <small>© 2026 마건</small>
             </div>

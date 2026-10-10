@@ -680,7 +680,7 @@
 .chapter2-story-boss-emergence-bg {
   position: absolute;
   inset: -6%;
-  background: url('/chapter2_story/assets/chapter2/backgrounds/bg_ch2_blackhole_corrupt.png') center / cover no-repeat;
+  background: url('/assets/chapter2/story/backgrounds/bg_ch2_blackhole_corrupt.png') center / cover no-repeat;
   filter: brightness(.18) saturate(.78) blur(14px);
   transform: scale(1.18);
   animation: chapter2StoryBossEmergenceBg 3s ease both;

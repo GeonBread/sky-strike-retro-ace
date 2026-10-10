@@ -289,7 +289,7 @@ export function Chapter2StoryExperience({
       sfx.startChapter2BossBgm();
       return;
     }
-    if (sfx.currentBgmTrack === "/audio/chapter2-boss-bgm.mp3") sfx.stopBgm();
+    if (sfx.currentBgmTrack === "/assets/audio/chapter2/chapter2-boss-bgm.mp3") sfx.stopBgm();
   }, [phase]);
 
   useEffect(() => {
@@ -993,7 +993,7 @@ export function Chapter2StoryExperience({
             {Array.from({ length: 28 }, (_, index) => <span key={index} style={{ "--i": index } as React.CSSProperties} />)}
           </div>
           <div className="chapter2-story-boss-emergence-boss-wrap">
-            <img src="/chapter2_story/assets/chapter2/illustrations/ill_boss_phase1.png" alt="팀플 블랙홀 무임승차자" />
+            <img src="/assets/chapter2/story/illustrations/ill_boss_phase1.png" alt="팀플 블랙홀 무임승차자" />
           </div>
           <div className="chapter2-story-boss-emergence-title">
             <small>CHAPTER 2 · BOSS</small>

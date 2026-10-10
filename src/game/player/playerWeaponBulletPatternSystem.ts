@@ -3,7 +3,7 @@
  *
  * 업로드된 `hobanu_bullet_design_demo_v26.html`의 탄 디자인/발사 패턴을 실제 게임에 맞게 이식한다.
  * 핵심 기준:
- * - 탄 외형은 `public/assets/bullets/player/*.png` 실제 이미지 파일을 사용한다.
+ * - 탄 외형은 `public/assets/common/player/bullets/*.png` 실제 이미지 파일을 사용한다.
  * - 이과/문과/예체능 계열별 발사 개수, 좌우 배치, 속도, 유도/빔 효과는 데모 v26의 spawnScience/spawnHumanities/spawnArts 흐름을 따른다.
  * - 기존 게임의 파워 레벨 1~5 구조는 그대로 유지한다.
  */

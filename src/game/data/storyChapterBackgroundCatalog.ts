@@ -6,9 +6,9 @@
  */
 
 export const STORY_CHAPTER1_PARALLAX_LAYERS = [
-  "/assets/backgrounds/chapter1_parallax_layer_1.png",
-  "/assets/backgrounds/chapter1_parallax_layer_2.png",
-  "/assets/backgrounds/chapter1_parallax_layer_3.png",
+  "/assets/common/backgrounds/chapter1_parallax_layer_1.png",
+  "/assets/common/backgrounds/chapter1_parallax_layer_2.png",
+  "/assets/common/backgrounds/chapter1_parallax_layer_3.png",
 ];
 
 export const STORY_CHAPTER1_PARALLAX_SPEEDS = [18, 54, 120];

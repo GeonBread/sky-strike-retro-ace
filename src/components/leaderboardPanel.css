@@ -10,7 +10,7 @@
   width: min(94vw, 620px);
   height: min(90vh, 900px);
   min-height: 620px;
-  background: url("/assets/ui/panels/leaderboard-panel.png") center / 100% 100% no-repeat;
+  background: url("/assets/common/ui/panels/leaderboard-panel.png") center / 100% 100% no-repeat;
   color: #0b1c3b;
   filter: drop-shadow(0 24px 40px rgba(0, 10, 31, 0.45));
 }

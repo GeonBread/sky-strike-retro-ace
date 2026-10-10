@@ -47,17 +47,17 @@ export function createChapter1BossOriginalRuntime(adapter: Chapter1BossOriginalA
 const bossPhase1Image = new Image();
 const bossPhase2Image = new Image();
 const bossPurifiedImage = new Image();
-bossPhase1Image.src = "/assets/chapter1/boss/body/gatekeeper_phase1.webp";
-bossPhase2Image.src = "/assets/chapter1/boss/body/gatekeeper_phase2.webp";
-bossPurifiedImage.src = "/assets/chapter1/boss/body/gatekeeper_purified.webp";
+bossPhase1Image.src = "/assets/chapter1/combat/boss/body/gatekeeper_phase1.webp";
+bossPhase2Image.src = "/assets/chapter1/combat/boss/body/gatekeeper_phase2.webp";
+bossPurifiedImage.src = "/assets/chapter1/combat/boss/body/gatekeeper_purified.webp";
 
 
 const bossBgStage1Image = new Image();
 const bossBgStage2Image = new Image();
 const bossBgStage3Image = new Image();
-bossBgStage1Image.src = "/assets/chapter1/boss/backgrounds/boss_stage1.png";
-bossBgStage2Image.src = "/assets/chapter1/boss/backgrounds/boss_stage2.png";
-bossBgStage3Image.src = "/assets/chapter1/boss/backgrounds/boss_stage3.png";
+bossBgStage1Image.src = "/assets/chapter1/combat/boss/backgrounds/boss_stage1.png";
+bossBgStage2Image.src = "/assets/chapter1/combat/boss/backgrounds/boss_stage2.png";
+bossBgStage3Image.src = "/assets/chapter1/combat/boss/backgrounds/boss_stage3.png";
 
 function drawFallbackBattleBackground(purify = 0) {
   const top = `rgb(${Math.round(17 - purify * 5)}, ${Math.round(18 + purify * 18)}, ${Math.round(27 + purify * 18)})`;

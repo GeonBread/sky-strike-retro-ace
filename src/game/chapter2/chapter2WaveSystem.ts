@@ -26,7 +26,7 @@ const MAX_PARTICLES = 220;
 const MAX_VANISHES = 72;
 const chapter2WaveBackground = typeof Image !== "undefined" ? new Image() : null;
 if (chapter2WaveBackground) {
-  chapter2WaveBackground.src = "/chapter2_story/assets/chapter2/backgrounds/bg_ch2_library_exterior_after_3am.png";
+  chapter2WaveBackground.src = "/assets/chapter2/story/backgrounds/bg_ch2_library_exterior_after_3am.png";
 }
 
 function drawChapter2WaveBackground(engine: any): void {
@@ -194,27 +194,27 @@ const bulletEffectColors: Record<string, string> = {
 };
 
 const monsterImagePaths: Partial<Record<Chapter2WaveEnemyType, string>> = {
-  ghost: "/assets/chapter2/waves/enemies/ghost_exam.png",
-  pointer: "/assets/chapter2/waves/enemies/laser_pointer.png",
-  anxiety: "/assets/chapter2/waves/enemies/anxiety_core.png",
-  noreply: "/assets/chapter2/waves/enemies/no_reply.png",
-  format: "/assets/chapter2/waves/enemies/format_error.png",
-  energy: "/assets/chapter2/waves/enemies/energy_absorber.png",
-  reference: "/assets/chapter2/waves/enemies/reference_bug.png",
-  highlighter: "/assets/chapter2/waves/enemies/highlighter.png",
-  countdown: "/assets/chapter2/waves/enemies/countdown_bot.png",
-  compressor: "/assets/chapter2/waves/enemies/page_compressor.png",
+  ghost: "/assets/chapter2/combat/waves/enemies/ghost_exam.png",
+  pointer: "/assets/chapter2/combat/waves/enemies/laser_pointer.png",
+  anxiety: "/assets/chapter2/combat/waves/enemies/anxiety_core.png",
+  noreply: "/assets/chapter2/combat/waves/enemies/no_reply.png",
+  format: "/assets/chapter2/combat/waves/enemies/format_error.png",
+  energy: "/assets/chapter2/combat/waves/enemies/energy_absorber.png",
+  reference: "/assets/chapter2/combat/waves/enemies/reference_bug.png",
+  highlighter: "/assets/chapter2/combat/waves/enemies/highlighter.png",
+  countdown: "/assets/chapter2/combat/waves/enemies/countdown_bot.png",
+  compressor: "/assets/chapter2/combat/waves/enemies/page_compressor.png",
 };
 
 const bulletImagePaths: Record<string, string> = {
-  paper: "/assets/chapter2/waves/bullets/paper_shard.png",
-  drop: "/assets/chapter2/waves/bullets/anxiety_drop.png",
-  x: "/assets/chapter2/waves/bullets/format_x.png",
-  energyOrb: "/assets/chapter2/waves/bullets/energy_orb.png",
-  citation: "/assets/chapter2/waves/bullets/citation_bracket.png",
-  ink: "/assets/chapter2/waves/bullets/ink_nib.png",
-  timer: "/assets/chapter2/waves/bullets/timer_orb.png",
-  block: "/assets/chapter2/waves/bullets/paper_block.png",
+  paper: "/assets/chapter2/combat/waves/bullets/paper_shard.png",
+  drop: "/assets/chapter2/combat/waves/bullets/anxiety_drop.png",
+  x: "/assets/chapter2/combat/waves/bullets/format_x.png",
+  energyOrb: "/assets/chapter2/combat/waves/bullets/energy_orb.png",
+  citation: "/assets/chapter2/combat/waves/bullets/citation_bracket.png",
+  ink: "/assets/chapter2/combat/waves/bullets/ink_nib.png",
+  timer: "/assets/chapter2/combat/waves/bullets/timer_orb.png",
+  block: "/assets/chapter2/combat/waves/bullets/paper_block.png",
 };
 
 const images: Record<string, HTMLImageElement> = {};

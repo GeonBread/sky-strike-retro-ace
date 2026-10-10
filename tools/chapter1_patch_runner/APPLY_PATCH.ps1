@@ -127,8 +127,8 @@ function Get-AutomaticCommitMessage {
         [string]::IsNullOrWhiteSpace($patchFolderName) -or
         $patchFolderName -eq $temporaryFolderName -or
         $patchFolderName -eq $repositoryFolderName -or
-        $patchFolderName -match '^sky-strike[_-]*retro[_-]*ace$' -or
-        $patchFolderName -match '^sky-strike-zip-patch-\d{8}-\d{6}$'
+        $patchFolderName -match '^hobanwoo[_-]*graduation[_-]*operation$' -or
+        $patchFolderName -match '^hobanwoo-project-patch-\d{8}-\d{6}$'
     )
 
     if ($genericPatchFolder) {
@@ -454,7 +454,7 @@ try {
     Invoke-CheckedCommand -Command 'git' -Arguments @('branch', $backupBranch, $baselineCommit) -FailureMessage "Could not create the safety branch."
     Write-Ok "Created safety branch: $backupBranch"
 
-    $temporaryRoot = Join-Path $env:TEMP "sky-strike-zip-patch-$timestamp"
+    $temporaryRoot = Join-Path $env:TEMP "hobanwoo-project-patch-$timestamp"
     New-Item -ItemType Directory -Path $temporaryRoot -Force | Out-Null
 
     Write-Step "Extracting ZIP"

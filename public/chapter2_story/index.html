@@ -78,7 +78,7 @@ button { color: inherit; }
 }
 .background-stack { z-index: -10; }
 .scene-background {
-  background-image: url("../assets/bg_placeholder.svg");
+  background-image: url("./assets/chapter2/story/legacy/bg_placeholder.svg");
   background-size: cover;
   background-position: var(--scene-background-position, center center);
   opacity: 0;
@@ -1775,10 +1775,10 @@ html.is-chapter2-embedded .story-stage.is-full-story {
           <figure class="portrait-frame has-frame-image" id="portraitFrame" aria-label="현재 발화자 초상화">
             <div class="portrait-viewport">
               <div class="portrait-backdrop" aria-hidden="true"></div>
-              <img id="speakerPortrait" class="speaker-portrait" src="assets/portrait_system.svg" alt="시스템 초상화" />
+              <img id="speakerPortrait" class="speaker-portrait" src="/assets/chapter2/story/legacy/portrait_system.svg" alt="시스템 초상화" />
               <span class="portrait-scanline" aria-hidden="true"></span>
             </div>
-            <img id="portraitFrameImage" class="portrait-frame-image" src="assets/frame_knu_default.svg" alt="" aria-hidden="true" />
+            <img id="portraitFrameImage" class="portrait-frame-image" src="/assets/chapter2/story/legacy/frame_knu_default.svg" alt="" aria-hidden="true" />
           </figure>
 
           <div class="dialogue-copy">
@@ -2477,7 +2477,7 @@ window.STORY_DATA = {
         "text": "확인하겠습니다.",
         "scene": "empty_classroom",
         "pose": "default",
-        "leftImage": "/chapter3_story/assets/chapter3/characters/junho_greeting.png",
+        "leftImage": "/assets/chapter3/story/characters/junho_greeting.png",
         "statusLabel": "처음 만난 4조",
         "left": "junho",
         "right": "hobanwoo"
@@ -6675,11 +6675,11 @@ window.STORY_DATA = {
         "hideActors": true,
         "hideIllustration": true,
         "monsterImages": [
-          "assets/chapter2/illustrations/purification_enemy_energy_absorber.png",
-          "assets/chapter2/illustrations/purification_enemy_exam_ghost.png",
-          "assets/chapter2/illustrations/purification_enemy_silent_bubble.png"
+          "/assets/chapter2/story/illustrations/purification_enemy_energy_absorber.png",
+          "/assets/chapter2/story/illustrations/purification_enemy_exam_ghost.png",
+          "/assets/chapter2/story/illustrations/purification_enemy_silent_bubble.png"
         ],
-        "studentCardImage": "assets/chapter2/characters/student_card_main.png"
+        "studentCardImage": "/assets/chapter2/story/characters/student_card_main.png"
       },
       {
         "type": "section-marker",
@@ -10705,7 +10705,7 @@ window.STORY_DATA = {
         "hideActors": true,
         "hideIllustration": true,
         "chapterNumber": 2,
-        "logoSrc": "assets/story/common/ui/game_logo.png",
+        "logoSrc": "/assets/common/story/ui/game_logo.png",
         "creatorEnglish": "made by Ma Geon",
         "creatorKorean": "마 건",
         "remainingStarCount": 2,
@@ -12078,9 +12078,9 @@ window.STORY_CUSTOM_EFFECTS['battle-summary'] = ({ layer, item }) => {
   if (String(item.footer || '') === '오염 파편 출현') {
     item.duration = Math.max(Number(item.duration || 0), 6500);
     const monsterTypes = [
-      { image: '/assets/chapter2/waves/enemies/no_reply.png', alt: '팀플 잠수함' },
-      { image: '/assets/chapter2/waves/enemies/ghost_exam.png', alt: '족보 유령' },
-      { image: '/assets/chapter2/waves/enemies/energy_absorber.png', alt: '밤샘 에너지 흡수체' }
+      { image: '/assets/chapter2/combat/waves/enemies/no_reply.png', alt: '팀플 잠수함' },
+      { image: '/assets/chapter2/combat/waves/enemies/ghost_exam.png', alt: '족보 유령' },
+      { image: '/assets/chapter2/combat/waves/enemies/energy_absorber.png', alt: '밤샘 에너지 흡수체' }
     ];
     const clusterBases = [
       { x: 24, y: 59 },
@@ -12118,7 +12118,7 @@ window.STORY_CUSTOM_EFFECTS['battle-summary'] = ({ layer, item }) => {
         </div>
         <style>
           .c2-monster-raid{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#030107;animation:c2MonsterRaidShake 6.5s steps(1,end) both}
-          .c2-monster-raid-bg{position:absolute;inset:-4%;background:url('assets/chapter2/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.30) saturate(.64) contrast(1.08);transform:scale(1.06);animation:c2MonsterRaidBg 6.5s ease both}
+          .c2-monster-raid-bg{position:absolute;inset:-4%;background:url('/assets/chapter2/story/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.30) saturate(.64) contrast(1.08);transform:scale(1.06);animation:c2MonsterRaidBg 6.5s ease both}
           .c2-monster-raid-vignette{position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,rgba(183,121,255,.06) 0 15%,rgba(25,4,39,.34) 42%,rgba(0,0,0,.82) 100%),linear-gradient(180deg,rgba(0,0,0,.08),rgba(16,0,28,.52));z-index:1}
           .c2-monster-raid-corruption{position:absolute;z-index:2;left:50%;top:48%;width:min(46vw,520px);aspect-ratio:1;transform:translate(-50%,-50%) scale(.16);filter:drop-shadow(0 0 46px rgba(183,121,255,.9));animation:c2MonsterRaidCore 6.5s cubic-bezier(.16,.86,.2,1) both}
           .c2-monster-raid-corruption>i{position:absolute;border-radius:44% 56% 62% 38%/54% 46% 54% 46%;background:radial-gradient(circle at 38% 32%,#efe2ff 0 5%,#b779ff 14%,#7134ad 42%,#180620 72%);box-shadow:inset 0 0 36px rgba(255,255,255,.12),0 0 38px rgba(183,121,255,.58);mix-blend-mode:screen;animation:c2MonsterRaidBlob .72s ease-in-out infinite alternate}
@@ -12165,11 +12165,11 @@ window.STORY_CUSTOM_EFFECTS['purification-shard-absorption'] = ({ layer, item })
   const monsterImages = Array.isArray(item.monsterImages) && item.monsterImages.length >= 3
     ? item.monsterImages
     : [
-        'assets/chapter2/illustrations/purification_enemy_energy_absorber.png',
-        'assets/chapter2/illustrations/purification_enemy_exam_ghost.png',
-        'assets/chapter2/illustrations/purification_enemy_silent_bubble.png'
+        '/assets/chapter2/story/illustrations/purification_enemy_energy_absorber.png',
+        '/assets/chapter2/story/illustrations/purification_enemy_exam_ghost.png',
+        '/assets/chapter2/story/illustrations/purification_enemy_silent_bubble.png'
       ];
-  const studentCardImage = String(item.studentCardImage || 'assets/chapter2/characters/student_card_main.png');
+  const studentCardImage = String(item.studentCardImage || '/assets/chapter2/story/characters/student_card_main.png');
 
   const shardData = [
     { x: 37.0, y: 61.0, r: -24, d: 0, f: 0 },
@@ -13051,7 +13051,7 @@ window.STORY_CUSTOM_EFFECTS['arrival-lookaround'] = ({ layer, item }) => {
 
 window.STORY_CUSTOM_EFFECTS['cafe-project-montage'] = ({ layer }) => c2MakeLayer(layer, `
   <div class="c2-cafe-scene">
-    <img src="assets/chapter2/illustrations/ill_cafe_teamwork.png" alt="카페에서 팀 프로젝트를 준비하는 장면" />
+    <img src="/assets/chapter2/story/illustrations/ill_cafe_teamwork.png" alt="카페에서 팀 프로젝트를 준비하는 장면" />
   </div>
   <div class="c2-cafe-table c2-pop">
     <h2>카페에서 팀 프로젝트 최종 준비</h2>
@@ -13149,8 +13149,8 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
       <style>
         .c2-ch1-star-recovery{position:absolute;inset:0;overflow:hidden;background:#02050a;color:#fff}
         .c2-ch1-star-bg-corrupt,.c2-ch1-star-bg-clean{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat}
-        .c2-ch1-star-bg-corrupt{background-image:url('assets/chapter2/backgrounds/bg_ch2_blackhole_corrupt.png');animation:c2Ch1BgCorrupt 8.2s ease both}
-        .c2-ch1-star-bg-clean{background-image:url('assets/chapter2/backgrounds/bg_ch2_blackhole_purified.png');opacity:0;animation:c2Ch1BgClean 8.2s ease both}
+        .c2-ch1-star-bg-corrupt{background-image:url('/assets/chapter2/story/backgrounds/bg_ch2_blackhole_corrupt.png');animation:c2Ch1BgCorrupt 8.2s ease both}
+        .c2-ch1-star-bg-clean{background-image:url('/assets/chapter2/story/backgrounds/bg_ch2_blackhole_purified.png');opacity:0;animation:c2Ch1BgClean 8.2s ease both}
         .c2-ch1-star-recovery[data-mode="absorb"] .c2-ch1-star-bg-corrupt{display:none}
         .c2-ch1-star-recovery[data-mode="absorb"] .c2-ch1-star-bg-clean{opacity:1;animation:none}
         .c2-ch1-star-recovery:before{content:'';position:absolute;z-index:1;inset:0;background:radial-gradient(circle at 24% 26%,rgba(255,244,170,.12),transparent 18%),radial-gradient(circle at 76% 24%,rgba(255,222,110,.14),transparent 20%),repeating-linear-gradient(90deg,transparent 0 82px,rgba(255,255,255,.022) 83px 84px);animation:c2Ch1StarAmbient 8.2s ease both}
@@ -13258,12 +13258,12 @@ window.STORY_CUSTOM_EFFECTS['boss-defeat-stars'] = ({ layer, item }) => {
       <div class="c2-ch1-star-bg-clean"></div>
       <div class="c2-ch1-star-reveal-field"><div class="c2-ch1-star-reveal-pair"></div></div>
       <div class="c2-ch1-star-wave"></div>
-      <div class="c2-ch1-star-boss-wrap"><img class="c2-ch1-star-boss" src="assets/chapter2/characters/boss_phase2.png" alt="정화되는 팀플 블랙홀 무임승차자" /></div>
+      <div class="c2-ch1-star-boss-wrap"><img class="c2-ch1-star-boss" src="/assets/chapter2/story/characters/boss_phase2.png" alt="정화되는 팀플 블랙홀 무임승차자" /></div>
       <div class="c2-ch1-star-core"></div>
       <div class="c2-ch1-star-orbit"></div>
       <div class="c2-ch1-recovery-star exam"><span class="c2-ch1-recovery-star-shape"></span><i class="c2-ch1-recovery-star-bright-core"></i></div>
       <div class="c2-ch1-recovery-star teamwork"><span class="c2-ch1-recovery-star-shape"></span><i class="c2-ch1-recovery-star-bright-core"></i></div>
-      <div class="c2-ch1-star-card-wrap"><img class="c2-ch1-star-card" src="assets/chapter2/characters/student_card_main.png" alt="호반우 학생증" /></div>
+      <div class="c2-ch1-star-card-wrap"><img class="c2-ch1-star-card" src="/assets/chapter2/story/characters/student_card_main.png" alt="호반우 학생증" /></div>
       <div class="c2-ch1-star-ripple exam"></div>
       <div class="c2-ch1-star-ripple teamwork"></div>
     </div>`);
@@ -13645,7 +13645,7 @@ window.STORY_CUSTOM_EFFECTS['chapter-ending-credits'] = ({ item }) => {
   const remainingStarCount = Number.isFinite(Number(item.remainingStarCount))
     ? Number(item.remainingStarCount)
     : 2;
-  const logoSrc = String(item.logoSrc || 'assets/story/common/ui/game_logo.png');
+  const logoSrc = String(item.logoSrc || '/assets/common/story/ui/game_logo.png');
   const creatorEnglish = String(item.creatorEnglish || 'made by Ma Geon');
   const creatorKorean = String(item.creatorKorean || '마 건');
 
@@ -13775,7 +13775,7 @@ window.STORY_CUSTOM_EFFECTS['corruption-fire-transition'] = ({ layer, item }) =>
       <div class="c2-corruption-rupture-copy"><small>SYSTEM ANOMALY</small><strong>오염 반응 급상승</strong></div>
       <style>
         .c2-corruption-rupture{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#000;animation:c2CorruptionRuptureShake 5.2s steps(1,end) both}
-        .c2-corruption-rupture-bg{position:absolute;inset:-4%;background:url('assets/chapter2/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.56) saturate(.78);transform:scale(1.04);animation:c2CorruptionRuptureBg 5.2s ease both}
+        .c2-corruption-rupture-bg{position:absolute;inset:-4%;background:url('/assets/chapter2/story/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.56) saturate(.78);transform:scale(1.04);animation:c2CorruptionRuptureBg 5.2s ease both}
         .c2-corruption-rupture-dim{position:absolute;z-index:1;inset:0;background:radial-gradient(circle at 50% 48%,rgba(183,121,255,.03),rgba(42,5,68,.18) 38%,rgba(0,0,0,.82) 100%);animation:c2CorruptionRuptureDim 5.2s ease both}
         .c2-corruption-rupture-scan{position:absolute;z-index:2;inset:0;opacity:0;background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(183,121,255,.08) 4px,transparent 5px);mix-blend-mode:screen;animation:c2CorruptionRuptureScan 5.2s steps(2,end) both}
         .c2-corruption-rupture-cracks{position:absolute;z-index:5;left:50%;top:48%;width:min(80vw,1000px);height:min(74vh,760px);transform:translate(-50%,-50%)}
@@ -14048,7 +14048,7 @@ window.STORY_CUSTOM_EFFECTS['student-card-activation'] = ({ item }) => {
       </style>
       <div class="c2-card-activation-soft"></div>
       <div class="c2-card-activation-aura"></div>
-      <img class="c2-card-activation-image" src="assets/chapter2/characters/student_card_main.png" alt="호반우 학생증">
+      <img class="c2-card-activation-image" src="/assets/chapter2/story/characters/student_card_main.png" alt="호반우 학생증">
     </div>`;
   document.body.appendChild(host);
   return () => host.remove();
@@ -14060,7 +14060,7 @@ window.STORY_CUSTOM_EFFECTS['student-card-sleep'] = ({ layer, item }) => {
     <div class="c2-card-signal-end">
       <div class="c2-card-signal-dim"></div>
       <div class="c2-card-signal-aura"></div>
-      <img class="c2-card-signal-image" src="assets/chapter2/characters/student_card_main.png" alt="호반우 학생증" />
+      <img class="c2-card-signal-image" src="/assets/chapter2/story/characters/student_card_main.png" alt="호반우 학생증" />
     </div>
     <style>
       .c2-card-signal-end{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}

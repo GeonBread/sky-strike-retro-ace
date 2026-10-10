@@ -55,7 +55,7 @@ function getRuntimePlayerStyle(engine: GameSceneRenderEngine): PlayerWeaponStyle
 }
 
 const HOBANU_PLAYER_IMAGE = new Image();
-HOBANU_PLAYER_IMAGE.src = "/assets/player/hobanu_player.png";
+HOBANU_PLAYER_IMAGE.src = "/assets/common/player/hobanu_player.png";
 
 /**
  * 전투 가이드를 열기 전에 호반우 스프라이트가 실제로 디코딩되어 그릴 수 있는지 반환한다.
@@ -65,7 +65,7 @@ export function isHobanuPlayerVisualReady(): boolean {
   return HOBANU_PLAYER_IMAGE.complete && HOBANU_PLAYER_IMAGE.naturalWidth > 0;
 }
 
-const HOBANU_BULLET_BASE = "/assets/bullets/player/";
+const HOBANU_BULLET_BASE = "/assets/common/player/bullets/";
 const HOBANU_BULLET_IMAGE_CACHE = new Map<string, HTMLImageElement>();
 
 function getHobanuBulletImage(sprite: string): HTMLImageElement | null {

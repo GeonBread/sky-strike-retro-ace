@@ -25,8 +25,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "출석 도장탄"
     ],
     "hp": 15,
-    "sprite": "/assets/chapter1/waves/enemies/monster_01_attendance.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_01_attendance_stamp.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_01_attendance.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_01_attendance_stamp.png",
     "displayWidth": 87,
     "displayHeight": 102
   },
@@ -41,8 +41,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "4발 고정 확산"
     ],
     "hp": 14,
-    "sprite": "/assets/chapter1/waves/enemies/monster_02_absence.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_02_absence_stamp.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_02_absence.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_02_absence_stamp.png",
     "displayWidth": 92,
     "displayHeight": 94
   },
@@ -57,8 +57,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "근거리 충격파"
     ],
     "hp": 18,
-    "sprite": "/assets/chapter1/waves/enemies/monster_03_notice.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_03_bell.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_03_notice.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_03_bell.png",
     "displayWidth": 83,
     "displayHeight": 98
   },
@@ -73,8 +73,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "예측 조준"
     ],
     "hp": 22,
-    "sprite": "/assets/chapter1/waves/enemies/monster_04_student_id_terminal.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_04_student_id.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_04_student_id_terminal.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_04_student_id.png",
     "displayWidth": 97,
     "displayHeight": 92
   },
@@ -89,8 +89,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "고속 수직 낙하"
     ],
     "hp": 24,
-    "sprite": "/assets/chapter1/waves/enemies/monster_05_login_guard.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_05_password_lock.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_05_login_guard.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_05_password_lock.png",
     "displayWidth": 87,
     "displayHeight": 98
   },
@@ -105,8 +105,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "완만한 저주파 흔들림"
     ],
     "hp": 18,
-    "sprite": "/assets/chapter1/waves/enemies/monster_06_course_bug.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_06_cltr_chip.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_06_course_bug.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_06_cltr_chip.png",
     "displayWidth": 69,
     "displayHeight": 114
   },
@@ -121,8 +121,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "중복 위치 방지"
     ],
     "hp": 28,
-    "sprite": "/assets/chapter1/waves/enemies/monster_07_schedule_block.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_07_schedule_conflict.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_07_schedule_block.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_07_schedule_conflict.png",
     "displayWidth": 166,
     "displayHeight": 164
   },
@@ -137,8 +137,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "단순 확산 패턴"
     ],
     "hp": 24,
-    "sprite": "/assets/chapter1/waves/enemies/monster_08_seat_drone.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_08_zero_seat.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_08_seat_drone.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_08_zero_seat.png",
     "displayWidth": 92,
     "displayHeight": 98
   },
@@ -153,8 +153,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "흡수량만큼 반사"
     ],
     "hp": 32,
-    "sprite": "/assets/chapter1/waves/enemies/monster_09_cart_box.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_09_course_cart.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_09_cart_box.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_09_course_cart.png",
     "displayWidth": 97,
     "displayHeight": 94
   },
@@ -169,8 +169,8 @@ export const CHAPTER1_ENEMY_CATALOG: readonly Chapter1EnemyCatalogEntry[] = [
       "90도 꺾임"
     ],
     "hp": 25,
-    "sprite": "/assets/chapter1/waves/enemies/monster_10_coordinate_warp.png",
-    "bulletSprite": "/assets/chapter1/waves/bullets/bullet_10_arrow.png",
+    "sprite": "/assets/chapter1/combat/waves/enemies/monster_10_coordinate_warp.png",
+    "bulletSprite": "/assets/chapter1/combat/waves/bullets/bullet_10_arrow.png",
     "displayWidth": 90,
     "displayHeight": 94
   }
