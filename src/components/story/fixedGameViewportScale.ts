@@ -7,8 +7,9 @@ export const FIXED_CINEMATIC_VIEWPORT_HEIGHT = 1080;
 
 // 일반 스토리/웨이브 프레임은 브라우저 하단에 딱 붙지 않도록
 // 작은 안전 여백을 남긴다. 전체화면 시네마틱에는 적용하지 않는다.
-const STORY_SAFE_HORIZONTAL_PX = 12;
-const STORY_SAFE_VERTICAL_PX = 16;
+const STORY_SAFE_HORIZONTAL_PX = 24;
+const STORY_SAFE_VERTICAL_PX = 120;
+const STORY_SCALE_SAFETY = 0.90;
 
 function readAvailableViewport(): { width: number; height: number } {
   if (typeof window === "undefined") {
@@ -42,7 +43,7 @@ function readContainScale(width: number, height: number): number {
   const viewport = readAvailableViewport();
   const safeWidth = Math.max(1, viewport.width - STORY_SAFE_HORIZONTAL_PX * 2);
   const safeHeight = Math.max(1, viewport.height - STORY_SAFE_VERTICAL_PX * 2);
-  return Math.max(0.05, Math.min(safeWidth / width, safeHeight / height));
+  return Math.max(0.05, Math.min(safeWidth / width, safeHeight / height) * STORY_SCALE_SAFETY);
 }
 
 function readCoverScale(width: number, height: number): number {
