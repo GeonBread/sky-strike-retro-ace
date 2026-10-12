@@ -1,18 +1,66 @@
 /**
  * 스토리 배경 렌더러
  *
- * 챕터별 배경, 보스전 배경 색상, 별빛, 전투 격자 효과를 그린다.
- * 챕터 1은 캠퍼스 항공뷰 맵 배경을 천천히 아래 방향으로 이동시키며 렌더링한다.
+ * 챕터 1은 세로로 긴 캠퍼스 항공뷰 맵을 사용하며,
+ * 화면 자체는 고정한 채 카메라가 맵의 상단에서 하단으로 천천히 내려가도록 렌더링한다.
  */
 
-import { STORY_CHAPTER1_MAP_SCROLL_SPEED, STORY_CHAPTER1_PARALLAX_ALPHAS, STORY_CHAPTER1_PARALLAX_SPEEDS } from "../data/storyChapterBackgroundCatalog";
+import {
+  STORY_CHAPTER1_MAP_SCROLL_SPEED,
+  STORY_CHAPTER1_PARALLAX_ALPHAS,
+  STORY_CHAPTER1_PARALLAX_SPEEDS,
+} from "../data/storyChapterBackgroundCatalog";
 
 type BackgroundRenderEngine = any;
 
+function renderSingleMapPanDown(engine: BackgroundRenderEngine, img: HTMLImageElement, isBoss: boolean): void {
+  const canvasWidth = engine.canvas.width;
+  const canvasHeight = engine.canvas.height;
+
+  const scale = Math.max(canvasWidth / img.naturalWidth, canvasHeight / img.naturalHeight);
+  const visibleSourceWidth = Math.min(img.naturalWidth, canvasWidth / scale);
+  const visibleSourceHeight = Math.min(img.naturalHeight, canvasHeight / scale);
+  const sourceX = Math.max(0, (img.naturalWidth - visibleSourceWidth) * 0.5);
+  const maxSourceY = Math.max(0, img.naturalHeight - visibleSourceHeight);
+  const elapsedSeconds = performance.now() / 1000;
+
+  // 화면은 고정, 카메라가 맵 상단에서 하단으로 천천히 이동한다.
+  const sourceY = maxSourceY > 0
+    ? Math.min(maxSourceY, elapsedSeconds * (STORY_CHAPTER1_MAP_SCROLL_SPEED / scale))
+    : 0;
+
+  engine.ctx.drawImage(
+    img,
+    sourceX,
+    sourceY,
+    visibleSourceWidth,
+    visibleSourceHeight,
+    0,
+    0,
+    canvasWidth,
+    canvasHeight,
+  );
+
+  // 배경이 너무 어둡지 않도록 오버레이를 완화한다.
+  engine.ctx.fillStyle = isBoss ? "rgba(4, 8, 18, 0.20)" : "rgba(4, 8, 18, 0.10)";
+  engine.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  const vignette = engine.ctx.createRadialGradient(
+    canvasWidth * 0.5,
+    canvasHeight * 0.45,
+    Math.min(canvasWidth, canvasHeight) * 0.22,
+    canvasWidth * 0.5,
+    canvasHeight * 0.5,
+    Math.max(canvasWidth, canvasHeight) * 0.74,
+  );
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, isBoss ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.10)");
+  engine.ctx.fillStyle = vignette;
+  engine.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+}
+
 /**
- * 챕터 1 전용 배경을 캔버스 크기에 맞춰 렌더링한다.
- * - 레이어가 1장이면 세로로 긴 항공뷰 맵을 위→아래로 천천히 패닝한다.
- * - 레이어가 여러 장이면 기존 패럴랙스 렌더링을 유지한다.
+ * 챕터 1 전용 배경 렌더링.
  */
 export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderEngine, isBoss: boolean): boolean {
   if (!engine.chapter1BackgroundReady || engine.chapter1BackgroundLayers.length < 1) return false;
@@ -23,42 +71,7 @@ export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderE
   const layers = engine.chapter1BackgroundLayers as HTMLImageElement[];
 
   if (layers.length === 1) {
-    const img = layers[0];
-    const scale = Math.max(engine.canvas.width / img.naturalWidth, engine.canvas.height / img.naturalHeight);
-    const drawWidth = img.naturalWidth * scale;
-    const drawHeight = img.naturalHeight * scale;
-    const x = (engine.canvas.width - drawWidth) / 2;
-
-    const maxScroll = Math.max(0, drawHeight - engine.canvas.height);
-    const elapsedSeconds = performance.now() / 1000;
-    // 위에서 아래로 천천히 내려가도록 스크롤.
-    const scrollY = maxScroll > 0
-      ? (elapsedSeconds * STORY_CHAPTER1_MAP_SCROLL_SPEED) % (maxScroll + engine.canvas.height * 0.18)
-      : 0;
-    const clampedScrollY = Math.min(scrollY, maxScroll);
-    const y = -clampedScrollY;
-
-    engine.ctx.save();
-    engine.ctx.drawImage(img, x, y, drawWidth, drawHeight);
-
-    // 전투 가독성을 위해 살짝 어둡게 눌러 준다.
-    engine.ctx.fillStyle = isBoss ? "rgba(3, 8, 20, 0.38)" : "rgba(3, 8, 20, 0.24)";
-    engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
-
-    // 가장자리에 은은한 비네팅을 넣어 HUD와 탄막 가독성을 유지한다.
-    const vignette = engine.ctx.createRadialGradient(
-      engine.canvas.width * 0.5,
-      engine.canvas.height * 0.45,
-      Math.min(engine.canvas.width, engine.canvas.height) * 0.18,
-      engine.canvas.width * 0.5,
-      engine.canvas.height * 0.5,
-      Math.max(engine.canvas.width, engine.canvas.height) * 0.72,
-    );
-    vignette.addColorStop(0, "rgba(0,0,0,0)");
-    vignette.addColorStop(1, isBoss ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.22)");
-    engine.ctx.fillStyle = vignette;
-    engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
-    engine.ctx.restore();
+    renderSingleMapPanDown(engine, layers[0], isBoss);
     return true;
   }
 
@@ -82,7 +95,7 @@ export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderE
 
   if (isBoss) {
     engine.ctx.save();
-    engine.ctx.fillStyle = "rgba(2, 6, 23, 0.18)";
+    engine.ctx.fillStyle = "rgba(2, 6, 23, 0.12)";
     engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
     engine.ctx.restore();
   }
@@ -91,13 +104,13 @@ export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderE
 }
 
 /**
- * 현재 전투 티어와 보스전 여부를 기준으로 전투 배경 전체를 그린다.
- * 패럴랙스 배경을 사용할 수 없는 경우에는 그라데이션, 별, 격자 효과를 직접 렌더링한다.
+ * 전체 전투 배경 렌더링.
  */
 export function renderBackgroundSystem(engine: BackgroundRenderEngine): void {
   const tier = engine.getCombatTier();
   const isBoss = engine.bossActive || engine.state === "BOSSCUTSCENE";
   if (tier === 1 && engine.renderChapter1ParallaxBackground(isBoss)) return;
+
   const time = performance.now();
   const topColors = isBoss
     ? tier >= 4
@@ -152,5 +165,5 @@ export function renderBackgroundSystem(engine: BackgroundRenderEngine): void {
     }
   }
 
-  engine.ctx.globalAlpha = 1.0;
+  engine.ctx.globalAlpha = 1;
 }
