@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Shield } from "lucide-react";
 import { sfx } from "../../game/AudioSystem";
 import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProgress";
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter2StoryExperience.css";
 import "./chapter3StoryExperience.css";
+import { useFixedGameViewportScale } from "./fixedGameViewportScale";
 
 type Chapter3StoryExperienceProps = {
   onExit?: () => void;
@@ -271,6 +272,7 @@ function chapter3WaveCheckpoint(waveIndex: number): StoryCheckpoint {
 }
 
 export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }: Chapter3StoryExperienceProps) {
+  const fixedViewportScale = useFixedGameViewportScale();
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const waveFrameRef = useRef<HTMLIFrameElement | null>(null);
   const legacyProgressRef = useRef(readChapter3Progress());
@@ -1000,6 +1002,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
       data-chapter3-effect={fullscreenEffect || undefined}
       data-wave-paused={wavePaused ? "true" : undefined}
       aria-label="챕터 3"
+      style={{ "--fixed-game-viewport-scale": fixedViewportScale } as CSSProperties}
     >
       <iframe
         key={`chapter3-story-${storyLaunchSerial}`}

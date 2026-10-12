@@ -159,7 +159,7 @@
 
 .chapter2-story-frame-shell.is-combat-hidden {
   visibility: hidden;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .chapter2-story-test-navigation {
@@ -915,4 +915,53 @@
   48% { opacity: 1; transform: translate(-50%, -50%) scale(.74) rotate(2deg); }
   62% { transform: translate(-50%, -50%) scale(1.08) rotate(-1deg); }
   72%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+}
+
+
+/* V2.4 fixed 922x960 Chapter 2 viewport */
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+.chapter2-story-frame-shell.is-story-effect-fullscreen { transform: none !important; }
+.chapter2-fixed-combat-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+  pointer-events: auto;
+}
+.chapter2-fixed-combat-stage > div:first-child {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+.chapter2-wave-purification-overlay {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 922px !important;
+  height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
 }

@@ -943,3 +943,37 @@
 
 /* The Chapter 3 navigation now reuses Chapter 2's test-navigation layout and behavior. */
 .chapter3-story-test-navigation{z-index:2147483000;}
+
+
+/* V2.4 fixed 922x960 Chapter 3 story/wave viewport */
+.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame { transform: none !important; }
+.chapter3WaveFrame {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+.chapter3WaveHostHud {
+  width: 922px !important;
+  height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}

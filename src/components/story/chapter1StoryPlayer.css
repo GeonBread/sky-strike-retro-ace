@@ -415,3 +415,39 @@
 
 
 /* FIX19 · 보스 등장/HP 충전 시네마틱도 일반 24:25 게임 프레임 내부에서만 재생한다. */
+
+
+/* V2.4 fixed 922x960 story-combat viewport */
+.chapter1-story-boss-layer {
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+}
+.chapter1-story-boss-layer > div:first-child {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  flex: none !important;
+  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+.chapter1-wave-purification-overlay,
+.chapter1-combat-guide-overlay {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 922px !important;
+  height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  box-sizing: border-box !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}

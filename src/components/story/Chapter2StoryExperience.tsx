@@ -5,6 +5,7 @@ import {
   type StoryCheckpoint,
 } from "../../story/storyProgress";
 import "./chapter2StoryExperience.css";
+import { useFixedGameViewportScale } from "./fixedGameViewportScale";
 
 interface Chapter2StoryStateMessage {
   segmentId?: string;
@@ -187,6 +188,7 @@ export function Chapter2StoryExperience({
   renderWaveCombat,
   renderBossCombat,
 }: Chapter2StoryExperienceProps) {
+  const fixedViewportScale = useFixedGameViewportScale();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const startedAtRef = useRef(Date.now());
   const restoredRef = useRef(false);
@@ -931,7 +933,7 @@ export function Chapter2StoryExperience({
   const waveMounted = phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit";
 
   return (
-    <div className="chapter2-story-experience">
+    <div className="chapter2-story-experience" style={{ "--fixed-game-viewport-scale": fixedViewportScale } as React.CSSProperties}>
       <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive ? " is-story-effect-fullscreen" : ""}`}>
         <iframe
           ref={iframeRef}
@@ -943,7 +945,7 @@ export function Chapter2StoryExperience({
       </div>
 
       {waveMounted && (
-        <React.Fragment key={`chapter2-wave-run-${waveRunKey}`}>
+        <div key={`chapter2-wave-run-${waveRunKey}`} className="chapter2-fixed-combat-stage">
           {renderWaveCombat?.({
             startWaveIndex: waveStartIndex,
             controlCommand: waveControlCommand,
@@ -961,11 +963,11 @@ export function Chapter2StoryExperience({
             onFailed: failWaveCombat,
             onExitToMenu: exitWaveCombat,
           })}
-        </React.Fragment>
+        </div>
       )}
 
       {phase === "boss" && (
-        <React.Fragment key={`chapter2-boss-run-${bossRunKey}`}>
+        <div key={`chapter2-boss-run-${bossRunKey}`} className="chapter2-fixed-combat-stage">
           {renderBossCombat?.({
             startPatternId: bossStartPatternId,
             controlCommand: bossControlCommand,
@@ -974,7 +976,7 @@ export function Chapter2StoryExperience({
             onFailed: failBossCombat,
             onExitToMenu: exitBossCombat,
           })}
-        </React.Fragment>
+        </div>
       )}
 
       {storyBossEmergenceActive && phase === "story" && (

@@ -2694,6 +2694,145 @@ html.is-embedded-story .battle-transition {
 html.is-embedded-story .battle-transition-title strong {
   font-size: clamp(56px, 10vw, 150px) !important;
 }
+
+/* =========================================================
+   V2.4 FIXED 922x960 LOGICAL VIEWPORT
+   ========================================================= */
+html.is-embedded-story .demo-shell {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+}
+html.is-embedded-story .story-stage,
+html.is-embedded-story .story-stage.is-full-story,
+html.is-embedded-story .story-stage.is-game-mode,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  flex: none !important;
+  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+html.is-embedded-story .story-stage.is-scene-preview[data-preview-style="admission-hold-fit"],
+html.is-embedded-story .story-stage.is-core-portal-fullscreen,
+html.is-embedded-story .story-stage.is-gatekeeper-entrance-fullscreen,
+html.is-embedded-story .story-stage:is(.is-entry-story13-zoom,.is-entry-open-hold,.is-entry-door-rush,.is-entry-red-hold,.is-entry-interior-tour),
+html.is-embedded-story .story-stage.is-opening-cinematic {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  transform: none !important;
+}
+
+/* dialogue stays proportionally fixed inside 922x960 */
+html.is-embedded-story .dialogue-layer {
+  left: 32px !important;
+  right: 32px !important;
+  bottom: 43px !important;
+}
+html.is-embedded-story .dialogue-box {
+  min-height: 174px !important;
+  padding: 30px 38px !important;
+}
+html.is-embedded-story .dialogue-copy,
+html.is-embedded-story .dialogue-layer.speaker-right .dialogue-copy {
+  column-gap: 16px !important;
+}
+html.is-embedded-story .dialogue-marker { font-size: 32px !important; }
+html.is-embedded-story .dialogue-text {
+  font-size: 26px !important;
+  line-height: 1.46 !important;
+}
+html.is-embedded-story .speaker-tag {
+  left: 34px !important;
+  top: -31px !important;
+  min-width: 176px !important;
+  padding: 8px 20px !important;
+  font-size: 16px !important;
+}
+html.is-embedded-story .dialogue-layer.speaker-right .speaker-tag {
+  left: auto !important;
+  right: 34px !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .dialogue-marker::before,
+html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue .dialogue-marker::before {
+  font-size: 32px !important;
+}
+
+/* Hobanwoo returns to the previous FIX42 visual size. */
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character="hobanwoo"] {
+  bottom: 211px !important;
+  width: 340px !important;
+  height: 614px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform-origin: center bottom !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-right[data-character="hobanwoo"] {
+  right: 14px !important;
+  left: auto !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character="hobanwoo"] {
+  left: 14px !important;
+  right: auto !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character="hobanwoo"] .actor-image,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character="hobanwoo"].is-speaking.is-turn-pulse .actor-image {
+  left: 50% !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: 0 !important;
+  width: auto !important;
+  height: 356px !important;
+  max-width: 340px !important;
+  max-height: 356px !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  translate: -50% 0 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* common monsters also use a fixed slot */
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character^="monster_"] {
+  left: 30px !important;
+  bottom: 230px !important;
+  width: 300px !important;
+  height: 420px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform-origin: center bottom !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character^="monster_"].is-speaking,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character^="monster_"].is-inactive {
+  transform: translateX(0) scale(1) !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character^="monster_"] .actor-image,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character^="monster_"].is-speaking.is-turn-pulse .actor-image {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  transform: none !important;
+  animation: none !important;
+}
 `;
 }
 
@@ -2810,6 +2949,18 @@ export function createChapter1StoryRuntime({
   styleElement.textContent = normalizeStoryStyles(storyDocument.styles);
   document.head.appendChild(styleElement);
   root.innerHTML = normalizeStoryMarkup(storyDocument.markup);
+
+  const updateFixedGameViewportScale = () => {
+    const viewportWidth = Math.max(1, window.innerWidth);
+    const viewportHeight = Math.max(1, window.innerHeight);
+    const scale = Math.max(0.05, Math.min(viewportWidth / 922, viewportHeight / 960));
+    document.documentElement.style.setProperty("--fixed-game-viewport-scale", scale.toFixed(6));
+  };
+  updateFixedGameViewportScale();
+  window.addEventListener("resize", updateFixedGameViewportScale, { passive: true });
+  window.visualViewport?.addEventListener("resize", updateFixedGameViewportScale, { passive: true });
+  eventListeners.push({ type: "resize", listener: updateFixedGameViewportScale });
+
 
   // Part 1 첫 정화 후반부 전용 레이어. 기존 출석탄/학생증 마크업은 그대로 두고,
   // 학생증 위 정화 에너지 덩어리, 수렴 파장/입자, 원통형 빔, 속도선, 드론 파편/확장 파동을 추가한다.
@@ -3181,6 +3332,7 @@ export function createChapter1StoryRuntime({
     if (locationOverlayTimer !== null) window.clearTimeout(locationOverlayTimer);
     locationOverlayTimer = null;
     locationOverlay.remove();
+    window.visualViewport?.removeEventListener("resize", updateFixedGameViewportScale);
     document.querySelectorAll(
       ".story-effect-layer.is-global-gatekeeper-entrance, .chapter1-core-portal-overlay, .chapter1-core-vision-reveal, .chapter1-boss-map-arrival-fullscreen, .chapter1-boss-map-dialogue-reveal",
     ).forEach((element) => element.remove());
