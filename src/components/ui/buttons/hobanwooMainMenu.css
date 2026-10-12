@@ -2,12 +2,25 @@
   --hobanwoo-main-bg: url("/assets/common/backgrounds/main_menu_campus_bg.png");
   position: relative;
   width: 100%;
-  height: 100svh;
-  min-height: 560px;
+  height: 100dvh;
+  min-height: 0;
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(0, 119, 236, 0.02), rgba(0, 0, 0, 0.1)),
     var(--hobanwoo-main-bg) center center / cover no-repeat;
+}
+
+
+.hobanwooMainMenuViewport {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  overflow: visible;
+  container-type: size;
+  container-name: hobanwoo-main-stage;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 /* V10 · 실제 기기 로컬 시간에 맞춘 메인 화면 캠퍼스 배경 */
@@ -38,10 +51,10 @@
 
 .hobanwooSiteLogo {
   position: absolute;
-  top: clamp(12px, 2.2vh, 24px);
-  left: clamp(12px, 2.2vw, 28px);
+  top: clamp(12px, 2.2cqh, 24px);
+  left: clamp(12px, 2.2cqw, 28px);
   z-index: 8;
-  width: clamp(58px, 7vw, 96px);
+  width: clamp(58px, 7cqw, 96px);
   height: auto;
   user-select: none;
   -webkit-user-drag: none;
@@ -52,7 +65,7 @@
 /* 시작 화면과 모드 메뉴가 동일한 로고 엘리먼트를 공유한다. */
 .hobanwooMainLogoStage {
   position: absolute;
-  top: clamp(10px, 2.1vh, 24px);
+  top: clamp(10px, 2.1cqh, 24px);
   left: 50%;
   z-index: 5;
   display: grid;
@@ -66,9 +79,9 @@
 
 .hobanwooMainLogo {
   display: block;
-  width: min(78vw, 420px);
+  width: min(78cqw, 420px);
   height: auto;
-  max-height: 56vh;
+  max-height: 56cqh;
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
@@ -81,11 +94,11 @@
 }
 
 .hobanwooMainMenu.menu-open .hobanwooMainLogoStage {
-  top: clamp(5px, 0.8vh, 10px);
+  top: clamp(5px, 0.8cqh, 10px);
 }
 
 .hobanwooMainMenu.menu-open .hobanwooMainLogo {
-  width: clamp(96px, 22vw, 126px);
+  width: clamp(96px, 22cqw, 126px);
   filter: drop-shadow(0 7px 10px rgba(0, 18, 48, 0.34));
 }
 
@@ -93,7 +106,7 @@
   position: absolute;
   left: 50%;
   /* 큰 로고의 하단과 시작 버튼이 겹치지 않도록 충분한 간격을 확보합니다. */
-  top: clamp(485px, 67vh, 625px);
+  top: clamp(485px, 67cqh, 625px);
   z-index: 6;
   display: grid;
   place-items: center;
@@ -117,12 +130,12 @@
 .hobanwooMainButtonColumn {
   position: absolute;
   left: 50%;
-  top: clamp(145px, 18.5vh, 178px);
+  top: clamp(145px, 18.5cqh, 178px);
   z-index: 5;
   display: grid;
   justify-items: center;
-  gap: clamp(4px, 0.7vh, 9px);
-  width: min(92vw, 450px);
+  gap: clamp(4px, 0.7cqh, 9px);
+  width: min(92cqw, 450px);
   overflow: visible;
   opacity: 0;
   visibility: hidden;
@@ -143,7 +156,7 @@
 }
 
 .hobanwooTempShipButton {
-  width: clamp(220px, 26vw, 350px);
+  width: clamp(220px, 26cqw, 350px);
   min-height: 64px;
   display: inline-flex;
   align-items: center;
@@ -158,7 +171,7 @@
     inset 0 0 0 7px #d7a83f,
     0 8px 9px rgba(3, 14, 31, 0.24);
   color: #10233f;
-  font-size: clamp(22px, 2.3vw, 32px);
+  font-size: clamp(22px, 2.3cqw, 32px);
   font-weight: 1000;
   letter-spacing: -0.07em;
   cursor: pointer;
@@ -200,7 +213,7 @@
   pointer-events: none !important;
 }
 
-@media (max-width: 760px) {
+@container hobanwoo-main-stage (max-width: 760px) {
   .hobanwooMainMenu {
     background:
       linear-gradient(180deg, rgba(0, 119, 236, 0.02), rgba(0, 0, 0, 0.08)),
@@ -216,25 +229,25 @@
   }
 
   .hobanwooMainLogo {
-    width: min(76vw, 380px);
+    width: min(76cqw, 380px);
   }
 
   .hobanwooMainMenu.menu-open .hobanwooMainLogo {
-    width: clamp(94px, 22vw, 118px);
+    width: clamp(94px, 22cqw, 118px);
   }
 
   .hobanwooMainStartControls {
-    top: clamp(470px, 68vh, 590px);
+    top: clamp(470px, 68cqh, 590px);
   }
 
   .hobanwooMainButtonColumn {
-    top: clamp(140px, 18.5vh, 154px);
-    width: min(92vw, 360px);
+    top: clamp(140px, 18.5cqh, 154px);
+    width: min(92cqw, 360px);
     gap: 4px;
   }
 
   .hobanwooTempShipButton {
-    width: min(76vw, 300px);
+    width: min(76cqw, 300px);
     min-height: 58px;
     font-size: 24px;
   }
@@ -260,52 +273,52 @@
    - 작은 화면일수록 버튼 사이가 더 조밀해지고, 큰 화면에서는 약간의 여유를 둡니다.
    ========================================================= */
 .hobanwooMainButtonColumn {
-  top: clamp(112px, 14.2vh, 148px) !important;
-  gap: clamp(0px, .22vh, 3px) !important;
+  top: clamp(112px, 14.2cqh, 148px) !important;
+  gap: clamp(0px, .22cqh, 3px) !important;
 }
 
 /* 스토리 모드: 아래쪽 투명 캔버스 여백을 줄입니다. */
 .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(1) {
-  margin-bottom: calc(-1 * clamp(32px, 5.4vh, 54px));
+  margin-bottom: calc(-1 * clamp(32px, 5.4cqh, 54px));
 }
 
 /* 도전 모드: 위/아래 투명 여백을 함께 상쇄합니다. */
 .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(2) {
-  margin-top: calc(-1 * clamp(22px, 3.8vh, 40px));
-  margin-bottom: calc(-1 * clamp(32px, 5.2vh, 52px));
+  margin-top: calc(-1 * clamp(22px, 3.8cqh, 40px));
+  margin-bottom: calc(-1 * clamp(32px, 5.2cqh, 52px));
 }
 
 /* 순위 / 설정: 이미지 캔버스의 큰 상하 여백을 압축합니다. */
 .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(3),
 .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(4) {
-  margin-top: calc(-1 * clamp(28px, 4.8vh, 48px));
-  margin-bottom: calc(-1 * clamp(28px, 4.8vh, 48px));
+  margin-top: calc(-1 * clamp(28px, 4.8cqh, 48px));
+  margin-bottom: calc(-1 * clamp(28px, 4.8cqh, 48px));
 }
 
 /* 기체 선택은 이미지 여백이 없으므로 앞 버튼과의 간격만 자연스럽게 맞춥니다. */
 .hobanwooMainButtonColumn > .hobanwooTempShipButton {
-  margin-top: calc(-1 * clamp(6px, 1vh, 10px));
+  margin-top: calc(-1 * clamp(6px, 1cqh, 10px));
 }
 
-@media (max-width: 760px) {
+@container hobanwoo-main-stage (max-width: 760px) {
   .hobanwooMainButtonColumn {
-    top: clamp(108px, 13.4vh, 132px) !important;
-    gap: clamp(0px, .12vh, 2px) !important;
+    top: clamp(108px, 13.4cqh, 132px) !important;
+    gap: clamp(0px, .12cqh, 2px) !important;
   }
 
   .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(1) {
-    margin-bottom: calc(-1 * clamp(34px, 5.6vh, 46px));
+    margin-bottom: calc(-1 * clamp(34px, 5.6cqh, 46px));
   }
 
   .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(2) {
-    margin-top: calc(-1 * clamp(24px, 4.2vh, 36px));
-    margin-bottom: calc(-1 * clamp(34px, 5.5vh, 46px));
+    margin-top: calc(-1 * clamp(24px, 4.2cqh, 36px));
+    margin-bottom: calc(-1 * clamp(34px, 5.5cqh, 46px));
   }
 
   .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(3),
   .hobanwooMainButtonColumn > .hobanwooButtonWrap:nth-child(4) {
-    margin-top: calc(-1 * clamp(30px, 5vh, 42px));
-    margin-bottom: calc(-1 * clamp(30px, 5vh, 42px));
+    margin-top: calc(-1 * clamp(30px, 5cqh, 42px));
+    margin-bottom: calc(-1 * clamp(30px, 5cqh, 42px));
   }
 }
 
@@ -316,9 +329,9 @@
    - 기체 선택 버튼의 hit area를 별도 레이어로 고정해 설정 hover 중첩 방지
    ========================================================= */
 .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
-  top: clamp(138px, 17vh, 176px) !important;
-  width: min(92vw, 430px) !important;
-  gap: clamp(9px, 1.15vh, 15px) !important;
+  top: clamp(138px, 17cqh, 176px) !important;
+  width: min(92cqw, 430px) !important;
+  gap: clamp(9px, 1.15cqh, 15px) !important;
   overflow: visible;
 }
 
@@ -350,7 +363,7 @@
   position: relative;
   z-index: 20;
   isolation: isolate;
-  width: clamp(236px, 28vw, 360px);
+  width: clamp(236px, 28cqw, 360px);
   min-height: 82px;
   display: grid;
   grid-template-columns: 50px 1fr 26px;
@@ -451,7 +464,7 @@
 }
 
 .hobanwooShipSelectButtonCopy strong {
-  font-size: clamp(23px, 2.5vw, 31px);
+  font-size: clamp(23px, 2.5cqw, 31px);
   font-weight: 1000;
   letter-spacing: -.075em;
 }
@@ -473,15 +486,15 @@
   transform: translateY(-1px);
 }
 
-@media (max-width: 760px) {
+@container hobanwoo-main-stage (max-width: 760px) {
   .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
-    top: clamp(130px, 16vh, 155px) !important;
-    width: min(94vw, 360px) !important;
+    top: clamp(130px, 16cqh, 155px) !important;
+    width: min(94cqw, 360px) !important;
     gap: 8px !important;
   }
 
   .hobanwooShipSelectButton {
-    width: min(80vw, 310px);
+    width: min(80cqw, 310px);
     min-height: 74px;
     grid-template-columns: 44px 1fr 22px;
     gap: 9px;
@@ -506,8 +519,8 @@
    - 보이는 버튼과 실제 마우스 영역이 겹치지 않으면서 조밀하게 정렬
    ========================================================= */
 .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
-  top: clamp(126px, 15.5vh, 158px) !important;
-  gap: clamp(10px, 1.15vh, 14px) !important;
+  top: clamp(126px, 15.5cqh, 158px) !important;
+  gap: clamp(10px, 1.15cqh, 14px) !important;
 }
 
 .hobanwooMainButtonColumnV8 > .hobanwooButtonWrap {
@@ -517,16 +530,16 @@
 
 .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode,
 .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
-  height: clamp(76px, 9.2vh, 88px);
+  height: clamp(76px, 9.2cqh, 88px);
   overflow: visible;
 }
 
 .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode {
-  width: clamp(230px, 28vw, 390px);
+  width: clamp(230px, 28cqw, 390px);
 }
 
 .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
-  width: clamp(210px, 25vw, 340px);
+  width: clamp(210px, 25cqw, 340px);
 }
 
 .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode img,
@@ -544,15 +557,15 @@
   min-height: 76px;
 }
 
-@media (max-width: 760px) {
+@container hobanwoo-main-stage (max-width: 760px) {
   .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
-    top: clamp(118px, 14.5vh, 145px) !important;
+    top: clamp(118px, 14.5cqh, 145px) !important;
     gap: 9px !important;
   }
 
   .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode,
   .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
-    height: clamp(72px, 9vh, 82px);
+    height: clamp(72px, 9cqh, 82px);
   }
 
   .hobanwooMainButtonColumnV8 .hobanwooShipSelectButton {
@@ -567,57 +580,57 @@
    - 로고와 메뉴가 겹쳐 보이지 않도록 로고는 조금 작게, 메뉴는 아래로 이동합니다.
    ========================================================= */
 .hobanwooMainMenu.menu-open .hobanwooMainLogoStage {
-  top: clamp(12px, 1.6vh, 18px) !important;
+  top: clamp(12px, 1.6cqh, 18px) !important;
 }
 
 .hobanwooMainMenu.menu-open .hobanwooMainLogo {
-  width: clamp(108px, 18vw, 120px) !important;
+  width: clamp(108px, 18cqw, 120px) !important;
 }
 
 .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
-  top: clamp(166px, 21.2vh, 190px) !important;
-  width: min(92vw, 420px) !important;
+  top: clamp(166px, 21.2cqh, 190px) !important;
+  width: min(92cqw, 420px) !important;
   gap: 0 !important;
 }
 
 /* 보이는 스토리 버튼과 설정 버튼 사이에 실제 여백 확보 */
 .hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(1) {
-  margin: 0 0 clamp(18px, 2.2vh, 24px) 0 !important;
+  margin: 0 0 clamp(18px, 2.2cqh, 24px) 0 !important;
 }
 
 /* 설정 버튼과 기체 선택 사이에도 같은 리듬의 여백 확보 */
 .hobanwooMainButtonColumnV8 > .hobanwooButtonWrap:nth-child(2) {
-  margin: 0 0 clamp(16px, 2vh, 22px) 0 !important;
+  margin: 0 0 clamp(16px, 2cqh, 22px) 0 !important;
 }
 
 .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode {
-  width: min(88vw, 380px) !important;
-  height: clamp(82px, 10.2vh, 96px) !important;
+  width: min(88cqw, 380px) !important;
+  height: clamp(82px, 10.2cqh, 96px) !important;
 }
 
 .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
-  width: min(82vw, 350px) !important;
-  height: clamp(78px, 9.5vh, 90px) !important;
+  width: min(82cqw, 350px) !important;
+  height: clamp(78px, 9.5cqh, 90px) !important;
 }
 
 .hobanwooMainButtonColumnV8 .hobanwooShipSelectButton {
-  width: min(84vw, 350px) !important;
+  width: min(84cqw, 350px) !important;
   min-height: 78px !important;
   margin: 0 !important;
 }
 
-@media (max-width: 760px) {
+@container hobanwoo-main-stage (max-width: 760px) {
   .hobanwooMainMenu.menu-open .hobanwooMainLogoStage {
     top: 10px !important;
   }
 
   .hobanwooMainMenu.menu-open .hobanwooMainLogo {
-    width: clamp(102px, 20vw, 116px) !important;
+    width: clamp(102px, 20cqw, 116px) !important;
   }
 
   .hobanwooMainButtonColumn.hobanwooMainButtonColumnV8 {
-    top: clamp(154px, 20vh, 174px) !important;
-    width: min(94vw, 370px) !important;
+    top: clamp(154px, 20cqh, 174px) !important;
+    width: min(94cqw, 370px) !important;
     gap: 0 !important;
   }
 
@@ -630,22 +643,22 @@
   }
 
   .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignStoryMode {
-    width: min(88vw, 360px) !important;
+    width: min(88cqw, 360px) !important;
     height: 88px !important;
   }
 
   .hobanwooMainButtonColumnV8 .hobanwooSpriteButton.variant-redesignSettings {
-    width: min(80vw, 330px) !important;
+    width: min(80cqw, 330px) !important;
     height: 82px !important;
   }
 
   .hobanwooMainButtonColumnV8 .hobanwooShipSelectButton {
-    width: min(82vw, 340px) !important;
+    width: min(82cqw, 340px) !important;
     min-height: 76px !important;
   }
 }
 
-@media (max-height: 650px) {
+@container hobanwoo-main-stage (max-height: 650px) {
   .hobanwooMainMenu.menu-open .hobanwooMainLogo {
     width: 100px !important;
   }
@@ -660,188 +673,14 @@
   }
 }
 
-/* =========================================================
-   V11 · 첨부 제작 버튼 4종 메인 메뉴
-   - 스토리 모드 / 설정 / 기체 선택 / 제작 정보 PNG를 원본 비율 그대로 사용한다.
-   - 각 버튼은 독립 hit area를 가지며 서로 겹치지 않는다.
-   ========================================================= */
-.hobanwooMainMenu.menu-open .hobanwooMainLogoStage {
-  top: clamp(10px, 1.4vh, 16px) !important;
+
+/* VIEWPORT_RATIO_LOCK_V1: sprite-button image widths follow the fixed menu stage, not browser zoom. */
+.hobanwooMainMenuViewport .hobanwooSpriteButton.size-start img {
+  width: clamp(250px, 28cqw, 360px);
 }
-
-.hobanwooMainMenu.menu-open .hobanwooMainLogo {
-  width: clamp(104px, 17vw, 120px) !important;
+.hobanwooMainMenuViewport .hobanwooSpriteButton.size-main img {
+  width: clamp(230px, 28cqw, 390px);
 }
-
-.hobanwooMainButtonColumn.hobanwooMainButtonColumnV11 {
-  top: clamp(136px, 17.5vh, 166px) !important;
-  width: min(92vw, 430px) !important;
-  display: flex !important;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: clamp(8px, 1.05vh, 12px) !important;
-  overflow: visible;
+.hobanwooMainMenuViewport .hobanwooSpriteButton.size-sub img {
+  width: clamp(210px, 25cqw, 340px);
 }
-
-.hobanwooMainArtButton {
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  isolation: isolate;
-  transform: translateY(0) scale(1);
-  transform-origin: center;
-  transition:
-    transform 150ms cubic-bezier(.2,.82,.2,1),
-    filter 150ms ease;
-}
-
-.hobanwooMainArtButton img {
-  display: block;
-  width: 100%;
-  height: auto;
-  user-select: none;
-  pointer-events: none;
-  -webkit-user-drag: none;
-  filter: drop-shadow(0 10px 12px rgba(2, 13, 31, .28));
-}
-
-.hobanwooMainArtButton.tone-story {
-  width: min(86vw, 330px);
-}
-
-.hobanwooMainArtButton.tone-settings {
-  width: min(70vw, 252px);
-}
-
-.hobanwooMainArtButton.tone-ship {
-  width: min(82vw, 310px);
-}
-
-.hobanwooMainArtButton.tone-production {
-  width: min(76vw, 282px);
-}
-
-.hobanwooMainArtButton:hover:not(:disabled) {
-  z-index: 4;
-  transform: translateY(-3px) scale(1.022);
-  filter: brightness(1.06) saturate(1.06);
-}
-
-.hobanwooMainArtButton:active:not(:disabled) {
-  transform: translateY(1px) scale(.985);
-  filter: brightness(.98);
-}
-
-.hobanwooMainArtButton:focus-visible {
-  outline: 4px solid #ffe27a;
-  outline-offset: 4px;
-  border-radius: 22px;
-}
-
-.hobanwooMainArtButton:disabled {
-  pointer-events: none;
-  opacity: .5;
-}
-
-.hobanwooMainMenu.is-inert .hobanwooMainArtButton {
-  pointer-events: none !important;
-}
-
-@media (max-width: 760px) {
-  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV11 {
-    top: clamp(130px, 16.8vh, 154px) !important;
-    width: min(94vw, 380px) !important;
-    gap: 8px !important;
-  }
-
-  .hobanwooMainArtButton.tone-story { width: min(86vw, 314px); }
-  .hobanwooMainArtButton.tone-settings { width: min(69vw, 238px); }
-  .hobanwooMainArtButton.tone-ship { width: min(81vw, 294px); }
-  .hobanwooMainArtButton.tone-production { width: min(74vw, 266px); }
-}
-
-@media (max-height: 720px) {
-  .hobanwooMainMenu.menu-open .hobanwooMainLogo {
-    width: 96px !important;
-  }
-
-  .hobanwooMainButtonColumn.hobanwooMainButtonColumnV11 {
-    top: 116px !important;
-    gap: 5px !important;
-  }
-
-  .hobanwooMainArtButton.tone-story { width: min(80vw, 286px); }
-  .hobanwooMainArtButton.tone-settings { width: min(64vw, 220px); }
-  .hobanwooMainArtButton.tone-ship { width: min(76vw, 270px); }
-  .hobanwooMainArtButton.tone-production { width: min(69vw, 246px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hobanwooMainArtButton {
-    transition: none;
-  }
-}
-
-/* =========================================================
-   V2.6 · MAIN MENU OWN REFERENCE LAYOUT
-   - Main menu remains a true full-screen page.
-   - Only its UI layer uses a 1600×900 reference canvas and one uniform scale.
-   - Background/shade continue to cover the browser viewport.
-   - This prevents vw/vh/clamp from changing each element at a different rate.
-   ========================================================= */
-.hobanwooMainMenuUiStage {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 4;
-  width: 1600px;
-  height: 900px;
-  overflow: visible;
-  transform: translate(-50%, -50%) scale(var(--main-menu-ui-scale, 1));
-  transform-origin: center center;
-}
-
-.hobanwooMainMenuUiStage .hobanwooSiteLogo {
-  top: 20px !important;
-  left: 28px !important;
-  width: 96px !important;
-}
-
-.hobanwooMainMenuUiStage .hobanwooMainLogoStage {
-  top: 19px !important;
-}
-
-.hobanwooMainMenuUiStage .hobanwooMainLogo {
-  width: 420px !important;
-  max-height: 504px !important;
-}
-
-.hobanwooMainMenu.menu-open .hobanwooMainMenuUiStage .hobanwooMainLogoStage {
-  top: 12px !important;
-}
-
-.hobanwooMainMenu.menu-open .hobanwooMainMenuUiStage .hobanwooMainLogo {
-  width: 120px !important;
-}
-
-.hobanwooMainMenuUiStage .hobanwooMainStartControls {
-  top: 603px !important;
-}
-
-.hobanwooMainMenuUiStage .hobanwooMainButtonColumn.hobanwooMainButtonColumnV11 {
-  top: 158px !important;
-  width: 430px !important;
-  gap: 9px !important;
-}
-
-.hobanwooMainMenuUiStage .hobanwooMainArtButton.tone-story { width: 330px !important; }
-.hobanwooMainMenuUiStage .hobanwooMainArtButton.tone-settings { width: 252px !important; }
-.hobanwooMainMenuUiStage .hobanwooMainArtButton.tone-ship { width: 310px !important; }
-.hobanwooMainMenuUiStage .hobanwooMainArtButton.tone-production { width: 282px !important; }

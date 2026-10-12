@@ -416,79 +416,39 @@
 
 /* FIX19 · 보스 등장/HP 충전 시네마틱도 일반 24:25 게임 프레임 내부에서만 재생한다. */
 
+/* =========================================================
+   VIEWPORT_RATIO_LOCK_V1
+   Keep the Chapter 1 runtime on a fixed 922x960 logical surface.
+   The global cinematic overlay remains outside this scaled shell so true
+   fullscreen effects can still cover the browser viewport.
+   ========================================================= */
+.chapter1-story-mount {
+  position: relative;
+}
 
-/* V2.4 fixed 922x960 story-combat viewport */
-.chapter1-story-boss-layer {
-  display: grid !important;
-  place-items: center !important;
-  overflow: hidden !important;
-}
-.chapter1-story-boss-layer > div:first-child {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  flex: none !important;
-  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-.chapter1-wave-purification-overlay,
-.chapter1-combat-guide-overlay {
-  position: fixed !important;
+.chapter1-story-mount > .demo-shell {
+  position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
   width: 922px !important;
   height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  box-sizing: border-box !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
+  transform: translate(-50%, -50%) scale(var(--chapter1-story-scale, 1)) !important;
   transform-origin: center center !important;
+  container-type: size;
+  container-name: chapter1-story-shell;
+  will-change: transform;
 }
 
-/* =========================================================
-   V2.6 · per-screen ratio correction
-   - test navigation follows the same single scale as the 922×960 story frame
-   - purification remains a true browser-fullscreen effect
-   ========================================================= */
-.chapter1-story-test-navigation {
-  transform: scale(var(--fixed-game-viewport-scale, 1));
-  transform-origin: top right;
-}
-
-.chapter1-wave-purification-overlay {
-  left: 0 !important;
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
-  max-width: none !important;
+.chapter1-story-mount .story-stage.is-full-story:not(.is-game-mode) {
+  width: 921.6px !important;
+  height: 960px !important;
   max-height: none !important;
-  aspect-ratio: auto !important;
-  transform: none !important;
+  aspect-ratio: 24 / 25 !important;
 }
 
-/* =========================================================
-   V2.8 · fixed-ratio test navigation scroll correction
-   The navigation itself is scaled with the 922×960 reference frame, so its
-   scrollable height must also be expressed in that unscaled reference space.
-   Using 100dvh here made the transformed panel taller than the real viewport.
-   ========================================================= */
-.chapter1-story-test-navigation {
-  max-height: 936px;
-}
-
-.chapter1-story-test-panel {
-  width: 360px;
-  max-height: 880px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+.chapter1-story-mount .story-stage.is-game-mode {
+  width: 800px !important;
+  height: 960px !important;
+  max-height: none !important;
+  aspect-ratio: 5 / 6 !important;
 }

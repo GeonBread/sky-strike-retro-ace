@@ -9,19 +9,16 @@
 }
 
 .chapter2-story-frame-shell {
-  width: min(96dvh, 100vw);
-  height: min(100dvh, 104.167vw);
+  width: min(96dvh, 100cqw);
+  height: 100dvh;
   min-height: 0;
-  max-width: 100vw;
-  max-height: 100dvh;
-  aspect-ratio: 24 / 25;
   overflow: hidden;
   background: #000;
 }
 
 
 .chapter2-story-frame-shell.is-story-effect-fullscreen {
-  width: 100vw;
+  width: 100cqw;
   height: 100dvh;
   max-width: none;
 }
@@ -57,7 +54,7 @@
 
 .chapter2-story-loading strong {
   color: #e60000;
-  font-size: clamp(24px, 4vw, 42px);
+  font-size: clamp(24px, 4cqw, 42px);
   letter-spacing: .12em;
 }
 
@@ -68,7 +65,7 @@
 
 .chapter2-integration-gate section,
 .chapter2-story-exit-overlay section {
-  width: min(92vw, 520px);
+  width: min(92cqw, 520px);
   padding: 28px;
   border: 2px solid rgba(230, 0, 0, .55);
   border-radius: 18px;
@@ -92,7 +89,7 @@
 .chapter2-integration-gate h2,
 .chapter2-story-exit-overlay h2 {
   margin: 0 0 12px;
-  font-size: clamp(24px, 5vw, 38px);
+  font-size: clamp(24px, 5cqw, 38px);
   line-height: 1.15;
 }
 
@@ -146,7 +143,7 @@
 
 @media (max-width: 800px) {
   .chapter2-story-frame-shell {
-    width: 100vw;
+    width: 100cqw;
     height: 100dvh;
   }
 
@@ -212,7 +209,7 @@
 }
 
 .chapter2-story-test-panel {
-  width: min(92vw, 390px);
+  width: min(92cqw, 390px);
   max-height: calc(100dvh - 66px);
   overflow-y: auto;
   padding: 14px;
@@ -331,7 +328,7 @@
   }
 
   .chapter2-story-test-panel {
-    width: min(94vw, 360px);
+    width: min(94cqw, 360px);
     max-height: calc(100dvh - 55px);
     padding: 11px;
   }
@@ -371,7 +368,7 @@
 
 .chapter2-fullscreen-wave-intro-slash {
   position: absolute;
-  width: 170vmax;
+  width: 170cqmax;
   height: 4px;
   background: #fff;
   transform: rotate(-18deg) scaleX(0);
@@ -392,14 +389,14 @@
 .chapter2-fullscreen-wave-intro-title small {
   display: block;
   color: #fff;
-  font: 1000 clamp(13px, 1.5vw, 20px)/1.2 "Courier New", "Noto Sans KR", monospace;
+  font: 1000 clamp(13px, 1.5cqw, 20px)/1.2 "Courier New", "Noto Sans KR", monospace;
   letter-spacing: .42em;
 }
 
 .chapter2-fullscreen-wave-intro-title strong {
   display: block;
   color: #fff;
-  font: italic 1000 clamp(54px, 10vw, 154px)/1.03 "Noto Sans KR", system-ui, sans-serif;
+  font: italic 1000 clamp(54px, 10cqw, 154px)/1.03 "Noto Sans KR", system-ui, sans-serif;
   letter-spacing: -.05em;
   word-break: keep-all;
 }
@@ -408,7 +405,7 @@
   display: block;
   margin-top: 8px;
   color: #ffe0a8;
-  font: 900 clamp(11px, 1.15vw, 15px)/1.35 "Noto Sans KR", system-ui, sans-serif;
+  font: 900 clamp(11px, 1.15cqw, 15px)/1.35 "Noto Sans KR", system-ui, sans-serif;
   letter-spacing: .16em;
   word-break: keep-all;
 }
@@ -500,7 +497,7 @@
 
 .chapter2-boss-intro-slash {
   position: absolute;
-  width: 170vmax;
+  width: 170cqmax;
   height: 5px;
   left: 50%;
   top: 50%;
@@ -523,7 +520,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(62vw, 620px);
+  width: min(62cqw, 620px);
   aspect-ratio: 1;
   border: 3px solid rgba(255, 61, 87, .82);
   border-radius: 50%;
@@ -536,7 +533,7 @@
 }
 
 .chapter2-boss-intro-ring.ring-b {
-  width: min(46vw, 450px);
+  width: min(46cqw, 450px);
   border-style: dashed;
   animation: chapter2BossIntroRingB 2.2s .9s ease-out both;
 }
@@ -551,7 +548,7 @@
   background: rgba(50, 0, 8, .86);
   color: #ffb0bb;
   text-align: center;
-  font: 1000 clamp(10px, 1.3vw, 15px)/1 "Courier New", monospace;
+  font: 1000 clamp(10px, 1.3cqw, 15px)/1 "Courier New", monospace;
   letter-spacing: .38em;
   opacity: 0;
   animation: chapter2BossIntroWarning 2.5s .68s steps(2, end) both;
@@ -560,8 +557,8 @@
 .chapter2-boss-intro-copy {
   position: relative;
   z-index: 5;
-  width: min(94vw, 1040px);
-  padding: clamp(26px, 5vw, 48px) clamp(20px, 4vw, 42px);
+  width: min(94cqw, 1040px);
+  padding: clamp(26px, 5cqw, 48px) clamp(20px, 4cqw, 42px);
   border-block: 4px solid #fff;
   background: linear-gradient(90deg, transparent, rgba(0,0,0,.84) 14%, rgba(0,0,0,.92) 50%, rgba(0,0,0,.84) 86%, transparent);
   text-align: center;
@@ -577,7 +574,7 @@
 .chapter2-boss-intro-copy small {
   display: block;
   color: #ff5570;
-  font: 1000 clamp(11px, 1.25vw, 16px)/1.2 "Courier New", monospace;
+  font: 1000 clamp(11px, 1.25cqw, 16px)/1.2 "Courier New", monospace;
   letter-spacing: .3em;
 }
 
@@ -585,7 +582,7 @@
   display: block;
   margin: 10px 0 8px;
   color: #fff;
-  font: italic 1000 clamp(48px, 9vw, 130px)/.92 "Arial Black", "Noto Sans KR", sans-serif;
+  font: italic 1000 clamp(48px, 9cqw, 130px)/.92 "Arial Black", "Noto Sans KR", sans-serif;
   letter-spacing: -.055em;
   text-shadow: 5px 5px 0 #7c0010, 0 0 10px rgba(255, 39, 67, .42);
 }
@@ -593,7 +590,7 @@
 .chapter2-boss-intro-copy h2 {
   margin: 8px 0 0;
   color: #ffd9df;
-  font-size: clamp(22px, 3.9vw, 48px);
+  font-size: clamp(22px, 3.9cqw, 48px);
   font-weight: 1000;
   line-height: 1.15;
   word-break: keep-all;
@@ -603,7 +600,7 @@
 .chapter2-boss-intro-copy p {
   margin: 12px 0 0;
   color: #ff9cab;
-  font-size: clamp(12px, 1.5vw, 18px);
+  font-size: clamp(12px, 1.5cqw, 18px);
   font-weight: 900;
   letter-spacing: .12em;
   word-break: keep-all;
@@ -715,7 +712,7 @@
   z-index: 3;
   left: 50%;
   top: 50%;
-  width: min(74vw, 74vh);
+  width: min(74cqw, 74cqh);
   aspect-ratio: 1;
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(.05);
@@ -729,7 +726,7 @@
   z-index: 4;
   left: 50%;
   top: 50%;
-  width: min(82vw, 82vh);
+  width: min(82cqw, 82cqh);
   aspect-ratio: 1;
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(.25);
@@ -769,7 +766,7 @@
   left: 50%;
   top: 50%;
   width: 4px;
-  height: min(28vh, 240px);
+  height: min(28cqh, 240px);
   transform-origin: 50% 0;
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(255,242,210,.95), rgba(182,120,255,.82) 40%, transparent);
@@ -797,7 +794,7 @@
   z-index: 7;
   left: 50%;
   top: 52%;
-  width: min(58vw, 540px);
+  width: min(58cqw, 540px);
   transform: translate(-50%, -50%) scale(.12);
   opacity: 0;
   filter: drop-shadow(0 0 30px rgba(76,24,150,.78)) drop-shadow(0 12px 34px rgba(0,0,0,.62));
@@ -816,7 +813,7 @@
   z-index: 12;
   left: 50%;
   top: 6%;
-  width: min(92vw, 980px);
+  width: min(92cqw, 980px);
   transform: translate(-50%, -14px);
   padding: 13px 24px 16px;
   border: 1px solid rgba(255, 238, 255, .48);
@@ -832,7 +829,7 @@
   display: block;
   margin-bottom: 5px;
   color: #fff0bd;
-  font: 1000 clamp(11px, 1.1vw, 16px)/1.15 "Noto Sans KR", system-ui, sans-serif;
+  font: 1000 clamp(11px, 1.1cqw, 16px)/1.15 "Noto Sans KR", system-ui, sans-serif;
   letter-spacing: .32em;
   text-shadow: 0 0 9px rgba(255, 230, 157, .9), 0 3px 10px #000;
 }
@@ -841,7 +838,7 @@
   display: block;
   color: #fff;
   -webkit-text-stroke: 1px rgba(255,255,255,.4);
-  font: 1000 clamp(31px, 5.4vw, 76px)/1.04 "Noto Sans KR", system-ui, sans-serif;
+  font: 1000 clamp(31px, 5.4cqw, 76px)/1.04 "Noto Sans KR", system-ui, sans-serif;
   letter-spacing: -.025em;
   text-shadow: 0 0 7px #fff, 0 0 20px rgba(229, 193, 255, .96), 0 0 50px rgba(161, 82, 255, .9), 0 7px 18px #000;
 }
@@ -906,8 +903,8 @@
 @keyframes chapter2StoryBossEmergenceDust {
   0%, 30% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(0) scale(.18); }
   44% { opacity: .9; }
-  78% { opacity: .55; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(-32vh) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(-46vh) scale(.4); }
+  78% { opacity: .55; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(-32cqh) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(calc(var(--i) * 12.857deg)) translateY(-46cqh) scale(.4); }
 }
 @keyframes chapter2StoryBossEmergenceBoss {
   0%, 38% { opacity: 0; transform: translate(-50%, -50%) scale(.12) rotate(-5deg); }
@@ -916,52 +913,39 @@
   72%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
 }
 
+/* VIEWPORT_RATIO_LOCK_V1: the iframe keeps a stable logical viewport during browser zoom. */
+.chapter2-story-frame-shell {
+  flex: 0 0 auto;
+  transform-origin: center center;
+  will-change: transform;
+}
 
-/* V2.26 FINAL: Chapter 1 host-output parity. No wrapper transform, no zoom. */
-.chapter2-story-experience {
-  padding: 0 !important;
-  display: grid !important;
-  place-items: center !important;
-}
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
-  position: relative !important;
-  inset: auto !important;
-  width: min(96dvh, 100vw) !important;
-  height: min(100dvh, 104.167vw) !important;
-  max-width: 100vw !important;
-  max-height: 100dvh !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  aspect-ratio: 24 / 25 !important;
-  transform: none !important;
-  zoom: 1 !important;
-  overflow: hidden !important;
-}
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) .chapter2-story-frame {
-  position: static !important;
-  inset: auto !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: none !important;
-  zoom: 1 !important;
-}
 .chapter2-story-frame-shell.is-story-effect-fullscreen {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: none !important;
-  zoom: 1 !important;
+  max-width: none;
 }
-.chapter2-story-frame-shell.is-story-effect-fullscreen .chapter2-story-frame {
+
+
+/* VIEWPORT_RATIO_LOCK_V1: React-hosted Chapter 2 cinematics use one fixed 1600x900 surface. */
+.chapter2-host-cinematic-viewport {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 1100;
+  width: 1600px;
+  height: 900px;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: size;
+  container-name: chapter2-cinematic-stage;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.chapter2-host-cinematic-viewport > .chapter2-fullscreen-wave-intro,
+.chapter2-host-cinematic-viewport > .chapter2-fullscreen-boss-intro,
+.chapter2-host-cinematic-viewport > .chapter2-fullscreen-story-boss-emergence {
+  position: absolute !important;
+  inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  transform: none !important;
-  zoom: 1 !important;
 }
