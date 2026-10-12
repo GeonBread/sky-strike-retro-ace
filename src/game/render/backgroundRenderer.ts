@@ -12,10 +12,10 @@
 type BackgroundRenderEngine = any;
 
 const CH1_MAP_SPEED = 14;
-const CH1_FAR_CLOUD_SPEED = 5;
-const CH1_NEAR_CLOUD_SPEED = 34;
-const CH1_FAR_CLOUD_ALPHA = 0.58;
-const CH1_NEAR_CLOUD_ALPHA = 0.66;
+const CH1_FAR_CLOUD_SPEED = 28;
+const CH1_NEAR_CLOUD_SPEED = 11;
+const CH1_FAR_CLOUD_ALPHA = 0.82;
+const CH1_NEAR_CLOUD_ALPHA = 0.62;
 
 let farCloudImage: HTMLImageElement | null = null;
 let nearCloudImage: HTMLImageElement | null = null;
@@ -106,19 +106,19 @@ export function renderChapter1ParallaxBackgroundSystem(
   // 1) Campus map: downward, infinite loop.
   drawLoopingLayerDown(engine, mapImage, CH1_MAP_SPEED, 1);
 
-  // 2) Distant small clouds: slowest. Draw a second half-cycle copy so the
-  // sparse cloud sheet remains visible without becoming opaque.
+  // 2) Small clouds: faster and more visible. Draw a second half-cycle copy so the
+  // sparse cloud sheet stays present across the whole scrolling cycle.
   if (isDrawableImage(farCloudImage)) {
     const farScale = Math.max(
       engine.canvas.width / farCloudImage.naturalWidth,
       engine.canvas.height / farCloudImage.naturalHeight,
     );
     const farHeight = farCloudImage.naturalHeight * farScale;
-    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.72, 0);
-    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.58, farHeight * 0.5);
+    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.92, 0);
+    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.76, farHeight * 0.5);
   }
 
-  // 3) Nearby large clouds: fastest.
+  // 3) Large clouds: deliberately slower than the small clouds.
   if (isDrawableImage(nearCloudImage)) {
     drawLoopingLayerDown(engine, nearCloudImage, CH1_NEAR_CLOUD_SPEED, CH1_NEAR_CLOUD_ALPHA);
   }
