@@ -1452,7 +1452,7 @@ html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper
   to { transform: scale(1.08) rotate(3deg); filter: brightness(1.28); }
 }
 
-/* V2.1 common-monster-dialogue-responsive-slot */
+/* V2.3 common-monster-dialogue-responsive-slot */
 /* 일반 몬스터 공용 대사창: 잡몹은 종류와 관계없이 같은 기계식 통신 프레임을 사용한다. */
 html.is-embedded-story .dialogue-layer.is-common-monster-dialogue {
   --speaker-accent: #ff9a32 !important;
@@ -1506,7 +1506,8 @@ html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .continue-indi
 }
 
 /* 24:25 스테이지 기준 캐릭터 슬롯.
-   px/vw/vh 혼합과 800px 미디어쿼리 때문에 브라우저 확대/축소에서 몬스터만 크기가 튀던 문제를 제거한다. */
+   px/vw/vh 혼합과 800px 미디어쿼리 때문에 브라우저 확대/축소에서 몬스터만 크기가 튀던 문제를 제거한다.
+   V2.3: 투명 여백이 적은 신규 PNG와 기존 PNG를 같은 44% x 66% 슬롯에 넣어 과대 표시되던 문제를 수정. */
 html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character="hobanwoo"] {
   right: 1.8% !important;
   bottom: 30.8% !important;
@@ -1530,10 +1531,10 @@ html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data
   transform: scale(1.12) !important;
 }
 html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character^="monster_"] {
-  left: 2.0% !important;
-  bottom: 30.8% !important;
-  width: 44% !important;
-  height: 66% !important;
+  left: 3.2% !important;
+  bottom: 24.2% !important;
+  width: 31% !important;
+  height: 46% !important;
   max-width: none !important;
   max-height: none !important;
   transform-origin: center bottom !important;
@@ -1549,7 +1550,7 @@ html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data
   height: 100% !important;
   object-fit: contain !important;
   object-position: center bottom !important;
-  transform: scale(1.30) !important;
+  transform: none !important;
   animation: var(--actor-motion-animation, none) !important;
 }
 
