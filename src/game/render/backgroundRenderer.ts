@@ -3,17 +3,21 @@
  *
  * Chapter 1 wave:
  * - campus map scrolls downward forever
- * - far/small cloud layer scrolls slowly
- * - near/large cloud layer scrolls fastest
+ * - large cloud layer scrolls faster than the map
+ * - small/far cloud layer scrolls fastest
  * - cloud assets are loaded independently here so they are not hidden by the
  *   generic Chapter 1 background-ready gate.
  */
 
 type BackgroundRenderEngine = any;
 
-const CH1_MAP_SPEED = 14;
-const CH1_FAR_CLOUD_SPEED = 28;
-const CH1_NEAR_CLOUD_SPEED = 11;
+// 3-tier Chapter 1 wave parallax ordering:
+// 1) campus map (slowest)
+// 2) large clouds (middle)
+// 3) small/far clouds (fastest)
+const CH1_MAP_SPEED = 8;
+const CH1_NEAR_CLOUD_SPEED = 14;
+const CH1_FAR_CLOUD_SPEED = 24;
 const CH1_FAR_CLOUD_ALPHA = 0.82;
 const CH1_NEAR_CLOUD_ALPHA = 0.62;
 
@@ -103,10 +107,15 @@ export function renderChapter1ParallaxBackgroundSystem(
   engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
   engine.ctx.restore();
 
-  // 1) Campus map: downward, infinite loop.
+  // 1) Campus map: slowest downward loop.
   drawLoopingLayerDown(engine, mapImage, CH1_MAP_SPEED, 1);
 
-  // 2) Small clouds: faster and more visible. Draw a second half-cycle copy so the
+  // 2) Large clouds: medium speed, faster than the map.
+  if (isDrawableImage(nearCloudImage)) {
+    drawLoopingLayerDown(engine, nearCloudImage, CH1_NEAR_CLOUD_SPEED, CH1_NEAR_CLOUD_ALPHA);
+  }
+
+  // 3) Small clouds: fastest layer. Draw a second half-cycle copy so the
   // sparse cloud sheet stays present across the whole scrolling cycle.
   if (isDrawableImage(farCloudImage)) {
     const farScale = Math.max(
@@ -116,11 +125,6 @@ export function renderChapter1ParallaxBackgroundSystem(
     const farHeight = farCloudImage.naturalHeight * farScale;
     drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.92, 0);
     drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.76, farHeight * 0.5);
-  }
-
-  // 3) Large clouds: deliberately slower than the small clouds.
-  if (isDrawableImage(nearCloudImage)) {
-    drawLoopingLayerDown(engine, nearCloudImage, CH1_NEAR_CLOUD_SPEED, CH1_NEAR_CLOUD_ALPHA);
   }
 
   // Keep the map readable. Only the boss gets a very light tone overlay.
