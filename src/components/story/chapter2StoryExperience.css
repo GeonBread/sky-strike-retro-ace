@@ -1216,3 +1216,29 @@
   transform-origin: top left !important;
   zoom: 1 !important;
 }
+
+/* V2.25 FINAL OVERRIDE: measured-host story fit */
+.chapter2-story-experience {
+  padding: 24px 28px 104px !important;
+}
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
+  width: var(--fixed-story-display-width, 922px) !important;
+  height: var(--fixed-story-display-height, 960px) !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) .chapter2-story-frame {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 922px !important;
+  height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+  transform-origin: top left !important;
+  zoom: 1 !important;
+}

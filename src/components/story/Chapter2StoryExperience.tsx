@@ -11,7 +11,7 @@ import {
   FIXED_GAME_VIEWPORT_HEIGHT,
   FIXED_GAME_VIEWPORT_WIDTH,
   useFixedCinematicViewportScale,
-  useFixedGameViewportScale,
+  useMeasuredGameViewportScale,
 } from "./fixedGameViewportScale";
 
 interface Chapter2StoryStateMessage {
@@ -195,7 +195,8 @@ export function Chapter2StoryExperience({
   renderWaveCombat,
   renderBossCombat,
 }: Chapter2StoryExperienceProps) {
-  const fixedViewportScale = useFixedGameViewportScale();
+  const viewportHostRef = useRef<HTMLDivElement>(null);
+  const fixedViewportScale = useMeasuredGameViewportScale(viewportHostRef);
   const fixedCinematicViewportScale = useFixedCinematicViewportScale();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const startedAtRef = useRef(Date.now());
@@ -942,6 +943,7 @@ export function Chapter2StoryExperience({
 
   return (
     <div
+      ref={viewportHostRef}
       className="chapter2-story-experience"
       style={{
         "--fixed-game-viewport-scale": fixedViewportScale,

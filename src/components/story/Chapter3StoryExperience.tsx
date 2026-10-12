@@ -11,7 +11,7 @@ import {
   FIXED_GAME_VIEWPORT_HEIGHT,
   FIXED_GAME_VIEWPORT_WIDTH,
   useFixedCinematicViewportScale,
-  useFixedGameViewportScale,
+  useMeasuredGameViewportScale,
 } from "./fixedGameViewportScale";
 
 type Chapter3StoryExperienceProps = {
@@ -280,7 +280,8 @@ function chapter3WaveCheckpoint(waveIndex: number): StoryCheckpoint {
 }
 
 export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }: Chapter3StoryExperienceProps) {
-  const fixedViewportScale = useFixedGameViewportScale();
+  const viewportHostRef = useRef<HTMLElement>(null);
+  const fixedViewportScale = useMeasuredGameViewportScale(viewportHostRef);
   const fixedCinematicViewportScale = useFixedCinematicViewportScale();
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const waveFrameRef = useRef<HTMLIFrameElement | null>(null);
@@ -1021,6 +1022,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
   return (
     <section
+      ref={viewportHostRef}
       className={`chapter3StoryExperience${fullscreenEffect || persistentCinematicActive ? " is-fullscreen-effect" : ""}${waveActive ? " is-wave-active" : ""}${screen === "selector" ? " is-selector-open" : ""}${finalCreditsActive ? " is-final-credits" : ""}`}
       data-chapter3-effect={fullscreenEffect || undefined}
       data-wave-paused={wavePaused ? "true" : undefined}
