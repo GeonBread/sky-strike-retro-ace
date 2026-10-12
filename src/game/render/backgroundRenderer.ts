@@ -1,71 +1,132 @@
 /**
- * 스토리 배경 렌더러
+ * 전투 배경 렌더러
  *
- * 챕터 1 웨이브에서는 캠퍼스 항공 맵 + 원근 구름 2개 레이어를
- * 각각 다른 속도로 위 -> 아래 방향으로 무한 반복 렌더링한다.
+ * Chapter 1 wave:
+ * - campus map scrolls downward forever
+ * - far/small cloud layer scrolls slowly
+ * - near/large cloud layer scrolls fastest
+ * - cloud assets are loaded independently here so they are not hidden by the
+ *   generic Chapter 1 background-ready gate.
  */
-
-import {
-  STORY_CHAPTER1_PARALLAX_ALPHAS,
-  STORY_CHAPTER1_PARALLAX_SPEEDS,
-} from "../data/storyChapterBackgroundCatalog";
 
 type BackgroundRenderEngine = any;
 
-function drawLoopingLayer(
+const CH1_MAP_SPEED = 14;
+const CH1_FAR_CLOUD_SPEED = 5;
+const CH1_NEAR_CLOUD_SPEED = 34;
+const CH1_FAR_CLOUD_ALPHA = 0.32;
+const CH1_NEAR_CLOUD_ALPHA = 0.38;
+
+let farCloudImage: HTMLImageElement | null = null;
+let nearCloudImage: HTMLImageElement | null = null;
+
+function makeCloudImage(primarySrc: string, fallbackSrc: string): HTMLImageElement | null {
+  if (typeof Image === "undefined") return null;
+  const image = new Image();
+  let fallbackTried = false;
+  image.onerror = () => {
+    if (fallbackTried) return;
+    fallbackTried = true;
+    image.src = fallbackSrc;
+  };
+  image.src = primarySrc;
+  return image;
+}
+
+function ensureChapter1CloudImages(): void {
+  if (!farCloudImage) {
+    farCloudImage = makeCloudImage(
+      "/assets/chapter1/combat/backgrounds/chapter1_cloud_far.png",
+      "/assets/backgrounds/chapter1_cloud_far.png",
+    );
+  }
+  if (!nearCloudImage) {
+    nearCloudImage = makeCloudImage(
+      "/assets/chapter1/combat/backgrounds/chapter1_cloud_near.png",
+      "/assets/backgrounds/chapter1_cloud_near.png",
+    );
+  }
+}
+
+function isDrawableImage(image: HTMLImageElement | null | undefined): image is HTMLImageElement {
+  return !!image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+}
+
+/**
+ * Draw a vertically looping layer whose bitmap itself moves from top to bottom.
+ */
+function drawLoopingLayerDown(
   engine: BackgroundRenderEngine,
-  img: HTMLImageElement,
+  image: HTMLImageElement,
   speed: number,
   alpha: number,
+  phase = 0,
 ): void {
   const canvasWidth = engine.canvas.width;
   const canvasHeight = engine.canvas.height;
-  const scale = Math.max(canvasWidth / img.naturalWidth, canvasHeight / img.naturalHeight);
-  const drawWidth = img.naturalWidth * scale;
-  const drawHeight = img.naturalHeight * scale;
-  const x = (canvasWidth - drawWidth) / 2;
-  const elapsedSeconds = performance.now() / 1000;
+  const scale = Math.max(canvasWidth / image.naturalWidth, canvasHeight / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  const x = (canvasWidth - drawWidth) * 0.5;
+  const timeSeconds = performance.now() / 1000;
 
-  // 양의 offset이 증가하므로 이미지 자체가 화면 위 -> 아래 방향으로 흐른다.
-  const offset = ((elapsedSeconds * speed) % drawHeight + drawHeight) % drawHeight;
-  const firstY = offset - drawHeight;
+  const offset = (((timeSeconds * speed) + phase) % drawHeight + drawHeight) % drawHeight;
+  const baseY = offset - drawHeight;
 
   engine.ctx.save();
   engine.ctx.globalAlpha = alpha;
-  engine.ctx.drawImage(img, x, firstY, drawWidth, drawHeight);
-  engine.ctx.drawImage(img, x, firstY + drawHeight, drawWidth, drawHeight);
-  // 큰 화면/경계 상황에서도 빈 틈이 생기지 않도록 한 장 더 확보한다.
-  engine.ctx.drawImage(img, x, firstY - drawHeight, drawWidth, drawHeight);
+  engine.ctx.globalCompositeOperation = "source-over";
+  engine.ctx.drawImage(image, x, baseY, drawWidth, drawHeight);
+  engine.ctx.drawImage(image, x, baseY + drawHeight, drawWidth, drawHeight);
+  engine.ctx.drawImage(image, x, baseY - drawHeight, drawWidth, drawHeight);
   engine.ctx.restore();
 }
 
 /**
- * 챕터 1 웨이브 전용 맵 + 구름 패럴랙스.
+ * Chapter 1 map + cloud parallax.
+ * The map source is still the existing engine layer, while the two cloud layers
+ * are loaded independently above. This keeps the clouds visible even if the
+ * generic layer loader/catalog changes.
  */
 export function renderChapter1ParallaxBackgroundSystem(
   engine: BackgroundRenderEngine,
   isBoss: boolean,
 ): boolean {
-  if (!engine.chapter1BackgroundReady || engine.chapter1BackgroundLayers.length < 1) return false;
+  const mapImage = engine.chapter1BackgroundLayers?.[0] as HTMLImageElement | undefined;
+  if (!isDrawableImage(mapImage)) return false;
 
+  ensureChapter1CloudImages();
+
+  engine.ctx.save();
+  engine.ctx.globalAlpha = 1;
   engine.ctx.fillStyle = "#02050a";
   engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
+  engine.ctx.restore();
 
-  const layers = engine.chapter1BackgroundLayers as HTMLImageElement[];
-  layers.forEach((img, index) => {
-    drawLoopingLayer(
-      engine,
-      img,
-      STORY_CHAPTER1_PARALLAX_SPEEDS[index] ?? 0,
-      STORY_CHAPTER1_PARALLAX_ALPHAS[index] ?? 1,
+  // 1) Campus map: downward, infinite loop.
+  drawLoopingLayerDown(engine, mapImage, CH1_MAP_SPEED, 1);
+
+  // 2) Distant small clouds: slowest. Draw a second half-cycle copy so the
+  // sparse cloud sheet remains visible without becoming opaque.
+  if (isDrawableImage(farCloudImage)) {
+    const farScale = Math.max(
+      engine.canvas.width / farCloudImage.naturalWidth,
+      engine.canvas.height / farCloudImage.naturalHeight,
     );
-  });
+    const farHeight = farCloudImage.naturalHeight * farScale;
+    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.58, 0);
+    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.42, farHeight * 0.5);
+  }
 
-  // 이전 버전처럼 맵 전체를 강하게 어둡게 하지 않는다.
-  // 보스전에서만 탄막 가독성을 위해 아주 약한 톤만 추가한다.
+  // 3) Nearby large clouds: fastest.
+  if (isDrawableImage(nearCloudImage)) {
+    drawLoopingLayerDown(engine, nearCloudImage, CH1_NEAR_CLOUD_SPEED, CH1_NEAR_CLOUD_ALPHA);
+  }
+
+  // Keep the map readable. Only the boss gets a very light tone overlay.
   if (isBoss) {
     engine.ctx.save();
-    engine.ctx.fillStyle = "rgba(3, 7, 18, 0.08)";
+    engine.ctx.fillStyle = "rgba(3, 7, 18, 0.06)";
     engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
     engine.ctx.restore();
   }
@@ -74,8 +135,7 @@ export function renderChapter1ParallaxBackgroundSystem(
 }
 
 /**
- * 현재 전투 티어와 보스전 여부를 기준으로 전투 배경 전체를 그린다.
- * 챕터 1 배경 에셋을 사용할 수 없는 경우에는 기존 기본 배경으로 폴백한다.
+ * Current combat background renderer. Non-Chapter-1 behaviour is preserved.
  */
 export function renderBackgroundSystem(engine: BackgroundRenderEngine): void {
   const tier = engine.getCombatTier();
@@ -87,17 +147,17 @@ export function renderBackgroundSystem(engine: BackgroundRenderEngine): void {
     ? tier >= 4
       ? ["#18051f", "#581c87", "#020617"]
       : tier === 3
-      ? ["#12081f", "#2e1065", "#020617"]
-      : tier === 2
-        ? ["#111827", "#4c0519", "#020617"]
-        : ["#111827", "#1e293b", "#020617"]
+        ? ["#12081f", "#2e1065", "#020617"]
+        : tier === 2
+          ? ["#111827", "#4c0519", "#020617"]
+          : ["#111827", "#1e293b", "#020617"]
     : tier >= 4
       ? ["#06121f", "#4a044e", "#020617"]
       : tier === 3
-      ? ["#07111f", "#312e81", "#020617"]
-      : tier === 2
-        ? ["#07111f", "#164e63", "#020617"]
-        : ["#020617", "#0f172a", "#020617"];
+        ? ["#07111f", "#312e81", "#020617"]
+        : tier === 2
+          ? ["#07111f", "#164e63", "#020617"]
+          : ["#020617", "#0f172a", "#020617"];
 
   const gradient = engine.ctx.createLinearGradient(0, 0, 0, engine.canvas.height);
   gradient.addColorStop(0, topColors[0]);
