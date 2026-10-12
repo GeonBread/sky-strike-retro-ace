@@ -5,7 +5,7 @@ import {
   type StoryCheckpoint,
 } from "../../story/storyProgress";
 import "./chapter2StoryExperience.css";
-import { useFixedGameViewportScale } from "./fixedGameViewportScale";
+import { useFixedCinematicViewportScale, useFixedGameViewportScale } from "./fixedGameViewportScale";
 
 interface Chapter2StoryStateMessage {
   segmentId?: string;
@@ -189,6 +189,7 @@ export function Chapter2StoryExperience({
   renderBossCombat,
 }: Chapter2StoryExperienceProps) {
   const fixedViewportScale = useFixedGameViewportScale();
+  const fixedCinematicViewportScale = useFixedCinematicViewportScale();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const startedAtRef = useRef(Date.now());
   const restoredRef = useRef(false);
@@ -933,7 +934,14 @@ export function Chapter2StoryExperience({
   const waveMounted = phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit";
 
   return (
-    <div className="chapter2-story-experience" style={{ "--fixed-game-viewport-scale": fixedViewportScale } as React.CSSProperties}>
+    <div
+      className="chapter2-story-experience"
+      style={{
+        "--fixed-game-viewport-scale": fixedViewportScale,
+        "--fixed-story-viewport-scale": fixedViewportScale,
+        "--fixed-cinematic-viewport-scale": fixedCinematicViewportScale,
+      } as React.CSSProperties}
+    >
       <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive ? " is-story-effect-fullscreen" : ""}`}>
         <iframe
           ref={iframeRef}

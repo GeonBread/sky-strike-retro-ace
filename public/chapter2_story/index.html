@@ -12803,6 +12803,12 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
       const parentWindow = window.parent;
       const parentDocument = parentWindow.document;
       const targetRect = window.frameElement.getBoundingClientRect();
+      const cinematicWidth = 1920;
+      const cinematicHeight = 1080;
+      const cinematicScale = Math.max(.05, Math.min(
+        parentWindow.innerWidth / cinematicWidth,
+        parentWindow.innerHeight / cinematicHeight,
+      ));
       const resolvedBg = bg ? new URL(bg, window.location.href).href : '';
       const overlay = parentDocument.createElement('div');
       overlay.className = 'c2-parent-boss-arrival-overlay';
@@ -12819,14 +12825,15 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
       const frame = parentDocument.createElement('div');
       Object.assign(frame.style, {
         position: 'absolute',
-        left: '0px',
-        top: '0px',
-        width: `${parentWindow.innerWidth}px`,
-        height: `${parentWindow.innerHeight}px`,
+        left: '50%',
+        top: '50%',
+        width: `${cinematicWidth}px`,
+        height: `${cinematicHeight}px`,
         overflow: 'hidden',
         background: '#080812',
         isolation: 'isolate',
         transformOrigin: 'center center',
+        transform: `translate(-50%,-50%) scale(${cinematicScale})`,
       });
 
       const background = parentDocument.createElement('div');
@@ -12859,8 +12866,8 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
         zIndex: '2',
         left: '50%',
         top: '50%',
-        width: '26vmin',
-        height: '26vmin',
+        width: '280px',
+        height: '280px',
         borderRadius: '50%',
         transform: 'translate(-50%,-50%) scale(.08)',
         opacity: '0',
@@ -12889,23 +12896,23 @@ window.STORY_CUSTOM_EFFECTS['boss-arrival-background-title'] = ({ layer, item })
       });
       const small = parentDocument.createElement('small');
       small.textContent = 'LOCATION · CHAPTER 2';
-      Object.assign(small.style, { display: 'block', marginBottom: '12px', fontSize: 'clamp(13px,1.45vw,20px)', fontWeight: '950', letterSpacing: '.30em', color: '#ffe7a8', textShadow: '0 0 16px rgba(255,222,137,.52)' });
+      Object.assign(small.style, { display: 'block', marginBottom: '12px', fontSize: '18px', fontWeight: '950', letterSpacing: '.30em', color: '#ffe7a8', textShadow: '0 0 16px rgba(255,222,137,.52)' });
       const strong = parentDocument.createElement('strong');
       strong.textContent = sceneInfo.title || '책임의 블랙홀';
-      Object.assign(strong.style, { display: 'block', fontSize: 'clamp(42px,6vw,80px)', fontWeight: '1000', letterSpacing: '-.035em', lineHeight: '1.02', color: '#fff', textShadow: '0 0 12px rgba(255,255,255,.38),0 0 32px rgba(192,132,255,.50),0 5px 24px rgba(0,0,0,.95)' });
+      Object.assign(strong.style, { display: 'block', fontSize: '76px', fontWeight: '1000', letterSpacing: '-.035em', lineHeight: '1.02', color: '#fff', textShadow: '0 0 12px rgba(255,255,255,.38),0 0 32px rgba(192,132,255,.50),0 5px 24px rgba(0,0,0,.95)' });
       const span = parentDocument.createElement('span');
       span.textContent = sceneInfo.subtitle || '팀플 블랙홀 무임승차자';
-      Object.assign(span.style, { display: 'block', marginTop: '13px', fontSize: 'clamp(18px,2.2vw,29px)', fontWeight: '850', color: '#ead7ff', textShadow: '0 0 18px rgba(184,113,255,.54),0 3px 14px rgba(0,0,0,.96)' });
+      Object.assign(span.style, { display: 'block', marginTop: '13px', fontSize: '28px', fontWeight: '850', color: '#ead7ff', textShadow: '0 0 18px rgba(184,113,255,.54),0 3px 14px rgba(0,0,0,.96)' });
       copy.append(small, strong, span);
       frame.append(background, vignette, aperture, copy);
       overlay.append(frame);
       parentDocument.body.appendChild(overlay);
 
       const frameAnimation = frame.animate([
-        { offset: 0, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 0 },
-        { offset: .045, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 1 },
-        { offset: .88, left: '0px', top: '0px', width: `${parentWindow.innerWidth}px`, height: `${parentWindow.innerHeight}px`, opacity: 1 },
-        { offset: 1, left: `${targetRect.left}px`, top: `${targetRect.top}px`, width: `${targetRect.width}px`, height: `${targetRect.height}px`, opacity: 1, easing: 'cubic-bezier(.18,.84,.22,1)' },
+        { offset: 0, opacity: 0 },
+        { offset: .045, opacity: 1 },
+        { offset: .90, opacity: 1 },
+        { offset: 1, opacity: 0 },
       ], { duration, fill: 'both' });
 
       const bgAnimation = background.animate([

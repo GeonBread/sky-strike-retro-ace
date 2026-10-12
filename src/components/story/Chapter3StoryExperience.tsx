@@ -5,7 +5,7 @@ import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProg
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter2StoryExperience.css";
 import "./chapter3StoryExperience.css";
-import { useFixedGameViewportScale } from "./fixedGameViewportScale";
+import { useFixedCinematicViewportScale, useFixedGameViewportScale } from "./fixedGameViewportScale";
 
 type Chapter3StoryExperienceProps = {
   onExit?: () => void;
@@ -30,6 +30,7 @@ type Chapter3BridgeMessage = {
     index?: number;
     sectionOrdinal?: number;
     code?: string;
+    active?: boolean;
   };
 };
 
@@ -273,6 +274,7 @@ function chapter3WaveCheckpoint(waveIndex: number): StoryCheckpoint {
 
 export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }: Chapter3StoryExperienceProps) {
   const fixedViewportScale = useFixedGameViewportScale();
+  const fixedCinematicViewportScale = useFixedCinematicViewportScale();
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const waveFrameRef = useRef<HTMLIFrameElement | null>(null);
   const legacyProgressRef = useRef(readChapter3Progress());
@@ -293,6 +295,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [currentStorySectionOrdinal, setCurrentStorySectionOrdinal] = useState(initialStoryOrdinal);
 
   const [fullscreenEffect, setFullscreenEffect] = useState<string | null>(null);
+  const [persistentCinematicActive, setPersistentCinematicActive] = useState(false);
   const [chapter43LocationTransitionActive, setChapter43LocationTransitionActive] = useState(false);
   const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [ready, setReady] = useState(false);
@@ -319,6 +322,14 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [exitConfirmMode, setExitConfirmMode] = useState<"story" | "wave" | null>(null);
   const [wavePaused, setWavePaused] = useState(false);
   const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: initialWaveIndex, totalWaves: WAVES.length, enemies: 0 });
+
+  useEffect(() => {
+    setPersistentCinematicActive(false);
+  }, [storyLaunchSerial]);
+
+  useEffect(() => {
+    if (screen !== "story" || waveActive || finalCreditsActive) setPersistentCinematicActive(false);
+  }, [screen, waveActive, finalCreditsActive]);
 
   useEffect(() => {
     if (!waveActive) return;
@@ -646,6 +657,11 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
             beginFinalCredits();
           }
           if (FULLSCREEN_EFFECTS.has(effectId)) setFullscreenEffect(effectId);
+          return;
+        }
+
+        if (message.type === "persistent-cinematic-state") {
+          setPersistentCinematicActive(Boolean(message.detail?.active));
           return;
         }
 
@@ -998,11 +1014,15 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
   return (
     <section
-      className={`chapter3StoryExperience${fullscreenEffect ? " is-fullscreen-effect" : ""}${waveActive ? " is-wave-active" : ""}${screen === "selector" ? " is-selector-open" : ""}${finalCreditsActive ? " is-final-credits" : ""}`}
+      className={`chapter3StoryExperience${fullscreenEffect || persistentCinematicActive ? " is-fullscreen-effect" : ""}${waveActive ? " is-wave-active" : ""}${screen === "selector" ? " is-selector-open" : ""}${finalCreditsActive ? " is-final-credits" : ""}`}
       data-chapter3-effect={fullscreenEffect || undefined}
       data-wave-paused={wavePaused ? "true" : undefined}
       aria-label="챕터 3"
-      style={{ "--fixed-game-viewport-scale": fixedViewportScale } as CSSProperties}
+      style={{
+        "--fixed-game-viewport-scale": fixedViewportScale,
+        "--fixed-story-viewport-scale": fixedViewportScale,
+        "--fixed-cinematic-viewport-scale": fixedCinematicViewportScale,
+      } as CSSProperties}
     >
       <iframe
         key={`chapter3-story-${storyLaunchSerial}`}

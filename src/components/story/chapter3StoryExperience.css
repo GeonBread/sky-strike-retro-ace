@@ -995,3 +995,90 @@
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
+
+/* =========================================================
+   V2.20 · Chapter 3 fixed logical geometry
+   - normal story/wave: 922×960 logical canvas
+   - fullscreen cinematics/website sequences: 1920×1080 logical canvas
+   - browser resize only changes the single uniform scale factor
+   ========================================================= */
+.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+
+.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  inset: auto !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9 !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+
+.chapter3WaveFrame {
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+}
+
+.chapter3WaveHostHud {
+  transform: translate(-50%, -50%) scale(var(--fixed-story-viewport-scale, 1)) !important;
+}
+
+/* Attach the Chapter 3 test navigation to the logical story canvas. */
+.chapter3-story-test-navigation {
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform-origin: 0 0 !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) translate(449px, -468px) translateX(-100%) !important;
+  max-height: 936px !important;
+}
+
+/* React-hosted full-screen Chapter 3 scenes use a fixed 16:9 reference canvas. */
+.chapter3FullscreenLocationTransition,
+.chapter3FinalCreditsOverlay {
+  inset: auto !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+
+/* In the 1920×1080 logical cinema canvas, use fixed logical typography/spacing
+   instead of physical-browser vw/vh values. */
+.chapter3FullscreenLocationCopy {
+  width: 900px !important;
+  min-height: 190px !important;
+}
+.chapter3FullscreenLocationCopy small { font-size: 14px !important; }
+.chapter3FullscreenLocationCopy strong { font-size: 72px !important; }
+
+.chapter3FinalCreditsTrack { width: 900px !important; }
+.chapter3FinalCreditsLeadLogo { height: 1080px !important; padding: 86px 76px !important; }
+.chapter3FinalCreditsLeadLogo img { width: 720px !important; max-height: 454px !important; }
+.chapter3FinalCreditsHeading { min-height: 367px !important; padding: 86px 0 54px !important; }

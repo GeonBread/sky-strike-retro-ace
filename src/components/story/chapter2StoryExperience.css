@@ -1003,3 +1003,84 @@
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
+
+/* =========================================================
+   V2.20 · Chapter 2 fixed logical geometry
+   - normal story/combat: 922×960 logical canvas
+   - fullscreen cinematics: 1920×1080 logical canvas
+   - only the whole canvas is uniformly scaled to the browser viewport
+   ========================================================= */
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+
+.chapter2-story-frame-shell.is-story-effect-fullscreen {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9 !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+  overflow: hidden !important;
+}
+
+.chapter2-fixed-combat-stage > div:first-child {
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+}
+
+/* Keep the developer navigation attached to the logical story canvas instead
+   of the physical browser top-right corner. */
+.chapter2-story-test-navigation {
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform-origin: 0 0 !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) translate(449px, -468px) translateX(-100%) !important;
+  max-height: 936px !important;
+}
+
+/* Parent-owned Chapter 2 transition layers also use one 16:9 logical canvas.
+   This prevents title/effect geometry from reflowing separately on small screens. */
+.chapter2-fullscreen-wave-intro,
+.chapter2-fullscreen-boss-intro,
+.chapter2-fullscreen-story-boss-emergence,
+.chapter2-wave-purification-overlay {
+  inset: auto !important;
+  left: 50% !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+
+/* Pure blackouts do not contain geometry, so they may still cover the whole browser. */
+.chapter2-wave-clear-blackout {
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  transform: none !important;
+}
