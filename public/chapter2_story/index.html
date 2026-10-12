@@ -78,7 +78,7 @@ button { color: inherit; }
 }
 .background-stack { z-index: -10; }
 .scene-background {
-  background-image: url("./assets/chapter2/story/legacy/bg_placeholder.svg");
+  background-image: url("/assets/chapter2/story/legacy/bg_placeholder.svg");
   background-size: cover;
   background-position: var(--scene-background-position, center center);
   opacity: 0;
@@ -2477,7 +2477,7 @@ window.STORY_DATA = {
         "text": "확인하겠습니다.",
         "scene": "empty_classroom",
         "pose": "default",
-        "leftImage": "/assets/chapter3/story/characters/junho_greeting.png",
+        "leftImage": "/chapter3_story//assets/chapter3/story/characters/junho_greeting.png",
         "statusLabel": "처음 만난 4조",
         "left": "junho",
         "right": "hobanwoo"
@@ -12078,9 +12078,9 @@ window.STORY_CUSTOM_EFFECTS['battle-summary'] = ({ layer, item }) => {
   if (String(item.footer || '') === '오염 파편 출현') {
     item.duration = Math.max(Number(item.duration || 0), 6500);
     const monsterTypes = [
-      { image: '/assets/chapter2/combat/waves/enemies/no_reply.png', alt: '팀플 잠수함' },
-      { image: '/assets/chapter2/combat/waves/enemies/ghost_exam.png', alt: '족보 유령' },
-      { image: '/assets/chapter2/combat/waves/enemies/energy_absorber.png', alt: '밤샘 에너지 흡수체' }
+      { image: '//assets/chapter2/combat/waves/enemies/no_reply.png', alt: '팀플 잠수함' },
+      { image: '//assets/chapter2/combat/waves/enemies/ghost_exam.png', alt: '족보 유령' },
+      { image: '//assets/chapter2/combat/waves/enemies/energy_absorber.png', alt: '밤샘 에너지 흡수체' }
     ];
     const clusterBases = [
       { x: 24, y: 59 },
