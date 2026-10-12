@@ -14,8 +14,8 @@ type BackgroundRenderEngine = any;
 const CH1_MAP_SPEED = 14;
 const CH1_FAR_CLOUD_SPEED = 5;
 const CH1_NEAR_CLOUD_SPEED = 34;
-const CH1_FAR_CLOUD_ALPHA = 0.32;
-const CH1_NEAR_CLOUD_ALPHA = 0.38;
+const CH1_FAR_CLOUD_ALPHA = 0.58;
+const CH1_NEAR_CLOUD_ALPHA = 0.66;
 
 let farCloudImage: HTMLImageElement | null = null;
 let nearCloudImage: HTMLImageElement | null = null;
@@ -114,8 +114,8 @@ export function renderChapter1ParallaxBackgroundSystem(
       engine.canvas.height / farCloudImage.naturalHeight,
     );
     const farHeight = farCloudImage.naturalHeight * farScale;
-    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.58, 0);
-    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.42, farHeight * 0.5);
+    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.72, 0);
+    drawLoopingLayerDown(engine, farCloudImage, CH1_FAR_CLOUD_SPEED, CH1_FAR_CLOUD_ALPHA * 0.58, farHeight * 0.5);
   }
 
   // 3) Nearby large clouds: fastest.
