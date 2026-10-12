@@ -977,3 +977,9 @@
   transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
   transform-origin: center center !important;
 }
+
+/* V2.6 · Chapter 3 test navigation follows the Chapter 3 reference scale. */
+.chapter3-story-test-navigation {
+  transform: scale(var(--fixed-game-viewport-scale, 1));
+  transform-origin: top right;
+}

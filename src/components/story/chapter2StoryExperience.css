@@ -965,3 +965,25 @@
   transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
   transform-origin: center center !important;
 }
+
+/* =========================================================
+   V2.6 · per-screen ratio correction
+   - test navigation scales with its 922×960 owner frame
+   - purification/fullscreen effects stay genuinely full-screen
+   ========================================================= */
+.chapter2-story-test-navigation {
+  transform: scale(var(--fixed-game-viewport-scale, 1));
+  transform-origin: top right;
+}
+
+.chapter2-wave-purification-overlay {
+  left: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: none !important;
+}

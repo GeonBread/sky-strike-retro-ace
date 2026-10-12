@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { sfx } from "../../../game/AudioSystem";
 import { HobanwooSpriteButton } from "./HobanwooSpriteButton";
 import "./hobanwooMainMenu.css";
@@ -14,6 +14,20 @@ type HobanwooMainMenuProps = {
 };
 
 type MainMenuTimeBand = "day" | "evening" | "night" | "dawn";
+
+const MAIN_MENU_DESIGN_WIDTH = 1600;
+const MAIN_MENU_DESIGN_HEIGHT = 900;
+
+function readMainMenuUiScale(): number {
+  if (typeof window === "undefined") return 1;
+  return Math.max(
+    0.05,
+    Math.min(
+      Math.max(1, window.innerWidth) / MAIN_MENU_DESIGN_WIDTH,
+      Math.max(1, window.innerHeight) / MAIN_MENU_DESIGN_HEIGHT,
+    ),
+  );
+}
 
 type MainMenuArtButtonProps = {
   src: string;
@@ -72,6 +86,28 @@ export function HobanwooMainMenu({
   onProductionInfo,
 }: HobanwooMainMenuProps) {
   const [timeBand, setTimeBand] = useState<MainMenuTimeBand>(() => resolveMainMenuTimeBand());
+  const [uiScale, setUiScale] = useState(readMainMenuUiScale);
+
+  useEffect(() => {
+    let raf = 0;
+    const syncScale = () => {
+      window.cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => {
+        const nextScale = readMainMenuUiScale();
+        setUiScale(nextScale);
+        document.documentElement.style.setProperty("--main-menu-ui-scale", nextScale.toFixed(6));
+      });
+    };
+    syncScale();
+    window.addEventListener("resize", syncScale, { passive: true });
+    window.visualViewport?.addEventListener("resize", syncScale, { passive: true });
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", syncScale);
+      window.visualViewport?.removeEventListener("resize", syncScale);
+      document.documentElement.style.removeProperty("--main-menu-ui-scale");
+    };
+  }, []);
 
   useEffect(() => {
     const syncTimeBand = () => setTimeBand(resolveMainMenuTimeBand());
@@ -114,65 +150,70 @@ export function HobanwooMainMenu({
     >
       <div className="hobanwooMainMenuShade" />
 
-      <img
-        className="hobanwooSiteLogo"
-        src="/assets/common/ui/logos/site-logo.png"
-        alt="호반우 게임 사이트"
-        draggable={false}
-      />
-
-      <div className="hobanwooMainLogoStage" aria-hidden={false}>
+      <div
+        className="hobanwooMainMenuUiStage"
+        style={{ "--main-menu-ui-scale": uiScale } as CSSProperties}
+      >
         <img
-          className="hobanwooMainLogo"
-          src="/assets/chapter1/story/ui/game_logo.png"
-          alt="호반우의 졸업 대작전"
+          className="hobanwooSiteLogo"
+          src="/assets/ui/logos/site-logo.png"
+          alt="호반우 게임 사이트"
           draggable={false}
         />
-      </div>
 
-      <div
-        className="hobanwooMainStartControls"
-        aria-hidden={menuOpen}
-      >
-        <HobanwooSpriteButton
-          variant="gameStart"
-          disabled={menuOpen}
-          onClick={() => onMenuOpenChange(true)}
-        />
-      </div>
+        <div className="hobanwooMainLogoStage" aria-hidden={false}>
+          <img
+            className="hobanwooMainLogo"
+            src="/assets/story/chapter1/ui/game_logo.png"
+            alt="호반우의 졸업 대작전"
+            draggable={false}
+          />
+        </div>
 
-      <div
-        className="hobanwooMainButtonColumn hobanwooMainButtonColumnV11"
-        aria-hidden={!menuOpen}
-      >
-        <MainMenuArtButton
-          src="/assets/common/ui/buttons/main_menu_story_mode_v11.png"
-          label="스토리 모드"
-          tone="story"
-          disabled={!menuOpen}
-          onClick={onStoryMode}
-        />
-        <MainMenuArtButton
-          src="/assets/common/ui/buttons/main_menu_settings_v11.png"
-          label="설정"
-          tone="settings"
-          disabled={!menuOpen}
-          onClick={onSettings}
-        />
-        <MainMenuArtButton
-          src="/assets/common/ui/buttons/main_menu_ship_select_v11.png"
-          label="기체 선택"
-          tone="ship"
-          disabled={!menuOpen}
-          onClick={onShipSelect}
-        />
-        <MainMenuArtButton
-          src="/assets/common/ui/buttons/main_menu_production_info_v11.png"
-          label="제작 정보"
-          tone="production"
-          disabled={!menuOpen}
-          onClick={onProductionInfo}
-        />
+        <div
+          className="hobanwooMainStartControls"
+          aria-hidden={menuOpen}
+        >
+          <HobanwooSpriteButton
+            variant="gameStart"
+            disabled={menuOpen}
+            onClick={() => onMenuOpenChange(true)}
+          />
+        </div>
+
+        <div
+          className="hobanwooMainButtonColumn hobanwooMainButtonColumnV11"
+          aria-hidden={!menuOpen}
+        >
+          <MainMenuArtButton
+            src="/assets/ui/buttons/main_menu_story_mode_v11.png"
+            label="스토리 모드"
+            tone="story"
+            disabled={!menuOpen}
+            onClick={onStoryMode}
+          />
+          <MainMenuArtButton
+            src="/assets/ui/buttons/main_menu_settings_v11.png"
+            label="설정"
+            tone="settings"
+            disabled={!menuOpen}
+            onClick={onSettings}
+          />
+          <MainMenuArtButton
+            src="/assets/ui/buttons/main_menu_ship_select_v11.png"
+            label="기체 선택"
+            tone="ship"
+            disabled={!menuOpen}
+            onClick={onShipSelect}
+          />
+          <MainMenuArtButton
+            src="/assets/ui/buttons/main_menu_production_info_v11.png"
+            label="제작 정보"
+            tone="production"
+            disabled={!menuOpen}
+            onClick={onProductionInfo}
+          />
+        </div>
       </div>
     </section>
   );
