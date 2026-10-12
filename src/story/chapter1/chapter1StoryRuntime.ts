@@ -220,7 +220,9 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   // Part 2의 게이트키퍼 스타일 주입 이후에 적용해 보스 전용 클래스와 서로 덮어쓰지 않게 한다.
   const studentCardDialogueClassHook = `    dialogueLayer.classList.toggle('speaker-right', speakerCharacter.side === 'right');`;
   const studentCardDialogueClassUpgrade = `    dialogueLayer.classList.toggle('speaker-right', speakerCharacter.side === 'right');
-    dialogueLayer.classList.toggle('is-student-card-dialogue', String(item.speaker || '') === 'student_card');`;
+    const commonMonsterSpeakerId = String(item.speakerVisual || item.speaker || '');
+    dialogueLayer.classList.toggle('is-student-card-dialogue', String(item.speaker || '') === 'student_card');
+    dialogueLayer.classList.toggle('is-common-monster-dialogue', commonMonsterSpeakerId.startsWith('monster_'));`;
   if (!normalized.includes(studentCardDialogueClassHook)) {
     throw new Error('Chapter 1 student-card dialogue hook was not found.');
   }
@@ -1126,7 +1128,8 @@ html.is-embedded-story .story-stage,
 html.is-embedded-story .story-stage.is-full-story,
 html.is-embedded-story .story-stage.is-game-mode {
   width: min(96dvh, 100vw) !important;
-  height: 100dvh !important;
+  height: min(100dvh, 104.167vw) !important;
+  max-width: 100vw !important;
   max-height: 100dvh !important;
   aspect-ratio: 24 / 25 !important;
   border: 0 !important;
@@ -1135,7 +1138,8 @@ html.is-embedded-story .story-stage.is-game-mode {
 /* Chapter 3 기준 스토리 UI: 화면 비율, 대사창 비율, 타이포그래피를 동일하게 고정한다. */
 html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) {
   width: min(96dvh, 100vw) !important;
-  height: 100dvh !important;
+  height: min(100dvh, 104.167vw) !important;
+  max-width: 100vw !important;
   max-height: 100dvh !important;
   aspect-ratio: 24 / 25 !important;
 }
@@ -1446,6 +1450,107 @@ html.is-embedded-story .dialogue-layer.is-gatekeeper-boss-dialogue.is-gatekeeper
 @keyframes chapter1GatekeeperBossSigil {
   from { transform: scale(.92) rotate(-3deg); filter: brightness(.92); }
   to { transform: scale(1.08) rotate(3deg); filter: brightness(1.28); }
+}
+
+/* V2.1 common-monster-dialogue-responsive-slot */
+/* 일반 몬스터 공용 대사창: 잡몹은 종류와 관계없이 같은 기계식 통신 프레임을 사용한다. */
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue {
+  --speaker-accent: #ff9a32 !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .dialogue-box {
+  border-color: #6e8393 !important;
+  background:
+    linear-gradient(135deg, rgba(255,154,50,.055) 0 10px, transparent 10px 28px),
+    linear-gradient(90deg, rgba(99,214,255,.045) 0 1px, transparent 1px 30px),
+    radial-gradient(circle at 10% 50%, rgba(255,147,48,.12), transparent 34%),
+    linear-gradient(180deg, rgba(13,20,26,.988), rgba(3,7,10,.998)) !important;
+  background-size: 28px 28px, 30px 30px, auto, auto !important;
+  box-shadow:
+    0 0 0 3px #05080b,
+    0 0 0 6px #2f4654,
+    inset 0 0 0 1px rgba(203,239,255,.14),
+    inset 0 0 42px rgba(77,190,231,.08),
+    0 10px 0 #17252e,
+    0 24px 52px rgba(0,0,0,.82),
+    0 0 26px rgba(255,148,48,.20) !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .dialogue-box::before,
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .dialogue-box::after {
+  background: #ff922e !important;
+  border-color: #14232c !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .speaker-tag {
+  border-color: #10202a !important;
+  background: linear-gradient(180deg, #667d8c 0%, #334b5b 56%, #162733 100%) !important;
+  box-shadow: 0 0 0 2px #9ed7e9, 0 6px 0 #0b151c, 0 0 20px rgba(92,205,239,.30) !important;
+  color: #f3fbff !important;
+  text-shadow: 0 0 7px rgba(154,229,255,.48), 2px 2px 0 #071015 !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .dialogue-marker {
+  font-size: 0 !important;
+  text-shadow: none !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .dialogue-marker::before {
+  content: "◆" !important;
+  font-size: clamp(24px, 3vw, 38px) !important;
+  color: #ff9a32 !important;
+  text-shadow: 0 0 9px rgba(255,154,50,.76), 0 0 18px rgba(94,214,255,.24) !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .dialogue-text {
+  color: #f0f7fa !important;
+  text-shadow: 0 0 7px rgba(106,211,244,.10), 3px 3px 0 #020405 !important;
+}
+html.is-embedded-story .dialogue-layer.is-common-monster-dialogue .continue-indicator {
+  color: #ff9a32 !important;
+  filter: drop-shadow(0 0 8px rgba(255,154,50,.72)) !important;
+}
+
+/* 24:25 스테이지 기준 캐릭터 슬롯.
+   px/vw/vh 혼합과 800px 미디어쿼리 때문에 브라우저 확대/축소에서 몬스터만 크기가 튀던 문제를 제거한다. */
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character="hobanwoo"] {
+  right: 1.8% !important;
+  bottom: 30.8% !important;
+  width: 44% !important;
+  height: 66% !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform-origin: center bottom !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-right[data-character="hobanwoo"].is-speaking,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-right[data-character="hobanwoo"].is-inactive {
+  transform: translateX(0) scale(1) !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character="hobanwoo"] .actor-image,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character="hobanwoo"].is-speaking.is-turn-pulse .actor-image {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  transform: scale(1.12) !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character^="monster_"] {
+  left: 2.0% !important;
+  bottom: 30.8% !important;
+  width: 44% !important;
+  height: 66% !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform-origin: center bottom !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character^="monster_"].is-speaking,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor-left[data-character^="monster_"].is-inactive {
+  transform: translateX(0) scale(1) !important;
+}
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character^="monster_"] .actor-image,
+html.is-embedded-story .story-stage.is-full-story:not(.is-game-mode) .actor[data-character^="monster_"].is-speaking.is-turn-pulse .actor-image {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  transform: scale(1.30) !important;
+  animation: var(--actor-motion-animation, none) !important;
 }
 
 /* 코어 포탈 진입 동안만 포탈용 스토리 스테이지를 브라우저 전체 화면으로 확장한다. */
