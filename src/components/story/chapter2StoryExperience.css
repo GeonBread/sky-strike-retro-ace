@@ -1084,3 +1084,70 @@
   height: 100dvh !important;
   transform: none !important;
 }
+
+/* =========================================================
+   V2.21 · Chapter 2 iframe scaling repair
+   Same correction as Chapter 3: the browsing context remains 922x960/1920x1080
+   while CSS zoom changes only its physical display size.
+   ========================================================= */
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: 922px !important;
+  max-height: 960px !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: none !important;
+  transform-origin: center center !important;
+  zoom: var(--fixed-story-viewport-scale, 1) !important;
+}
+
+.chapter2-story-frame-shell.is-story-effect-fullscreen {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: 1920px !important;
+  max-height: 1080px !important;
+  aspect-ratio: 16 / 9 !important;
+  transform: none !important;
+  transform-origin: center center !important;
+  zoom: var(--fixed-cinematic-viewport-scale, 1) !important;
+  overflow: hidden !important;
+}
+
+.chapter2-story-test-navigation {
+  left: auto !important;
+  top: 12px !important;
+  right: 12px !important;
+  bottom: auto !important;
+  transform: none !important;
+  transform-origin: top right !important;
+  max-height: calc(100dvh - 24px) !important;
+}
+.chapter2-story-test-panel {
+  max-height: calc(100dvh - 72px) !important;
+  overflow-y: auto !important;
+}
+
+/* Parent-owned Chapter 2 16:9 transitions use cover-scale, preserving their
+   native aspect ratio while filling the browser viewport. */
+.chapter2-fullscreen-wave-intro,
+.chapter2-fullscreen-boss-intro,
+.chapter2-fullscreen-story-boss-emergence,
+.chapter2-wave-purification-overlay {
+  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+}

@@ -1082,3 +1082,100 @@
 .chapter3FinalCreditsLeadLogo { height: 1080px !important; padding: 86px 76px !important; }
 .chapter3FinalCreditsLeadLogo img { width: 720px !important; max-height: 454px !important; }
 .chapter3FinalCreditsHeading { min-height: 367px !important; padding: 86px 0 54px !important; }
+
+/* =========================================================
+   V2.21 · Chapter 3 iframe scaling repair
+   V2.20 transformed the iframe itself. In Chromium that created a second
+   coordinate system around fixed/viewport content and could shove the 922x960
+   story canvas off-screen even at 100% browser zoom.
+
+   Keep the iframe browsing context at the exact logical resolution and use
+   CSS zoom for the outer physical size. zoom participates in layout, so the
+   parent's grid centering remains correct and the iframe still reports
+   922x960 (or 1920x1080 for cinematics) to its own CSS/media queries.
+   ========================================================= */
+.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: 922px !important;
+  max-height: 960px !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: none !important;
+  transform-origin: center center !important;
+  zoom: var(--fixed-story-viewport-scale, 1) !important;
+}
+
+.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: 1920px !important;
+  max-height: 1080px !important;
+  aspect-ratio: 16 / 9 !important;
+  transform: none !important;
+  transform-origin: center center !important;
+  zoom: var(--fixed-cinematic-viewport-scale, 1) !important;
+}
+
+/* The Chapter 3 wave iframe uses the same 922x960 logical viewport. */
+.chapter3WaveFrame {
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: 922px !important;
+  max-height: 960px !important;
+  aspect-ratio: 922 / 960 !important;
+  transform: none !important;
+  transform-origin: center center !important;
+  zoom: var(--fixed-story-viewport-scale, 1) !important;
+}
+
+/* HUD keeps the same logical geometry but is not an iframe, so uniform transform
+   scaling remains safe and avoids pointer/canvas coordinate side effects. */
+.chapter3WaveHostHud {
+  width: 922px !important;
+  height: 960px !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform: translate(-50%, -50%) scale(var(--fixed-story-viewport-scale, 1)) !important;
+  transform-origin: center center !important;
+}
+
+/* V2.20's translated test-navigation transform could place the controls far
+   away from the actual frame. Keep it viewport-pinned and independently scrollable. */
+.chapter3-story-test-navigation {
+  left: auto !important;
+  top: 12px !important;
+  right: 12px !important;
+  bottom: auto !important;
+  transform: none !important;
+  transform-origin: top right !important;
+  max-height: calc(100dvh - 24px) !important;
+}
+.chapter3-story-test-navigation .chapter2-story-test-panel {
+  max-height: calc(100dvh - 72px) !important;
+  overflow-y: auto !important;
+}
+
+/* Parent-owned 16:9 cinematics stay fixed-ratio and now use the cover scale
+   supplied by V2.21, so they fill the browser without stretching. */
+.chapter3FullscreenLocationTransition,
+.chapter3FinalCreditsOverlay {
+  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+}
