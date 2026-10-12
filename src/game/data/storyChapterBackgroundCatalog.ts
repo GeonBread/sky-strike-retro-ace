@@ -7,9 +7,10 @@ export const STORY_CHAPTER1_PARALLAX_LAYERS = [
 ];
 
 /**
- * 챕터 1 웨이브 배경 카메라가 상단에서 하단으로 내려가는 속도(px/s).
+ * 챕터 1 웨이브 배경의 세로 스크롤 속도(px/s).
+ * 양수일수록 화면 기준으로 맵이 위에서 아래로 흘러간다.
  */
-export const STORY_CHAPTER1_MAP_SCROLL_SPEED = 10;
+export const STORY_CHAPTER1_MAP_SCROLL_SPEED = 14;
 
 export const STORY_CHAPTER1_PARALLAX_SPEEDS = [0];
 export const STORY_CHAPTER1_PARALLAX_ALPHAS = [1];

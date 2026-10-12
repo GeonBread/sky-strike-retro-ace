@@ -1,8 +1,9 @@
 /**
  * 스토리 배경 렌더러
  *
- * 챕터 1은 세로로 긴 캠퍼스 항공뷰 맵을 사용하며,
- * 화면 자체는 고정한 채 카메라가 맵의 상단에서 하단으로 천천히 내려가도록 렌더링한다.
+ * 챕터 1은 세로로 긴 캠퍼스 항공뷰 맵을 사용한다.
+ * 사용자가 요구한 것처럼 배경 맵 이미지 자체가 화면 기준으로
+ * 위에서 아래로 천천히 흘러가며, 끊김 없이 무한 반복된다.
  */
 
 import {
@@ -13,48 +14,39 @@ import {
 
 type BackgroundRenderEngine = any;
 
-function renderSingleMapPanDown(engine: BackgroundRenderEngine, img: HTMLImageElement, isBoss: boolean): void {
+function renderSingleMapLoopDown(engine: BackgroundRenderEngine, img: HTMLImageElement, isBoss: boolean): void {
   const canvasWidth = engine.canvas.width;
   const canvasHeight = engine.canvas.height;
 
   const scale = Math.max(canvasWidth / img.naturalWidth, canvasHeight / img.naturalHeight);
-  const visibleSourceWidth = Math.min(img.naturalWidth, canvasWidth / scale);
-  const visibleSourceHeight = Math.min(img.naturalHeight, canvasHeight / scale);
-  const sourceX = Math.max(0, (img.naturalWidth - visibleSourceWidth) * 0.5);
-  const maxSourceY = Math.max(0, img.naturalHeight - visibleSourceHeight);
-  const elapsedSeconds = performance.now() / 1000;
+  const drawWidth = img.naturalWidth * scale;
+  const drawHeight = img.naturalHeight * scale;
+  const x = (canvasWidth - drawWidth) / 2;
+  const timeSeconds = performance.now() / 1000;
 
-  // 화면은 고정, 카메라가 맵 상단에서 하단으로 천천히 이동한다.
-  const sourceY = maxSourceY > 0
-    ? Math.min(maxSourceY, elapsedSeconds * (STORY_CHAPTER1_MAP_SCROLL_SPEED / scale))
-    : 0;
+  // 화면 기준으로 맵이 위 -> 아래로 이동하도록 양의 방향으로 스크롤.
+  // 무한 반복을 위해 현재 오프셋 아래/위에 같은 이미지를 추가로 한 장 더 그린다.
+  const offset = ((timeSeconds * STORY_CHAPTER1_MAP_SCROLL_SPEED) % drawHeight + drawHeight) % drawHeight;
+  const baseY = offset - drawHeight;
 
-  engine.ctx.drawImage(
-    img,
-    sourceX,
-    sourceY,
-    visibleSourceWidth,
-    visibleSourceHeight,
-    0,
-    0,
-    canvasWidth,
-    canvasHeight,
-  );
+  engine.ctx.drawImage(img, x, baseY, drawWidth, drawHeight);
+  engine.ctx.drawImage(img, x, baseY + drawHeight, drawWidth, drawHeight);
+  engine.ctx.drawImage(img, x, baseY - drawHeight, drawWidth, drawHeight);
 
-  // 배경이 너무 어둡지 않도록 오버레이를 완화한다.
-  engine.ctx.fillStyle = isBoss ? "rgba(4, 8, 18, 0.20)" : "rgba(4, 8, 18, 0.10)";
+  // 배경이 너무 어두웠던 문제 완화
+  engine.ctx.fillStyle = isBoss ? "rgba(4, 8, 18, 0.16)" : "rgba(4, 8, 18, 0.08)";
   engine.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
   const vignette = engine.ctx.createRadialGradient(
     canvasWidth * 0.5,
     canvasHeight * 0.45,
-    Math.min(canvasWidth, canvasHeight) * 0.22,
+    Math.min(canvasWidth, canvasHeight) * 0.24,
     canvasWidth * 0.5,
     canvasHeight * 0.5,
-    Math.max(canvasWidth, canvasHeight) * 0.74,
+    Math.max(canvasWidth, canvasHeight) * 0.76,
   );
   vignette.addColorStop(0, "rgba(0,0,0,0)");
-  vignette.addColorStop(1, isBoss ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.10)");
+  vignette.addColorStop(1, isBoss ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.08)");
   engine.ctx.fillStyle = vignette;
   engine.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 }
@@ -71,7 +63,7 @@ export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderE
   const layers = engine.chapter1BackgroundLayers as HTMLImageElement[];
 
   if (layers.length === 1) {
-    renderSingleMapPanDown(engine, layers[0], isBoss);
+    renderSingleMapLoopDown(engine, layers[0], isBoss);
     return true;
   }
 
@@ -82,20 +74,22 @@ export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderE
     const drawHeight = img.naturalHeight * scale;
     const x = (engine.canvas.width - drawWidth) / 2;
     const speed = STORY_CHAPTER1_PARALLAX_SPEEDS[index] ?? 0;
-    const y = speed === 0
-      ? (engine.canvas.height - drawHeight) / 2
-      : ((time * speed) % drawHeight + drawHeight) % drawHeight;
+    const offset = speed === 0 ? 0 : ((time * speed) % drawHeight + drawHeight) % drawHeight;
+    const y = speed === 0 ? (engine.canvas.height - drawHeight) / 2 : offset - drawHeight;
 
     engine.ctx.save();
     engine.ctx.globalAlpha = STORY_CHAPTER1_PARALLAX_ALPHAS[index] ?? 1;
     engine.ctx.drawImage(img, x, y, drawWidth, drawHeight);
-    if (speed !== 0) engine.ctx.drawImage(img, x, y - drawHeight, drawWidth, drawHeight);
+    if (speed !== 0) {
+      engine.ctx.drawImage(img, x, y + drawHeight, drawWidth, drawHeight);
+      engine.ctx.drawImage(img, x, y - drawHeight, drawWidth, drawHeight);
+    }
     engine.ctx.restore();
   });
 
   if (isBoss) {
     engine.ctx.save();
-    engine.ctx.fillStyle = "rgba(2, 6, 23, 0.12)";
+    engine.ctx.fillStyle = "rgba(2, 6, 23, 0.10)";
     engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
     engine.ctx.restore();
   }
