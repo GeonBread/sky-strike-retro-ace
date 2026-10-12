@@ -2477,7 +2477,7 @@ window.STORY_DATA = {
         "text": "확인하겠습니다.",
         "scene": "empty_classroom",
         "pose": "default",
-        "leftImage": "/chapter3_story//assets/chapter3/story/characters/junho_greeting.png",
+        "leftImage": "/assets/chapter3/story/characters/junho_greeting.png",
         "statusLabel": "처음 만난 4조",
         "left": "junho",
         "right": "hobanwoo"
@@ -10922,11 +10922,34 @@ function c2GetSceneInfo(sceneId) {
   return scenes[sceneId] || null;
 }
 
+function c2CanonicalAssetPath(file) {
+  if (!file) return '';
+  let raw = String(file).replace(/\\/g, '/');
+  if (/^(?:data:|blob:|https?:)/.test(raw)) return raw;
+  raw = raw.replace(/^\/chapter2_story\/assets\//, '');
+  raw = raw.replace(/^\/chapter3_story\/assets\//, '');
+  raw = raw.replace(/^assets\//, '');
+  if (raw.startsWith('/assets/')) return raw;
+  if (raw.startsWith('/')) return raw;
+  if (/^chapter2\/(?:backgrounds|characters|illustrations|portraits)\//.test(raw)) {
+    return `/assets/chapter2/story/${raw.slice('chapter2/'.length)}`;
+  }
+  if (/^chapter3\/(?:backgrounds|characters|illustrations|monsters|portraits)\//.test(raw)) {
+    return `/assets/chapter3/story/${raw.slice('chapter3/'.length)}`;
+  }
+  if (raw.startsWith('characters/hobanwoo/')) {
+    return `/assets/common/characters/hobanwoo/${raw.slice('characters/hobanwoo/'.length)}`;
+  }
+  if (raw.startsWith('story/common/ui/')) {
+    return `/assets/common/story/ui/${raw.slice('story/common/ui/'.length)}`;
+  }
+  return `/assets/chapter2/story/legacy/${raw}`;
+}
+
 function c2GetSceneBackground(sceneId) {
   const info = c2GetSceneInfo(sceneId);
   if (!info || !info.background) return '';
-  const bg = String(info.background);
-  return bg.startsWith('assets/') ? bg : `assets/${bg}`;
+  return c2CanonicalAssetPath(info.background);
 }
 
 function c2SplitTimeCardLabel(raw) {
@@ -12078,9 +12101,9 @@ window.STORY_CUSTOM_EFFECTS['battle-summary'] = ({ layer, item }) => {
   if (String(item.footer || '') === '오염 파편 출현') {
     item.duration = Math.max(Number(item.duration || 0), 6500);
     const monsterTypes = [
-      { image: '//assets/chapter2/combat/waves/enemies/no_reply.png', alt: '팀플 잠수함' },
-      { image: '//assets/chapter2/combat/waves/enemies/ghost_exam.png', alt: '족보 유령' },
-      { image: '//assets/chapter2/combat/waves/enemies/energy_absorber.png', alt: '밤샘 에너지 흡수체' }
+      { image: '/assets/chapter2/combat/waves/enemies/no_reply.png', alt: '팀플 잠수함' },
+      { image: '/assets/chapter2/combat/waves/enemies/ghost_exam.png', alt: '족보 유령' },
+      { image: '/assets/chapter2/combat/waves/enemies/energy_absorber.png', alt: '밤샘 에너지 흡수체' }
     ];
     const clusterBases = [
       { x: 24, y: 59 },
@@ -14409,11 +14432,7 @@ document.head.appendChild(c2Style);
     integrationGate: null
   };
 
-  const assetPath = file => {
-    if (!file) return '';
-    if (/^(?:data:|blob:|https?:|\/)/.test(file)) return file;
-    return `${config.assetsDirectory || 'assets/'}${file}`;
-  };
+  const assetPath = file => c2CanonicalAssetPath(file);
 
   const isEffect = item => Boolean(item && item.type && item.type !== 'dialogue');
   const isDialogue = item => Boolean(item && !isEffect(item));

@@ -4132,10 +4132,36 @@ function c3ClockNumberMarkup() {
 }
 
 function c3GetSceneInfo(sceneKey){ return window.STORY_CONFIG?.scenes?.[sceneKey] || null; }
+function c3CanonicalAssetPath(file) {
+  if (!file) return '';
+  let raw = String(file).replace(/\\/g, '/');
+  if (/^(?:data:|blob:|https?:)/.test(raw)) return raw;
+  raw = raw.replace(/^\/chapter3_story\/assets\//, '');
+  raw = raw.replace(/^\/chapter2_story\/assets\//, '');
+  raw = raw.replace(/^assets\//, '');
+  if (raw.startsWith('/assets/')) return raw;
+  if (raw.startsWith('/')) return raw;
+  if (/^chapter3\/(?:backgrounds|characters|illustrations|monsters|portraits)\//.test(raw)) {
+    return `/assets/chapter3/story/${raw.slice('chapter3/'.length)}`;
+  }
+  if (/^chapter2\/(?:backgrounds|illustrations)\//.test(raw)) {
+    return `/assets/chapter2/story/${raw.slice('chapter2/'.length)}`;
+  }
+  if (/^chapter2\/(?:characters|portraits)\//.test(raw)) {
+    return `/assets/chapter3/story/${raw.slice('chapter2/'.length)}`;
+  }
+  if (raw.startsWith('characters/hobanwoo/')) {
+    return `/assets/common/characters/hobanwoo/${raw.slice('characters/hobanwoo/'.length)}`;
+  }
+  if (raw.startsWith('story/common/ui/')) {
+    return `/assets/common/story/ui/${raw.slice('story/common/ui/'.length)}`;
+  }
+  return `/assets/chapter3/story/legacy/${raw}`;
+}
 function c3GetSceneBackground(sceneKey){
   const bg=String(c3GetSceneInfo(sceneKey)?.background || '');
   if(!bg) return '';
-  return /^(?:data:|blob:|https?:|\/|assets\/)/.test(bg) ? bg : `assets/${bg}`;
+  return c3CanonicalAssetPath(bg);
 }
 
 window.STORY_CUSTOM_EFFECTS['time-card'] = ({ layer, item }) => {
@@ -5508,11 +5534,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     hostExitConfirmOpen: false
   };
 
-  const assetPath = file => {
-    if (!file) return '';
-    if (/^(?:data:|blob:|https?:|\/)/.test(file)) return file;
-    return `${config.assetsDirectory || 'assets/'}${file}`;
-  };
+  const assetPath = file => c3CanonicalAssetPath(file);
 
   const isEffect = item => Boolean(item && item.type && item.type !== 'dialogue');
   const isDialogue = item => Boolean(item && !isEffect(item));
