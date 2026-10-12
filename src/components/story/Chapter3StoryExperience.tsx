@@ -5,7 +5,14 @@ import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProg
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter2StoryExperience.css";
 import "./chapter3StoryExperience.css";
-import { useFixedCinematicViewportScale, useFixedGameViewportScale } from "./fixedGameViewportScale";
+import {
+  FIXED_CINEMATIC_VIEWPORT_HEIGHT,
+  FIXED_CINEMATIC_VIEWPORT_WIDTH,
+  FIXED_GAME_VIEWPORT_HEIGHT,
+  FIXED_GAME_VIEWPORT_WIDTH,
+  useFixedCinematicViewportScale,
+  useFixedGameViewportScale,
+} from "./fixedGameViewportScale";
 
 type Chapter3StoryExperienceProps = {
   onExit?: () => void;
@@ -1022,17 +1029,23 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
         "--fixed-game-viewport-scale": fixedViewportScale,
         "--fixed-story-viewport-scale": fixedViewportScale,
         "--fixed-cinematic-viewport-scale": fixedCinematicViewportScale,
+        "--fixed-story-display-width": `${FIXED_GAME_VIEWPORT_WIDTH * fixedViewportScale}px`,
+        "--fixed-story-display-height": `${FIXED_GAME_VIEWPORT_HEIGHT * fixedViewportScale}px`,
+        "--fixed-cinematic-display-width": `${FIXED_CINEMATIC_VIEWPORT_WIDTH * fixedCinematicViewportScale}px`,
+        "--fixed-cinematic-display-height": `${FIXED_CINEMATIC_VIEWPORT_HEIGHT * fixedCinematicViewportScale}px`,
       } as CSSProperties}
     >
-      <iframe
-        key={`chapter3-story-${storyLaunchSerial}`}
-        ref={frameRef}
-        className="chapter3StoryFrame"
-        src={frameSrc}
-        title="CHAPTER 3 — 졸업요건 최종전"
-        allow="autoplay; fullscreen"
-        aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
-      />
+      <div className="chapter3StoryFrameShell">
+        <iframe
+          key={`chapter3-story-${storyLaunchSerial}`}
+          ref={frameRef}
+          className="chapter3StoryFrame"
+          src={frameSrc}
+          title="CHAPTER 3 — 졸업요건 최종전"
+          allow="autoplay; fullscreen"
+          aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
+        />
+      </div>
 
       {chapter43LocationTransitionActive && (
         <div className="chapter3FullscreenLocationTransition" aria-label="경북대학교 배경 전환">
@@ -1201,20 +1214,22 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
       {waveActive && (
         <div className="chapter3WaveStage" aria-label="챕터 3 일반 몬스터 웨이브">
-          <iframe
-            key={`chapter3-wave-${waveRunKey}-${waveStartIndex}-${waveSingle ? "single" : "flow"}`}
-            ref={waveFrameRef}
-            className="chapter3WaveFrame"
-            src={waveSrc}
-            title="CHAPTER 3 일반 오염 몬스터 정화 전투"
-            tabIndex={0}
-            onLoad={() => {
-              window.requestAnimationFrame(() => {
-                waveFrameRef.current?.focus({ preventScroll: true });
-                waveFrameRef.current?.contentWindow?.focus();
-              });
-            }}
-          />
+          <div className="chapter3WaveFrameShell">
+            <iframe
+              key={`chapter3-wave-${waveRunKey}-${waveStartIndex}-${waveSingle ? "single" : "flow"}`}
+              ref={waveFrameRef}
+              className="chapter3WaveFrame"
+              src={waveSrc}
+              title="CHAPTER 3 일반 오염 몬스터 정화 전투"
+              tabIndex={0}
+              onLoad={() => {
+                window.requestAnimationFrame(() => {
+                  waveFrameRef.current?.focus({ preventScroll: true });
+                  waveFrameRef.current?.contentWindow?.focus();
+                });
+              }}
+            />
+          </div>
           {!waveReady && !waveFailed && <div className="chapter3WaveLoading">CHAPTER 3 COMBAT LOADING</div>}
         </div>
       )}

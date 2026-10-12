@@ -1151,3 +1151,68 @@
 .chapter2-wave-purification-overlay {
   transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
 }
+
+/* =========================================================
+   V2.23 · Chapter 2 wrapper-based fixed logical viewport
+   CSS zoom is intentionally not used. The shell owns the physical fitted size,
+   while the iframe always keeps its original 922×960 / 1920×1080 browsing context.
+   ========================================================= */
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
+  position: relative !important;
+  width: var(--fixed-story-display-width, 922px) !important;
+  height: var(--fixed-story-display-height, 960px) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  transform: none !important;
+  zoom: 1 !important;
+  overflow: hidden !important;
+  flex: none !important;
+}
+
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) > .chapter2-story-frame {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: 922px !important;
+  max-height: 960px !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+  transform-origin: top left !important;
+  zoom: 1 !important;
+}
+
+.chapter2-story-frame-shell.is-story-effect-fullscreen {
+  position: relative !important;
+  width: var(--fixed-cinematic-display-width, 1920px) !important;
+  height: var(--fixed-cinematic-display-height, 1080px) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  transform: none !important;
+  zoom: 1 !important;
+  overflow: hidden !important;
+  flex: none !important;
+}
+
+.chapter2-story-frame-shell.is-story-effect-fullscreen > .chapter2-story-frame {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: 1920px !important;
+  max-height: 1080px !important;
+  transform: scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+  transform-origin: top left !important;
+  zoom: 1 !important;
+}

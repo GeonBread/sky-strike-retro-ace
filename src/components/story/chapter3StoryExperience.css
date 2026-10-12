@@ -1179,3 +1179,98 @@
 .chapter3FinalCreditsOverlay {
   transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
 }
+
+/* =========================================================
+   V2.23 · Chapter 3 wrapper-based fixed logical viewport
+   The wrapper has the fitted physical size. The iframe itself remains at the
+   exact logical resolution and is uniformly painted into that wrapper.
+   This avoids CSS zoom layout bugs and prevents the lower dialogue area from
+   extending below the visible browser viewport.
+   ========================================================= */
+.chapter3StoryFrameShell {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  background: #050506;
+}
+
+.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrameShell {
+  width: var(--fixed-story-display-width, 922px) !important;
+  height: var(--fixed-story-display-height, 960px) !important;
+}
+
+.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrameShell {
+  width: var(--fixed-cinematic-display-width, 1920px) !important;
+  height: var(--fixed-cinematic-display-height, 1080px) !important;
+}
+
+.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
+  position: absolute !important;
+  inset: auto !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: 922px !important;
+  max-height: 960px !important;
+  aspect-ratio: auto !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+  transform-origin: top left !important;
+  zoom: 1 !important;
+}
+
+.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame {
+  position: absolute !important;
+  inset: auto !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 1920px !important;
+  height: 1080px !important;
+  min-width: 1920px !important;
+  min-height: 1080px !important;
+  max-width: 1920px !important;
+  max-height: 1080px !important;
+  aspect-ratio: auto !important;
+  transform: scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
+  transform-origin: top left !important;
+  zoom: 1 !important;
+}
+
+.chapter3StoryExperience.is-selector-open .chapter3StoryFrameShell,
+.chapter3StoryExperience.is-wave-active .chapter3StoryFrameShell {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chapter3WaveFrameShell {
+  position: relative;
+  width: var(--fixed-story-display-width, 922px) !important;
+  height: var(--fixed-story-display-height, 960px) !important;
+  flex: none;
+  overflow: hidden;
+  background: #05070c;
+  box-shadow: 0 0 48px rgba(0, 0, 0, .8);
+}
+
+.chapter3WaveFrame {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 922px !important;
+  height: 960px !important;
+  min-width: 922px !important;
+  min-height: 960px !important;
+  max-width: 922px !important;
+  max-height: 960px !important;
+  aspect-ratio: auto !important;
+  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
+  transform-origin: top left !important;
+  zoom: 1 !important;
+  box-shadow: none !important;
+}

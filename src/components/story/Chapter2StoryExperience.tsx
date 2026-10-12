@@ -5,7 +5,14 @@ import {
   type StoryCheckpoint,
 } from "../../story/storyProgress";
 import "./chapter2StoryExperience.css";
-import { useFixedCinematicViewportScale, useFixedGameViewportScale } from "./fixedGameViewportScale";
+import {
+  FIXED_CINEMATIC_VIEWPORT_HEIGHT,
+  FIXED_CINEMATIC_VIEWPORT_WIDTH,
+  FIXED_GAME_VIEWPORT_HEIGHT,
+  FIXED_GAME_VIEWPORT_WIDTH,
+  useFixedCinematicViewportScale,
+  useFixedGameViewportScale,
+} from "./fixedGameViewportScale";
 
 interface Chapter2StoryStateMessage {
   segmentId?: string;
@@ -940,6 +947,10 @@ export function Chapter2StoryExperience({
         "--fixed-game-viewport-scale": fixedViewportScale,
         "--fixed-story-viewport-scale": fixedViewportScale,
         "--fixed-cinematic-viewport-scale": fixedCinematicViewportScale,
+        "--fixed-story-display-width": `${FIXED_GAME_VIEWPORT_WIDTH * fixedViewportScale}px`,
+        "--fixed-story-display-height": `${FIXED_GAME_VIEWPORT_HEIGHT * fixedViewportScale}px`,
+        "--fixed-cinematic-display-width": `${FIXED_CINEMATIC_VIEWPORT_WIDTH * fixedCinematicViewportScale}px`,
+        "--fixed-cinematic-display-height": `${FIXED_CINEMATIC_VIEWPORT_HEIGHT * fixedCinematicViewportScale}px`,
       } as React.CSSProperties}
     >
       <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive ? " is-story-effect-fullscreen" : ""}`}>
