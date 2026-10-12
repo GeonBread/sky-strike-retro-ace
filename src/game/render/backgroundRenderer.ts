@@ -2,16 +2,16 @@
  * 스토리 배경 렌더러
  *
  * 챕터별 배경, 보스전 배경 색상, 별빛, 전투 격자 효과를 그린다.
- * 챕터 1은 캠퍼스 항공뷰 맵 배경을 우선 렌더링한다.
+ * 챕터 1은 캠퍼스 항공뷰 맵 배경을 천천히 아래 방향으로 이동시키며 렌더링한다.
  */
 
-import { STORY_CHAPTER1_PARALLAX_ALPHAS, STORY_CHAPTER1_PARALLAX_SPEEDS } from "../data/storyChapterBackgroundCatalog";
+import { STORY_CHAPTER1_MAP_SCROLL_SPEED, STORY_CHAPTER1_PARALLAX_ALPHAS, STORY_CHAPTER1_PARALLAX_SPEEDS } from "../data/storyChapterBackgroundCatalog";
 
 type BackgroundRenderEngine = any;
 
 /**
  * 챕터 1 전용 배경을 캔버스 크기에 맞춰 렌더링한다.
- * - 레이어가 1장이면 정적 맵 배경으로 cover 렌더링한다.
+ * - 레이어가 1장이면 세로로 긴 항공뷰 맵을 위→아래로 천천히 패닝한다.
  * - 레이어가 여러 장이면 기존 패럴랙스 렌더링을 유지한다.
  */
 export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderEngine, isBoss: boolean): boolean {
@@ -28,13 +28,21 @@ export function renderChapter1ParallaxBackgroundSystem(engine: BackgroundRenderE
     const drawWidth = img.naturalWidth * scale;
     const drawHeight = img.naturalHeight * scale;
     const x = (engine.canvas.width - drawWidth) / 2;
-    const y = (engine.canvas.height - drawHeight) / 2;
+
+    const maxScroll = Math.max(0, drawHeight - engine.canvas.height);
+    const elapsedSeconds = performance.now() / 1000;
+    // 위에서 아래로 천천히 내려가도록 스크롤.
+    const scrollY = maxScroll > 0
+      ? (elapsedSeconds * STORY_CHAPTER1_MAP_SCROLL_SPEED) % (maxScroll + engine.canvas.height * 0.18)
+      : 0;
+    const clampedScrollY = Math.min(scrollY, maxScroll);
+    const y = -clampedScrollY;
 
     engine.ctx.save();
     engine.ctx.drawImage(img, x, y, drawWidth, drawHeight);
 
     // 전투 가독성을 위해 살짝 어둡게 눌러 준다.
-    engine.ctx.fillStyle = isBoss ? "rgba(3, 8, 20, 0.36)" : "rgba(3, 8, 20, 0.24)";
+    engine.ctx.fillStyle = isBoss ? "rgba(3, 8, 20, 0.38)" : "rgba(3, 8, 20, 0.24)";
     engine.ctx.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
 
     // 가장자리에 은은한 비네팅을 넣어 HUD와 탄막 가독성을 유지한다.
