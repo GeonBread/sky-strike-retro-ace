@@ -666,6 +666,26 @@ export class AudioSystem {
     this.requestBgmPlayback();
   }
 
+  startChapter1EndingBgm() {
+    const track = "/assets/audio/chapter1/chapter1-ending-bgm.mp3";
+    if (this.currentBgmTrack === track && this.bgmElement) {
+      this.cancelBgmFade();
+      this.bgmElement.volume = this.bgmVol;
+      this.isPlayingBgm = true;
+      if (this.bgmElement.paused) this.requestBgmPlayback();
+      return;
+    }
+
+    this.stopBgm();
+    this.init();
+    this.currentBgmTrack = track;
+    this.bgmElement = new Audio(track);
+    this.bgmElement.loop = true;
+    this.bgmElement.volume = this.bgmVol;
+    this.isPlayingBgm = true;
+    this.requestBgmPlayback();
+  }
+
   startChapter2StruggleBgm() {
     const track = "/assets/audio/chapter2/chapter2-struggle-bgm.mp3";
     if (this.currentBgmTrack === track && this.bgmElement && !this.bgmElement.paused) {

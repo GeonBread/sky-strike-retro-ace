@@ -983,3 +983,15 @@
   transform: scale(var(--fixed-game-viewport-scale, 1));
   transform-origin: top right;
 }
+
+/* V2.8 · Chapter 3 uses Chapter 2's panel; cap it in logical frame pixels. */
+.chapter3-story-test-navigation {
+  max-height: 936px;
+}
+
+.chapter3-story-test-navigation .chapter2-story-test-panel {
+  max-height: 880px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}

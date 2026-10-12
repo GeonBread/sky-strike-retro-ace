@@ -987,3 +987,19 @@
   max-height: none !important;
   transform: none !important;
 }
+
+/* =========================================================
+   V2.8 · fixed-ratio test navigation scroll correction
+   Keep scroll limits in the 922×960 logical coordinate system before scale().
+   ========================================================= */
+.chapter2-story-test-navigation {
+  max-height: 936px;
+}
+
+.chapter2-story-test-panel {
+  width: 390px;
+  max-height: 880px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}

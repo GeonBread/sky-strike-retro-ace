@@ -792,17 +792,17 @@ function normalizeStoryRuntimeScript(source: string, part: Chapter1StoryPart): s
   normalized = normalized.replace(initialWaveBgmFadeHook, initialWaveBgmFadeUpgrade);
 
   // Part 2의 학사 시스템 정상화가 끝난 뒤에는 코어 BGM을 페이드아웃하고,
-  // 본관 귀환 배경이 나타나는 순간 Chapter 1 일상 BGM을 다시 시작해 엔딩까지 유지한다.
+  // 본관 귀환 연출이 시작되는 순간 전용 Chapter 1 마무리 BGM으로 전환해 엔딩까지 유지한다.
   if (part === 2) {
-    const returnCampusDailyBgmHook = `  function startStory21BackgroundIntro(nextCompletionAction = 'finish') {
+    const returnCampusEndingBgmHook = `  function startStory21BackgroundIntro(nextCompletionAction = 'finish') {
     stopTyping();`;
-    const returnCampusDailyBgmUpgrade = `  function startStory21BackgroundIntro(nextCompletionAction = 'finish') {
+    const returnCampusEndingBgmUpgrade = `  function startStory21BackgroundIntro(nextCompletionAction = 'finish') {
     stopTyping();
-    window.__CHAPTER1_START_DAILY_BGM__?.();`;
-    if (!normalized.includes(returnCampusDailyBgmHook)) {
-      throw new Error('Chapter 1 return-campus daily BGM hook was not found.');
+    window.__CHAPTER1_START_ENDING_BGM__?.();`;
+    if (!normalized.includes(returnCampusEndingBgmHook)) {
+      throw new Error('Chapter 1 return-campus ending BGM hook was not found.');
     }
-    normalized = normalized.replace(returnCampusDailyBgmHook, returnCampusDailyBgmUpgrade);
+    normalized = normalized.replace(returnCampusEndingBgmHook, returnCampusEndingBgmUpgrade);
   }
 
   // 학생증은 오염 추적 직후 정상 문장으로 말하지 못하고 끊어진 단어만 출력한다.
@@ -3176,6 +3176,9 @@ export function createChapter1StoryRuntime({
   localWindowValues.set("__CHAPTER1_START_CORE_INTERIOR_BGM__", () => {
     sfx.startChapter1CoreInteriorBgm();
   });
+  localWindowValues.set("__CHAPTER1_START_ENDING_BGM__", () => {
+    sfx.startChapter1EndingBgm();
+  });
   localWindowValues.set("__CHAPTER1_FADE_OUT_BGM__", (rawDurationMs: unknown) => {
     // Story BGM fades are only valid while the visible story runtime is actually
     // performing a STORY -> combat/cinematic transition. When a saved wave/boss
@@ -3197,14 +3200,15 @@ export function createChapter1StoryRuntime({
       ? payload.items as Array<Record<string, unknown>>
       : [];
     const rawBaseState = typeof payload.baseState === "string" ? payload.baseState : "";
-    const baseState = (["daily", "drone", "core", "none"] as const).includes(rawBaseState as "daily" | "drone" | "core" | "none")
-      ? rawBaseState as "daily" | "drone" | "core" | "none"
+    const baseState = (["daily", "drone", "core", "ending", "none"] as const).includes(rawBaseState as "daily" | "drone" | "core" | "ending" | "none")
+      ? rawBaseState as "daily" | "drone" | "core" | "ending" | "none"
       : "none";
 
-    const applyBgmState = (state: "daily" | "drone" | "core" | "none") => {
+    const applyBgmState = (state: "daily" | "drone" | "core" | "ending" | "none") => {
       if (state === "daily") sfx.startChapter1DailyBgm();
       else if (state === "drone") sfx.startChapter1DroneChaseBgm();
       else if (state === "core") sfx.startChapter1CoreInteriorBgm();
+      else if (state === "ending") sfx.startChapter1EndingBgm();
       else sfx.stopBgm();
       return state;
     };
@@ -3257,7 +3261,7 @@ export function createChapter1StoryRuntime({
         "chapterEndSequence",
         "chapterEnd"
       ].includes(segmentId)) {
-        return applyBgmState("daily");
+        return applyBgmState("ending");
       }
       if ([
         "bossIntro",
