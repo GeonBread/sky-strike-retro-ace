@@ -5,14 +5,6 @@ import {
   type StoryCheckpoint,
 } from "../../story/storyProgress";
 import "./chapter2StoryExperience.css";
-import {
-  FIXED_CINEMATIC_VIEWPORT_HEIGHT,
-  FIXED_CINEMATIC_VIEWPORT_WIDTH,
-  FIXED_GAME_VIEWPORT_HEIGHT,
-  FIXED_GAME_VIEWPORT_WIDTH,
-  useFixedCinematicViewportScale,
-  useMeasuredGameViewportScale,
-} from "./fixedGameViewportScale";
 
 interface Chapter2StoryStateMessage {
   segmentId?: string;
@@ -195,9 +187,6 @@ export function Chapter2StoryExperience({
   renderWaveCombat,
   renderBossCombat,
 }: Chapter2StoryExperienceProps) {
-  const viewportHostRef = useRef<HTMLDivElement>(null);
-  const fixedViewportScale = useMeasuredGameViewportScale(viewportHostRef);
-  const fixedCinematicViewportScale = useFixedCinematicViewportScale();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const startedAtRef = useRef(Date.now());
   const restoredRef = useRef(false);
@@ -942,19 +931,7 @@ export function Chapter2StoryExperience({
   const waveMounted = phase === "wave" || phase === "wave-purification-effect" || phase === "wave-purification-exit";
 
   return (
-    <div
-      ref={viewportHostRef}
-      className="chapter2-story-experience"
-      style={{
-        "--fixed-game-viewport-scale": fixedViewportScale,
-        "--fixed-story-viewport-scale": fixedViewportScale,
-        "--fixed-cinematic-viewport-scale": fixedCinematicViewportScale,
-        "--fixed-story-display-width": `${FIXED_GAME_VIEWPORT_WIDTH * fixedViewportScale}px`,
-        "--fixed-story-display-height": `${FIXED_GAME_VIEWPORT_HEIGHT * fixedViewportScale}px`,
-        "--fixed-cinematic-display-width": `${FIXED_CINEMATIC_VIEWPORT_WIDTH * fixedCinematicViewportScale}px`,
-        "--fixed-cinematic-display-height": `${FIXED_CINEMATIC_VIEWPORT_HEIGHT * fixedCinematicViewportScale}px`,
-      } as React.CSSProperties}
-    >
+    <div className="chapter2-story-experience">
       <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive ? " is-story-effect-fullscreen" : ""}`}>
         <iframe
           ref={iframeRef}
@@ -966,7 +943,7 @@ export function Chapter2StoryExperience({
       </div>
 
       {waveMounted && (
-        <div key={`chapter2-wave-run-${waveRunKey}`} className="chapter2-fixed-combat-stage">
+        <React.Fragment key={`chapter2-wave-run-${waveRunKey}`}>
           {renderWaveCombat?.({
             startWaveIndex: waveStartIndex,
             controlCommand: waveControlCommand,
@@ -984,11 +961,11 @@ export function Chapter2StoryExperience({
             onFailed: failWaveCombat,
             onExitToMenu: exitWaveCombat,
           })}
-        </div>
+        </React.Fragment>
       )}
 
       {phase === "boss" && (
-        <div key={`chapter2-boss-run-${bossRunKey}`} className="chapter2-fixed-combat-stage">
+        <React.Fragment key={`chapter2-boss-run-${bossRunKey}`}>
           {renderBossCombat?.({
             startPatternId: bossStartPatternId,
             controlCommand: bossControlCommand,
@@ -997,7 +974,7 @@ export function Chapter2StoryExperience({
             onFailed: failBossCombat,
             onExitToMenu: exitBossCombat,
           })}
-        </div>
+        </React.Fragment>
       )}
 
       {storyBossEmergenceActive && phase === "story" && (

@@ -1,18 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Shield } from "lucide-react";
 import { sfx } from "../../game/AudioSystem";
 import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProgress";
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter2StoryExperience.css";
 import "./chapter3StoryExperience.css";
-import {
-  FIXED_CINEMATIC_VIEWPORT_HEIGHT,
-  FIXED_CINEMATIC_VIEWPORT_WIDTH,
-  FIXED_GAME_VIEWPORT_HEIGHT,
-  FIXED_GAME_VIEWPORT_WIDTH,
-  useFixedCinematicViewportScale,
-  useMeasuredGameViewportScale,
-} from "./fixedGameViewportScale";
 
 type Chapter3StoryExperienceProps = {
   onExit?: () => void;
@@ -37,7 +29,6 @@ type Chapter3BridgeMessage = {
     index?: number;
     sectionOrdinal?: number;
     code?: string;
-    active?: boolean;
   };
 };
 
@@ -280,9 +271,6 @@ function chapter3WaveCheckpoint(waveIndex: number): StoryCheckpoint {
 }
 
 export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }: Chapter3StoryExperienceProps) {
-  const viewportHostRef = useRef<HTMLElement>(null);
-  const fixedViewportScale = useMeasuredGameViewportScale(viewportHostRef);
-  const fixedCinematicViewportScale = useFixedCinematicViewportScale();
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const waveFrameRef = useRef<HTMLIFrameElement | null>(null);
   const legacyProgressRef = useRef(readChapter3Progress());
@@ -303,7 +291,6 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [currentStorySectionOrdinal, setCurrentStorySectionOrdinal] = useState(initialStoryOrdinal);
 
   const [fullscreenEffect, setFullscreenEffect] = useState<string | null>(null);
-  const [persistentCinematicActive, setPersistentCinematicActive] = useState(false);
   const [chapter43LocationTransitionActive, setChapter43LocationTransitionActive] = useState(false);
   const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [ready, setReady] = useState(false);
@@ -330,14 +317,6 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [exitConfirmMode, setExitConfirmMode] = useState<"story" | "wave" | null>(null);
   const [wavePaused, setWavePaused] = useState(false);
   const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: initialWaveIndex, totalWaves: WAVES.length, enemies: 0 });
-
-  useEffect(() => {
-    setPersistentCinematicActive(false);
-  }, [storyLaunchSerial]);
-
-  useEffect(() => {
-    if (screen !== "story" || waveActive || finalCreditsActive) setPersistentCinematicActive(false);
-  }, [screen, waveActive, finalCreditsActive]);
 
   useEffect(() => {
     if (!waveActive) return;
@@ -665,11 +644,6 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
             beginFinalCredits();
           }
           if (FULLSCREEN_EFFECTS.has(effectId)) setFullscreenEffect(effectId);
-          return;
-        }
-
-        if (message.type === "persistent-cinematic-state") {
-          setPersistentCinematicActive(Boolean(message.detail?.active));
           return;
         }
 
@@ -1022,32 +996,20 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
   return (
     <section
-      ref={viewportHostRef}
-      className={`chapter3StoryExperience${fullscreenEffect || persistentCinematicActive ? " is-fullscreen-effect" : ""}${waveActive ? " is-wave-active" : ""}${screen === "selector" ? " is-selector-open" : ""}${finalCreditsActive ? " is-final-credits" : ""}`}
+      className={`chapter3StoryExperience${fullscreenEffect ? " is-fullscreen-effect" : ""}${waveActive ? " is-wave-active" : ""}${screen === "selector" ? " is-selector-open" : ""}${finalCreditsActive ? " is-final-credits" : ""}`}
       data-chapter3-effect={fullscreenEffect || undefined}
       data-wave-paused={wavePaused ? "true" : undefined}
       aria-label="챕터 3"
-      style={{
-        "--fixed-game-viewport-scale": fixedViewportScale,
-        "--fixed-story-viewport-scale": fixedViewportScale,
-        "--fixed-cinematic-viewport-scale": fixedCinematicViewportScale,
-        "--fixed-story-display-width": `${FIXED_GAME_VIEWPORT_WIDTH * fixedViewportScale}px`,
-        "--fixed-story-display-height": `${FIXED_GAME_VIEWPORT_HEIGHT * fixedViewportScale}px`,
-        "--fixed-cinematic-display-width": `${FIXED_CINEMATIC_VIEWPORT_WIDTH * fixedCinematicViewportScale}px`,
-        "--fixed-cinematic-display-height": `${FIXED_CINEMATIC_VIEWPORT_HEIGHT * fixedCinematicViewportScale}px`,
-      } as CSSProperties}
     >
-      <div className="chapter3StoryFrameShell">
-        <iframe
-          key={`chapter3-story-${storyLaunchSerial}`}
-          ref={frameRef}
-          className="chapter3StoryFrame"
-          src={frameSrc}
-          title="CHAPTER 3 — 졸업요건 최종전"
-          allow="autoplay; fullscreen"
-          aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
-        />
-      </div>
+      <iframe
+        key={`chapter3-story-${storyLaunchSerial}`}
+        ref={frameRef}
+        className="chapter3StoryFrame"
+        src={frameSrc}
+        title="CHAPTER 3 — 졸업요건 최종전"
+        allow="autoplay; fullscreen"
+        aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
+      />
 
       {chapter43LocationTransitionActive && (
         <div className="chapter3FullscreenLocationTransition" aria-label="경북대학교 배경 전환">
@@ -1216,22 +1178,20 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
       {waveActive && (
         <div className="chapter3WaveStage" aria-label="챕터 3 일반 몬스터 웨이브">
-          <div className="chapter3WaveFrameShell">
-            <iframe
-              key={`chapter3-wave-${waveRunKey}-${waveStartIndex}-${waveSingle ? "single" : "flow"}`}
-              ref={waveFrameRef}
-              className="chapter3WaveFrame"
-              src={waveSrc}
-              title="CHAPTER 3 일반 오염 몬스터 정화 전투"
-              tabIndex={0}
-              onLoad={() => {
-                window.requestAnimationFrame(() => {
-                  waveFrameRef.current?.focus({ preventScroll: true });
-                  waveFrameRef.current?.contentWindow?.focus();
-                });
-              }}
-            />
-          </div>
+          <iframe
+            key={`chapter3-wave-${waveRunKey}-${waveStartIndex}-${waveSingle ? "single" : "flow"}`}
+            ref={waveFrameRef}
+            className="chapter3WaveFrame"
+            src={waveSrc}
+            title="CHAPTER 3 일반 오염 몬스터 정화 전투"
+            tabIndex={0}
+            onLoad={() => {
+              window.requestAnimationFrame(() => {
+                waveFrameRef.current?.focus({ preventScroll: true });
+                waveFrameRef.current?.contentWindow?.focus();
+              });
+            }}
+          />
           {!waveReady && !waveFailed && <div className="chapter3WaveLoading">CHAPTER 3 COMBAT LOADING</div>}
         </div>
       )}

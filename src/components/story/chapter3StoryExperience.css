@@ -13,10 +13,7 @@
 .chapter3StoryFrame {
   display: block;
   width: min(96dvh, 100vw);
-  height: min(100dvh, 104.167vw);
-  max-width: 100vw;
-  max-height: 100dvh;
-  aspect-ratio: 24 / 25;
+  height: 100dvh;
   border: 0;
   background: #050506;
   transition: width 180ms ease, opacity 160ms ease;
@@ -358,11 +355,7 @@
 }
 
 @media (max-width: 560px) {
-  .chapter3StoryFrame {
-    width: min(96dvh, 100vw);
-    height: min(100dvh, 104.167vw);
-    aspect-ratio: 24 / 25;
-  }
+  .chapter3StoryFrame { width: 100vw; }
   .chapter3DetailGrid { grid-template-columns: 1fr; }
   .chapter3SelectCard.is-wide { grid-column: auto; }
   .chapter3DetailSelectorFooter span { display: none; }
@@ -945,376 +938,44 @@
 .chapter3-story-test-navigation{z-index:2147483000;}
 
 
-/* V2.4 fixed 922x960 Chapter 3 story/wave viewport */
+/* V2.26 FINAL: Chapter 1 host-output parity. No wrapper transform, no zoom. */
+.chapter3StoryExperience {
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
 .chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
+  position: relative !important;
+  inset: auto !important;
+  width: min(96dvh, 100vw) !important;
+  height: min(100dvh, 104.167vw) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  aspect-ratio: 24 / 25 !important;
+  transform: none !important;
+  zoom: 1 !important;
 }
-.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame { transform: none !important; }
-.chapter3WaveFrame {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-.chapter3WaveHostHud {
-  width: 922px !important;
-  height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
-/* V2.6 · Chapter 3 test navigation follows the Chapter 3 reference scale. */
-.chapter3-story-test-navigation {
-  transform: scale(var(--fixed-game-viewport-scale, 1));
-  transform-origin: top right;
-}
-
-/* V2.8 · Chapter 3 uses Chapter 2's panel; cap it in logical frame pixels. */
-.chapter3-story-test-navigation {
-  max-height: 936px;
-}
-
-.chapter3-story-test-navigation .chapter2-story-test-panel {
-  max-height: 880px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-}
-
-/* =========================================================
-   V2.20 · Chapter 3 fixed logical geometry
-   - normal story/wave: 922×960 logical canvas
-   - fullscreen cinematics/website sequences: 1920×1080 logical canvas
-   - browser resize only changes the single uniform scale factor
-   ========================================================= */
-.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
 .chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame {
   position: fixed !important;
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  inset: auto !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   max-width: none !important;
   max-height: none !important;
-  aspect-ratio: 16 / 9 !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
-.chapter3WaveFrame {
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-}
-
-.chapter3WaveHostHud {
-  transform: translate(-50%, -50%) scale(var(--fixed-story-viewport-scale, 1)) !important;
-}
-
-/* Attach the Chapter 3 test navigation to the logical story canvas. */
-.chapter3-story-test-navigation {
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  transform-origin: 0 0 !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) translate(449px, -468px) translateX(-100%) !important;
-  max-height: 936px !important;
-}
-
-/* React-hosted full-screen Chapter 3 scenes use a fixed 16:9 reference canvas. */
-.chapter3FullscreenLocationTransition,
-.chapter3FinalCreditsOverlay {
-  inset: auto !important;
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
-/* In the 1920×1080 logical cinema canvas, use fixed logical typography/spacing
-   instead of physical-browser vw/vh values. */
-.chapter3FullscreenLocationCopy {
-  width: 900px !important;
-  min-height: 190px !important;
-}
-.chapter3FullscreenLocationCopy small { font-size: 14px !important; }
-.chapter3FullscreenLocationCopy strong { font-size: 72px !important; }
-
-.chapter3FinalCreditsTrack { width: 900px !important; }
-.chapter3FinalCreditsLeadLogo { height: 1080px !important; padding: 86px 76px !important; }
-.chapter3FinalCreditsLeadLogo img { width: 720px !important; max-height: 454px !important; }
-.chapter3FinalCreditsHeading { min-height: 367px !important; padding: 86px 0 54px !important; }
-
-/* =========================================================
-   V2.21 · Chapter 3 iframe scaling repair
-   V2.20 transformed the iframe itself. In Chromium that created a second
-   coordinate system around fixed/viewport content and could shove the 922x960
-   story canvas off-screen even at 100% browser zoom.
-
-   Keep the iframe browsing context at the exact logical resolution and use
-   CSS zoom for the outer physical size. zoom participates in layout, so the
-   parent's grid centering remains correct and the iframe still reports
-   922x960 (or 1920x1080 for cinematics) to its own CSS/media queries.
-   ========================================================= */
-.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
-  position: relative !important;
-  inset: auto !important;
-  left: auto !important;
-  top: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: none !important;
-  transform-origin: center center !important;
-  zoom: var(--fixed-story-viewport-scale, 1) !important;
-}
-
-.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame {
-  position: relative !important;
-  inset: auto !important;
-  left: auto !important;
-  top: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
-  max-width: 1920px !important;
-  max-height: 1080px !important;
-  aspect-ratio: 16 / 9 !important;
-  transform: none !important;
-  transform-origin: center center !important;
-  zoom: var(--fixed-cinematic-viewport-scale, 1) !important;
-}
-
-/* The Chapter 3 wave iframe uses the same 922x960 logical viewport. */
-.chapter3WaveFrame {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: none !important;
-  transform-origin: center center !important;
-  zoom: var(--fixed-story-viewport-scale, 1) !important;
-}
-
-/* HUD keeps the same logical geometry but is not an iframe, so uniform transform
-   scaling remains safe and avoids pointer/canvas coordinate side effects. */
-.chapter3WaveHostHud {
-  width: 922px !important;
-  height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
-/* V2.20's translated test-navigation transform could place the controls far
-   away from the actual frame. Keep it viewport-pinned and independently scrollable. */
-.chapter3-story-test-navigation {
-  left: auto !important;
-  top: 12px !important;
-  right: 12px !important;
-  bottom: auto !important;
-  transform: none !important;
-  transform-origin: top right !important;
-  max-height: calc(100dvh - 24px) !important;
-}
-.chapter3-story-test-navigation .chapter2-story-test-panel {
-  max-height: calc(100dvh - 72px) !important;
-  overflow-y: auto !important;
-}
-
-/* Parent-owned 16:9 cinematics stay fixed-ratio and now use the cover scale
-   supplied by V2.21, so they fill the browser without stretching. */
-.chapter3FullscreenLocationTransition,
-.chapter3FinalCreditsOverlay {
-  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-}
-
-/* =========================================================
-   V2.23 · Chapter 3 wrapper-based fixed logical viewport
-   The wrapper has the fitted physical size. The iframe itself remains at the
-   exact logical resolution and is uniformly painted into that wrapper.
-   This avoids CSS zoom layout bugs and prevents the lower dialogue area from
-   extending below the visible browser viewport.
-   ========================================================= */
-.chapter3StoryFrameShell {
-  position: relative;
-  flex: none;
-  overflow: hidden;
-  background: #050506;
-}
-
-.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrameShell {
-  width: var(--fixed-story-display-width, 922px) !important;
-  height: var(--fixed-story-display-height, 960px) !important;
-}
-
-.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrameShell {
-  width: var(--fixed-cinematic-display-width, 1920px) !important;
-  height: var(--fixed-cinematic-display-height, 1080px) !important;
-}
-
-.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
-  position: absolute !important;
-  inset: auto !important;
-  left: 0 !important;
-  top: 0 !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
   aspect-ratio: auto !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
+  transform: none !important;
   zoom: 1 !important;
-}
-
-.chapter3StoryExperience.is-fullscreen-effect .chapter3StoryFrame {
-  position: absolute !important;
-  inset: auto !important;
-  left: 0 !important;
-  top: 0 !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
-  max-width: 1920px !important;
-  max-height: 1080px !important;
-  aspect-ratio: auto !important;
-  transform: scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
-  zoom: 1 !important;
-}
-
-.chapter3StoryExperience.is-selector-open .chapter3StoryFrameShell,
-.chapter3StoryExperience.is-wave-active .chapter3StoryFrameShell {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.chapter3WaveFrameShell {
-  position: relative;
-  width: var(--fixed-story-display-width, 922px) !important;
-  height: var(--fixed-story-display-height, 960px) !important;
-  flex: none;
-  overflow: hidden;
-  background: #05070c;
-  box-shadow: 0 0 48px rgba(0, 0, 0, .8);
-}
-
-.chapter3WaveFrame {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
-  aspect-ratio: auto !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
-  zoom: 1 !important;
-  box-shadow: none !important;
-}
-
-/* V2.25 FINAL OVERRIDE: measured-host story fit */
-.chapter3StoryExperience {
-  padding: 24px 28px 104px !important;
-}
-.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrameShell {
-  width: var(--fixed-story-display-width, 922px) !important;
-  height: var(--fixed-story-display-height, 960px) !important;
-  max-width: none !important;
-  max-height: none !important;
-  align-self: center !important;
-  justify-self: center !important;
-}
-.chapter3StoryExperience:not(.is-fullscreen-effect) .chapter3StoryFrame {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
-  zoom: 1 !important;
-}
-.chapter3WaveFrameShell {
-  width: var(--fixed-story-display-width, 922px) !important;
-  height: var(--fixed-story-display-height, 960px) !important;
-  align-self: center !important;
-  justify-self: center !important;
 }
 .chapter3WaveFrame {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
+  width: min(96dvh, 100vw) !important;
+  height: min(100dvh, 104.167vw) !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  aspect-ratio: 24 / 25 !important;
+  transform: none !important;
   zoom: 1 !important;
 }

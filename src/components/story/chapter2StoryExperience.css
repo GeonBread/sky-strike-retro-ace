@@ -146,9 +146,8 @@
 
 @media (max-width: 800px) {
   .chapter2-story-frame-shell {
-    width: min(96dvh, 100vw);
-    height: min(100dvh, 104.167vw);
-    aspect-ratio: 24 / 25;
+    width: 100vw;
+    height: 100dvh;
   }
 
   .chapter2-integration-gate section,
@@ -159,7 +158,7 @@
 
 .chapter2-story-frame-shell.is-combat-hidden {
   visibility: hidden;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .chapter2-story-test-navigation {
@@ -918,327 +917,51 @@
 }
 
 
-/* V2.4 fixed 922x960 Chapter 2 viewport */
+/* V2.26 FINAL: Chapter 1 host-output parity. No wrapper transform, no zoom. */
+.chapter2-story-experience {
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
 .chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
+  position: relative !important;
+  inset: auto !important;
+  width: min(96dvh, 100vw) !important;
+  height: min(100dvh, 104.167vw) !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  aspect-ratio: 24 / 25 !important;
+  transform: none !important;
+  zoom: 1 !important;
+  overflow: hidden !important;
 }
-.chapter2-story-frame-shell.is-story-effect-fullscreen { transform: none !important; }
-.chapter2-fixed-combat-stage {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background: #000;
-  pointer-events: auto;
-}
-.chapter2-fixed-combat-stage > div:first-child {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: scale(var(--fixed-game-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-.chapter2-wave-purification-overlay {
-  position: fixed !important;
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 922px !important;
-  height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-game-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
-/* =========================================================
-   V2.6 · per-screen ratio correction
-   - test navigation scales with its 922×960 owner frame
-   - purification/fullscreen effects stay genuinely full-screen
-   ========================================================= */
-.chapter2-story-test-navigation {
-  transform: scale(var(--fixed-game-viewport-scale, 1));
-  transform-origin: top right;
-}
-
-.chapter2-wave-purification-overlay {
-  left: 0 !important;
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
+.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) .chapter2-story-frame {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   max-width: none !important;
   max-height: none !important;
   transform: none !important;
+  zoom: 1 !important;
 }
-
-/* =========================================================
-   V2.8 · fixed-ratio test navigation scroll correction
-   Keep scroll limits in the 922×960 logical coordinate system before scale().
-   ========================================================= */
-.chapter2-story-test-navigation {
-  max-height: 936px;
-}
-
-.chapter2-story-test-panel {
-  width: 390px;
-  max-height: 880px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-}
-
-/* =========================================================
-   V2.20 · Chapter 2 fixed logical geometry
-   - normal story/combat: 922×960 logical canvas
-   - fullscreen cinematics: 1920×1080 logical canvas
-   - only the whole canvas is uniformly scaled to the browser viewport
-   ========================================================= */
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
 .chapter2-story-frame-shell.is-story-effect-fullscreen {
   position: fixed !important;
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: 16 / 9 !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-  overflow: hidden !important;
-}
-
-.chapter2-fixed-combat-stage > div:first-child {
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-}
-
-/* Keep the developer navigation attached to the logical story canvas instead
-   of the physical browser top-right corner. */
-.chapter2-story-test-navigation {
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  transform-origin: 0 0 !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) translate(449px, -468px) translateX(-100%) !important;
-  max-height: 936px !important;
-}
-
-/* Parent-owned Chapter 2 transition layers also use one 16:9 logical canvas.
-   This prevents title/effect geometry from reflowing separately on small screens. */
-.chapter2-fullscreen-wave-intro,
-.chapter2-fullscreen-boss-intro,
-.chapter2-fullscreen-story-boss-emergence,
-.chapter2-wave-purification-overlay {
-  inset: auto !important;
-  left: 50% !important;
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-  transform-origin: center center !important;
-}
-
-/* Pure blackouts do not contain geometry, so they may still cover the whole browser. */
-.chapter2-wave-clear-blackout {
   inset: 0 !important;
   width: 100vw !important;
   height: 100dvh !important;
-  transform: none !important;
-}
-
-/* =========================================================
-   V2.21 · Chapter 2 iframe scaling repair
-   Same correction as Chapter 3: the browsing context remains 922x960/1920x1080
-   while CSS zoom changes only its physical display size.
-   ========================================================= */
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
-  position: relative !important;
-  inset: auto !important;
-  left: auto !important;
-  top: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
-  aspect-ratio: 922 / 960 !important;
-  transform: none !important;
-  transform-origin: center center !important;
-  zoom: var(--fixed-story-viewport-scale, 1) !important;
-}
-
-.chapter2-story-frame-shell.is-story-effect-fullscreen {
-  position: relative !important;
-  inset: auto !important;
-  left: auto !important;
-  top: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
-  max-width: 1920px !important;
-  max-height: 1080px !important;
-  aspect-ratio: 16 / 9 !important;
-  transform: none !important;
-  transform-origin: center center !important;
-  zoom: var(--fixed-cinematic-viewport-scale, 1) !important;
-  overflow: hidden !important;
-}
-
-.chapter2-story-test-navigation {
-  left: auto !important;
-  top: 12px !important;
-  right: 12px !important;
-  bottom: auto !important;
-  transform: none !important;
-  transform-origin: top right !important;
-  max-height: calc(100dvh - 24px) !important;
-}
-.chapter2-story-test-panel {
-  max-height: calc(100dvh - 72px) !important;
-  overflow-y: auto !important;
-}
-
-/* Parent-owned Chapter 2 16:9 transitions use cover-scale, preserving their
-   native aspect ratio while filling the browser viewport. */
-.chapter2-fullscreen-wave-intro,
-.chapter2-fullscreen-boss-intro,
-.chapter2-fullscreen-story-boss-emergence,
-.chapter2-wave-purification-overlay {
-  transform: translate(-50%, -50%) scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-}
-
-/* =========================================================
-   V2.23 · Chapter 2 wrapper-based fixed logical viewport
-   CSS zoom is intentionally not used. The shell owns the physical fitted size,
-   while the iframe always keeps its original 922×960 / 1920×1080 browsing context.
-   ========================================================= */
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
-  position: relative !important;
-  width: var(--fixed-story-display-width, 922px) !important;
-  height: var(--fixed-story-display-height, 960px) !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
   max-width: none !important;
   max-height: none !important;
-  aspect-ratio: auto !important;
   transform: none !important;
   zoom: 1 !important;
-  overflow: hidden !important;
-  flex: none !important;
 }
-
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) > .chapter2-story-frame {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 922px !important;
-  height: 960px !important;
-  min-width: 922px !important;
-  min-height: 960px !important;
-  max-width: 922px !important;
-  max-height: 960px !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
-  zoom: 1 !important;
-}
-
-.chapter2-story-frame-shell.is-story-effect-fullscreen {
-  position: relative !important;
-  width: var(--fixed-cinematic-display-width, 1920px) !important;
-  height: var(--fixed-cinematic-display-height, 1080px) !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: auto !important;
+.chapter2-story-frame-shell.is-story-effect-fullscreen .chapter2-story-frame {
+  width: 100% !important;
+  height: 100% !important;
   transform: none !important;
-  zoom: 1 !important;
-  overflow: hidden !important;
-  flex: none !important;
-}
-
-.chapter2-story-frame-shell.is-story-effect-fullscreen > .chapter2-story-frame {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 1920px !important;
-  height: 1080px !important;
-  min-width: 1920px !important;
-  min-height: 1080px !important;
-  max-width: 1920px !important;
-  max-height: 1080px !important;
-  transform: scale(var(--fixed-cinematic-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
-  zoom: 1 !important;
-}
-
-/* V2.25 FINAL OVERRIDE: measured-host story fit */
-.chapter2-story-experience {
-  padding: 24px 28px 104px !important;
-}
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) {
-  width: var(--fixed-story-display-width, 922px) !important;
-  height: var(--fixed-story-display-height, 960px) !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: auto !important;
-  align-self: center !important;
-  justify-self: center !important;
-}
-.chapter2-story-frame-shell:not(.is-story-effect-fullscreen) .chapter2-story-frame {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 922px !important;
-  height: 960px !important;
-  max-width: none !important;
-  max-height: none !important;
-  transform: scale(var(--fixed-story-viewport-scale, 1)) !important;
-  transform-origin: top left !important;
   zoom: 1 !important;
 }
