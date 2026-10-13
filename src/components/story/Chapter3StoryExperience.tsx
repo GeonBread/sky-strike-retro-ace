@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Shield } from "lucide-react";
 import { sfx } from "../../game/AudioSystem";
-import {
-  CINEMATIC_VIEWPORT_HEIGHT,
-  CINEMATIC_VIEWPORT_WIDTH,
-  GAME_VIEWPORT_HEIGHT,
-  GAME_VIEWPORT_WIDTH,
-  useFixedViewportScale,
-} from "../../lib/useFixedViewportScale";
 import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProgress";
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter2StoryExperience.css";
@@ -324,21 +317,6 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [exitConfirmMode, setExitConfirmMode] = useState<"story" | "wave" | null>(null);
   const [wavePaused, setWavePaused] = useState(false);
   const [waveHud, setWaveHud] = useState<Chapter3WaveHud>({ hp: 3, maxHp: 3, bombs: 3, powerLevel: 1, waveIndex: initialWaveIndex, totalWaves: WAVES.length, enemies: 0 });
-
-  const storyFrameLogicalWidth = fullscreenEffect ? CINEMATIC_VIEWPORT_WIDTH : GAME_VIEWPORT_WIDTH;
-  const storyFrameLogicalHeight = fullscreenEffect ? CINEMATIC_VIEWPORT_HEIGHT : GAME_VIEWPORT_HEIGHT;
-  const storyFrameScale = useFixedViewportScale(
-    storyFrameLogicalWidth,
-    storyFrameLogicalHeight,
-    fullscreenEffect ? "cover" : "contain",
-  );
-  const waveFrameScale = useFixedViewportScale(GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
-
-  const hostCinematicScale = useFixedViewportScale(
-    CINEMATIC_VIEWPORT_WIDTH,
-    CINEMATIC_VIEWPORT_HEIGHT,
-    "cover",
-  );
 
   useEffect(() => {
     if (!waveActive) return;
@@ -1023,47 +1001,28 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
       data-wave-paused={wavePaused ? "true" : undefined}
       aria-label="챕터 3"
     >
-      <div
-        className="chapter3StoryFrameShell"
-        style={{
-          width: storyFrameLogicalWidth,
-          height: storyFrameLogicalHeight,
-          transform: `scale(${storyFrameScale})`,
-          transformOrigin: "center center",
-        }}
-      >
-        <iframe
-          key={`chapter3-story-${storyLaunchSerial}`}
-          ref={frameRef}
-          className="chapter3StoryFrame"
-          src={frameSrc}
-          title="CHAPTER 3 — 졸업요건 최종전"
-          allow="autoplay; fullscreen"
-          aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
-        />
-      </div>
+      <iframe
+        key={`chapter3-story-${storyLaunchSerial}`}
+        ref={frameRef}
+        className="chapter3StoryFrame"
+        src={frameSrc}
+        title="CHAPTER 3 — 졸업요건 최종전"
+        allow="autoplay; fullscreen"
+        aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
+      />
 
       {chapter43LocationTransitionActive && (
-        <div
-          className="chapter3HostCinematicViewport"
-          style={{ transform: `translate(-50%, -50%) scale(${hostCinematicScale})` }}
-        >
-          <div className="chapter3FullscreenLocationTransition" aria-label="경북대학교 배경 전환">
-            <div className="chapter3FullscreenLocationBackground" />
-            <div className="chapter3FullscreenLocationVignette" />
-            <div className="chapter3FullscreenLocationCopy">
-              <small>LOCATION</small>
-              <strong>경북대학교</strong>
-            </div>
+        <div className="chapter3FullscreenLocationTransition" aria-label="경북대학교 배경 전환">
+          <div className="chapter3FullscreenLocationBackground" />
+          <div className="chapter3FullscreenLocationVignette" />
+          <div className="chapter3FullscreenLocationCopy">
+            <small>LOCATION</small>
+            <strong>경북대학교</strong>
           </div>
         </div>
       )}
 
       {finalCreditsActive && (
-        <div
-          className="chapter3HostCinematicViewport"
-          style={{ transform: `translate(-50%, -50%) scale(${hostCinematicScale})` }}
-        >
         <div
           key={`chapter3-final-credits-${finalCreditsRunKey}`}
           className="chapter3FinalCreditsOverlay"
@@ -1143,7 +1102,6 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
             </div>
           </div>
         </div>
-        </div>
       )}
 
       {ready && !exitConfirmMode && !waveFailed && !finalCreditsActive && (
@@ -1220,42 +1178,38 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
       {waveActive && (
         <div className="chapter3WaveStage" aria-label="챕터 3 일반 몬스터 웨이브">
-          <div
-            className="chapter3WaveViewport"
-            style={{ transform: `scale(${waveFrameScale})`, transformOrigin: "center center" }}
-          >
-            <iframe
-              key={`chapter3-wave-${waveRunKey}-${waveStartIndex}-${waveSingle ? "single" : "flow"}`}
-              ref={waveFrameRef}
-              className="chapter3WaveFrame"
-              src={waveSrc}
-              title="CHAPTER 3 일반 오염 몬스터 정화 전투"
-              tabIndex={0}
-              onLoad={() => {
-                window.requestAnimationFrame(() => {
-                  waveFrameRef.current?.focus({ preventScroll: true });
-                  waveFrameRef.current?.contentWindow?.focus();
-                });
-              }}
-            />
-            {!waveReady && !waveFailed && <div className="chapter3WaveLoading">CHAPTER 3 COMBAT LOADING</div>}
-            {!waveFailed && (
-              <div className="chapter3WaveHostHud" aria-hidden="true">
-                <div className="chapter3WaveHudTopRight">
-                  <div className="chapter3WaveHudHp">
-                    {[...Array(waveHud.maxHp)].map((_, i) => (
-                      <Shield key={i} size={18} className={i < waveHud.hp ? "text-rose-500 fill-rose-500" : "text-slate-800 fill-transparent"} />
-                    ))}
-                  </div>
-                  <span className="chapter3WavePowerBadge">POWER LV {waveHud.powerLevel}</span>
-                </div>
-                <div className="chapter3WaveHudBottomRight" aria-label={`폭탄 ${waveHud.bombs} / 3`}>
-                  {[...Array(3)].map((_, i) => (
-                    <span key={i} className={`combat-hud-bomb-icon${i < waveHud.bombs ? " is-active" : ""}`} />
-                  ))}
-                </div>
-              </div>
-            )}
+          <iframe
+            key={`chapter3-wave-${waveRunKey}-${waveStartIndex}-${waveSingle ? "single" : "flow"}`}
+            ref={waveFrameRef}
+            className="chapter3WaveFrame"
+            src={waveSrc}
+            title="CHAPTER 3 일반 오염 몬스터 정화 전투"
+            tabIndex={0}
+            onLoad={() => {
+              window.requestAnimationFrame(() => {
+                waveFrameRef.current?.focus({ preventScroll: true });
+                waveFrameRef.current?.contentWindow?.focus();
+              });
+            }}
+          />
+          {!waveReady && !waveFailed && <div className="chapter3WaveLoading">CHAPTER 3 COMBAT LOADING</div>}
+        </div>
+      )}
+
+      {waveActive && !waveFailed && (
+        <div className="chapter3WaveHostHud" aria-hidden="true">
+          <div className="chapter3WaveHudTopRight">
+            <div className="chapter3WaveHudHp">
+              {[...Array(waveHud.maxHp)].map((_, i) => (
+                <Shield key={i} size={18} className={i < waveHud.hp ? "text-rose-500 fill-rose-500" : "text-slate-800 fill-transparent"} />
+              ))}
+            </div>
+            <span className="chapter3WavePowerBadge">POWER LV {waveHud.powerLevel}</span>
+          </div>
+          <div className="chapter3WaveHudBottomRight" aria-label={`폭탄 ${waveHud.bombs} / 3`}>
+            {[...Array(3)].map((_, i) => (
+              <span key={i} className={`combat-hud-bomb-icon${i < waveHud.bombs ? " is-active" : ""}`} />
+            ))}
           </div>
         </div>
       )}

@@ -5,11 +5,6 @@ import React, {
   useRef,
 } from "react";
 import { createChapter1StoryRuntime } from "../../story/chapter1/chapter1StoryRuntime";
-import {
-  GAME_VIEWPORT_HEIGHT,
-  GAME_VIEWPORT_WIDTH,
-  useFixedViewportScale,
-} from "../../lib/useFixedViewportScale";
 import type {
   Chapter1StoryEvent,
   Chapter1StoryPart,
@@ -47,8 +42,6 @@ export const Chapter1StoryPlayer = forwardRef<
   const mountRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<Chapter1StoryRuntimeHandle | null>(null);
   const onEventRef = useRef(onEvent);
-
-  const storyViewportScale = useFixedViewportScale(GAME_VIEWPORT_WIDTH, GAME_VIEWPORT_HEIGHT);
 
   useEffect(() => {
     onEventRef.current = onEvent;
@@ -102,7 +95,6 @@ export const Chapter1StoryPlayer = forwardRef<
     <div
       className={`chapter1-story-player${hidden ? " is-hidden" : ""}`}
       aria-hidden={hidden}
-      style={{ "--chapter1-story-scale": String(storyViewportScale) } as React.CSSProperties}
     >
       <div ref={mountRef} className="chapter1-story-mount" />
     </div>

@@ -1,13 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { sfx } from "../../game/AudioSystem";
 import {
-  CINEMATIC_VIEWPORT_HEIGHT,
-  CINEMATIC_VIEWPORT_WIDTH,
-  GAME_VIEWPORT_HEIGHT,
-  GAME_VIEWPORT_WIDTH,
-  useFixedViewportScale,
-} from "../../lib/useFixedViewportScale";
-import {
   saveStoryCheckpoint,
   type StoryCheckpoint,
 } from "../../story/storyProgress";
@@ -235,20 +228,6 @@ export function Chapter2StoryExperience({
   const [combatRetryPromptVisible, setCombatRetryPromptVisible] = useState(false);
   const [waveRunKey, setWaveRunKey] = useState(0);
   const [bossRunKey, setBossRunKey] = useState(0);
-
-  const storyFrameLogicalWidth = storyFullscreenEffectActive ? CINEMATIC_VIEWPORT_WIDTH : GAME_VIEWPORT_WIDTH;
-  const storyFrameLogicalHeight = storyFullscreenEffectActive ? CINEMATIC_VIEWPORT_HEIGHT : GAME_VIEWPORT_HEIGHT;
-  const storyFrameScale = useFixedViewportScale(
-    storyFrameLogicalWidth,
-    storyFrameLogicalHeight,
-    storyFullscreenEffectActive ? "cover" : "contain",
-  );
-
-  const hostCinematicScale = useFixedViewportScale(
-    CINEMATIC_VIEWPORT_WIDTH,
-    CINEMATIC_VIEWPORT_HEIGHT,
-    "cover",
-  );
 
   const resumeIndex = useMemo(() => {
     if (resumeCheckpoint?.kind !== "story" || resumeCheckpoint.chapter !== 2) return null;
@@ -953,15 +932,7 @@ export function Chapter2StoryExperience({
 
   return (
     <div className="chapter2-story-experience">
-      <div
-        className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive ? " is-story-effect-fullscreen" : ""}`}
-        style={{
-          width: storyFrameLogicalWidth,
-          height: storyFrameLogicalHeight,
-          transform: `scale(${storyFrameScale})`,
-          transformOrigin: "center center",
-        }}
-      >
+      <div className={`chapter2-story-frame-shell${phase !== "story" ? " is-combat-hidden" : ""}${storyFullscreenEffectActive ? " is-story-effect-fullscreen" : ""}`}>
         <iframe
           ref={iframeRef}
           className="chapter2-story-frame"
@@ -1007,10 +978,6 @@ export function Chapter2StoryExperience({
       )}
 
       {storyBossEmergenceActive && phase === "story" && (
-        <div
-          className="chapter2-host-cinematic-viewport"
-          style={{ transform: `translate(-50%, -50%) scale(${hostCinematicScale})` }}
-        >
         <div className="chapter2-fullscreen-story-boss-emergence" aria-label="챕터 2 스토리 보스 등장 연출">
           <div className="chapter2-story-boss-emergence-bg" />
           <div className="chapter2-story-boss-emergence-void" />
@@ -1033,14 +1000,9 @@ export function Chapter2StoryExperience({
             <strong>팀플 블랙홀 무임승차자</strong>
           </div>
         </div>
-        </div>
       )}
 
       {phase === "boss-intro" && (
-        <div
-          className="chapter2-host-cinematic-viewport"
-          style={{ transform: `translate(-50%, -50%) scale(${hostCinematicScale})` }}
-        >
         <div className="chapter2-fullscreen-boss-intro" aria-label="챕터 2 보스전 시작 연출">
           <div className="chapter2-boss-intro-grid" />
           <div className="chapter2-boss-intro-shutter top" />
@@ -1056,7 +1018,6 @@ export function Chapter2StoryExperience({
             <h2>시험·팀플 블랙홀 무임승차자</h2>
             <p>핵심 오염원 확인 · 정화 전투 개시</p>
           </div>
-        </div>
         </div>
       )}
 
@@ -1103,10 +1064,6 @@ export function Chapter2StoryExperience({
       )}
 
       {waveIntroTransitionActive && (
-        <div
-          className="chapter2-host-cinematic-viewport"
-          style={{ transform: `translate(-50%, -50%) scale(${hostCinematicScale})` }}
-        >
         <div className="chapter2-fullscreen-wave-intro" aria-hidden="true">
           <div className="chapter2-fullscreen-wave-intro-shutter" />
           <div className="chapter2-fullscreen-wave-intro-slash" />
@@ -1115,7 +1072,6 @@ export function Chapter2StoryExperience({
             <strong>정화 전투 개시</strong>
             <span>시험 · 팀플 오염 파편 정화</span>
           </div>
-        </div>
         </div>
       )}
 
