@@ -1915,11 +1915,6 @@ html.chapter1-output-parity .location-transition-overlay {
   <div class="story-global-effect-layer" id="storyGlobalEffectLayer" aria-hidden="true"></div>
   <div class="story-global-persistent-overlay" id="storyGlobalPersistentOverlay" aria-hidden="true"></div>
 
-  <div class="resource-error-panel" id="resourceErrorPanel" role="alert">
-    <strong>이미지 파일을 찾지 못했습니다.</strong>
-    ZIP 파일을 먼저 모두 압축 해제한 뒤, <code>chapter2_story/index.html</code>을 실행하십시오.
-    <code>index.html</code>과 <code>assets</code> 폴더가 같은 위치에 있어야 합니다.
-  </div>
   <script>
 if (new URLSearchParams(window.location.search).get('embedded') === '1') {
   document.documentElement.classList.add('is-chapter2-embedded');
@@ -1958,12 +1953,13 @@ window.STORY_SCENES = {
   library_vending: { chapter:'CHAPTER 2', title:'신관 지하 자판기 공간', subtitle:'열람실 밖 휴식 공간', background:'chapter2/backgrounds/bg_ch2_library_floor1.png', position:'center right', tint:'rgba(5,4,13,.26)' },
   future_creator_hall: { chapter:'CHAPTER 2', title:'미래창직관 1층', subtitle:'잠깐 숨 돌리는 시간', background:'chapter2/backgrounds/bg_ch2_future_creator_hall.png', position:'center center', tint:'rgba(10,12,18,.12)' },
   library_reading_day: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'시험 공부 진행 중', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(7,10,16,.12)' },
-  library_reading_night: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'저녁 공부', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(2,4,12,.24)' },
-  library_exterior_night: { chapter:'CHAPTER 2', title:'도서관 바깥', subtitle:'노을빛 도서관 외부', background:'chapter2/backgrounds/bg_ch2_library_exterior_after_3am.png', position:'center center', tint:'rgba(1,5,18,.08)' },
+  library_reading_night: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'늦은 저녁 공부', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(2,4,12,.24)' },
+  library_reading_evening: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'팀플 마무리 작업', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(7,10,16,.14)' },
+  library_exterior_night: { chapter:'CHAPTER 2', title:'도서관 바깥', subtitle:'노을빛 도서관 외부', background:'chapter2/backgrounds/bg_ch2_library_exterior_sunset.png', position:'center center', tint:'rgba(1,5,18,.08)' },
   library_transition_hall: { chapter:'CHAPTER 2', title:'도서관 바깥 통로', subtitle:'학생증과 급한 대화', background:'chapter2/backgrounds/bg_ch2_library_transition_hall.png', position:'center center', tint:'rgba(6,10,18,.12)' },
-  library_exit: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'저녁 공부', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(2,4,12,.24)' },
-  corrupted_library: { chapter:'CHAPTER 2', title:'오염된 신관 지하 열람실', subtitle:'시험·팀플 오염 발생', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(22,4,34,.30)' },
-  combat_zone: { chapter:'CHAPTER 2', title:'시험·팀플 오염 구역', subtitle:'일반 오염 파편 정화', background:'chapter2/backgrounds/bg_ch2_library_exterior_after_3am.png', position:'center center', tint:'rgba(4,10,24,.18)' },
+  library_exit: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'늦은 저녁 공부', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(2,4,12,.24)' },
+  corrupted_library: { chapter:'CHAPTER 2', title:'오염된 신관 지하 열람실', subtitle:'시험·팀플 오염 발생', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(22,4,34,.30)' },
+  combat_zone: { chapter:'CHAPTER 2', title:'시험·팀플 오염 구역', subtitle:'일반 오염 파편 정화', background:'chapter2/backgrounds/bg_ch2_library_exterior_sunset.png', position:'center center', tint:'rgba(4,10,24,.18)' },
   meeting_room: { chapter:'CHAPTER 2', title:'중간 점검 강의실', subtitle:'예정된 중간 점검', background:'chapter2/backgrounds/bg_ch2_lecture_room.png', position:'center center', tint:'rgba(10,18,12,.12)' },
   project_room: { chapter:'CHAPTER 2', title:'팀 회의실', subtitle:'최종 파일 통합', background:'chapter2/backgrounds/bg_ch2_lecture_room.png', position:'center center', tint:'rgba(4,18,12,.12)' },
   cafe_project: { chapter:'CHAPTER 2', title:'카페', subtitle:'팀 프로젝트 최종 준비', background:'chapter2/illustrations/ill_cafe_teamwork.png', position:'center center', tint:'linear-gradient(180deg, rgba(14,8,5,.18), rgba(18,10,6,.42))' },
@@ -4807,9 +4803,9 @@ window.STORY_DATA = {
         "effect": "time-card",
         "duration": 7600,
         "scene": "library_reading_day",
-        "time": "내부 마감일 · 오후 4시 30분",
+        "time": "내부 마감일 · 오후 2시 05분",
         "place": "도서관 신관 지하 1층 열람실",
-        "dateTime": "4월 14일 토요일 · 오후 4시 30분",
+        "dateTime": "4월 14일 토요일 · 오후 2시 05분",
         "dayLabel": "내부 마감일",
         "transitionMode": "date",
         "calendarYear": 2029
@@ -4820,7 +4816,7 @@ window.STORY_DATA = {
         "duration": 2960,
         "scene": "library_reading_day",
         "title": "조별과제 4조",
-        "currentTime": "오후 4:30",
+        "currentTime": "오후 2:05",
         "messages": [
           {
             "type": "message",
@@ -5318,7 +5314,7 @@ window.STORY_DATA = {
         "effect": "study-session",
         "duration": 2400,
         "scene": "library_reading_day",
-        "time": "오후 4:35 ~ 5:25",
+        "time": "오후 2:10 ~ 3:05",
         "task": "시험공부 50분",
         "phone": "가방 안"
       },
@@ -5328,14 +5324,14 @@ window.STORY_DATA = {
         "duration": 4236,
         "scene": "library_reading_day",
         "title": "조별과제 4조",
-        "currentTime": "오후 5:25",
+        "currentTime": "오후 3:05",
         "messages": [
           {
             "type": "message",
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -5752,7 +5748,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -5796,14 +5792,14 @@ window.STORY_DATA = {
         "duration": 5256,
         "scene": "library_reading_day",
         "title": "조별과제 4조",
-        "currentTime": "오후 5:27",
+        "currentTime": "오후 3:07",
         "messages": [
           {
             "type": "message",
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -5814,7 +5810,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -5825,7 +5821,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -6042,7 +6038,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -6258,7 +6254,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -6269,7 +6265,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -6280,7 +6276,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -6300,18 +6296,18 @@ window.STORY_DATA = {
         "duration": 4300,
         "scene": "library_reading_day",
         "time": "약 1시간 뒤",
-        "dateTime": "4월 14일 토요일 · 오후 6시 30분",
+        "dateTime": "4월 14일 토요일 · 오후 4시 20분",
         "dayLabel": "약 1시간 뒤",
         "transitionMode": "time",
         "calendarYear": 2029,
-        "fromTime": "오후 5시 30분",
-        "toTime": "오후 6시 30분",
+        "fromTime": "오후 3시 10분",
+        "toTime": "오후 4시 20분",
         "hidePlaceCard": true
       },
       {
         "speaker": "hobanwoo",
         "text": "(흠.. 뭐라도 올리셨는지 확인해볼까?)",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "pose": "thinking",
         "statusLabel": "내부 마감일",
         "right": "hobanwoo"
@@ -6320,7 +6316,7 @@ window.STORY_DATA = {
         "type": "custom-effect",
         "effect": "folder-snapshot",
         "duration": 5200,
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "title": "공유 문서함",
         "files": [
           {
@@ -6347,7 +6343,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "(하하..)",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "pose": "dejected",
         "statusLabel": "내부 마감일",
         "right": "hobanwoo",
@@ -6356,7 +6352,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "(그냥 내가 다.. 하자..)",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "pose": "gloomy",
         "statusLabel": "내부 마감일",
         "right": "hobanwoo",
@@ -6366,7 +6362,7 @@ window.STORY_DATA = {
         "type": "custom-effect",
         "effect": "desktop-workflow",
         "duration": 19000,
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "title": "혼자서 다시 작업 시작",
         "wordTitle": "보고서 결론 및 최종 문장 정리",
         "pptTitle": "PPT 결론 슬라이드 마무리",
@@ -6377,10 +6373,17 @@ window.STORY_DATA = {
         ],
         "reportTitle": "스마트 제조 시스템 개선 방안",
         "progressState": "finalizing",
-        "workflowFromTime": "오후 6시 30분",
-        "workflowToTime": "오후 6시 50분",
+        "workflowFromTime": "오후 4시 20분",
+        "workflowToTime": "오후 6시 40분",
         "workflowStartDate": "4월 14일 토요일",
         "workflowEndDate": "4월 14일 토요일",
+        "workflowClockLabels": [
+          "4월 14일 토요일 · 오후 4시 20분",
+          "4월 14일 토요일 · 오후 4시 55분",
+          "4월 14일 토요일 · 오후 5시 30분",
+          "4월 14일 토요일 · 오후 6시 05분",
+          "4월 14일 토요일 · 오후 6시 40분"
+        ],
         "showWorkflowClock": true,
         "pptSaveClose": true
       },
@@ -6388,17 +6391,17 @@ window.STORY_DATA = {
         "type": "section-marker",
         "title": "저녁의 도서관",
         "duration": 0,
-        "scene": "library_reading_night"
+        "scene": "library_reading_evening"
       },
       {
         "type": "location-title",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "duration": 1400
       },
       {
         "speaker": "hobanwoo",
         "text": "(이제 보고서랑 발표 자료는 거의 끝났는데..)",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "pose": "tired",
         "statusLabel": "저녁의 도서관",
         "right": "hobanwoo"
@@ -6406,7 +6409,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "(이것만 검토하고 이제 슬슬 가자..)",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "pose": "dejected",
         "statusLabel": "저녁의 도서관",
         "right": "hobanwoo"
@@ -6415,27 +6418,27 @@ window.STORY_DATA = {
         "type": "section-marker",
         "title": "오염 발생",
         "duration": 0,
-        "scene": "library_reading_night"
+        "scene": "library_reading_evening"
       },
       {
         "type": "custom-effect",
         "effect": "time-card",
         "duration": 5500,
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "time": "오후 6시 55분",
         "place": "도서관 신관 지하 1층 열람실",
         "dateTime": "4월 14일 토요일 · 오후 6시 55분",
         "dayLabel": "해질녘",
         "transitionMode": "time",
         "calendarYear": 2029,
-        "fromTime": "오후 6시 50분",
+        "fromTime": "오후 6시 40분",
         "toTime": "오후 6시 55분"
       },
       {
         "type": "custom-effect",
         "effect": "study-session",
         "duration": 5200,
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "time": "오후 6시 55분",
         "task": "보고서 결론 정리 중"
       },
@@ -6443,7 +6446,7 @@ window.STORY_DATA = {
         "type": "custom-effect",
         "effect": "word-crash",
         "duration": 6200,
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "persistDialogueCount": 2,
         "hideActors": true,
         "windowTitle": "team_project_report_final_v7.docx",
@@ -6463,7 +6466,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "(뭐.. 뭐야!)",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "pose": "shocked",
         "statusLabel": "문서 오류",
         "right": "hobanwoo",
@@ -6472,7 +6475,7 @@ window.STORY_DATA = {
       {
         "speaker": "hobanwoo",
         "text": "(안 돼.. 안 돼.. 저장 안 된 거 아니지..??)",
-        "scene": "library_reading_night",
+        "scene": "library_reading_evening",
         "pose": "shocked",
         "statusLabel": "문서 오류",
         "right": "hobanwoo",
@@ -7378,7 +7381,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7389,7 +7392,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7400,7 +7403,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7616,7 +7619,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7627,7 +7630,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7638,7 +7641,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7909,7 +7912,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7920,7 +7923,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -7931,7 +7934,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8163,7 +8166,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8174,7 +8177,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8185,7 +8188,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8478,7 +8481,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8489,7 +8492,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8500,7 +8503,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8743,7 +8746,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8754,7 +8757,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -8765,7 +8768,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -9107,7 +9110,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -9118,7 +9121,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -9129,7 +9132,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -9383,7 +9386,7 @@ window.STORY_DATA = {
             "side": "in",
             "sender": "준호",
             "text": "죄송합니다.. 제가 PPT를 잘 만들 줄 몰라서..",
-            "time": "오후 4:41",
+            "time": "오후 2:21",
             "unread": 0,
             "file": false,
             "dateIso": "2029-04-14",
@@ -9394,7 +9397,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "알겠습니다.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -9405,7 +9408,7 @@ window.STORY_DATA = {
             "side": "out",
             "sender": "호반우",
             "text": "그러면 자료조사나 보고서 만드시는 거 도와주세요.",
-            "time": "오후 5:27",
+            "time": "오후 3:07",
             "unread": 3,
             "file": false,
             "dateIso": "2029-04-14",
@@ -13382,7 +13385,7 @@ window.STORY_CUSTOM_EFFECTS['desktop-workflow'] = ({ layer, item }) => {
   const workflowClockMarkup = finalizing && item.showWorkflowClock !== false ? `
     <div class="c2-workflow-clock">
       <div class="c2-workflow-clock-face"><i class="c2-workflow-clock-hand c2-workflow-clock-hour"></i><i class="c2-workflow-clock-hand c2-workflow-clock-minute"></i><b></b></div>
-      <div class="c2-workflow-clock-copy"><small>작업 진행 시간</small><strong class="c2-workflow-clock-label">${c2Escape(item.workflowStartDate || '4월 14일 토요일')} · ${c2Escape(item.workflowFromTime || '오후 9시 20분')}</strong><span>${c2Escape(item.workflowFromTime || '오후 9시 20분')} → ${c2Escape(item.workflowToTime || '오전 1시 30분')}</span></div>
+      <div class="c2-workflow-clock-copy"><small>작업 진행 시간</small><strong class="c2-workflow-clock-label">${c2Escape(item.workflowStartDate || '4월 14일 토요일')} · ${c2Escape(item.workflowFromTime || '오후 4시 20분')}</strong><span>${c2Escape(item.workflowFromTime || '오후 4시 20분')} → ${c2Escape(item.workflowToTime || '오후 6시 40분')}</span></div>
     </div>` : '';
   const pptSlide = finalizing ? `
     <section class="c2-ppt-slide is-final-slide">
@@ -13548,18 +13551,19 @@ window.STORY_CUSTOM_EFFECTS['desktop-workflow'] = ({ layer, item }) => {
     const clockLabel = layer.querySelector('.c2-workflow-clock-label');
     const clockRoot = layer.querySelector('.c2-workflow-clock');
     const clockDuration = Math.max(12000, uploadCompleteAt - 500);
-    if (clockHour) animations.push(clockHour.animate([{transform:'rotate(280deg)'},{transform:'rotate(405deg)'}],{duration:clockDuration,easing:'linear',fill:'forwards'}));
-    if (clockMinute) animations.push(clockMinute.animate([{transform:'rotate(120deg)'},{transform:'rotate(1620deg)'}],{duration:clockDuration,easing:'linear',fill:'forwards'}));
+    if (clockHour) animations.push(clockHour.animate([{transform:'rotate(130deg)'},{transform:'rotate(200deg)'}],{duration:clockDuration,easing:'linear',fill:'forwards'}));
+    if (clockMinute) animations.push(clockMinute.animate([{transform:'rotate(120deg)'},{transform:'rotate(960deg)'}],{duration:clockDuration,easing:'linear',fill:'forwards'}));
+    const suppliedClockLabels = Array.isArray(item.workflowClockLabels) ? item.workflowClockLabels : [];
     const labels = [
-      [0, `${item.workflowStartDate || '4월 14일 토요일'} · ${item.workflowFromTime || '오후 9시 20분'}`],
-      [4200, '4월 14일 토요일 · 오후 10시 35분'],
-      [8200, '4월 14일 토요일 · 오후 11시 50분'],
-      [11600, '4월 15일 일요일 · 오전 12시 35분'],
-      [Math.max(13000, clockDuration - 900), `${item.workflowEndDate || '4월 15일 일요일'} · ${item.workflowToTime || '오전 1시 30분'}`]
+      [0, suppliedClockLabels[0] || `${item.workflowStartDate || '4월 14일 토요일'} · ${item.workflowFromTime || '오후 4시 20분'}`],
+      [4200, suppliedClockLabels[1] || '4월 14일 토요일 · 오후 4시 55분'],
+      [8200, suppliedClockLabels[2] || '4월 14일 토요일 · 오후 5시 30분'],
+      [11600, suppliedClockLabels[3] || '4월 14일 토요일 · 오후 6시 05분'],
+      [Math.max(13000, clockDuration - 900), suppliedClockLabels[4] || `${item.workflowEndDate || '4월 14일 토요일'} · ${item.workflowToTime || '오후 6시 40분'}`]
     ];
     labels.forEach(([delay,label], index) => timeouts.push(setTimeout(() => {
       if (clockLabel) clockLabel.textContent = label;
-      if (index >= 3) clockRoot?.classList.add('is-after-midnight');
+      if (index >= 3 && item.workflowEndDate && item.workflowEndDate !== item.workflowStartDate) clockRoot?.classList.add('is-after-midnight');
     }, delay)));
   }
 
