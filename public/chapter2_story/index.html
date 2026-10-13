@@ -1954,11 +1954,11 @@ window.STORY_SCENES = {
   future_creator_hall: { chapter:'CHAPTER 2', title:'미래창직관 1층', subtitle:'잠깐 숨 돌리는 시간', background:'chapter2/backgrounds/bg_ch2_future_creator_hall.png', position:'center center', tint:'rgba(10,12,18,.12)' },
   library_reading_day: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'시험 공부 진행 중', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(7,10,16,.12)' },
   library_reading_night: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'늦은 저녁 공부', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(2,4,12,.24)' },
-  library_reading_evening: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'팀플 마무리 작업', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(7,10,16,.14)' },
+  library_reading_evening: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'팀플 마무리 작업', background:'chapter2/backgrounds/bg_ch2_library_readingroom_sunset.png', position:'center center', tint:'rgba(7,10,16,.06)' },
   library_exterior_night: { chapter:'CHAPTER 2', title:'도서관 바깥', subtitle:'노을빛 도서관 외부', background:'chapter2/backgrounds/bg_ch2_library_exterior_sunset.png', position:'center center', tint:'rgba(1,5,18,.08)' },
   library_transition_hall: { chapter:'CHAPTER 2', title:'도서관 바깥 통로', subtitle:'학생증과 급한 대화', background:'chapter2/backgrounds/bg_ch2_library_transition_hall.png', position:'center center', tint:'rgba(6,10,18,.12)' },
   library_exit: { chapter:'CHAPTER 2', title:'도서관 신관 지하 1층 열람실', subtitle:'늦은 저녁 공부', background:'chapter2/backgrounds/bg_ch2_library_readingroom_night.png', position:'center center', tint:'rgba(2,4,12,.24)' },
-  corrupted_library: { chapter:'CHAPTER 2', title:'오염된 신관 지하 열람실', subtitle:'시험·팀플 오염 발생', background:'chapter2/backgrounds/bg_ch2_library_readingroom_day.png', position:'center center', tint:'rgba(22,4,34,.30)' },
+  corrupted_library: { chapter:'CHAPTER 2', title:'오염된 신관 지하 열람실', subtitle:'시험·팀플 오염 발생', background:'chapter2/backgrounds/bg_ch2_library_readingroom_sunset.png', position:'center center', tint:'rgba(22,4,34,.30)' },
   combat_zone: { chapter:'CHAPTER 2', title:'시험·팀플 오염 구역', subtitle:'일반 오염 파편 정화', background:'chapter2/backgrounds/bg_ch2_library_exterior_sunset.png', position:'center center', tint:'rgba(4,10,24,.18)' },
   meeting_room: { chapter:'CHAPTER 2', title:'중간 점검 강의실', subtitle:'예정된 중간 점검', background:'chapter2/backgrounds/bg_ch2_lecture_room.png', position:'center center', tint:'rgba(10,18,12,.12)' },
   project_room: { chapter:'CHAPTER 2', title:'팀 회의실', subtitle:'최종 파일 통합', background:'chapter2/backgrounds/bg_ch2_lecture_room.png', position:'center center', tint:'rgba(4,18,12,.12)' },
@@ -12201,7 +12201,7 @@ window.STORY_CUSTOM_EFFECTS['battle-summary'] = ({ layer, item }) => {
         </div>
         <style>
           .c2-monster-raid{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#030107;animation:c2MonsterRaidShake 6.5s steps(1,end) both}
-          .c2-monster-raid-bg{position:absolute;inset:-4%;background:url('/assets/chapter2/story/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.30) saturate(.64) contrast(1.08);transform:scale(1.06);animation:c2MonsterRaidBg 6.5s ease both}
+          .c2-monster-raid-bg{position:absolute;inset:-4%;background:url('/assets/chapter2/story/backgrounds/bg_ch2_library_readingroom_sunset.png') center/cover no-repeat;filter:brightness(.30) saturate(.64) contrast(1.08);transform:scale(1.06);animation:c2MonsterRaidBg 6.5s ease both}
           .c2-monster-raid-vignette{position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,rgba(183,121,255,.06) 0 15%,rgba(25,4,39,.34) 42%,rgba(0,0,0,.82) 100%),linear-gradient(180deg,rgba(0,0,0,.08),rgba(16,0,28,.52));z-index:1}
           .c2-monster-raid-corruption{position:absolute;z-index:2;left:50%;top:48%;width:min(46vw,520px);aspect-ratio:1;transform:translate(-50%,-50%) scale(.16);filter:drop-shadow(0 0 46px rgba(183,121,255,.9));animation:c2MonsterRaidCore 6.5s cubic-bezier(.16,.86,.2,1) both}
           .c2-monster-raid-corruption>i{position:absolute;border-radius:44% 56% 62% 38%/54% 46% 54% 46%;background:radial-gradient(circle at 38% 32%,#efe2ff 0 5%,#b779ff 14%,#7134ad 42%,#180620 72%);box-shadow:inset 0 0 36px rgba(255,255,255,.12),0 0 38px rgba(183,121,255,.58);mix-blend-mode:screen;animation:c2MonsterRaidBlob .72s ease-in-out infinite alternate}
@@ -13859,7 +13859,7 @@ window.STORY_CUSTOM_EFFECTS['corruption-fire-transition'] = ({ layer, item }) =>
       <div class="c2-corruption-rupture-copy"><small>SYSTEM ANOMALY</small><strong>오염 반응 급상승</strong></div>
       <style>
         .c2-corruption-rupture{position:absolute;inset:0;overflow:hidden;isolation:isolate;background:#000;animation:c2CorruptionRuptureShake 5.2s steps(1,end) both}
-        .c2-corruption-rupture-bg{position:absolute;inset:-4%;background:url('/assets/chapter2/story/backgrounds/bg_ch2_library_readingroom_night.png') center/cover no-repeat;filter:brightness(.56) saturate(.78);transform:scale(1.04);animation:c2CorruptionRuptureBg 5.2s ease both}
+        .c2-corruption-rupture-bg{position:absolute;inset:-4%;background:url('/assets/chapter2/story/backgrounds/bg_ch2_library_readingroom_sunset.png') center/cover no-repeat;filter:brightness(.56) saturate(.78);transform:scale(1.04);animation:c2CorruptionRuptureBg 5.2s ease both}
         .c2-corruption-rupture-dim{position:absolute;z-index:1;inset:0;background:radial-gradient(circle at 50% 48%,rgba(183,121,255,.03),rgba(42,5,68,.18) 38%,rgba(0,0,0,.82) 100%);animation:c2CorruptionRuptureDim 5.2s ease both}
         .c2-corruption-rupture-scan{position:absolute;z-index:2;inset:0;opacity:0;background:repeating-linear-gradient(180deg,transparent 0 3px,rgba(183,121,255,.08) 4px,transparent 5px);mix-blend-mode:screen;animation:c2CorruptionRuptureScan 5.2s steps(2,end) both}
         .c2-corruption-rupture-cracks{position:absolute;z-index:5;left:50%;top:48%;width:min(80vw,1000px);height:min(74vh,760px);transform:translate(-50%,-50%)}
