@@ -164,7 +164,7 @@ export function HobanwooMainMenu({
         <div className="hobanwooMainLogoStage" aria-hidden={false}>
           <img
             className="hobanwooMainLogo"
-            src="/assets/chapter1/story/ui/game_logo.png"
+            src="/assets/common/story/ui/game_logo.png"
             alt="호반우의 졸업 대작전"
             draggable={false}
           />

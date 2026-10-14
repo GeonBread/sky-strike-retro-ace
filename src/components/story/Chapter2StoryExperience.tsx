@@ -4,6 +4,7 @@ import {
   saveStoryCheckpoint,
   type StoryCheckpoint,
 } from "../../story/storyProgress";
+import chapter2StoryUrl from "../../embedded/chapter2Story.html?url";
 import "./chapter2StoryExperience.css";
 
 interface Chapter2StoryStateMessage {
@@ -102,6 +103,7 @@ interface Chapter2StoryExperienceProps {
 const BRIDGE_CHANNEL = "sky-strike-chapter2-story";
 const STORY_SEGMENT = "chapter2_full";
 const CHAPTER2_WAVE_COUNT = 20;
+const withRuntimeQuery = (url: string, query: string) => `${url}${url.includes("?") ? "&" : "?"}${query}`;
 // STORY_DATA 기준: "비어 있는 공유 폴더" section-marker가 index 53,
 // 날짜 경과 time-card가 index 54, 빈 공유 폴더 화면 뒤 첫 대사가 index 57,
 // Word 자동 저장 실패 직후 "(뭐.. 뭐야!)" 대사가 index 112,
@@ -936,7 +938,7 @@ export function Chapter2StoryExperience({
         <iframe
           ref={iframeRef}
           className="chapter2-story-frame"
-          src="/chapter2_story/index.html?embedded=1"
+          src={withRuntimeQuery(chapter2StoryUrl, "embedded=1")}
           title="챕터 2 · 중간고사와 팀 프로젝트"
           allow="autoplay"
         />

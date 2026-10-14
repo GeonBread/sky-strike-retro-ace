@@ -4,7 +4,11 @@ import { sfx } from "../../game/AudioSystem";
 import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProgress";
 import "../ui/hobanwooOverlayPanels.css";
 import "./chapter2StoryExperience.css";
+import chapter3StoryUrl from "../../embedded/chapter3Story.html?url";
+import chapter3WaveUrl from "../../embedded/chapter3Wave.html?url";
 import "./chapter3StoryExperience.css";
+
+const withRuntimeQuery = (url: string, query: string) => `${url}${url.includes("?") ? "&" : "?"}${query}`;
 
 type Chapter3StoryExperienceProps = {
   onExit?: () => void;
@@ -361,11 +365,11 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   }, [screen, storyIsTestJump, waveActive, waveOrigin, waveHud.waveIndex]);
 
   const frameSrc = useMemo(
-    () => `/chapter3_story/index.html?hostSelector=1&run=${storyLaunchSerial}`,
+    () => withRuntimeQuery(chapter3StoryUrl, `hostSelector=1&run=${storyLaunchSerial}`),
     [storyLaunchSerial],
   );
   const wavePower = (waveDeathCounts[waveStartIndex] ?? 0) >= 3 ? 5 : 1;
-  const waveSrc = `/chapter3_wave/index.html?embedded=1&start=${waveStartIndex}&power=${wavePower}&single=${waveSingle ? 1 : 0}&run=${waveRunKey}`;
+  const waveSrc = withRuntimeQuery(chapter3WaveUrl, `embedded=1&start=${waveStartIndex}&power=${wavePower}&single=${waveSingle ? 1 : 0}&run=${waveRunKey}`);
 
   const postStoryCommand = (type: string, detail?: Record<string, unknown>) => {
     frameRef.current?.contentWindow?.postMessage(

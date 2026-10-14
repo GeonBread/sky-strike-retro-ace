@@ -1610,7 +1610,7 @@ function Chapter1ClearSequence({ onContinue, onMenu }: { onContinue: () => void;
       {phase === "opening" && (
         <div className="chapterClearOpeningSequence" aria-label="챕터 1 종료 오프닝 크레딧">
           <section className="chapterClearOpeningCard chapterClearOpeningLogoCard" aria-label="게임 로고">
-            <img className="chapterClearOpeningLogoImage" src="/assets/chapter1/story/ui/game_logo.png" alt="호반우의 졸업 대작전 게임 로고" />
+            <img className="chapterClearOpeningLogoImage" src="/assets/common/story/ui/game_logo.png" alt="호반우의 졸업 대작전 게임 로고" />
           </section>
           <section className="chapterClearOpeningCard chapterClearOpeningMadeByCard" aria-label="제작자 크레딧">
             <small>DIRECTED AND CREATED</small>

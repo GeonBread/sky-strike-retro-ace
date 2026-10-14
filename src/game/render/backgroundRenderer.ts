@@ -24,31 +24,19 @@ const CH1_NEAR_CLOUD_ALPHA = 0.62;
 let farCloudImage: HTMLImageElement | null = null;
 let nearCloudImage: HTMLImageElement | null = null;
 
-function makeCloudImage(primarySrc: string, fallbackSrc: string): HTMLImageElement | null {
+function makeCloudImage(src: string): HTMLImageElement | null {
   if (typeof Image === "undefined") return null;
   const image = new Image();
-  let fallbackTried = false;
-  image.onerror = () => {
-    if (fallbackTried) return;
-    fallbackTried = true;
-    image.src = fallbackSrc;
-  };
-  image.src = primarySrc;
+  image.src = src;
   return image;
 }
 
 function ensureChapter1CloudImages(): void {
   if (!farCloudImage) {
-    farCloudImage = makeCloudImage(
-      "/assets/chapter1/combat/backgrounds/chapter1_cloud_far.png",
-      "/assets/backgrounds/chapter1_cloud_far.png",
-    );
+    farCloudImage = makeCloudImage("/assets/chapter1/combat/backgrounds/chapter1_cloud_far.png");
   }
   if (!nearCloudImage) {
-    nearCloudImage = makeCloudImage(
-      "/assets/chapter1/combat/backgrounds/chapter1_cloud_near.png",
-      "/assets/backgrounds/chapter1_cloud_near.png",
-    );
+    nearCloudImage = makeCloudImage("/assets/chapter1/combat/backgrounds/chapter1_cloud_near.png");
   }
 }
 

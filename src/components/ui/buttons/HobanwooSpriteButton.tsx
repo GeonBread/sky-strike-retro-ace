@@ -6,10 +6,6 @@ type ButtonState = "normal" | "hover" | "pressed" | "disabled" | "selected";
 
 export type HobanwooButtonVariant =
   | "gameStart"
-  | "redesignStoryMode"
-  | "redesignSettings"
-  | "pauseContinue"
-  | "mainMenu"
   | "leaderboardLocal"
   | "leaderboardOnline"
   | "refresh"
@@ -51,26 +47,6 @@ const variantMap: Record<HobanwooButtonVariant, VariantMeta> = {
     label: "게임 시작",
     size: "start",
     normal: "game-start.png",
-  },
-  redesignStoryMode: {
-    label: "스토리 모드",
-    size: "main",
-    normal: "story-mode.png",
-  },
-  redesignSettings: {
-    label: "설정",
-    size: "sub",
-    normal: "settings.png",
-  },
-  pauseContinue: {
-    label: "계속하기",
-    size: "pause",
-    normal: "continue.png",
-  },
-  mainMenu: {
-    label: "메인 화면",
-    size: "pause",
-    normal: "main-menu.png",
   },
   leaderboardLocal: {
     label: "로컬 랭킹",

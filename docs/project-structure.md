@@ -9,8 +9,8 @@
 - `public/assets/chapter1/`: Chapter 1 `story` / `combat`
 - `public/assets/chapter2/`: Chapter 2 `story` / `combat`
 - `public/assets/chapter3/`: Chapter 3 `story` / `combat`
-- `public/chapter2_story/index.html`: Chapter 2 story runtime
-- `public/chapter3_story/index.html`: Chapter 3 story runtime
-- `public/chapter3_wave/index.html`: Chapter 3 wave runtime
+- `src/embedded/chapter2Story.html`: Chapter 2 story runtime source (Vite `?url` asset)
+- `src/embedded/chapter3Story.html`: Chapter 3 story runtime source (Vite `?url` asset)
+- `src/embedded/chapter3Wave.html`: Chapter 3 wave runtime source (Vite `?url` asset)
 
-기존 챕터별 중복 asset 폴더는 통합되며, 런타임 코드에서 참조되지 않는 이미지/오디오 파일은 정리됩니다.
+기존 챕터별 중복 asset 폴더는 통합되며, 런타임 코드에서 참조되지 않는 이미지 파일은 정리됩니다.
