@@ -1,22 +1,12 @@
-CH1 WAVE USE THIS MAP V3
+CH1 WAVE EXACT MAP V4
 
-This patch does only one thing for Chapter 1 wave:
-- forces the wave map layer to use the exact user-supplied vertical campus map image
-- keeps cloud layers unchanged
-- keeps parallax scroll behavior unchanged
+This patch forces Chapter 1 wave rendering to use the exact user-supplied 228x2048 map image.
 
-Changed runtime reference:
-- src/game/data/storyChapterBackgroundCatalog.ts
-  from: /assets/chapter1/combat/backgrounds/chapter1_wave_map.png
-  to:   /assets/chapter1/combat/backgrounds/chapter1_wave_map_v3.png
+Key difference from previous patches:
+- The map is stored under src/assets and imported by Vite.
+- backgroundRenderer.ts draws that imported image directly.
+- It no longer depends on any old public chapter1_wave_map*.png file.
+- Old public map variants are deleted.
+- Cloud assets and cloud/parallax speeds remain unchanged.
 
-Added asset:
-- public/assets/chapter1/combat/backgrounds/chapter1_wave_map_v3.png
-
-Deletes stale assets if they exist:
-- public/assets/chapter1/combat/backgrounds/chapter1_wave_map.png
-- public/assets/chapter1/combat/backgrounds/chapter1_wave_map_v2.png
-
-Important:
-- If your working tree is dirty, commit or stash first.
-- After applying, restart Vite dev server or hard reload once.
+If the game still shows the old map after this patch, the running game is not using this Git working tree/build.
