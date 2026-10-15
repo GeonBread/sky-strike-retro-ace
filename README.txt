@@ -1,12 +1,14 @@
-CH1 WAVE EXACT MAP V4
+CH1 WAVE FULL LENGTH LOOP V5
 
-This patch forces Chapter 1 wave rendering to use the exact user-supplied 228x2048 map image.
+Fixes Chapter 1 campus-map scrolling for the supplied 228x2048 vertical map.
 
-Key difference from previous patches:
-- The map is stored under src/assets and imported by Vite.
-- backgroundRenderer.ts draws that imported image directly.
-- It no longer depends on any old public chapter1_wave_map*.png file.
-- Old public map variants are deleted.
-- Cloud assets and cloud/parallax speeds remain unchanged.
+Root cause fixed:
+- Old renderer used performance.now(), so time spent in menus/story before combat
+  already advanced the map. The wave could therefore begin mid-map and wrap early.
 
-If the game still shows the old map after this patch, the running game is not using this Git working tree/build.
+New behavior:
+- Exact supplied map remains the Chapter 1 wave map.
+- Map is scaled to canvas width while preserving the complete vertical aspect ratio.
+- Repeat spacing is the FULL scaled map height, never the viewport/old-map height.
+- Map scroll phase uses chapter1Wave.clock, which starts with Chapter 1 combat.
+- Existing cloud layers, cloud speeds and cloud alpha are unchanged.
