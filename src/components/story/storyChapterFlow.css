@@ -319,6 +319,18 @@
   font-family: "Courier New", "Noto Sans KR", monospace;
 }
 
+/* Keep the Chapter 1 defeat dialog above chapter cinematics and test navigation. */
+.chapter1WaveDeathOverlay.chapter1-combat-death-overlay {
+  z-index: 2147483000;
+  isolation: isolate;
+}
+
+.chapter1WaveDeathOverlay > .chapterCombatRetryOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
 .chapter1-combat-retry-dialog {
   width: min(520px, 92vw);
   padding: clamp(28px, 5vw, 40px) clamp(22px, 5vw, 36px);

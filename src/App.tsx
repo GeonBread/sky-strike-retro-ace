@@ -333,10 +333,19 @@ function GameCanvas({
     engine.onChapter1BossPhase2Story = () => bossPhase2CallbackRef.current?.();
     engine.onChapter1BossComplete = () => bossCompleteCallbackRef.current?.();
 
+    // In Chapter 1 waves, the GAMEOVER transition depends on the engine's frame loop
+    // advancing the 1.1 s death timer. Keep a wall-clock fallback in the UI polling
+    // loop so the retry dialog still opens if that simulation transition stalls.
+    let chapter1FatalHitObservedAt: number | null = null;
     const hudInterval = setInterval(() => {
-      // Safety net for story combat: Chapter 1 uses the GAMEOVER transition as the retry trigger.
-      // Report it once even if a boss-specific render/update path suppresses the normal onGameOver callback.
+      // Normal callback remains the primary path; never report the same death twice.
       if (isStoryMode && engine.state === "GAMEOVER") reportStoryCombatFailure();
+      if (chapter1WaveOnly && isStoryMode && engine.player?.hp <= 0 && engine.player?.isDead) {
+        if (chapter1FatalHitObservedAt === null) chapter1FatalHitObservedAt = performance.now();
+        if (performance.now() - chapter1FatalHitObservedAt >= 1250) reportStoryCombatFailure();
+      } else {
+        chapter1FatalHitObservedAt = null;
+      }
       if (engine.player) {
         setHp(Math.max(0, Math.min(MAX_HP, engine.player.hp)));
         if (engine.canvas.width > 0 && engine.canvas.height > 0) {
@@ -1379,7 +1388,7 @@ function Chapter1StoryExperience({
       )}
 
       {combatFailure && (
-        <div className="chapter1-combat-death-overlay" role="presentation">
+        <div className="chapter1-combat-death-overlay chapter1WaveDeathOverlay" role="presentation">
           {combatRetryPromptVisible && (
             <div className="chapterGamePauseOverlay chapterCombatRetryOverlay">
               <section className="chapterGamePauseDialog" role="dialog" aria-modal="true" aria-label="전투 재도전 확인">
