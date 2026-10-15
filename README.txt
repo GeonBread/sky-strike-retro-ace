@@ -1,28 +1,22 @@
-HOBANWOO_REMOVE_ALL_RANKING_SUPABASE_V2
-======================================
+HOBANWOO_REMOVE_SCORE_RANKING_SUPABASE_V3
 
-Purpose
-- Removes the entire ranking system, both local and online.
-- Includes the previous Supabase-removal work in this single patch.
-- Keeps the in-game score/high-score value because it is still used by gameplay/UI/unlock logic.
+This is the cumulative cleanup patch.
+You do NOT need to apply V1 or V2 first.
 
-Removed
-- supabase/ backend folder, schema, edge functions and temp metadata
-- src/services/leaderboard/ (local + online + validation/session code)
-- LeaderboardPanel and its CSS
-- LEADERBOARD / PROFILE screen states used by ranking
-- nickname/player-id ranking profile code
-- local/online score submission and rank display from Game Over
-- ranking-specific sprite-button variants and overlay CSS
-- ranking-specific image assets
-- Supabase-specific patch-runner path handling and tsconfig exclusion
+Removes:
+- Supabase integration and supabase/ tree
+- online/local leaderboard services and UI
+- global game score state and high-score persistence
+- score HUD / FINAL SCORE display
+- score awards from enemies, bosses, smart bombs, powerups, bullets, rewards
+- score-based boss thresholds
+- score-based Vanguard unlock condition
 
-Game Over after patch
-- Final score remains visible.
-- Retry, Main Menu and Share remain.
-- No nickname, local rank, online rank, upload or ranking button remains.
+Behavior after cleanup:
+- Vanguard is always selectable.
+- Legacy non-story boss timing uses elapsed stage time instead of score thresholds.
+- Story combat flow remains time/story-driven.
+- Game over share text no longer includes a score.
 
-Compatibility
-- Delete entries are ignored by the patch runner when the path is already absent.
-  Therefore this combined patch can also be applied if the earlier Supabase-only
-  patch or public-asset cleanup already removed some of these paths.
+The patch runner's internal PowerShell variable named $score is unrelated to game score;
+it ranks candidate patch folders and is intentionally preserved.
