@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Chapter3BossBattle, type Chapter3BossLaunch } from "./Chapter3BossBattle";
 import { Shield } from "lucide-react";
 import { sfx } from "../../game/AudioSystem";
 import { saveStoryCheckpoint, type StoryCheckpoint } from "../../story/storyProgress";
@@ -36,7 +37,7 @@ type Chapter3BridgeMessage = {
   };
 };
 
-type Chapter3Screen = "selector" | "story" | "wave";
+type Chapter3Screen = "selector" | "story" | "wave" | "boss";
 type Chapter3SelectorTab = "story" | "wave" | "pattern" | "boss";
 type WaveOrigin = "story" | "selector";
 type StoryLaunch =
@@ -275,6 +276,11 @@ function chapter3WaveCheckpoint(waveIndex: number): StoryCheckpoint {
 }
 
 export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }: Chapter3StoryExperienceProps) {
+  const storyLaunchAppliedRef = useRef("");
+  const resumedBossRef = useRef(resumeCheckpoint?.kind === "boss");
+  const bossOriginRef = useRef<"story" | "selector">("story");
+  const [bossLaunch, setBossLaunch] = useState<Chapter3BossLaunch>({});
+  const [bossRunKey, setBossRunKey] = useState(0);
   const frameRef = useRef<HTMLIFrameElement | null>(null);
   const waveFrameRef = useRef<HTMLIFrameElement | null>(null);
   const legacyProgressRef = useRef(readChapter3Progress());
@@ -298,7 +304,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [chapter43LocationTransitionActive, setChapter43LocationTransitionActive] = useState(false);
   const [showJumpMenu, setShowJumpMenu] = useState(false);
   const [ready, setReady] = useState(false);
-  const [screen, setScreen] = useState<Chapter3Screen>(initialCheckpointRef.current?.kind === "wave" ? "wave" : "story");
+  const [screen, setScreen] = useState<Chapter3Screen>(initialCheckpointRef.current?.kind === "boss" ? "boss" : initialCheckpointRef.current?.kind === "wave" ? "wave" : "story");
   const [selectorTab, setSelectorTab] = useState<Chapter3SelectorTab>("story");
   const [storyLaunch, setStoryLaunch] = useState<StoryLaunch>({ kind: "resume", index: initialStoryIndex, ordinal: initialStoryOrdinal });
   const [storyLaunchSerial, setStoryLaunchSerial] = useState(0);
@@ -344,6 +350,10 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   useEffect(() => {
     const persistCurrentLocation = () => {
       if (storyIsTestJump || finalCreditsActiveRef.current) return;
+      if (screen === "boss") {
+        saveStoryCheckpoint({version:1,chapter:3,kind:"boss",savedAt:Date.now()});
+        return;
+      }
       if (waveActive && waveOrigin === "story") {
         saveStoryCheckpoint(chapter3WaveCheckpoint(waveHud.waveIndex));
         return;
@@ -564,6 +574,24 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setScreen("wave");
   };
 
+  const launchBoss = (origin: "story" | "selector" = "selector", tests = false) => {
+    hideStoryFrameForWave();
+    setWaveActive(false);setFullscreenEffect(null);setShowJumpMenu(false);setExitConfirmMode(null);
+    bossOriginRef.current=origin;setBossLaunch({tests});setBossRunKey(key=>key+1);setScreen("boss");
+    if(origin==="story"&&!storyIsTestJump)saveStoryCheckpoint({version:1,chapter:3,kind:"boss",savedAt:Date.now()});
+  };
+
+  const completeBossBattle = () => {
+    if(bossOriginRef.current!=="story"){returnToSelector();return;}
+    restoreStoryFrameForStory();
+    if(resumedBossRef.current){
+      resumedBossRef.current=false;prepareStoryLaunch({kind:"continue-from-section",ordinal:14},false);return;
+    }
+    // Resume the parked story without replaying its original start command.
+    setScreen("story");
+    postStoryCommand("boss-complete");
+  };
+
   const skipCurrentContext = () => {
     if (waveActive || screen === "wave") {
       const nextWave = Math.min(WAVES.length - 1, Math.max(waveStartIndex, waveHud.waveIndex) + 1);
@@ -585,6 +613,9 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
   useEffect(() => {
     if (!ready || screen !== "story") return;
+    const signature = `${storyLaunchSerial}:${JSON.stringify(storyLaunch)}`;
+    if(storyLaunchAppliedRef.current===signature)return;
+    storyLaunchAppliedRef.current=signature;
     if (storyLaunch.kind === "full") {
       postStoryCommand("start-full-story");
       return;
@@ -596,7 +627,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     const section = STORY_SECTIONS[storyLaunch.ordinal];
     if (section) postStoryCommand("start-section", { titlePrefix: section.title });
     else postStoryCommand("start-section-ordinal", { ordinal: storyLaunch.ordinal });
-  }, [ready, screen, storyLaunch]);
+  }, [ready, screen, storyLaunch, storyLaunchSerial]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent<Chapter3BridgeMessage>) => {
@@ -638,6 +669,10 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
           }
           if (effectId === "graduation-campus-return-fullscreen") {
             setChapter43LocationTransitionActive(true);
+          }
+          if (effectId === "boss-running") {
+            launchBoss("story");
+            return;
           }
           if (effectId === "battle-running") {
             setFullscreenEffect(null);
@@ -914,7 +949,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
   useEffect(() => {
     const handleHostKeyboard = (event: KeyboardEvent) => {
-      if (finalCreditsActiveRef.current) return;
+      if (finalCreditsActiveRef.current || screen === "boss") return;
       if (event.code === "Escape") {
         if (exitConfirmMode) {
           event.preventDefault();
@@ -991,10 +1026,12 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
           <span>{section.scene} · 선택 지점부터 이후 보스 스토리를 계속 진행</span>
         </button>
       ))}
-      <div className="chapter3BossRuntimeNotice">
-        <b>BOSS PATTERN</b>
-        <span>디그리온 실제 보스 전투 런타임은 아직 프로젝트에 통합되어 있지 않아, 존재하지 않는 패턴 버튼은 만들지 않았습니다. 보스 런타임 통합 후 이 탭에 실제 패턴별 실행 버튼을 연결합니다.</span>
-      </div>
+      <button type="button" className="chapter3SelectCard is-boss" onClick={()=>launchBoss("selector")}>
+        <b>FINAL BOSS</b><strong>디그리온 실제 보스전</strong><span>1페이즈 → 각성 → 2페이즈 → 최후의 40초 → 클리어</span>
+      </button>
+      <button type="button" className="chapter3SelectCard is-boss" onClick={()=>launchBoss("selector",true)}>
+        <b>PATTERN TEST</b><strong>페이즈별 패턴 · 연출 테스트</strong><span>1·2페이즈 편성 / 공통 패턴 / 보조 공격 / 최초 학습·숙련 버전</span>
+      </button>
     </>
   );
 
@@ -1011,8 +1048,9 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
         className="chapter3StoryFrame"
         src={frameSrc}
         title="CHAPTER 3 — 졸업요건 최종전"
+        style={screen === "boss" ? { display:"none" } : undefined}
         allow="autoplay; fullscreen"
-        aria-hidden={screen === "selector" || screen === "wave" || finalCreditsActive}
+        aria-hidden={screen === "selector" || screen === "wave" || screen === "boss" || finalCreditsActive}
       />
 
       {chapter43LocationTransitionActive && (
@@ -1108,7 +1146,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
         </div>
       )}
 
-      {ready && !exitConfirmMode && !waveFailed && !finalCreditsActive && (
+      {screen !== "boss" && ready && !exitConfirmMode && !waveFailed && !finalCreditsActive && (
         <div className="chapter2-story-test-navigation chapter3-story-test-navigation" aria-label="챕터 3 진행 테스트 이동">
           <div className="chapter2-story-test-toolbar">
             <button type="button" className="chapter2-story-test-skip" onClick={skipCurrentContext}>
@@ -1164,6 +1202,8 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
 
               <div className="chapter2-story-test-group">
                 <strong>보스 · 최종 정화 구간</strong>
+                <button type="button" className="is-boss" onClick={()=>launchBoss("selector")}>디그리온 실제 보스전</button>
+                <button type="button" className="is-boss" onClick={()=>launchBoss("selector",true)}>페이즈별 패턴 테스트</button>
                 <button type="button" className="is-boss" onClick={launchBossFlow}>보스 흐름 처음부터</button>
                 {BOSS_SECTIONS.map((section) => (
                   <button type="button" className="is-boss" key={`chapter3-boss-${section.ordinal}`} onClick={() => launchStorySection(section.ordinal)}>
@@ -1179,6 +1219,8 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
           )}
         </div>
       )}
+
+      {screen === "boss" && <Chapter3BossBattle key={`boss-${bossRunKey}`} launch={bossLaunch} power={waveHud.powerLevel} onComplete={completeBossBattle} onExit={returnToSelector} />}
 
       {waveActive && (
         <div className="chapter3WaveStage" aria-label="챕터 3 일반 몬스터 웨이브">

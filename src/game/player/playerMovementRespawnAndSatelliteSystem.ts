@@ -23,7 +23,7 @@ const DEFAULT_PLAYER_FIRE_INTERVAL = 0.075;
 
 type PlayerRuntime = any;
 
-function getHobanuPlayerFireInterval(engine: PlayerRuntime): number {
+export function getHobanuPlayerFireInterval(engine: PlayerRuntime): number {
   const level = Math.max(1, Math.min(5, engine.player?.powerLevel ?? 1));
   const style = engine.player?.weaponStyle ?? "science";
 
@@ -49,7 +49,7 @@ function getHobanuPlayerFireInterval(engine: PlayerRuntime): number {
   return DEFAULT_PLAYER_FIRE_INTERVAL;
 }
 
-function canHobanuPlayerShootNow(engine: PlayerRuntime): boolean {
+export function canHobanuPlayerShootNow(engine: PlayerRuntime): boolean {
   // Chapter 2 보스전도 Chapter 1과 동일한 전공별 발사 리듬을 사용합니다.
   // 패턴 전환 중에도 입력/탄 생성 자체는 계속 처리하되, science의 1.0초 연사 + 0.2초 휴식은 유지합니다.
   const style = engine.player?.weaponStyle ?? "science";

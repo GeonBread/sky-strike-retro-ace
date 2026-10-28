@@ -6834,7 +6834,18 @@ function runCustomEffect(item) {
       if (bodyViewportHost?.isConnected) bodyViewportHost.remove();
       console.warn(`[StorySystem] 등록되지 않은 커스텀 연출: ${effectId}`);
     }
-    state.effectTimer = window.setTimeout(() => finishEffect(item, effectId), Math.max(0, Number(item.duration || 1200)));
+    state.effectTimer = window.setTimeout(() => {
+      if (HOST_SELECTOR_MODE && effectId === 'boss-battle-transition') {
+        // Keep the existing story index parked here until the real boss is cleared.
+        // No inserted story item: all saved dialogue indices and BGM cues remain valid.
+        state.effectTimer = null;
+        state.currentEffectId = 'boss-running';
+        hooks.onEffectEnd?.({ effectId, item, api });
+        hooks.onEffectStart?.({ effectId:'boss-running', item, api });
+        return;
+      }
+      finishEffect(item, effectId);
+    }, Math.max(0, Number(item.duration || 1200)));
   }
 
   function runSectionMarker(item) {
@@ -7508,6 +7519,12 @@ function runCustomEffect(item) {
 
     if (message.type === 'set-exit-confirm') {
       state.hostExitConfirmOpen = Boolean(message.detail?.open);
+      return;
+    }
+
+    if (message.type === 'boss-complete') {
+      if (!state.effectRunning || state.currentEffectId !== 'boss-running') return;
+      skipCurrent();
       return;
     }
 

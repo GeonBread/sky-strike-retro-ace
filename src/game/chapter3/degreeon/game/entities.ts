@@ -1,0 +1,28 @@
+// Adapter type surface; renderer and visual catalog are copied unchanged.
+export type BulletVisualType =
+  | "plasma_bolt"
+  | "comet_needle"
+  | "core_orb"
+  | "cracked_core"
+  | "drone_missile"
+  | "tesla_spark"
+  | "spore_glob"
+  | "cosmic_plasma_core"
+  | "comet_spear"
+  | "tesla_spine_missile"
+  | "rift_shard"
+  | "phase_core"
+  | "star_beacon"
+  | "chapter2_mini_shard"
+  | "corrupt_orb"
+  | "attendance_stamp"
+  | "notice_popup"
+  | "guide_arrow"
+  | "deadline_missile"
+  | "scanner_beam"
+  | "unsubmitted_missile"
+  | "f_bomb"
+  | "f_fragment"
+  | "atom"
+  | "flask";
+export interface Bullet { vx:number; vy:number; enemyVisualPhase?:number; fuseTimer?:number; visualType?:BulletVisualType; }
