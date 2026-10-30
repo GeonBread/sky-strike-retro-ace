@@ -151,6 +151,20 @@ function Get-RelativePathIfInside([string]$ParentPath, [string]$ChildPath) {
     return Normalize-RelativePath $childFull.Substring($parentFull.Length)
 }
 
+# ZIP Patch Runner v9: preserve a local npm lockfile and commit npm-generated lock changes.
+function Get-PatchWorkingTreeStatus([string]$SelectedZipRelativePath) {
+    # Do not Trim() the porcelain output: its first two spaces encode Git status.
+    $lines = @(& git status --porcelain=v1 --untracked-files=all)
+    if ($LASTEXITCODE -ne 0) { throw "Could not inspect Git working-tree status." }
+    $quotedZipPath = '"' + $SelectedZipRelativePath + '"'
+    foreach ($line in $lines) {
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        $linePath = if ($line.Length -gt 3) { $line.Substring(3).Trim() } else { '' }
+        if (-not [string]::IsNullOrWhiteSpace($SelectedZipRelativePath) -and ($linePath -eq $SelectedZipRelativePath -or $linePath -eq $quotedZipPath)) { continue }
+        Write-Output $line
+    }
+}
+
 function Get-ParentCandidates([string]$StartPath) {
     $results = @()
     if ([string]::IsNullOrWhiteSpace($StartPath) -or -not (Test-Path $StartPath)) {
@@ -398,6 +412,7 @@ $backupBranch = $null
 $reportPath = $null
 $plan = @()
 $mutationStarted = $false
+$preflightPreserved = $false
 
 try {
     if ([string]::IsNullOrWhiteSpace($ZipPath)) {
@@ -423,25 +438,60 @@ try {
     Write-Host "Branch  : $branchName"
     Write-Host "Baseline: $baselineCommit"
 
-    $workingTreeStatus = Get-CommandOutput -Command 'git' -Arguments @('status', '--porcelain', '--untracked-files=all')
     $selectedZipRelativePath = Get-RelativePathIfInside -ParentPath $repositoryRoot -ChildPath $ZipPath
-    $statusLines = @()
-    if (-not [string]::IsNullOrWhiteSpace($workingTreeStatus)) {
-        $statusLines = @($workingTreeStatus -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    }
-
+    $statusLines = @(Get-PatchWorkingTreeStatus -SelectedZipRelativePath $selectedZipRelativePath)
     if (-not [string]::IsNullOrWhiteSpace($selectedZipRelativePath)) {
-        $quotedZipPath = '"' + $selectedZipRelativePath + '"'
-        $statusLines = @($statusLines | Where-Object {
-            $linePath = if ($_.Length -gt 3) { $_.Substring(3).Trim() } else { '' }
-            -not ($linePath -eq $selectedZipRelativePath -or $linePath -eq $quotedZipPath)
-        })
         Write-WarnMessage "The selected ZIP is inside the repository. It will not be staged or committed: $selectedZipRelativePath"
     }
 
+    # A local lockfile is preserved, never discarded. Permit this runner's own
+    # replacement too, so the user can install this fix before applying a ZIP.
+    $runnerRelativePath = Get-RelativePathIfInside -ParentPath $repositoryRoot -ChildPath $PSCommandPath
+    $preservePaths = @()
+    $blockedLines = @()
+    foreach ($line in $statusLines) {
+        $linePath = if ($line.Length -gt 3) { $line.Substring(3).Trim() } else { '' }
+        $statusCode = if ($line.Length -ge 2) { $line.Substring(0, 2) } else { '' }
+        $isLocalLock = $linePath -eq 'package-lock.json'
+        $isThisRunner = -not [string]::IsNullOrWhiteSpace($runnerRelativePath) -and $linePath -eq $runnerRelativePath
+        if (($isLocalLock -or $isThisRunner) -and $statusCode -in @(' M', 'M ', 'MM', '??', 'A ', 'AM') -and (Test-Path -LiteralPath (Join-Path $repositoryRoot $linePath) -PathType Leaf)) {
+            $preservePaths += $linePath
+        }
+        else { $blockedLines += $line }
+    }
+    if ($blockedLines.Count -gt 0) {
+        $remainingStatus = $blockedLines -join "`n"
+        throw "Other project files have local changes. No patch files were applied.`nCommit or stash those changes first:`n$remainingStatus"
+    }
+    if ($preservePaths.Count -gt 0) {
+        Write-Step "Backing up and preserving the local lockfile / updated patch runner"
+        $preflightTime = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
+        $preserveDirectory = Join-Path $repositoryRoot ".git\patch-runner\preserved-$preflightTime"
+        New-Item -ItemType Directory -Path $preserveDirectory -Force | Out-Null
+        foreach ($relativePath in ($preservePaths | Sort-Object -Unique)) {
+            $originalPath = Join-Path $repositoryRoot $relativePath
+            $savedPath = Join-Path $preserveDirectory $relativePath
+            New-Item -ItemType Directory -Path (Split-Path -Parent $savedPath) -Force | Out-Null
+            Copy-Item -LiteralPath $originalPath -Destination $savedPath
+            if ((Get-FileSha256 $originalPath) -ne (Get-FileSha256 $savedPath)) { throw "Backup verification failed: $relativePath" }
+        }
+        if ($preservePaths -contains 'package-lock.json') {
+            Invoke-CheckedCommand -Command 'node' -Arguments @('-e', "JSON.parse(require('fs').readFileSync('package-lock.json','utf8')); console.log('Local lockfile JSON OK')") -FailureMessage "The local package-lock.json is invalid. Its backup was preserved."
+        }
+        $preserveArguments = @('commit', '--only', '-m', 'chore: preserve local lockfile and update patch runner', '--') + @($preservePaths | Sort-Object -Unique)
+        # git commit --only reads tracked working-tree files; add newly installed files first.
+        foreach ($relativePath in ($preservePaths | Sort-Object -Unique)) {
+            Invoke-CheckedCommand -Command 'git' -Arguments @('add', '--', $relativePath) -FailureMessage "Could not stage preserved file: $relativePath"
+        }
+        Invoke-CheckedCommand -Command 'git' -Arguments $preserveArguments -FailureMessage "Could not preserve local changes in a Git commit. Backups were retained."
+        $preflightPreserved = $true
+        $baselineCommit = Get-CommandOutput -Command 'git' -Arguments @('rev-parse', 'HEAD')
+        Write-Ok "Local contents preserved. Updated baseline: $baselineCommit"
+        Write-Host "Original-file backups: $preserveDirectory"
+        $statusLines = @(Get-PatchWorkingTreeStatus -SelectedZipRelativePath $selectedZipRelativePath)
+    }
     if ($statusLines.Count -gt 0) {
-        $remainingStatus = $statusLines -join "`n"
-        throw "The working tree is not clean. No project files were changed by this runner.`nCommit or stash these changes first:`n$remainingStatus"
+        throw "Working-tree changes remain after preservation. Review git status before retrying."
     }
     Write-Ok "Working tree is clean"
 
@@ -664,6 +714,20 @@ try {
         Write-WarnMessage "No npm build script was found."
     }
 
+    # npm install may change the lock even when the ZIP only contains package.json.
+    # Include that validated result in this patch commit, preventing the next run
+    # from failing on a lockfile left dirty by this runner itself.
+    $lockChanges = @(& git status --porcelain=v1 -- package-lock.json)
+    if ($LASTEXITCODE -ne 0) { throw "Could not inspect the generated dependency lockfile." }
+    if ($lockChanges.Count -gt 0 -and @($plan | Where-Object { $_.Path -eq 'package-lock.json' }).Count -eq 0) {
+        $lockDestination = Join-Path $repositoryRoot 'package-lock.json'
+        if (-not (Test-Path -LiteralPath $lockDestination -PathType Leaf)) { throw "Dependency validation removed package-lock.json unexpectedly." }
+        $lockIsNew = ([string]$lockChanges[0]).StartsWith('??')
+        $plan += [PSCustomObject]@{ Status = $(if ($lockIsNew) { 'NEW' } else { 'MODIFY' }); Path = 'package-lock.json'; Source = $null; Destination = $lockDestination }
+        Add-Content -LiteralPath $reportPath -Encoding UTF8 -Value "Dependency-generated change: package-lock.json"
+        Write-Ok "Generated package-lock.json will be included in the patch commit"
+    }
+
     Write-Step "Final Git summary"
     & git status --short --untracked-files=all | Out-Host
     & git diff --stat | Out-Host
@@ -762,7 +826,12 @@ catch {
         }
     }
     else {
-        Write-WarnMessage "Failure occurred before patch files were applied. The project was not modified."
+        if ($preflightPreserved) {
+            Write-WarnMessage "Patch files were not applied. The preservation commit and original-file backups were retained."
+        }
+        else {
+            Write-WarnMessage "Failure occurred before patch files were applied. No patch changes were made."
+        }
     }
 
     if (-not [string]::IsNullOrWhiteSpace($backupBranch)) { Write-Host "Safety branch retained: $backupBranch" }
