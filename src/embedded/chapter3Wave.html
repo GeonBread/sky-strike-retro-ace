@@ -231,6 +231,7 @@
     <div class="small">밸런스 수치는 실제 게임용 확정값이 아닙니다. 초중반은 단일 몬스터 체험·숙련, 후반에는 2~3종 몬스터가 하나의 기하학 진형을 만드는 복합 웨이브 5종, 마지막에는 자유 조합 웨이브가 이어집니다.</div>
   </aside>
 </div>
+<script src="/assets/runtime/combatParallax.js"></script>
 <script>
 (() => {
 'use strict';
@@ -344,6 +345,7 @@ function preloadSprite(path){
  const img=new Image();img.src=path;spriteCache[path]=img;return img;
 }
 const CHAPTER3_BG_IMAGES=[preloadSprite('/assets/chapter3/combat/backgrounds/chapter3_wave_map.png')];
+const chapter3Parallax=new HobanuCombatParallax.CombatParallax('wave3');
 const HOBANWOO_PLAYER_SPRITE='/assets/common/player/hobanu_player.png';
 const PLAYER_SHOT_SPRITES=[
  '/assets/common/player/bullets/science_gear.png',
@@ -2252,7 +2254,7 @@ function updateFinalPurification(dt){
  }
 }
 function update(dt){
- mapScroll=(mapScroll+dt)%100000;waveTime+=dt;if(noticeTimer>0){noticeTimer-=dt;if(noticeTimer<=0)notice.classList.remove('show');}
+ mapScroll+=dt;waveTime+=dt;if(noticeTimer>0){noticeTimer-=dt;if(noticeTimer<=0)notice.classList.remove('show');}
  if(!gameOver){
   updateCombatView(dt);
   if(finalPurification.active)updateFinalPurification(dt);
@@ -2300,7 +2302,7 @@ function drawParallaxLayer(img,speed,alpha=1){
  const offset=(((mapScroll*speed)%dh)+dh)%dh,baseY=offset-dh;
  ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(img,x,baseY,dw,dh);ctx.drawImage(img,x,baseY+dh,dw,dh);ctx.drawImage(img,x,baseY-dh,dw,dh);ctx.restore();return true;
 }
-function drawBG(){ctx.fillStyle='#07101a';ctx.fillRect(0,0,W,H);drawParallaxLayer(CHAPTER3_BG_IMAGES[0],8,1);ctx.fillStyle='rgba(5,8,14,.10)';ctx.fillRect(0,0,W,H);}
+function drawBG(){ctx.fillStyle='#07101a';ctx.fillRect(0,0,W,H);drawParallaxLayer(CHAPTER3_BG_IMAGES[0],8,1);chapter3Parallax.draw(ctx,W,H,mapScroll);ctx.fillStyle='rgba(5,8,14,.10)';ctx.fillRect(0,0,W,H);}
 function circle(x,y,r,fill,stroke=null,lw=2){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}}
 function label(text,x,y,size=10,color='#fff'){ctx.fillStyle=color;ctx.font=`700 ${size}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x,y);}
 

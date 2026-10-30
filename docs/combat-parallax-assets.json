@@ -1,0 +1,82 @@
+[
+  {
+    "original": "웨이브 1,2 배경/세로형 투명한 낮구름 오버레이.png",
+    "target": "public/assets/common/combat/parallax/wave12/cloud_large.png",
+    "sha256": "3a56c5010f74aabd2b0c7543e2e38d51c6386d1af314097601d783740391e79a"
+  },
+  {
+    "original": "웨이브 1,2 배경/세로 캔버스의 일곱 작은 구름.png",
+    "target": "public/assets/common/combat/parallax/wave12/cloud_small_1.png",
+    "sha256": "280bbc33385721ed3790a7f3f76b05129d7e8555fd0b6edc27eb875ad64be261"
+  },
+  {
+    "original": "웨이브 1,2 배경/투명한 하늘에 흩어진 작은 구름.png",
+    "target": "public/assets/common/combat/parallax/wave12/cloud_small_2.png",
+    "sha256": "984f75939b0fd507621107ced9c2307d5fb658f91e95ef6f13ad216124325b21"
+  },
+  {
+    "original": "웨이브 1,2 배경/공중에 떠오른 노란 정화 파편.png",
+    "target": "public/assets/common/combat/parallax/wave12/purification_1.png",
+    "sha256": "bd6822e0d2ee4bc5565912eae2378f138691dbf645717eb167fbf378feb8863f"
+  },
+  {
+    "original": "웨이브 1,2 배경/투명 세로 오버레이의 미세한 황금 파편.png",
+    "target": "public/assets/common/combat/parallax/wave12/purification_2.png",
+    "sha256": "6fa2023b47329a22c1557cabd153b2229421bf8bedde0e8f93dbd2e1d9d26c74"
+  },
+  {
+    "original": "웨이브 3 배경/바람결의 세로형 밤구름 오버레이.png",
+    "target": "public/assets/common/combat/parallax/wave3/cloud_1.png",
+    "sha256": "1eb188918f38aeef292b4b050e924bbddaadd67fc768b45b48c3aa44152f795d"
+  },
+  {
+    "original": "웨이브 3 배경/불규칙하게 흩어진 밤구름 오버레이.png",
+    "target": "public/assets/common/combat/parallax/wave3/cloud_2.png",
+    "sha256": "9f4792c2cd0bd3624e95a246f0b8cfea9175e12c402c709baa3b5678ae23428c"
+  },
+  {
+    "original": "웨이브 3 배경/세로형 투명 밤구름 오버레이.png",
+    "target": "public/assets/common/combat/parallax/wave3/cloud_3.png",
+    "sha256": "11007a11573b7a91653bb0fb9980f1554d0f52e134411d524bb2acaf937aaace"
+  },
+  {
+    "original": "웨이브 3 배경/투명한 미세 보랏빛 오염 파편.png",
+    "target": "public/assets/common/combat/parallax/wave3/corruption.png",
+    "sha256": "8d72d1330c6e4ff77a6683d2a77e6ff42ff306aa0d294c95e513d9c44d02f6f9"
+  },
+  {
+    "original": "보스 2 배경/보랏빛 균열이 스민 검은 구름.png",
+    "target": "public/assets/common/combat/parallax/boss2/cloud_1.png",
+    "sha256": "9311bfa7489e98ebcd574760e0a254d4ec4b83e381f41d74410ef4013fd64ef7"
+  },
+  {
+    "original": "보스 2 배경/투명한 보랏빛 부식 구름.png",
+    "target": "public/assets/common/combat/parallax/boss2/cloud_2.png",
+    "sha256": "c0763830c43602aa6092533b297be9038611329efc499bcc100d039cdaad3e9f"
+  },
+  {
+    "original": "보스 2 배경/무작위로 흩어진 보랏빛 파편.png",
+    "target": "public/assets/common/combat/parallax/boss2/fragments_1.png",
+    "sha256": "33d76d7bac6118f1f96338959ffb968818a0ad14f68a8b3334983297e866892e"
+  },
+  {
+    "original": "보스 2 배경/보랏빛 부유 잔해 오버레이.png",
+    "target": "public/assets/common/combat/parallax/boss2/fragments_2.png",
+    "sha256": "a69cc7797c60b7cf5d4f9b57432f94a3afe254313fab24c0ee7250f2ce5b9cfb"
+  },
+  {
+    "original": "보스 3 배경/부유하는 고대 금빛 문양과 홀로그램 파편.png",
+    "target": "public/assets/common/combat/parallax/boss3/relic_gold.png",
+    "sha256": "88f0a115529ad03cfa6ef763feeca01ec7c9eecf615eb88f99f38135d95dc504"
+  },
+  {
+    "original": "보스 3 배경/어둠 속 부유하는 유적 파편.png",
+    "target": "public/assets/common/combat/parallax/boss3/relic_ruins.png",
+    "sha256": "847ff865f91af02de0fa56d9011ca03cfeb8cdde767816de19034fb78e6bda0c"
+  },
+  {
+    "original": "보스 3 배경/챕터 3 보스.png",
+    "target": "public/assets/chapter3/combat/boss/backgrounds/chapter3_boss_map.png",
+    "sha256": "7b5237e063beae824a07f9aaa01eaf32badf923892330814fc94a42e24562127"
+  }
+]

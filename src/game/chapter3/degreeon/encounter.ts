@@ -1,3 +1,4 @@
+import {getCombatParallax} from '../../render/combatParallax';
 import {freshLearning,startLearning,hasLearningStep,type Learning} from './learning';
 import {AWAKEN_SECONDS,AWAKEN_REVEAL} from './awakeningCinema';
 import {ARRIVAL_SECONDS,CLEAR_SECONDS,DEFEAT_SECONDS} from './bossCinema';
@@ -44,7 +45,7 @@ function scene(e:Engine,mode:StoryMode){const s=e.encounter,p=e.localPlayer();s.
  if(mode==='threat'){s.phase=2;e.bossForm=2;e.bossHpMax=PHASE_HP[2];e.bossHp=e.bossHpMax;}
  e.continuity=freshContinuity();e.clearAttack();e.enemies=[];e.items=[];e.effects=[];e.advanced.zones=[];e.smartBombActive=false;e.bombParticles=[];e.keys.clear();e.rotation=0;e.pendingBombard=false;e.queuedIndex=null;e.miss=0;e.missTimer=0;e.playerFacing=0;e.playStorySound(mode==='false-clear'?'resolve':mode==='awakening'?'charge':mode==='victory'?'victory':'weight');e.log(`보스전 연출 · ${mode}`);e.notify();}
 export function startEncounter(e:Engine,practice=false){
- e.bossMapScroll=0;
+ e.bossMapScroll=0;getCombatParallax(e,"boss3").reset(e.clock);
  const old=e.encounter,lab=old.enabled?old.lab:{index:e.index,stage:e.stage,supports:[...e.selectedSupports],full:e.fullField,expert:e.expert,autoplay:e.autoplay,missCap:e.missCap};
  e.encounter={...freshEncounter(),enabled:true,practice,lab,phase:practice?2:1};e.paused=false;e.keys.clear();e.seed=314159;e.speed=1;e.angle=e.targetAngle=e.fromAngle=0;e.orientation=0;e.rotation=0;e.fullField=false;e.selectedSupports.clear();e.autoplay=false;e.expert=false;e.missCap=120;e.begin(e.patterns.findIndex(p=>p.id==='flowers'),0);
  e.hp=MAX_HP;e.bombs=MAX_BOMBS;e.bossHpMax=PHASE_HP[practice?2:1];e.bossHp=e.bossHpMax;e.bossForm=practice?2:1;e.hits=0;e.deaths=0;e.bossHits=0;e.gameOver=false;

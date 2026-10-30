@@ -1,4 +1,5 @@
 import {drawScrollingMapDown} from "../../render/scrollingMap";
+import {getCombatParallax} from "../../render/combatParallax";
 // Resource-only adapter. Physics, warning timings and pattern sequencing stay in the supplied engine.
 import type {Engine} from './engine';
 const root='/';
@@ -23,5 +24,5 @@ export function background(e:Engine,c:CanvasRenderingContext2D){
 
 /** The same moving map is shared by combat, arrival and awakening fragments. */
 export function drawBattleMap(e:Engine,c:CanvasRenderingContext2D,w=e.fieldW,h=e.fieldH){
- c.save();c.translate(-w/2,-h/2);const ok=drawScrollingMapDown(c,images.bg,w,h,e.bossMapScroll,1);c.restore();return ok;
+ c.save();c.translate(-w/2,-h/2);const ok=drawScrollingMapDown(c,images.bg,w,h,e.bossMapScroll,1);if(ok)getCombatParallax(e,"boss3").draw(c,w,h,e.clock);c.restore();return ok;
 }

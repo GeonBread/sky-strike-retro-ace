@@ -236,6 +236,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   lastCanvasWidth: number = 0;
   lastCanvasHeight: number = 0;
   paused: boolean = false;
+  backgroundTime = 0;
   // false일 때는 배경과 캐릭터를 계속 렌더링하되 적 생성·이동·공격만 정지한다.
   simulationEnabled: boolean = true;
   playMode: GameMode = "arcade";
@@ -354,6 +355,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   }
 
   start(color: ShipColor, mode: GameMode = "arcade", style: ShipStyle = "science") {
+    this.backgroundTime=0;
     initializeGameStartStateSystem(this, color, mode);
     this.player.weaponStyle = style;
 
@@ -384,6 +386,7 @@ export class GameEngine implements GameEngineRuntimeContext {
   }
 
   update(dt: number) {
+    this.backgroundTime+=dt;
     updateStageFlowAndBossCutsceneSystem(this, dt);
   }
 

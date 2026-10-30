@@ -1,4 +1,5 @@
 import { drawScrollingMapDown } from "../render/scrollingMap";
+import {getCombatParallax} from "../render/combatParallax";
 import { sfx } from "../AudioSystem";
 import { spawnChapter1EnemyHitEffectSystem } from "../chapter1/chapter1WaveImpactSystem";
 
@@ -37,6 +38,7 @@ function drawChapter2WaveBackground(engine: any): void {
   if (!canvas || !context) return;
   if (image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
     drawScrollingMapDown(context, image, canvas.width, canvas.height, time, 8);
+    getCombatParallax(engine,"wave12").draw(context,canvas.width,canvas.height,time);
   } else {
     context.fillStyle = "#050914";
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -1596,6 +1598,7 @@ function processRealBomb(engine: any) {
 }
 
 export function startChapter2WaveSystem(engine: any, startIndex = 0) {
+  getCombatParallax(engine,"wave12").reset();
   activeEngine = engine;
   completionNotified = false;
   lastBombActive = false;
