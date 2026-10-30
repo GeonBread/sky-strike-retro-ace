@@ -2,6 +2,7 @@ import {drawScrollingMapDown} from "../../render/scrollingMap";
 import {getCombatParallax} from "../../render/combatParallax";
 // Resource-only adapter. Physics, warning timings and pattern sequencing stay in the supplied engine.
 import type {Engine} from './engine';
+import {playerHoverPose} from './playerHover';
 const root='/';
 export const assetPaths={
  player:'assets/common/player/hobanu_player.png',
@@ -15,6 +16,7 @@ if(typeof Image!=='undefined')for(const [id,path] of Object.entries(assetPaths))
 export function sprite(c:CanvasRenderingContext2D,id:keyof typeof assetPaths,x:number,y:number,w:number,h:number){const im=images[id];if(!im?.complete||!im.naturalWidth)return false;c.drawImage(im,x-w/2,y-h/2,w,h);return true;}
 /** Match combat's player width and the source image's 2:3 proportions. */
 export function playerSprite(c:CanvasRenderingContext2D,x:number,y:number,w=48*2.85){const im=images.player;if(!im?.complete||!im.naturalWidth)return false;return sprite(c,'player',x,y,w,w*im.naturalHeight/im.naturalWidth);}
+export function cinematicPlayer(e:Engine,c:CanvasRenderingContext2D,x:number,y:number){const p=playerHoverPose(e.playerAnimClock);c.save();c.translate(x+p.x,y+p.y);c.rotate(p.angle);playerSprite(c,0,0);c.restore();}
 export function background(e:Engine,c:CanvasRenderingContext2D){
  if(!e.useResources)return;c.save();drawBattleMap(e,c);
  // Retain original warning/effect contrast without replacing the original FX passes.

@@ -1,3 +1,4 @@
+import {playerHoverPose} from './playerHover';
 import {drawNativeShot} from './nativeWeapon';
 import {isMenuDeception,drawMenuScene} from './menuDeception';
 import { drawAdvanced, drawSeed, exileOverlay, activeLaserSegments } from './advanced';
@@ -61,8 +62,7 @@ function drawPlayerFallback(c:CanvasRenderingContext2D,clone:boolean){
   c.fillStyle='#11141a';c.beginPath();c.arc(0,-16,8,0,Math.PI*2);c.fill();
 }
 function drawPlayer(e:Engine,c:CanvasRenderingContext2D,p:Vec,clone:boolean,clock=e.playerAnimClock){
-  const bob=Math.sin(clock*4)*3.8,side=Math.sin(clock*12)*1.15;
-  const idleRot=Math.sin(clock*3)*.02;
+  const hover=playerHoverPose(clock),bob=hover.y,side=hover.x,idleRot=hover.angle;
   const facing=e.angle+e.playerFacing;
   c.save();c.translate(p.x+side,p.y+bob);c.rotate(facing+idleRot);c.globalAlpha=clone?.48:1;
   if(e.pattern.id==='exile'&&e.advanced.exile.state==='return'){const k=smooth(e.advanced.exile.age/1.25);c.globalAlpha*=k;c.scale(.5+.5*k,.5+.5*k);}

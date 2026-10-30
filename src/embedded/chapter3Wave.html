@@ -231,7 +231,14 @@
     <div class="small">밸런스 수치는 실제 게임용 확정값이 아닙니다. 초중반은 단일 몬스터 체험·숙련, 후반에는 2~3종 몬스터가 하나의 기하학 진형을 만드는 복합 웨이브 5종, 마지막에는 자유 조합 웨이브가 이어집니다.</div>
   </aside>
 </div>
-<script src="/assets/runtime/combatParallax.js"></script>
+<script>
+addEventListener('error',()=>{if(new URLSearchParams(location.search).get('embedded')==='1')parent.postMessage({channel:'sky-strike-chapter3-wave',type:'boot-error'},location.origin);});
+</script>
+<!-- COMBAT_PARALLAX_RUNTIME_START -->
+<script>
+var HobanuCombatParallax=(()=>{var d=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var M=Object.getOwnPropertyNames;var _=Object.prototype.hasOwnProperty;var P=(s,e,t)=>e in s?d(s,e,{enumerable:!0,configurable:!0,writable:!0,value:t}):s[e]=t;var L=(s,e)=>{for(var t in e)d(s,t,{get:e[t],enumerable:!0})},R=(s,e,t,a)=>{if(e&&typeof e=="object"||typeof e=="function")for(let n of M(e))!_.call(s,n)&&n!==t&&d(s,n,{get:()=>e[n],enumerable:!(a=w(e,n))||a.enumerable});return s};var C=s=>R(d({},"__esModule",{value:!0}),s);var u=(s,e,t)=>P(s,typeof e!="symbol"?e+"":e,t);var F={};L(F,{CombatParallax:()=>y,PARALLAX_PROFILES:()=>m,getCombatParallax:()=>S});const I="/assets/common/combat/parallax/",i=s=>I+s,m={wave12:[{id:"large-cloud",assets:[i("wave12/cloud_large.png")],speed:[14,14],opacity:[.36,.36]},{id:"small-cloud",assets:[i("wave12/cloud_small_1.png"),i("wave12/cloud_small_2.png")],speed:[24,24],opacity:[.57,.57]},{id:"purification",assets:[i("wave12/purification_1.png"),i("wave12/purification_2.png")],speed:[19,43],opacity:[1,1]}],wave3:[{id:"night-cloud",assets:[1,2,3].map(s=>i(`wave3/cloud_${s}.png`)),speed:[14,19],opacity:[.34,.43]},{id:"near-night-cloud",assets:[1,2,3].map(s=>i(`wave3/cloud_${s}.png`)),speed:[29,40],opacity:[.23,.34],chance:.5,duration:[16,27],gap:[8,17],exclude:"night-cloud"},{id:"corruption",assets:[i("wave3/corruption.png")],speed:[25,46],opacity:[.6,.78],chance:.7,duration:[20,35],gap:[9,19]}],boss2:[{id:"boss-cloud",assets:[i("boss2/cloud_1.png"),i("boss2/cloud_2.png")],speed:[133,164],opacity:[.68,.82],chance:.8,duration:[18,32],gap:[7,15]},{id:"boss-fragments",assets:[i("boss2/fragments_1.png"),i("boss2/fragments_2.png")],speed:[183,234],opacity:[.52,.7],chance:.8,duration:[15,25],gap:[5,12]}],boss3:[{id:"relics",assets:[i("boss3/relic_gold.png"),i("boss3/relic_ruins.png")],speed:[195,270],opacity:[.55,.74],chance:.85,duration:[16,27],gap:[5,12]}]},h=s=>(s=Math.max(0,Math.min(1,s)),s*s*(3-2*s)),T=s=>()=>(s=Math.imul(s,1664525)+1013904223>>>0,s/4294967296),l=(s,e)=>e[0]+s()*(e[1]-e[0]),H=s=>{if(typeof Image>"u")return null;const e=new Image;return e.src=s,e};class y{constructor(e,t=Math.random,a=H){this.scene=e;this.random=t;u(this,"lanes",[]);u(this,"images",new Map);u(this,"lastTime",-1);for(const n of m[e])for(const o of n.assets)this.images.has(o)||this.images.set(o,a(o));this.reset()}reset(e=0){this.lastTime=e,this.lanes=m[this.scene].map(t=>({config:t,random:T(Math.floor(this.random()*4294967296)),active:!1,asset:"",speed:0,opacity:0,phase:0,start:0,next:0}));for(const t of this.lanes)this.begin(t,e)}begin(e,t){const{config:a,random:n}=e;if(e.active=a.chance===void 0||n()<a.chance,e.start=t,!e.active){e.next=t+l(n,a.gap);return}const o=this.lanes.find(p=>p.config.id===a.exclude)?.asset,r=a.assets.filter(p=>p!==o);e.asset=r[Math.min(r.length-1,Math.floor(n()*r.length))],e.speed=l(n,a.speed),e.opacity=l(n,a.opacity),e.phase=n(),e.next=a.chance===void 0?1/0:t+l(n,a.duration)}sample(e){e=Math.max(0,Number.isFinite(e)?e:0),e<this.lastTime&&this.reset(),this.lastTime=e;const t=[];for(const a of this.lanes){for(;e>=a.next;){const o=a.next;a.active?(a.active=!1,a.next=o+l(a.random,a.config.gap)):this.begin(a,o)}if(!a.active)continue;const n=a.config.chance===void 0?1:h((e-a.start)/1.5)*h((a.next-e)/1.8);t.push({id:a.config.id,asset:a.asset,speed:a.speed,opacity:a.opacity*n,distance:(e-a.start)*a.speed,phase:a.phase})}return t}draw(e,t,a,n){if(!(t<=0||a<=0))for(const o of this.sample(n)){const r=this.images.get(o.asset);if(!r?.complete||!r.naturalWidth||!r.naturalHeight||o.opacity<=0)continue;const p=Math.max(t/r.naturalWidth,a/r.naturalHeight),f=r.naturalWidth*p,c=r.naturalHeight*p,v=(t-f)/2,g=((o.distance+o.phase*c)%c+c)%c;e.save(),e.globalAlpha*=o.opacity,e.globalCompositeOperation="source-over",e.beginPath(),e.rect(0,0,t,a),e.clip();for(const x of[g-c,g,g-2*c])e.drawImage(r,v,x,f,c);e.restore()}}}const b=new WeakMap;function S(s,e){let t=b.get(s);t||(t=new Map,b.set(s,t));let a=t.get(e);return a||(a=new y(e),t.set(e,a)),a}return C(F);})();
+</script>
+<!-- COMBAT_PARALLAX_RUNTIME_END -->
 <script>
 (() => {
 'use strict';
@@ -345,7 +352,7 @@ function preloadSprite(path){
  const img=new Image();img.src=path;spriteCache[path]=img;return img;
 }
 const CHAPTER3_BG_IMAGES=[preloadSprite('/assets/chapter3/combat/backgrounds/chapter3_wave_map.png')];
-const chapter3Parallax=new HobanuCombatParallax.CombatParallax('wave3');
+const chapter3Parallax=typeof HobanuCombatParallax!=='undefined'?new HobanuCombatParallax.CombatParallax('wave3'):{draw(){}};
 const HOBANWOO_PLAYER_SPRITE='/assets/common/player/hobanu_player.png';
 const PLAYER_SHOT_SPRITES=[
  '/assets/common/player/bullets/science_gear.png',
@@ -2861,6 +2868,7 @@ addEventListener('keyup',e=>keys[e.key]=false);
 addEventListener('message',e=>{
  if(e.origin!==location.origin)return;
  const m=e.data||{};if(m.channel!=='sky-strike-chapter3-wave-host')return;
+ if(m.type==='request-ready'){emitWave('ready',{waveIndex,totalWaves:waves.length});}
  if(m.type==='set-paused'){paused=!!m.detail?.paused;for(const k of Object.keys(keys))keys[k]=false;emitWave('pause-state',{paused});}
 });
 const waveList=document.getElementById('waveList'),legend=document.getElementById('legend');

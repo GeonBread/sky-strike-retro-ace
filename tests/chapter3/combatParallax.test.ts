@@ -11,7 +11,7 @@ test('day scenes keep exactly one small-cloud variant and one gold variant, with
  for(let seed=0;seed<100;seed++){
   const p=runtime('wave12',seed),a=p.sample(0),b=p.sample(1000);
   assert.equal(a.length,3);assert.equal(a[0].speed,14);assert.equal(a[1].speed,24);assert.ok(8<a[0].speed&&a[0].speed<a[1].speed);
-  for(const frame of a)assert.ok(frame.opacity>0&&frame.opacity<1);
+  for(const frame of a.slice(0,2))assert.ok(frame.opacity>0&&frame.opacity<1);assert.equal(a[2].opacity,1);
   assert.deepEqual(a.map(f=>f.asset),b.map(f=>f.asset));clouds.add(a[1].asset);gold.add(a[2].asset);speeds.add(a[2].speed);assert.ok(a[2].speed>=19&&a[2].speed<=43);
  }
  assert.equal(clouds.size,2);assert.equal(gold.size,2);assert.ok(speeds.size>90);
@@ -61,7 +61,7 @@ test('rendering preserves full PNG proportions, downward displacement and the ca
  const make=()=>{const c:any={draws:[],globalAlpha:.4,stack:[],save(){this.stack.push(this.globalAlpha)},restore(){this.globalAlpha=this.stack.pop()},beginPath(){},rect(){},clip(){},drawImage(...a:any[]){this.draws.push({args:a,alpha:this.globalAlpha})}};return c;};
  const a=make(),b=make();p.draw(a,922,960,0);p.draw(b,922,960,1);assert.equal(a.draws.length,9);
  for(let i=0;i<9;i++){
-  const x=a.draws[i],y=b.draws[i],frame=p.sample(1)[Math.floor(i/3)];assert.ok(Math.abs(x.args[4]/x.args[3]-3)<1e-10);assert.ok(x.alpha<.4);
+  const x=a.draws[i],y=b.draws[i],frame=p.sample(1)[Math.floor(i/3)];assert.ok(Math.abs(x.args[4]/x.args[3]-3)<1e-10);assert.ok(x.alpha<=.4);
   assert.ok(Math.abs(y.args[2]-x.args[2]-frame.speed)<1e-8);
  }
  assert.equal(a.globalAlpha,.4);

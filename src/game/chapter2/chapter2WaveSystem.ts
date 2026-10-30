@@ -38,7 +38,6 @@ function drawChapter2WaveBackground(engine: any): void {
   if (!canvas || !context) return;
   if (image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
     drawScrollingMapDown(context, image, canvas.width, canvas.height, time, 8);
-    getCombatParallax(engine,"wave12").draw(context,canvas.width,canvas.height,time);
   } else {
     context.fillStyle = "#050914";
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -46,6 +45,7 @@ function drawChapter2WaveBackground(engine: any): void {
   // 탄/적 가독성을 위해 노을 배경을 살짝 어둡게 유지합니다.
   context.fillStyle = "rgba(2, 6, 18, 0.30)";
   context.fillRect(0, 0, canvas.width, canvas.height);
+  if(image?.complete&&image.naturalWidth>0)getCombatParallax(engine,"wave12").draw(context,canvas.width,canvas.height,time);
 }
 
 

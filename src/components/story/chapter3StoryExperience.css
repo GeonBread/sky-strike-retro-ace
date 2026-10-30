@@ -979,3 +979,5 @@
   transform: none !important;
   zoom: 1 !important;
 }
+
+.chapter3WaveBootError{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#070611ed;color:#f2e4ff;font:15px/1.6 system-ui,sans-serif}.chapter3WaveBootError button{border:1px solid #ab86c7;border-radius:6px;padding:11px 18px;background:#2b1b3e;color:#fff;cursor:pointer}

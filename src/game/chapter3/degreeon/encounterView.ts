@@ -2,7 +2,7 @@ import {drawAwakening} from './awakeningCinema';
 import {drawBossCinema,ARRIVAL_SECONDS} from './bossCinema';
 import type {Engine} from './engine';
 import {clamp,smooth,BASE_FIELD_W,BASE_FIELD_H} from './core';
-import {sprite,playerSprite,drawBattleMap} from './resources';
+import {sprite,cinematicPlayer,drawBattleMap} from './resources';
 import {fitBossPresentation} from './presentation';
 import {drawHpBar,HP_BAR_WIDTH} from './hpBar';
 export function drawEncounterScene(e:Engine){const c=e.ctx,s=e.encounter,{w,h}=fitBossPresentation(e.canvas,e.presentationScale);
@@ -22,7 +22,7 @@ export function drawEncounterScene(e:Engine){const c=e.ctx,s=e.encounter,{w,h}=f
  }
  c.save();c.globalAlpha=clamp(bossAlpha,0,1);c.shadowColor=after||awaken?'#c474ef':'#9d7ae5';c.shadowBlur=awaken?35:18;if(!sprite(c,bossId,0,bossY,bossSize,bossSize)){c.fillStyle='#b494dd';c.beginPath();c.arc(0,bossY,bossSize*.25,0,Math.PI*2);c.fill();}c.restore();
  for(let i=0;i<34;i++){const a=i*2.399,r=clear?age*(35+i%5*13):130+i%8*33,x=Math.cos(a)*r,y=clear?-270+Math.sin(a)*r+age*age*18:bossY+Math.sin(a+age*.12)*r*.68;c.save();c.translate(x,y);c.rotate(a+age*.3);c.globalAlpha=clear?clamp(1-age/3.8,0,1):.25;c.fillStyle=i%3?'#d19bf2':'#ffe1aa';c.fillRect(-2,-5,4,10);c.restore();}
- const playerX=clear?s.sceneFrom.x*(1-k):0,playerY=clear?s.sceneFrom.y*(1-k)+404*k:404;c.save();c.globalAlpha=win?1:.82;playerSprite(c,playerX,playerY);c.restore();
+ const playerX=clear?s.sceneFrom.x*(1-k):0,playerY=clear?s.sceneFrom.y*(1-k)+404*k:404;c.save();c.globalAlpha=win?1:.82;cinematicPlayer(e,c,playerX,playerY);c.restore();
  // The health display participates in the awakening rather than resetting as an ordinary pattern.
  c.save();c.translate(0,-fh/2+62);c.scale(Math.min(1,(fw-36)/HP_BAR_WIDTH),1);let hp=clear||s.mode==='taunt'?0:awaken?smooth((t-3.2)/2):e.bossHp/e.bossHpMax;drawHpBar(c,hp,after||awaken?1:0);c.restore();
  c.restore();

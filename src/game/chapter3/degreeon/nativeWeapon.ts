@@ -24,7 +24,7 @@ export function emitNativeShots(e:Engine,p:Vec,heading=0):Shot[]{
  const c=Math.cos(heading),s=Math.sin(heading);
  return r.bullets.map((b:Bullet)=>{
   const dx=b.x+b.width/2-p.x,dy=b.y+b.height/2-p.y,x=p.x+dx*c-dy*s,y=p.y+dx*s+dy*c,vx=b.vx*c-b.vy*s,vy=b.vx*s+b.vy*c;
-  b.x=x-b.width/2;b.y=y-b.height/2;b.vx=vx;b.vy=vy;
+  b.x=x-b.width/2;b.y=y-b.height/2;b.vx=vx;b.vy=vy;b.playerBulletRotation=(b.playerBulletRotation??0)+heading;
   return {x,y,vx,vy,age:0,native:b,heading};
  });
 }
@@ -38,7 +38,12 @@ export function drawNativeShot(e:Engine,c:CanvasRenderingContext2D,s:Shot){
  const b=s.native;if(!b)return;
  b.x=s.x-b.width/2;b.y=s.y-b.height/2;
  const r=runtime(e,e.pattern.id==='exile'?e.advanced.exile.world:e.localPlayer());r.ctx=c;
- renderPlayerBulletByStyle(r,b,s.x,s.y,b.width/2,b.height/2);
+ if(isNativeBeam(s)&&(s.heading??0)!==0){
+  const p=e.pattern.id==='exile'?e.advanced.exile.world:e.localPlayer(),h=s.heading!,cs=Math.cos(h),sn=Math.sin(h);
+  const unrotate=(a:any)=>{const x=a.x+a.width/2-p.x,y=a.y+a.height/2-p.y;return {...a,x:p.x+x*cs+y*sn-a.width/2,y:p.y-x*sn+y*cs-a.height/2};};
+  r.enemies=r.enemies.map(unrotate);if(r.bossEntity?.active)r.bossEntity=unrotate(r.bossEntity);
+  c.save();c.translate(p.x,p.y);c.rotate(h);c.translate(-p.x,-p.y);renderPlayerBulletByStyle(r,b,s.x,s.y,b.width/2,b.height/2);c.restore();
+ }else renderPlayerBulletByStyle(r,b,s.x,s.y,b.width/2,b.height/2);
 }
 export const shotDamage=(s:Shot)=>Math.max(0,s.native?.damage??1);
 export const isNativeBeam=(s:Shot)=>s.native?.playerBulletKind==='musicBeam';

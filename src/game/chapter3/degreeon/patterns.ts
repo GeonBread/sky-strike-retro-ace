@@ -109,11 +109,14 @@ export const patterns:Pattern[]=[
     // Local x is screen y after the quarter turn; local y advances right → left.
     const upper=-e.fieldW/2,lower=e.fieldW/2;
     for(const [a,b] of [[upper,center-gap/2],[center+gap/2,lower]]){
-      if(b<=a)continue;e.add({kind:'rect',x:(a+b)/2,y:-e.fieldH/2-35,w:b-a,h:40,vy:155+e.stage*12,warn:1,life:6,tag:'비행 오염 블록'});
+      if(b<=a)continue;e.add({kind:'rect',x:(a+b)/2,y:-e.fieldH/2-35,w:b-a,h:40,vy:155+e.stage*12,warn:1,life:(e.fieldH+120)/(155+e.stage*12)+2,tag:'비행 오염 블록'});
     }
-    if(e.stage>0){const sign=e.counter%2?1:-1;e.add({kind:'spike',x:center+sign*(gap/2+18),y:-e.fieldH/2-100,w:42,h:46,vx:-sign*.001,vy:155+e.stage*12,warn:1,life:6,tag:'비행 가시'});}
+    if(e.stage>0){const sign=e.counter%2?1:-1;e.add({kind:'spike',x:center+sign*(gap/2+18),y:-e.fieldH/2-100,w:42,h:46,vx:-sign*.001,vy:155+e.stage*12,warn:1,life:(e.fieldH+160)/(155+e.stage*12)+2,tag:'비행 가시'});}
     e.counter++;
-  },(e,c)=>{c.fillStyle='#71479899';c.fillRect(-e.fieldW/2,-e.fieldH/2,9,e.fieldH);c.fillRect(e.fieldW/2-9,-e.fieldH/2,9,e.fieldH);c.strokeStyle='#c193ed';c.setLineDash([12,8]);c.strokeRect(-e.fieldW/2+9,-e.fieldH/2,e.fieldW-18,e.fieldH);c.setLineDash([]);}),
+  },(e,c)=>{c.fillStyle='#71479899';c.fillRect(-e.fieldW/2,-e.fieldH/2,9,e.fieldH);c.fillRect(e.fieldW/2-9,-e.fieldH/2,9,e.fieldH);c.strokeStyle='#c193ed';c.setLineDash([12,8]);c.strokeRect(-e.fieldW/2+9,-e.fieldH/2,e.fieldW-18,e.fieldH);c.setLineDash([]);
+    // Local +X becomes visible downward gravity after the quarter turn.
+    c.save();c.translate(-e.fieldW/2+86,e.fieldH/2-80);c.strokeStyle='#ffe7a8';c.lineWidth=4;c.shadowColor='#b58ce3';c.shadowBlur=12;
+    for(let i=0;i<3;i++){const x=i*20+(e.clock*24)%20;c.globalAlpha=.35+i*.2;c.beginPath();c.moveTo(x-8,-11);c.lineTo(x+2,0);c.lineTo(x-8,11);c.stroke();}c.restore();}),
   make('rotation','전장 다중 회전','CONTINUOUS ROTATION','약 5초마다 회전하며 일반 공격과 화면 기준 조작을 유지합니다.',0,['90° 회전','역세로 전투','네 방향 연결','연속 회전'],30,noop),
   make('clones','3분신 공동 생존','TRIPLE EXISTENCE','일반 공격과 함께 세 기체가 사격·피격합니다. 세 기체의 LIFE를 공유합니다.',0,['중심에서 세 갈래','세 기체 동시 사격','공동 피격 회피','분신 사이의 여백'],27,noop),
   make('miss','미스탄 누적 폭격','MISSED SHOT DEBT','빗나간 탄을 회수합니다. 게이지 또는 30초 조건 후 종료 시 폭격합니다.',0,['사격과 미스 집계','흔들리는 표적','오염 자원 축적','최대 15발 폭격'],31,e=>{

@@ -310,6 +310,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
   const [storyLaunchSerial, setStoryLaunchSerial] = useState(0);
   const [waveActive, setWaveActive] = useState(initialCheckpointRef.current?.kind === "wave");
   const [waveReady, setWaveReady] = useState(false);
+  const [waveBootError,setWaveBootError]=useState(false);
   const [waveFailed, setWaveFailed] = useState(false);
   const [waveRetryPromptVisible, setWaveRetryPromptVisible] = useState(false);
   const waveRetryPromptTimerRef = useRef<number | null>(null);
@@ -513,7 +514,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setWaveActive(false);
     setWaveFailed(false);
     setWaveRetryPromptVisible(false);
-    setWaveReady(false);
+    setWaveReady(false);setWaveBootError(false);
     setFailedWaveIndex(null);
     setExitConfirmMode(null);
     setWavePaused(false);
@@ -532,7 +533,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setWaveActive(false);
     setWaveFailed(false);
     setWaveRetryPromptVisible(false);
-    setWaveReady(false);
+    setWaveReady(false);setWaveBootError(false);
     setFailedWaveIndex(null);
     setExitConfirmMode(null);
     setWavePaused(false);
@@ -559,7 +560,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     clearWaveRetryPromptTimer();
     setWaveFailed(false);
     setWaveRetryPromptVisible(false);
-    setWaveReady(false);
+    setWaveReady(false);setWaveBootError(false);
     setWaveStartIndex(safeIndex);
     setWaveSingle(single);
     setFailedWaveIndex(null);
@@ -573,6 +574,13 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setWaveActive(true);
     setScreen("wave");
   };
+
+  useEffect(()=>{
+    if(!waveActive||waveReady)return;
+    const ask=()=>waveFrameRef.current?.contentWindow?.postMessage({channel:"sky-strike-chapter3-wave-host",type:"request-ready"},window.location.origin);
+    ask();const retry=window.setInterval(ask,750),timeout=window.setTimeout(()=>setWaveBootError(true),12000);
+    return()=>{window.clearInterval(retry);window.clearTimeout(timeout);};
+  },[waveActive,waveReady,waveRunKey]);
 
   const launchBoss = (origin: "story" | "selector" = "selector", tests = false) => {
     hideStoryFrameForWave();
@@ -811,8 +819,10 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
       if (event.source === waveFrameRef.current?.contentWindow) {
         if (message.channel !== "sky-strike-chapter3-wave") return;
 
+        if (message.type === "boot-error") {setWaveBootError(true);return;}
+
         if (message.type === "ready") {
-          setWaveReady(true);
+          setWaveBootError(false);setWaveReady(true);
           // The iframe has just become the active combat surface. Focus it immediately
           // so WASD/arrow input works without requiring an initial mouse click.
           window.requestAnimationFrame(() => {
@@ -861,6 +871,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
         }
 
         if (message.type === "hud-state") {
+          setWaveReady(true);setWaveBootError(false);
           const activeWaveIndex = Math.max(0, Math.floor(message.detail?.waveIndex ?? waveStartIndex));
           setWaveHud({
             hp: Math.max(0, Math.floor(message.detail?.hp ?? 3)),
@@ -990,7 +1001,7 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
     setFailedWaveIndex(null);
     setWaveRetryPromptVisible(false);
     setWaveFailed(false);
-    setWaveReady(false);
+    setWaveReady(false);setWaveBootError(false);
     setWaveRunKey((key) => key + 1);
   };
 
@@ -1243,13 +1254,15 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
             title="CHAPTER 3 일반 오염 몬스터 정화 전투"
             tabIndex={0}
             onLoad={() => {
+              postWaveCommand("request-ready");
               window.requestAnimationFrame(() => {
                 waveFrameRef.current?.focus({ preventScroll: true });
                 waveFrameRef.current?.contentWindow?.focus();
               });
             }}
           />
-          {!waveReady && !waveFailed && <div className="chapter3WaveLoading">CHAPTER 3 COMBAT LOADING</div>}
+          {!waveReady&&!waveFailed&&!waveBootError&&<div className="chapter3WaveLoading">CHAPTER 3 COMBAT LOADING</div>}
+          {!waveReady&&waveBootError&&<div className="chapter3WaveBootError" role="alert"><p>전투 화면을 불러오지 못했습니다.</p><button onClick={()=>launchWave(waveStartIndex,waveSingle,waveOrigin)}>다시 불러오기</button><button onClick={returnToSelector}>챕터 선택으로</button></div>}
         </div>
       )}
 
