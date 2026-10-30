@@ -643,6 +643,17 @@ export function Chapter3StoryExperience({ onExit, onComplete, resumeCheckpoint }
           return;
         }
 
+        if (message.type === "boss-transition-cue") {
+          sfx.resumeAll();
+          const cue=message.detail?.code;
+          if(cue==='0')sfx.playOscillator(42,'sine',2.8,27,.25);
+          if(cue==='1'){sfx.playOscillator(48,'triangle',2.8,90,.25);sfx.playOscillator(72,'sine',2.8,144,.12);}
+          if(cue==='2'){sfx.playOscillator(34,'triangle',2,22,.4);sfx.playOscillator(180,'sine',1.6,65,.12);}
+          if(cue==='3'){sfx.playOscillator(55,'triangle',2.4,28,.45);sfx.playOscillator(220,'sine',2.4,330,.12);}
+          if(cue==='4')sfx.playOscillator(82,'sine',1.8,28,.3);
+          return;
+        }
+
         if (message.type === "final-space-bgm-start") {
           sfx.resumeAll();
           sfx.startChapter3FinalSpaceBgm();

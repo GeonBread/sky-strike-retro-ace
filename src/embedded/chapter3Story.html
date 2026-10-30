@@ -3335,6 +3335,22 @@ html.chapter1-output-parity .location-transition-overlay {
 }
 </style>
 
+<style id="chapter3-final-boss-gate-style">
+@font-face{font-family:'Degreeon Gate';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/common/fonts/chapter3-final-boss-title.woff') format('woff')}
+.c3-final-gate-active .global-effect-actor-overlay,.c3-final-gate-active .dialogue-layer{display:none!important}
+.c3-final-gate{position:absolute;inset:0;overflow:hidden;background:#070611;color:#f7e8c8;text-align:center;isolation:isolate}
+.c3-final-gate canvas{position:absolute;inset:0;width:100%;height:100%}
+.c3-final-gate-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 25%,#03020ba8 100%);pointer-events:none}
+.c3-final-gate-prelude,.c3-final-gate-title,.c3-final-gate-ready{position:absolute;left:50%;top:50%;width:92%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;opacity:0;transition:opacity 1s ease;pointer-events:none}
+.c3-final-gate small{font:500 clamp(9px,1.2vw,13px) Georgia,serif;letter-spacing:.45em;color:#d7b989;text-shadow:0 0 18px #d59d5544}
+.c3-final-gate-prelude strong{font:400 clamp(25px,4vw,50px)/1.6 'Degreeon Gate',sans-serif;letter-spacing:.08em;margin:22px 0 15px;text-shadow:0 0 30px #bb83e577}.c3-final-gate-prelude span{font-family:'Degreeon Gate',sans-serif;font-size:clamp(11px,1.5vw,16px);letter-spacing:.25em;color:#bc9dcc}
+.c3-final-gate[data-act="0"] .c3-final-gate-prelude{opacity:1}.c3-final-gate[data-act="3"] .c3-final-gate-title{opacity:1}.c3-final-gate[data-act="4"] .c3-final-gate-ready{animation:c3-final-ready 3.3s both}
+.c3-final-gate-title>span{font:400 clamp(16px,2.6vw,28px)/1.6 'Degreeon Gate',sans-serif;letter-spacing:.35em;color:#debfeb}.c3-final-gate-title strong{font:400 clamp(56px,9vw,112px)/1.4 'Degreeon Gate',sans-serif;letter-spacing:.18em;padding-left:.18em;color:#fff1cf;text-shadow:0 3px 0 #3b2345,0 0 40px #b48be77a,0 0 100px #a759d655}.c3-final-gate-title em{font:normal clamp(12px,2vw,20px)/1.4 Georgia,serif;letter-spacing:.65em;padding-left:.65em;color:#d5b580}.c3-final-gate-rule{width:min(540px,65vw);height:1px;background:linear-gradient(90deg,transparent,#ddb376,transparent);margin:24px 0;position:relative}.c3-final-gate-rule:after{content:'';position:absolute;width:7px;height:7px;background:#edcf9e;left:50%;top:0;transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 20px #d8a26e}
+.c3-final-gate-ready strong{font:400 clamp(26px,4vw,50px)/1.6 'Degreeon Gate',sans-serif;letter-spacing:.2em;margin-top:22px;text-shadow:0 0 25px #d3a0ee}
+@keyframes c3-final-ready{0%,80%,100%{opacity:0}20%,55%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.c3-final-gate-prelude,.c3-final-gate-title{transition:none}}
+</style>
+
 </head>
 <body>
   <main class="story-app">
@@ -3830,7 +3846,7 @@ window.STORY_DATA = {
       C3D.line("digrion", "어리석군.", "graduation_core", "최종 공간", {left:"digrion",right:"hobanwoo"}),
       C3D.line("hobanwoo", "그럴 수도 있고.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"neutral",left:"digrion"}),
       C3D.line("hobanwoo", "그래도 난 졸업할 거야.", "graduation_core", "최종 공간", {right:"hobanwoo",pose:"brave",left:"digrion"}),
-      C3D.fx("boss-battle-transition", "graduation_core", 4300),
+      C3D.fx("boss-battle-transition", "graduation_core", 18000),
 
       C3D.sec("장면 29. 마지막 두 별 봉인 약화", "graduation_core"),
       C3D.line("student_card", "디그리온의 오염 반응이 크게 약화되었습니다.", "graduation_core", "마지막 두 별 봉인 약화", {left:"student_card",right:"hobanwoo"}),
@@ -4888,12 +4904,61 @@ window.STORY_CUSTOM_EFFECTS['assignment-submit-timeline'] = ({layer,item}) => c3
 window.STORY_CUSTOM_EFFECTS['core-barrier-break'] = ({ layer }) => c3Mount(layer, `
   <div class="ch3-core-barrier"><div class="barrier"></div><div class="crack c1"></div><div class="crack c2"></div><div class="crack c3"></div><strong>졸업 코어 장벽 붕괴</strong></div>`);
 
-window.STORY_CUSTOM_EFFECTS['boss-battle-transition'] = ({ layer, item, api }) => {
+window.STORY_CUSTOM_EFFECTS['boss-battle-transition'] = ({ layer, api }) => {
   api.setMode('game');
-  const coreClass = item?.scene === 'graduation_core' ? ' is-digrion-core' : '';
-  return c3Mount(layer, `<div class="ch3-boss-battle-transition${coreClass}"><small>FINAL BOSS</small><strong>미졸업의 군주 디그리온</strong><span>BATTLE START</span></div>`);
+  return c3Mount(layer, `<div class="c3-final-gate" data-act="0" aria-label="디그리온 최종 보스전 진입">
+    <canvas aria-hidden="true"></canvas><div class="c3-final-gate-vignette"></div>
+    <div class="c3-final-gate-prelude"><small>THE LAST THRESHOLD</small><strong>마지막 문이 열린다.</strong><span>모든 규칙의 끝에서</span></div>
+    <div class="c3-final-gate-title"><small>FINAL BOSS · CHAPTER III</small><div class="c3-final-gate-rule"></div><span>미졸업의 군주</span><strong>디그리온</strong><em>DEGREEON</em><div class="c3-final-gate-rule"></div></div>
+    <div class="c3-final-gate-ready"><small>BEYOND EVERY RULE</small><strong>최후의 전투</strong></div>
+  </div>`, root => {
+    const gate=root.querySelector('.c3-final-gate'),canvas=gate.querySelector('canvas'),ctx=canvas.getContext('2d');
+    if(!ctx)return;
+    document.body.classList.add('c3-final-gate-active');
+    const clamp=n=>Math.max(0,Math.min(1,n)),ease=n=>{n=clamp(n);return n*n*(3-2*n);};
+    const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const boss=new Image(),map=new Image();boss.src='/assets/chapter3/story/characters/digrion_phase1.png';map.src='/assets/chapter3/combat/boss/backgrounds/chapter3_boss_map.png';
+    const started=performance.now(),cues=[.2,3.6,7.1,10.4,14.7];let raf=0,nextCue=0,lastAct=-1;
+    const frame=now=>{
+      const t=Math.min(18,(now-started)/1000),r=gate.getBoundingClientRect(),w=Math.max(1,r.width),h=Math.max(1,r.height),dpr=Math.min(window.devicePixelRatio||1,1.5),unit=Math.min(w,h)/960;
+      if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#070611';ctx.fillRect(0,0,w,h);
+      const act=t<3.6?0:t<7.1?1:t<10.4?2:t<14.7?3:4;if(act!==lastAct){gate.dataset.act=String(act);lastAct=act;}
+      while(nextCue<cues.length&&t>=cues[nextCue]){window.parent.postMessage({channel:'sky-strike-chapter3-story',type:'boss-transition-cue',detail:{code:String(nextCue)}},window.location.origin);nextCue++;}
+      ctx.save();ctx.translate(w/2,h/2);ctx.scale(unit,unit);
+      const vw=w/unit,vh=h/unit,charge=ease((t-3.2)/4),release=ease((t-7.1)/3.3),close=ease((t-14.7)/2.4),cx=0,cy=-35;
+      const aura=ctx.createRadialGradient(cx,cy,5,cx,cy,700);aura.addColorStop(0,`rgba(171,83,235,${.12+.26*charge})`);aura.addColorStop(.45,'#55247b36');aura.addColorStop(1,'#07061100');ctx.fillStyle=aura;ctx.fillRect(-vw/2,-vh/2,vw,vh);
+      // Distant stars accelerate toward the seal; each ray uses one shared clock.
+      for(let i=0;i<140;i++){
+        const a=i*2.399963,radius=90+((i*67+t*(reduced?8:32+charge*170))%1050),x=Math.cos(a)*radius,y=cy+Math.sin(a)*radius*.7;
+        ctx.globalAlpha=(.15+i%7*.04)*(1-close);ctx.strokeStyle=i%6?'#b99ad8':'#ffe0a6';ctx.lineWidth=i%4?1:2;ctx.beginPath();ctx.moveTo(x,y);const tail=reduced?2:5+charge*(12+i%12);ctx.lineTo(x+Math.cos(a)*tail,y+Math.sin(a)*tail*.7);ctx.stroke();
+      }ctx.globalAlpha=1;
+      // Monumental pillars and six contracting orbital inscriptions frame the gate.
+      for(const sign of [-1,1])for(let i=0;i<5;i++){
+        const x=sign*(270+i*105)*(1-.22*release),a=(.09+.15*charge)*(1-close);
+        ctx.fillStyle=`rgba(117,65,156,${a})`;ctx.fillRect(x-12,-vh/2,24,vh);ctx.strokeStyle=`rgba(238,198,135,${a})`;ctx.lineWidth=1;ctx.strokeRect(x-17,-vh/2,34,vh);
+      }
+      for(let j=0;j<6;j++){
+        const radius=(165+j*47)*(1-.38*charge)+70*(1-ease(t/3));ctx.save();ctx.translate(0,cy);ctx.rotate((reduced?0:t*.07)*(j%2?-1:1)+j*.36);ctx.globalAlpha=(.22+.35*charge)*(1-close);ctx.strokeStyle=j%2?'#b780e4':'#e4be7f';ctx.lineWidth=j===0?3:1;ctx.setLineDash(j%2?[36,9,3,9]:[1,14]);ctx.beginPath();ctx.arc(0,0,radius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+        for(let i=0;i<12;i++){ctx.save();ctx.rotate(i*Math.PI/6);ctx.strokeRect(radius-5,-5,10,10);ctx.restore();}ctx.restore();
+      }
+      // A narrow rupture becomes a luminous doorway, without resizing the game plane.
+      const opening=ease((t-7.1)/3.3)*(1-close),gateW=12+opening*520;
+      if(t>5.3){ctx.save();ctx.globalAlpha=ease((t-5.3)/1.5)*(1-close);const beam=ctx.createLinearGradient(-gateW/2,0,gateW/2,0);beam.addColorStop(0,'#a168f000');beam.addColorStop(.46,'#bb80ee77');beam.addColorStop(.5,'#fff1d9');beam.addColorStop(.54,'#bb80ee77');beam.addColorStop(1,'#a168f000');ctx.fillStyle=beam;ctx.fillRect(-gateW/2,-vh/2,gateW,vh);ctx.strokeStyle='#f8d39a';ctx.lineWidth=2;for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(sign*gateW*.4,-vh/2);ctx.lineTo(sign*gateW*.4,cy-230);ctx.lineTo(sign*gateW*.49,cy-170);ctx.lineTo(sign*gateW*.49,cy+170);ctx.lineTo(sign*gateW*.4,cy+230);ctx.lineTo(sign*gateW*.4,vh/2);ctx.stroke();}ctx.restore();}
+      // The silhouette emerges before the name; keep the supplied sprite's proportions.
+      if(boss.complete&&boss.naturalWidth&&t>8){const reveal=ease((t-8)/1.3)*(1-ease((t-10.1)/.6));ctx.save();ctx.globalAlpha=reveal*.86;ctx.shadowColor='#c685f4';ctx.shadowBlur=34;const size=480;ctx.drawImage(boss,-size/2,cy-size/2,size,size*boss.naturalHeight/boss.naturalWidth);ctx.restore();}
+      for(let i=0;i<50;i++){const a=i*2.399963,r=200+i%8*31,spin=reduced?0:t*.15,x=Math.cos(a+spin)*r*(1-.62*charge+release),y=cy+Math.sin(a+spin)*r*(1-.62*charge+release);ctx.save();ctx.translate(x,y);ctx.rotate(a+t*.08);ctx.globalAlpha=(.3+.3*charge)*(1-close);ctx.fillStyle=i%4?'#b584dd':'#f5cf91';ctx.fillRect(-2,-7,4,14);ctx.restore();}
+      // One restrained impact, then the map appears at its exact combat aspect ratio.
+      if(t>10.4&&t<10.8&&!reduced){ctx.fillStyle=`rgba(255,231,192,${.24*(1-ease((t-10.4)/.4))})`;ctx.fillRect(-vw/2,-vh/2,vw,vh);}
+      if(t>15.5&&map.complete&&map.naturalWidth){ctx.save();ctx.globalAlpha=ease((t-15.5)/.7)*(1-ease((t-17)/.8));ctx.beginPath();ctx.rect(-461,-480,922,960);ctx.clip();const scale=922/map.naturalWidth,mh=map.naturalHeight*scale;ctx.drawImage(map,-461,-480,922,mh);ctx.fillStyle='#07061199';ctx.fillRect(-461,-480,922,960);ctx.restore();}
+      const dark=1-ease(t/1.2)+ease((t-17)/.8);if(dark>0){ctx.fillStyle=`rgba(7,6,17,${clamp(dark)})`;ctx.fillRect(-vw/2,-vh/2,vw,vh);}
+      ctx.restore();
+      if(t<18)raf=requestAnimationFrame(frame);
+    };
+    raf=requestAnimationFrame(frame);
+    return ()=>{cancelAnimationFrame(raf);document.body.classList.remove('c3-final-gate-active');};
+  });
 };
-
 window.STORY_CUSTOM_EFFECTS['boss-transition'] = ({ layer, item, api }) => {
   api.setMode('story');
   return c3Mount(layer, `<div class="ch3-boss-transition"><div class="energy"></div><img src="/assets/chapter3/story/characters/digrion_phase2_final.png" alt="디그리온 최종 각성 형태"><small>PHASE ${c3Esc(item.phase||'2')} TRANSITION</small><strong>${c3Esc(item.title||'형태 변화')}</strong><span>${c3Esc(item.subtitle||'')}</span></div>`);
@@ -6662,6 +6727,16 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   }
 
   function finishEffect(item, effectId) {
+    if (HOST_SELECTOR_MODE && effectId === 'boss-battle-transition') {
+      clearTimer('effectTimer');
+      // Stop the gate's animation and pending cues even when the player skips early.
+      if (typeof state.activeEffectCleanup === 'function') state.activeEffectCleanup();
+      state.activeEffectCleanup = null;
+      state.currentEffectId = 'boss-running';
+      hooks.onEffectEnd?.({ effectId, item, api });
+      hooks.onEffectStart?.({ effectId:'boss-running', item, api });
+      return;
+    }
     // 시간 전환 화면이 현재 장면을 완전히 덮고 있는 동안 실제 배경을 교체합니다.
     // 이렇게 해야 전환 종료 직후 이전 장소가 잠깐 노출되지 않습니다.
     if (effectId === 'time-card' && item?.scene) {
@@ -6775,7 +6850,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     return false;
   };
 
-  const bodyViewportEffectIds = new Set(['teleport-core', 'boss-emergence', 'recruitment-result', 'digrion-body-break', 'monthly-schedule', 'job-posting-browse', 'job-application-submit', 'recruitment-application-glitch', 'graduation-portal-sequence', 'diagnosis-glitch', 'semester-time-passage', 'combat-transition', 'digrion-spirit-reveal', 'purification-energy-form', 'purification-launch', 'purification-collision', 'purification-explosion', 'first-monster-birth', 'student-card-shutdown', 'graduation-day-atmosphere', 'graduation-ceremony-background', 'autumn-campus-location-transition']);
+  const bodyViewportEffectIds = new Set(['boss-battle-transition', 'teleport-core', 'boss-emergence', 'recruitment-result', 'digrion-body-break', 'monthly-schedule', 'job-posting-browse', 'job-application-submit', 'recruitment-application-glitch', 'graduation-portal-sequence', 'diagnosis-glitch', 'semester-time-passage', 'combat-transition', 'digrion-spirit-reveal', 'purification-energy-form', 'purification-launch', 'purification-collision', 'purification-explosion', 'first-monster-birth', 'student-card-shutdown', 'graduation-day-atmosphere', 'graduation-ceremony-background', 'autumn-campus-location-transition']);
 
   function itemKeepsPersistentOverlay(item, effectId) {
     return effectId === 'chat-snapshot' || Number(item?.persistDialogueCount || 0) > 0;
@@ -6835,15 +6910,6 @@ function runCustomEffect(item) {
       console.warn(`[StorySystem] 등록되지 않은 커스텀 연출: ${effectId}`);
     }
     state.effectTimer = window.setTimeout(() => {
-      if (HOST_SELECTOR_MODE && effectId === 'boss-battle-transition') {
-        // Keep the existing story index parked here until the real boss is cleared.
-        // No inserted story item: all saved dialogue indices and BGM cues remain valid.
-        state.effectTimer = null;
-        state.currentEffectId = 'boss-running';
-        hooks.onEffectEnd?.({ effectId, item, api });
-        hooks.onEffectStart?.({ effectId:'boss-running', item, api });
-        return;
-      }
       finishEffect(item, effectId);
     }, Math.max(0, Number(item.duration || 1200)));
   }

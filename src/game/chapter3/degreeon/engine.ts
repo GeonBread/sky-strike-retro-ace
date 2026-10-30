@@ -1,4 +1,5 @@
 import {freshNativeWeapon,emitNativeShots,nativeFireInterval,nativeCanFire,moveNativeShot,shotDamage,isNativeBeam} from './nativeWeapon';
+import {bossMapSpeed,type BossMapStage} from '../../render/bossMapScroll';
 import {freshContinuity,requestHandoff,tickHandoff,beginBridge,tickBridge,bossTarget,tickBossPresence,playerFireAllowed} from './continuity';
 import {freshEncounter,startEncounter,startStoryPreview,leaveEncounter,updateEncounter,storyCinematic,advanceEncounterCue,encounterDamage,encounterCueExpired,skipStoryScene} from './encounter';
 import type {StorySound} from './encounter';
@@ -52,7 +53,7 @@ export class Engine {
   motionTime(p:Vec,dt:number,vx=0,vy=0){return timedMotion(this.phase==='active'?this.advanced.zones:[],p,{x:vx,y:vy},dt);}
   get debtEnabled(){return supports(this).has('miss');}
   ctx:CanvasRenderingContext2D; pattern!:Pattern; index=0; stage=0; phase:Phase='intro'; phaseTime=0;
-  t=0; clock=0; beat=0; counter=0; orientation=0; angle=0;
+  t=0; clock=0; bossMapScroll=0; beat=0; counter=0; orientation=0; angle=0;
   rotation=0; rotationDuration=2; fromAngle=0; targetAngle=0; rotationLive=false;
   fieldW=540; fieldH=650; player:Vec={x:CANVAS_CX,y:884}; boss:Vec={x:0,y:-300};
   hazards:Entity[]=[]; shots:Shot[]=[];enemies:WorldActor[]=[];items:WorldActor[]=[]; effects:Effect[]=[]; links:Link[]=[]; lasers:Laser[]=[];
@@ -436,10 +437,20 @@ export class Engine {
     const vals=[cross(a,b),cross(b,c),cross(c,a)];
     return vals.every(v=>v>=0)||vals.every(v=>v<=0)||Math.min(segmentDistance(p,a,b),segmentDistance(p,b,c),segmentDistance(p,c,a))<PLAYER_HIT_RADIUS;
   }
+  get presentationScale(){
+    if(typeof window==='undefined')return 1;
+    return Math.min(window.innerWidth,window.innerHeight)/CANVAS_H;
+  }
   get displayScale(){
     if(typeof window==='undefined')return 1;
-    const base=Math.min(window.innerWidth,window.innerHeight)/CANVAS_H;
+    const base=this.presentationScale;
     return this.pattern.id==='rhythm'?Math.min(base,Math.max(window.innerWidth,window.innerHeight)/1600):base;
+  }
+  get bossMapStage():BossMapStage{
+    const mode=this.encounter.mode;
+    if(this.purification>=0||this.encounter.enabled&&['false-clear','taunt','victory','complete'].includes(mode))return 'defeated';
+    if(this.encounter.enabled&&mode==='awakening')return 'awakening';
+    return (this.encounter.enabled?this.encounter.phase:this.bossForm)===2?'phase2':'phase1';
   }
   bombardSize(){
     if(typeof window==='undefined')return {w:BOMBARD_FIELD_W,h:BOMBARD_FIELD_H};
@@ -460,7 +471,7 @@ export class Engine {
     if(this.bombSpawned>=this.bombTotal&&this.hazards.length===0){this.phase='restore';this.phaseTime=0;this.miss=0;this.missTimer=0;this.pendingBombard=false;this.log('폭격 종료 · 전장 복구');}
   }
   step(dt:number){
-    if(this.paused)return;if(updateEncounter(this,dt)){this.clock+=dt;return;}tickBridge(this,dt);this.syncTimeZones();const playerDt=dt*this.localTime(this.localPlayer()),bossDt=dt*this.localTime(this.boss);this.playerAnimClock+=playerDt;for(const [i,b] of this.bodies().entries())this.bodyAnimClocks[this.bodies().length===3?i:1]+=dt*this.localTime(this.local(b));this.bossAnimClock+=bossDt;this.clock+=dt;this.phaseTime+=dt;this.cooldown=Math.max(0,this.cooldown-playerDt);this.bombCooldown=Math.max(0,this.bombCooldown-playerDt);this.damageFlash=Math.max(0,this.damageFlash-playerDt);this.laneCooldown-=playerDt;this.shake=Math.max(0,this.shake-dt);for(const z of this.advanced.zones)z.clock+=dt*z.scale;
+    if(this.paused)return;this.bossMapScroll+=dt*bossMapSpeed(this.bossMapStage);if(updateEncounter(this,dt)){this.clock+=dt;return;}tickBridge(this,dt);this.syncTimeZones();const playerDt=dt*this.localTime(this.localPlayer()),bossDt=dt*this.localTime(this.boss);this.playerAnimClock+=playerDt;for(const [i,b] of this.bodies().entries())this.bodyAnimClocks[this.bodies().length===3?i:1]+=dt*this.localTime(this.local(b));this.bossAnimClock+=bossDt;this.clock+=dt;this.phaseTime+=dt;this.cooldown=Math.max(0,this.cooldown-playerDt);this.bombCooldown=Math.max(0,this.bombCooldown-playerDt);this.damageFlash=Math.max(0,this.damageFlash-playerDt);this.laneCooldown-=playerDt;this.shake=Math.max(0,this.shake-dt);for(const z of this.advanced.zones)z.clock+=dt*z.scale;
     this.updateSmartBomb(dt);
     if(this.purification>=0){this.purification+=dt;this.resolveSmartBomb();return;}
     if(!this.encounter.enabled&&!this.finalStand.started&&this.bossForm===2&&this.phase==='active'&&(this.finalStand.pending||this.bossHp<=Math.max(1,this.bossHpMax*.01)))this.startFinalStand();
@@ -527,9 +538,10 @@ export class Engine {
     if(plane){
       const scale=this.displayScale;
       plane.style.border=outside||isMenuDeception(this)?'0':'';plane.style.borderRadius=outside||isMenuDeception(this)?'0':'';
-      plane.style.width=expanded?w*scale+'px':'';
-      plane.style.height=expanded?h*scale+'px':'';
-      plane.style.aspectRatio=expanded?w+'/'+h:'';
+      // Explicit dimensions also avoid the canvas's intrinsic width overriding CSS aspect-ratio.
+      plane.style.width=w*scale+'px';
+      plane.style.height=h*scale+'px';
+      plane.style.aspectRatio=w+'/'+h;
     }
     if(plane){const jolt=stormScreenShake(this),stampJolt=stampScreenShake(this),scale=this.displayScale;jolt.x+=stampJolt.x;jolt.y+=stampJolt.y;plane.style.transform=`translate(-50%, -50%) rotate(${this.angle}rad) translate(${jolt.x*scale}px, ${jolt.y*scale}px)`;}
     drawScene(this);

@@ -1,5 +1,5 @@
 import type {Engine} from './engine';
-import {sprite} from './resources';
+import {sprite,playerSprite} from './resources';
 import {drawHpBar,HP_BAR_WIDTH} from './hpBar';
 import {clamp,smooth,BASE_FIELD_W as W,BASE_FIELD_H as H} from './core';
 export const ARRIVAL_SECONDS=6.5,CLEAR_SECONDS=6.4,DEFEAT_SECONDS=14;
@@ -38,7 +38,8 @@ export function drawBossCinema(e:Engine,c:CanvasRenderingContext2D,kind:'arrival
  c.restore();
  const bars=arrival?smooth(t/.65):final?1-smooth((t-10)/3):1;c.fillStyle='#02030be8';c.fillRect(-W/2,-H/2,W,46*bars);c.fillRect(-W/2,H/2-46*bars,W,46*bars);
  c.save();c.globalAlpha=arrival?smooth((t-2.6)/.5):1;c.translate(0,-H/2+62);c.scale(Math.min(1,(W-36)/HP_BAR_WIDTH),1);drawHpBar(c,arrival?cinemaHp(t):0,final?1:0);c.restore();
- c.save();sprite(c,'player',0,404,137,137);c.restore();
+ c.save();playerSprite(c,0,404);c.restore();
  if(arrival&&t>3&&t<5.8){c.save();c.globalAlpha=smooth((t-3)/.5)*(1-smooth((t-5.1)/.7));c.textAlign='center';c.fillStyle='#efd6ff';c.font='28px "Degreeon Black Han"';c.fillText('미졸업의 군주',0,-40);c.font='52px "Degreeon Black Han"';c.fillStyle='#fff0d3';c.fillText('디그리온',0,22);c.restore();}
  if(!arrival&&t>=burst&&release<.28){c.fillStyle=`rgba(255,237,215,${.27*(1-release/.28)})`;c.fillRect(-W/2,-H/2,W,H);}
+ if(arrival&&t<.8){c.fillStyle=`rgba(7,6,17,${1-smooth(t/.8)})`;c.fillRect(-W/2,-H/2,W,H);}
 }

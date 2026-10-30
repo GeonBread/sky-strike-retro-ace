@@ -1,5 +1,5 @@
 import type {Engine} from './engine';
-import {sprite,drawBattleMap} from './resources';
+import {sprite,playerSprite,drawBattleMap} from './resources';
 import {drawHpBar,HP_BAR_WIDTH} from './hpBar';
 import {clamp,smooth,BASE_FIELD_W as W,BASE_FIELD_H as H} from './core';
 export const AWAKEN_SECONDS=12,AWAKEN_REVEAL=5.2;
@@ -31,6 +31,6 @@ export function drawAwakening(e:Engine,c:CanvasRenderingContext2D,t:number){
  // Restrained letterboxing and a title that vanishes before the fourth-wall dialogue.
  const bars=1-smooth((t-10)/2);c.fillStyle='#020109ee';c.fillRect(-fullW/2,-fullH/2,fullW,52*bars);c.fillRect(-fullW/2,fullH/2-52*bars,fullW,52*bars);
  if(t>6.2&&t<10.7){c.save();c.globalAlpha=smooth((t-6.2)/.6)*(1-smooth((t-9.8)/.9));c.textAlign='center';c.font='24px "Degreeon Black Han"';c.fillStyle='#d4b4ed';c.fillText('규칙의 지배자',0,195);c.font='46px "Degreeon Black Han"';c.fillStyle='#ffe9b8';c.fillText('각성 디그리온',0,253);c.restore();}
- c.save();c.translate(0,-H/2+62);c.scale(Math.min(1,(W-36)/HP_BAR_WIDTH),1);drawHpBar(c,p.hp,1);c.restore();sprite(c,'player',0,404,137,137);
+ c.save();c.translate(0,-H/2+62);c.scale(Math.min(1,(W-36)/HP_BAR_WIDTH),1);drawHpBar(c,p.hp,1);c.restore();playerSprite(c,0,404);
  if(t>=AWAKEN_REVEAL&&burst<.24){c.fillStyle=`rgba(255,239,219,${.26*(1-burst/.24)})`;c.fillRect(-fullW/2,-fullH/2,fullW,fullH);}
 }
