@@ -1,3 +1,4 @@
+import { drawScrollingMapDown } from "../render/scrollingMap";
 import { sfx } from "../AudioSystem";
 import { spawnChapter1EnemyHitEffectSystem } from "../chapter1/chapter1WaveImpactSystem";
 
@@ -26,7 +27,7 @@ const MAX_PARTICLES = 220;
 const MAX_VANISHES = 72;
 const chapter2WaveBackground = typeof Image !== "undefined" ? new Image() : null;
 if (chapter2WaveBackground) {
-  chapter2WaveBackground.src = "/assets/chapter2/story/backgrounds/bg_ch2_library_exterior_sunset.png";
+  chapter2WaveBackground.src = "/assets/chapter2/combat/backgrounds/chapter2_wave_map.png";
 }
 
 function drawChapter2WaveBackground(engine: any): void {
@@ -35,10 +36,7 @@ function drawChapter2WaveBackground(engine: any): void {
   const context = engine?.ctx as CanvasRenderingContext2D | undefined;
   if (!canvas || !context) return;
   if (image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0) {
-    const scale = Math.max(canvas.width / image.naturalWidth, canvas.height / image.naturalHeight);
-    const dw = image.naturalWidth * scale;
-    const dh = image.naturalHeight * scale;
-    context.drawImage(image, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+    drawScrollingMapDown(context, image, canvas.width, canvas.height, time, 8);
   } else {
     context.fillStyle = "#050914";
     context.fillRect(0, 0, canvas.width, canvas.height);

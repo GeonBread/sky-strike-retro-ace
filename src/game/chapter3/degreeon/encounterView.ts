@@ -2,7 +2,7 @@ import {drawAwakening} from './awakeningCinema';
 import {drawBossCinema,ARRIVAL_SECONDS} from './bossCinema';
 import type {Engine} from './engine';
 import {clamp,smooth,BASE_FIELD_W,BASE_FIELD_H} from './core';
-import {sprite} from './resources';
+import {sprite,drawBattleMap} from './resources';
 import {drawHpBar,HP_BAR_WIDTH} from './hpBar';
 export function drawEncounterScene(e:Engine){const c=e.ctx,s=e.encounter,v=e.gridSize(),w=Math.round(v.w),h=Math.round(v.h),scale=e.displayScale;
  if(e.canvas.width!==w)e.canvas.width=w;if(e.canvas.height!==h)e.canvas.height=h;const plane=e.canvas.parentElement;
@@ -11,7 +11,7 @@ export function drawEncounterScene(e:Engine){const c=e.ctx,s=e.encounter,v=e.gri
  const still=s.mode==='threat'&&s.line===2,age=s.mode==='complete'?5:still?0:s.age,awaken=s.mode==='awakening',t=awaken?s.age:0,after=s.phase===2||['threat','last-warning','victory','complete'].includes(s.mode),clear=s.mode==='false-clear',win=s.mode==='victory'||s.mode==='complete';
  const k=clear?smooth(age/.9):1,fw=clear?s.sceneFrom.w+(BASE_FIELD_W-s.sceneFrom.w)*k:BASE_FIELD_W,fh=clear?s.sceneFrom.h+(BASE_FIELD_H-s.sceneFrom.h)*k:BASE_FIELD_H;
  const hit=awaken&&t>=3.2?Math.exp(-(t-3.2)*3)*8:0;c.translate(Math.sin(t*107)*hit,Math.cos(t*89)*hit*.65);c.rotate(clear?s.sceneFrom.angle*(1-k):0);
- c.fillStyle='#191025';c.fillRect(-fw/2,-fh/2,fw,fh);sprite(c,'bg',0,0,fw,fh);
+ c.fillStyle='#191025';c.fillRect(-fw/2,-fh/2,fw,fh);drawBattleMap(e,c,fw,fh);
  if(s.mode==='complete'){c.save();c.globalAlpha=clear?smooth(age/3.8)*.7:smooth(age/3);sprite(c,'pure',0,0,fw,fh);c.restore();}
  c.fillStyle='#08061244';c.fillRect(-fw/2,-fh/2,fw,fh);c.strokeStyle=after?'#ce87f566':'#a6a0ca55';c.lineWidth=2;c.strokeRect(-fw/2,-fh/2,fw,fh);
  if(clear||s.mode==='victory'||s.mode==='complete'||s.mode==='opening'&&s.age<ARRIVAL_SECONDS){drawBossCinema(e,c,clear?'clear':s.mode==='victory'||s.mode==='complete'?'defeat':'arrival',s.mode==='complete'?16:s.age);c.restore();return;}

@@ -1,5 +1,5 @@
 import type {Engine} from './engine';
-import {sprite} from './resources';
+import {sprite,drawBattleMap} from './resources';
 import {drawHpBar,HP_BAR_WIDTH} from './hpBar';
 import {clamp,smooth,BASE_FIELD_W as W,BASE_FIELD_H as H} from './core';
 export const AWAKEN_SECONDS=12,AWAKEN_REVEAL=5.2;
@@ -8,7 +8,7 @@ export function drawAwakening(e:Engine,c:CanvasRenderingContext2D,t:number){
  const fullW=e.canvas.width,fullH=e.canvas.height,p=awakeningPose(t),burst=Math.max(0,t-AWAKEN_REVEAL),dark=1-smooth((t-5.4)/3);
  c.fillStyle=`rgba(2,1,9,${.78*dark})`;c.fillRect(-fullW/2,-fullH/2,fullW,fullH);
  // The arena breaks into radial glass plates: use the real background inside each shard.
- if(t>4.2&&t<8.6){const k=smooth((t-4.2)/3.7);for(let i=0;i<12;i++){const a=i*Math.PI/6,b=a+Math.PI/6,drift=k*(80+i%3*40);c.save();c.translate(Math.cos(a+.25)*drift,Math.sin(a+.25)*drift*.6);c.globalAlpha=(1-smooth((t-6.2)/2.4))*.65;c.beginPath();c.moveTo(0,-140);c.lineTo(Math.cos(a)*1000,-140+Math.sin(a)*1000);c.lineTo(Math.cos(b)*1000,-140+Math.sin(b)*1000);c.closePath();c.clip();sprite(c,'bg',0,0,W,H);c.strokeStyle='#c8a3ef';c.lineWidth=2;c.stroke();c.restore();}}
+ if(t>4.2&&t<8.6){const k=smooth((t-4.2)/3.7);for(let i=0;i<12;i++){const a=i*Math.PI/6,b=a+Math.PI/6,drift=k*(80+i%3*40);c.save();c.translate(Math.cos(a+.25)*drift,Math.sin(a+.25)*drift*.6);c.globalAlpha=(1-smooth((t-6.2)/2.4))*.65;c.beginPath();c.moveTo(0,-140);c.lineTo(Math.cos(a)*1000,-140+Math.sin(a)*1000);c.lineTo(Math.cos(b)*1000,-140+Math.sin(b)*1000);c.closePath();c.clip();drawBattleMap(e,c,W,H);c.strokeStyle='#c8a3ef';c.lineWidth=2;c.stroke();c.restore();}}
  const shake=t>=AWAKEN_REVEAL?10*Math.exp(-burst*1.6):t>3?Math.min(2,(t-3)*.9):0;
  c.save();c.translate(Math.sin(t*101)*shake,Math.cos(t*129)*shake*.6);
  // Falling remnants reverse their velocity and spiral into the extinguished core.

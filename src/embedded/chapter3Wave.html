@@ -343,12 +343,7 @@ function preloadSprite(path){
  if(spriteCache[path])return spriteCache[path];
  const img=new Image();img.src=path;spriteCache[path]=img;return img;
 }
-const CHAPTER1_BG_PATHS=[
- '/assets/common/backgrounds/chapter1_parallax_layer_1.png',
- '/assets/common/backgrounds/chapter1_parallax_layer_2.png',
- '/assets/common/backgrounds/chapter1_parallax_layer_3.png'
-];
-const CHAPTER1_BG_IMAGES=CHAPTER1_BG_PATHS.map(preloadSprite);
+const CHAPTER3_BG_IMAGES=[preloadSprite('/assets/chapter3/combat/backgrounds/chapter3_wave_map.png')];
 const HOBANWOO_PLAYER_SPRITE='/assets/common/player/hobanu_player.png';
 const PLAYER_SHOT_SPRITES=[
  '/assets/common/player/bullets/science_gear.png',
@@ -2299,8 +2294,13 @@ function update(dt){
  }else if(!isWaveDone())waveClearTimer=0;
 }
 
-function drawParallaxLayer(img,speed,alpha=1){if(!img||!img.complete||!img.naturalWidth)return false;const offset=(mapScroll*speed)%H;ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(img,0,offset-H,W,H);ctx.drawImage(img,0,offset,W,H);ctx.restore();return true;}
-function drawBG(){ctx.fillStyle='#07101a';ctx.fillRect(0,0,W,H);let drawn=false;drawn=drawParallaxLayer(CHAPTER1_BG_IMAGES[0],8,1)||drawn;drawn=drawParallaxLayer(CHAPTER1_BG_IMAGES[1],18,.94)||drawn;drawn=drawParallaxLayer(CHAPTER1_BG_IMAGES[2],34,.96)||drawn;if(!drawn){ctx.fillStyle='#070a12';ctx.fillRect(0,0,W,H);}ctx.fillStyle='rgba(5,8,14,.10)';ctx.fillRect(0,0,W,H);}
+function drawParallaxLayer(img,speed,alpha=1){
+ if(!img||!img.complete||!img.naturalWidth||!img.naturalHeight)return false;
+ const scale=Math.max(W/img.naturalWidth,H/img.naturalHeight),dw=img.naturalWidth*scale,dh=img.naturalHeight*scale,x=(W-dw)/2;
+ const offset=(((mapScroll*speed)%dh)+dh)%dh,baseY=offset-dh;
+ ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(img,x,baseY,dw,dh);ctx.drawImage(img,x,baseY+dh,dw,dh);ctx.drawImage(img,x,baseY-dh,dw,dh);ctx.restore();return true;
+}
+function drawBG(){ctx.fillStyle='#07101a';ctx.fillRect(0,0,W,H);drawParallaxLayer(CHAPTER3_BG_IMAGES[0],8,1);ctx.fillStyle='rgba(5,8,14,.10)';ctx.fillRect(0,0,W,H);}
 function circle(x,y,r,fill,stroke=null,lw=2){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}}
 function label(text,x,y,size=10,color='#fff'){ctx.fillStyle=color;ctx.font=`700 ${size}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,x,y);}
 
