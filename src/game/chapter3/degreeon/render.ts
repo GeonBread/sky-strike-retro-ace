@@ -1,4 +1,5 @@
 import {playerHoverPose} from './playerHover';
+import {drawFlightPresence} from './flightPresence';
 import {drawNativeShot} from './nativeWeapon';
 import {isMenuDeception,drawMenuScene} from './menuDeception';
 import { drawAdvanced, drawSeed, exileOverlay, activeLaserSegments } from './advanced';
@@ -38,6 +39,9 @@ function drawCutPieces(e:Engine,c:CanvasRenderingContext2D){
 }
 function drawBoss(e:Engine,c:CanvasRenderingContext2D,bossScale:number){
   if(e.phase==='bombard'||e.phase==='restore')return;
+  const flightOpacity=e.pattern.id==='flight'?e.flightPresence.opacity:1;
+  if(flightOpacity<=0)return;
+  bossScale*=.8+.2*flightOpacity;
   if(!e.encounter.enabled&&e.pattern.id==='outside-hands'&&e.phase==='active'){bossScale*=1-smooth(e.unseen.hands.age/.65);if(bossScale<.01)return;}
   if(!e.encounter.enabled&&e.pattern.id==='graduation-gate'&&e.phase==='active'&&e.unseen.gate.phase!=='expose')return;
   if(e.encounter.enabled)bossScale*=e.bossVisibility;
@@ -46,12 +50,13 @@ function drawBoss(e:Engine,c:CanvasRenderingContext2D,bossScale:number){
     c.shadowColor='#a678ed';c.shadowBlur=22;
     const desired=e.encounter.enabled?e.bossVisualSize:(e.pattern.id==='split8'?138:268)*(e.bossForm===2?1.12:1);
     const size=Math.min(desired,Math.max(110,(e.fieldH/2-Math.abs(e.boss.y)-6)*2));
-    c.globalAlpha=e.purification>=0?Math.max(0,1-e.purification/2):1;
+    c.globalAlpha=flightOpacity*(e.purification>=0?Math.max(0,1-e.purification/2):1);
     const ok=sprite(c,e.bossForm===1?'boss1':'boss2',0,0,size,size);
     c.restore();if(ok)return;
   }
   const visual=e.pattern.id==='split8'?1.65:3.65;
   c.save();c.translate(e.boss.x,e.boss.y);c.scale(bossScale*visual,bossScale*visual);c.rotate(Math.sin(e.bossAnimClock*.8)*.035);c.strokeStyle='#ccafff';c.fillStyle='#33234b';c.shadowColor='#a678ed';c.shadowBlur=12;c.lineWidth=.8;
+  c.globalAlpha=flightOpacity;
   poly(c,[{x:0,y:-33},{x:32,y:-12},{x:23,y:26},{x:0,y:36},{x:-23,y:26},{x:-32,y:-12}]);c.fill();c.stroke();
   c.strokeStyle='#8961ad';c.lineWidth=.7;ring(c,{x:0,y:0},44+Math.sin(e.bossAnimClock*2)*2);c.fillStyle='#f2e0ff';c.fillRect(-13,-3,9,3);c.fillRect(4,-3,9,3);c.restore();
 }
@@ -191,7 +196,7 @@ export function drawScene(e:Engine){
   for(const shot of e.shots)drawNativeShot(e,c,shot);c.shadowBlur=0;
   for(const a of e.enemies){c.save();c.translate(a.x,a.y);c.rotate(Math.sin(a.age*2)*.15);c.fillStyle=a.color;c.strokeStyle='#f0dcff';c.shadowColor=a.color;c.shadowBlur=12;poly(c,[{x:0,y:-a.r},{x:a.r,y:0},{x:0,y:a.r},{x:-a.r,y:0}]);c.fill();c.stroke();c.restore();}
   for(const a of e.items){c.save();c.translate(a.x,a.y);c.rotate(a.age);c.strokeStyle=a.color;c.fillStyle=a.color+'44';c.lineWidth=2;poly(c,[{x:0,y:-a.r},{x:a.r,y:0},{x:0,y:a.r},{x:-a.r,y:0}]);c.fill();c.stroke();c.rotate(-a.age);c.fillStyle=a.color;c.font='bold 13px '+font;c.textAlign='center';c.fillText(a.item==='life'?'L':a.item==='bomb'?'B':'E',0,5);c.restore();}
-  const bossScale=e.encounter.enabled?1:e.phase==='intro'?smooth(e.phaseTime/.9):e.phase==='outro'?1-smooth(e.phaseTime/1.8):1;drawBoss(e,c,bossScale);
+  const bossScale=e.encounter.enabled||e.pattern.id==='flight'?1:e.phase==='intro'?smooth(e.phaseTime/.9):e.phase==='outro'?1-smooth(e.phaseTime/1.8):1;drawBoss(e,c,bossScale);drawFlightPresence(e,c);
   for(const f of e.effects){const k=f.age/f.life;c.save();c.strokeStyle=f.color;c.fillStyle=f.color;c.globalAlpha=1-k;c.shadowColor=f.color;c.shadowBlur=15;c.lineWidth=2;if(f.kind==='lane'){ring(c,f,10+k*f.radius);c.globalAlpha=(1-k)*.25;c.fillRect(f.x-e.fieldW/10+5,-e.fieldH/2,e.fieldW/5-10,e.fieldH);c.globalAlpha=1-k;c.lineWidth=4;line(c,{x:f.x,y:f.y-k*220},{x:f.x,y:f.y+k*220});c.lineWidth=1;line(c,{x:f.x-12,y:f.y-k*180},{x:f.x-12,y:f.y+k*180});line(c,{x:f.x+12,y:f.y-k*180},{x:f.x+12,y:f.y+k*180});}else if(f.kind==='burst'){ring(c,f,8+f.radius*k);for(let i=0;i<9;i++){const a=i*2.399+f.x*.1,d=f.radius*k;c.fillRect(f.x+Math.cos(a)*d-2,f.y+Math.sin(a)*d-2,4,4);}}else{ring(c,f,5+f.radius*k);ring(c,f,3+f.radius*k*.65);if(f.kind==='bomb'){c.globalAlpha=(1-k)*.16;c.beginPath();c.arc(f.x,f.y,f.radius*k,0,Math.PI*2);c.fill();}}c.restore();}
   c.restore();c.restore();
   const outside=exileOverlay(e,c);

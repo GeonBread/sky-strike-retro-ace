@@ -6243,6 +6243,7 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
     el.dialogueLayer.classList.remove('is-opening');
     el.stage.classList.remove('has-dialogue', 'is-speaking-line', 'has-word-crash-dialogue');
     state.dialogueOpen = false;
+    removeGlobalEffectActorOverlay();
   }
 
   const dialogueHome = {
@@ -6276,6 +6277,11 @@ window.STORY_CUSTOM_EFFECTS['graduation-portal-static-zoom'] = ({layer}) => {
   }
 
   function syncGlobalEffectActorOverlay(item, speakerId) {
+    // A queued dialogue paint must never recreate its actor above a cinematic.
+    if (!state.dialogueOpen || state.effectRunning || state.items[state.index] !== item) {
+      removeGlobalEffectActorOverlay();
+      return;
+    }
     const persistentBodyEffect = document.querySelector('.story-body-effect-host[data-persistent-dialogue="true"]');
     const hasBlockingGlobalEffect = Boolean(document.querySelector('.c2-word-crash-global-host, .story-body-effect-host, .story-global-effect-layer[aria-hidden="false"] > .ch3-effect'));
     const shouldShowOverlayActor = Boolean(persistentBodyEffect || hasBlockingGlobalEffect);

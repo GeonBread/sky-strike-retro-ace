@@ -49,6 +49,7 @@ export function tickHandoff(e:Engine,dt:number){
   e.cutPolygon=f.cutFrom.map((p,i)=>{const q=rayPoint(rect,i*Math.PI*2/64);return{x:p.x+(q.x-p.x)*k,y:p.y+(q.y-p.y)*k};});
  }
  if(!attackSettled(e)){f.settledAge=0;return;}f.settledAge+=dt;
+ if(e.pattern.id==='flight'&&e.flightPresence.state!=='visible')return;
  if(['inspection','graduation-gate','split8','path-fold','outside-hands'].includes(e.pattern.id)&&f.settledAge<.5)return;
  if(e.rotation>0||e.fieldWarpEnabled&&e.fieldWarp.mode!=='hold'||e.cutTelegraph||e.cutEnabled&&f.cutAge<1.1||e.recycle.bank.length)return;
  if(['portals','magnet','time'].some(id=>e.selectedSupports.has(id))&&f.age<.7)return;

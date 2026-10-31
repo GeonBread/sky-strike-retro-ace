@@ -3,19 +3,21 @@ import type {Shot} from './core';
 import { drawBombEffects } from './bomb';
 import type { Engine } from './engine';
 import { clamp, smooth, distance, segmentDistance, Vec } from './core';
+export const EXILE_MAX_ENEMIES=128;
+const EXILE_INITIAL_ENEMIES=112;
 export type Exile={state:'grab'|'throw'|'drift'|'explore'|'enter'|'return'|'done';age:number;detached:boolean;viewW:number;viewH:number;camera:Vec;world:Vec;velocity:Vec;initialVelocity:Vec;flightStart:Vec;breakAt:Vec;travel:number;portal:Vec;w:number;h:number;spawn:number;from:Vec;entryFrom:Vec;enemies:(Vec&{hp:number;age:number;vx:number;vy:number})[];shots:Shot[];fire:number;heading:number;returned:boolean;bombOrigin:Vec|null};
 export function freshExile():Exile{return {state:'grab',age:0,detached:false,viewW:1600,viewH:960,camera:{x:0,y:0},world:{x:0,y:0},velocity:{x:0,y:0},initialVelocity:{x:0,y:0},flightStart:{x:0,y:0},breakAt:{x:0,y:0},travel:0,portal:{x:0,y:0},w:0,h:0,spawn:0,from:{x:0,y:0},entryFrom:{x:0,y:0},enemies:[],shots:[],fire:0,heading:0,returned:false,bombOrigin:null};}
 export function exileOutside(e:Engine){return e.pattern.id==='exile'&&e.phase==='active'&&e.advanced.exile.detached;}
 export function enterExile(e:Engine){const size=e.gridSize(),x=e.advanced.exile;x.viewW=size.w;x.viewH=size.h;x.w=size.w*1.75;x.h=size.h*1.6;x.from=e.localPlayer();x.portal={x:x.w*.29,y:-x.h*.28};e.cooldown=5;}
 export function seedExileEnemies(e:Engine){
  const x=e.advanced.exile,landing={x:x.flightStart.x+x.initialVelocity.x*1.85/3,y:x.flightStart.y+x.initialVelocity.y*1.85/3};
- const spacing=Math.max(145-e.stage*5,Math.sqrt(x.w*x.h/300)),cols=Math.ceil(x.w/spacing),rows=Math.ceil(x.h/spacing);x.enemies=[];
+ const cols=Math.max(1,Math.ceil(Math.sqrt(EXILE_INITIAL_ENEMIES*x.w/x.h))),rows=Math.max(1,Math.floor(EXILE_INITIAL_ENEMIES/cols));x.enemies=[];
  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
   const p={x:-x.w/2+(col+.5+(e.random()-.5)*.45)*x.w/cols,y:-x.h/2+(row+.5+(e.random()-.5)*.45)*x.h/rows};
   if(distance(p,landing)<175||distance(p,x.portal)<100)continue;
   x.enemies.push({...p,hp:2,age:1,vx:0,vy:0});
  }
- x.enemies=x.enemies.slice(0,360);x.spawn=.65;
+ x.spawn=.65;
 }
 function setState(e:Engine,state:Exile['state']){
  const x=e.advanced.exile;x.state=state;x.age=0;
@@ -41,12 +43,12 @@ export function updateExile(e:Engine,dt:number){
   x.travel=distance(x.world,x.flightStart);e.playerFacing=x.heading+Math.sin(k*Math.PI)*-.65;
   if(k>=1){x.velocity={x:0,y:0};setState(e,'explore');e.log('전체 화면 바깥 공간 · 방향키 유영 · SPACE 사격 · 포탈 탐색');}
  }else if(x.state==='explore'){
-  x.spawn-=dt;if(x.spawn<=0){x.spawn=.18-e.stage*.02;const side=Math.floor(e.random()*4),pos=e.random()-.5;
-   const rx=x.viewW*.58,ry=x.viewH*.58,p=side===0?{x:x.world.x+pos*x.viewW,y:x.world.y-ry}:side===1?{x:x.world.x+rx,y:x.world.y+pos*x.viewH}:side===2?{x:x.world.x+pos*x.viewW,y:x.world.y+ry}:{x:x.world.x-rx,y:x.world.y+pos*x.viewH};p.x=clamp(p.x,-x.w/2+30,x.w/2-30);p.y=clamp(p.y,-x.h/2+30,x.h/2-30);x.enemies.push({...p,vx:0,vy:0,hp:2,age:0});}
+  x.spawn-=dt;if(x.spawn<=0){x.spawn=.65-e.stage*.08;if(x.enemies.length<EXILE_MAX_ENEMIES){const side=Math.floor(e.random()*4),pos=e.random()-.5;
+   const rx=x.viewW*.58,ry=x.viewH*.58,p=side===0?{x:x.world.x+pos*x.viewW,y:x.world.y-ry}:side===1?{x:x.world.x+rx,y:x.world.y+pos*x.viewH}:side===2?{x:x.world.x+pos*x.viewW,y:x.world.y+ry}:{x:x.world.x-rx,y:x.world.y+pos*x.viewH};p.x=clamp(p.x,-x.w/2+30,x.w/2-30);p.y=clamp(p.y,-x.h/2+30,x.h/2-30);x.enemies.push({...p,vx:0,vy:0,hp:2,age:0});}}
   for(const m of x.enemies){m.age+=dt;const d=distance(m,x.world)||1,sp=19+e.stage*4;m.vx=(x.world.x-m.x)/d*sp;m.vy=(x.world.y-m.y)/d*sp;m.x+=m.vx*dt;m.y+=m.vy*dt;if(d<28)e.hit('화면 밖 오염 군집');}
   x.fire-=dt;if((e.keys.has(' ')||e.autoFire)&&x.fire<=0&&nativeCanFire(e)){x.fire=nativeFireInterval(e);x.shots.push(...emitNativeShots(e,x.world,x.heading));}
-  for(const s of x.shots){moveNativeShot(e,s,dt);const prev={x:s.x,y:s.y};s.age+=dt;s.x+=(s.vx??0)*dt;s.y+=s.vy*dt;const beam=isNativeBeam(s);const m=beam?[...x.enemies].filter(m=>m.hp>0).sort((a,b)=>distance(a,x.world)-distance(b,x.world))[0]:x.enemies.find(m=>m.hp>0&&segmentDistance(m,prev,s)<24);if(m&&(!beam||e.clock>=(s.beamNextHit??0))){m.hp-=shotDamage(s);if(beam)s.beamNextHit=e.clock+.12;else s.age=10;}}
-  x.shots=x.shots.filter(s=>s.age<3);x.enemies=x.enemies.filter(m=>m.hp>0&&m.age<150).slice(-360);
+  for(const s of x.shots){moveNativeShot(e,s,dt);if(s.age>=3)continue;const prev={x:s.x,y:s.y};s.age+=dt;s.x+=(s.vx??0)*dt;s.y+=s.vy*dt;const beam=isNativeBeam(s);const m=beam?nearestExileEnemy(x):x.enemies.find(m=>m.hp>0&&segmentDistance(m,prev,s)<24);if(m&&(!beam||e.clock>=(s.beamNextHit??0))){m.hp-=shotDamage(s);if(beam)s.beamNextHit=e.clock+.12;else s.age=10;}}
+  x.shots=x.shots.filter(s=>s.age<3);x.enemies=x.enemies.filter(m=>m.hp>0&&m.age<150);
   if(distance(x.world,x.portal)<58){x.entryFrom={...x.world};setState(e,'enter');e.log('복귀 포탈 진입');}
  }else if(x.state==='enter'){
   const k=smooth(x.age/.9);x.world={x:x.entryFrom.x+(x.portal.x-x.entryFrom.x)*k,y:x.entryFrom.y+(x.portal.y-x.entryFrom.y)*k};
@@ -65,6 +67,25 @@ export function moveExile(e:Engine,dt:number,dx:number,dy:number){
 }
 /** Position of the original screen in the whole-browser view, always receding right. */
 export function exileProjection(x:Exile){return {x:x.viewW/2-x.camera.x+x.travel*.7,y:x.viewH/2-x.camera.y-x.travel*.12,scale:1/(1+(x.travel/220)**1.8)};}
+function nearestExileEnemy(x:Exile){
+ let best:Exile['enemies'][number]|undefined,bestD=Infinity;
+ for(const m of x.enemies){if(m.hp<=0)continue;const d=(m.x-x.world.x)**2+(m.y-x.world.y)**2;if(d<bestD){best=m;bestD=d;}}
+ return best;
+}
+let enemySprites:HTMLCanvasElement[]|null=null;
+function enemySprite(damaged:boolean){
+ if(!enemySprites){
+  enemySprites=[false,true].map(hit=>{
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=96;
+   const c=canvas.getContext('2d')!;c.translate(48,48);c.shadowColor='#be6dee';c.shadowBlur=12;
+   c.fillStyle=hit?'#e7a9fd':'#7d3eaa';c.strokeStyle='#d09be9';c.lineWidth=2;c.beginPath();
+   for(let i=0;i<8;i++){const a=i*Math.PI/4,r=i%2?15:27;i?c.lineTo(Math.cos(a)*r,Math.sin(a)*r):c.moveTo(Math.cos(a)*r,Math.sin(a)*r);}
+   c.closePath();c.fill();c.stroke();return canvas;
+  });
+ }
+ return enemySprites[Number(damaged)];
+}
+export function exileEnemyVisible(x:Exile,m:Vec){return Math.abs(m.x-x.camera.x)<x.viewW/2+48&&Math.abs(m.y-x.camera.y)<x.viewH/2+48;}
 export function exileOverlay(e:Engine,c:CanvasRenderingContext2D):boolean{
  if(e.pattern.id!=='exile'||e.phase!=='active')return false;const x=e.advanced.exile;
  if(x.state==='grab'){const a=e.screen(e.boss),b=e.player;c.save();c.strokeStyle='#c188ff';c.lineWidth=10;c.shadowColor='#bc79ff';c.shadowBlur=18;c.beginPath();c.moveTo(a.x,a.y);c.quadraticCurveTo(a.x+140,b.y,b.x,b.y);c.stroke();c.strokeStyle='#efcaff';c.lineWidth=3;c.beginPath();c.ellipse(b.x,b.y,50,62,0,0,Math.PI*2);c.stroke();c.restore();}
@@ -74,19 +95,19 @@ export function exileOverlay(e:Engine,c:CanvasRenderingContext2D):boolean{
 export function drawExile(e:Engine,c:CanvasRenderingContext2D,drawPlayer:(p:Vec)=>void,drawArena:()=>void){
  const x=e.advanced.exile,w=x.viewW,h=x.viewH,panel=exileProjection(x);c.save();c.fillStyle='#080718';c.fillRect(0,0,w,h);
  const speed=Math.hypot(x.velocity.x,x.velocity.y),streak=x.state==='drift'?speed*.075:3;
- for(let i=0;i<180;i++){const px=((i*137.79-x.camera.x*.28)%w+w)%w,py=((i*87.73-x.camera.y*.28)%h+h)%h;c.strokeStyle=i%2?'#9465d066':'#dba8ef44';c.lineWidth=1+i%2;c.beginPath();c.moveTo(px,py);c.lineTo(px+streak,py-streak*.16);c.stroke();}
+ for(let group=0;group<2;group++){c.strokeStyle=group?'#9465d066':'#dba8ef44';c.lineWidth=1+group;c.beginPath();for(let i=group;i<180;i+=2){const px=((i*137.79-x.camera.x*.28)%w+w)%w,py=((i*87.73-x.camera.y*.28)%h+h)%h;c.moveTo(px,py);c.lineTo(px+streak,py-streak*.16);}c.stroke();}
  // The intact arena keeps its original artwork and HUD while moving off to the right.
  c.save();c.translate(panel.x,panel.y);c.scale(panel.scale,panel.scale);drawArena();c.restore();
  c.save();c.translate(w/2-x.camera.x,h/2-x.camera.y);
-  for(const m of x.enemies){c.save();c.translate(m.x,m.y);c.rotate(m.age*.3);c.globalAlpha=smooth(m.age/.7);c.shadowColor='#be6dee';c.shadowBlur=12;c.fillStyle=m.hp<2?'#e7a9fd':'#7d3eaa';c.strokeStyle='#d09be9';c.lineWidth=2;c.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,r=i%2?15:27;i?c.lineTo(Math.cos(a)*r,Math.sin(a)*r):c.moveTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();c.restore();}
+  for(const m of x.enemies){if(!exileEnemyVisible(x,m))continue;c.save();c.translate(m.x,m.y);c.rotate(m.age*.3);c.globalAlpha=smooth(m.age/.7);c.drawImage(enemySprite(m.hp<2),-48,-48);c.restore();}
  if(x.state==='drift'){
   const k=clamp(x.age/1.85,0,1);c.save();c.translate(x.breakAt.x,x.breakAt.y);
   for(let i=0;i<30;i++){const a=i*2.399,r=25+k*(70+i*5);c.save();c.translate(Math.cos(a)*r,Math.sin(a)*r);c.rotate(a+k*3);c.globalAlpha=(1-k)*.85;c.fillStyle=i%3?'#603c9e':'#d6b9ff';c.beginPath();c.moveTo(-9,-18);c.lineTo(14,-4);c.lineTo(4,20);c.closePath();c.fill();c.restore();}c.restore();
   c.save();c.globalAlpha=(1-k)*.55;c.strokeStyle='#e3baff';c.lineWidth=4;c.beginPath();c.moveTo(x.world.x+45,x.world.y-8);c.lineTo(x.world.x+45+streak*3,x.world.y-8-streak*.5);c.stroke();c.restore();
  }else{
   c.strokeStyle='#6d4a9144';c.lineWidth=3;c.strokeRect(-x.w/2,-x.h/2,x.w,x.h);c.strokeStyle='#6b478418';c.lineWidth=1;
-  for(let xx=-x.w/2;xx<x.w/2;xx+=140){c.beginPath();c.moveTo(xx,-x.h/2);c.lineTo(xx,x.h/2);c.stroke();}
-  for(let yy=-x.h/2;yy<x.h/2;yy+=140){c.beginPath();c.moveTo(-x.w/2,yy);c.lineTo(x.w/2,yy);c.stroke();}
+  c.beginPath();for(let xx=-x.w/2;xx<x.w/2;xx+=140){c.moveTo(xx,-x.h/2);c.lineTo(xx,x.h/2);}
+  for(let yy=-x.h/2;yy<x.h/2;yy+=140){c.moveTo(-x.w/2,yy);c.lineTo(x.w/2,yy);}c.stroke();
 
   for(const s of x.shots)drawNativeShot(e,c,s);
   c.save();c.translate(x.portal.x,x.portal.y);c.shadowColor='#76ffe0';c.shadowBlur=30;c.strokeStyle='#8affde';c.lineWidth=6;c.beginPath();c.ellipse(0,0,54,78,0,0,Math.PI*2);c.stroke();c.lineWidth=2;

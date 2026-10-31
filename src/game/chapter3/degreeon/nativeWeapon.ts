@@ -8,12 +8,23 @@ import type {Engine} from './engine';
 import type {Shot,Vec} from './core';
 export type NativeWeapon={style:PlayerWeaponStyle;color:string;power:number;shotIndex:number};
 export const freshNativeWeapon=():NativeWeapon=>({style:'science',color:'blue',power:1,shotIndex:0});
-function runtime(e:Engine,p:Vec,bullets:Bullet[]=[]){
+type NativeTarget={active:boolean;x:number;y:number;width:number;height:number};
+const exileTargets=new WeakMap<Engine,{clock:number;source:Engine['advanced']['exile']['enemies'];count:number;targets:NativeTarget[]}>();
+function targetsFor(e:Engine,outside:boolean,menu:boolean):NativeTarget[]{
+ if(outside){
+  const source=e.advanced.exile.enemies,cached=exileTargets.get(e);
+  if(cached&&cached.clock===e.clock&&cached.source===source&&cached.count===source.length)return cached.targets;
+  const targets=source.map(a=>({active:a.hp>0,x:a.x-24,y:a.y-24,width:48,height:48}));
+  exileTargets.set(e,{clock:e.clock,source,count:source.length,targets});return targets;
+ }
+ const targets=menu?(e.menuDeception.wave?.snapshot??[]).map(a=>({...a,r:24})):e.enemies;
+ return targets.map(a=>({active:a.hp>0,x:a.x-a.r,y:a.y-a.r,width:a.r*2,height:a.r*2}));
+}
+function runtime(e:Engine,p:Vec,bullets:Bullet[]=[],needsTargets=false){
  const size=48;
  const outside=e.pattern.id==='exile'&&e.advanced.exile.detached;
  const menu=e.pattern.id.startsWith('menu-deception');
- const targets=outside?e.advanced.exile.enemies.map(a=>({...a,r:24})):menu?(e.menuDeception.wave?.snapshot??[]).map(a=>({...a,r:24})):e.enemies;
- const r:any={player:{x:p.x-size/2,y:p.y-size/2,width:size,height:size,powerLevel:e.nativeWeapon.power,weaponStyle:e.nativeWeapon.style,color:e.nativeWeapon.color},bullets,playerWeaponShotIndex:e.nativeWeapon.shotIndex,enemies:targets.map(a=>({active:a.hp>0,x:a.x-a.r,y:a.y-a.r,width:a.r*2,height:a.r*2})),bossEntity:{active:!outside&&!menu&&!e.storyInputLocked&&e.bossVisibility>.1,x:e.boss.x-52,y:e.boss.y-52,width:104,height:104}};
+ const r:any={player:{x:p.x-size/2,y:p.y-size/2,width:size,height:size,powerLevel:e.nativeWeapon.power,weaponStyle:e.nativeWeapon.style,color:e.nativeWeapon.color},bullets,playerWeaponShotIndex:e.nativeWeapon.shotIndex,enemies:needsTargets?targetsFor(e,outside,menu):[],bossEntity:{active:!outside&&!menu&&!e.storyInputLocked&&e.bossVisibility>.1&&e.flightPresence.opacity>.1,x:e.boss.x-52,y:e.boss.y-52,width:104,height:104}};
  r.addPlayerBlt=(...args:any[])=>addPlayerBulletEntitySystem(r,...args as [number,number,number,number,number,number,string,number,any]);
  return r;
 }
@@ -31,13 +42,13 @@ export function emitNativeShots(e:Engine,p:Vec,heading=0):Shot[]{
 export function moveNativeShot(e:Engine,s:Shot,dt:number){
  if(!s.native)return;
  const b=s.native;b.x=s.x-b.width/2;b.y=s.y-b.height/2;b.vx=s.vx??0;b.vy=s.vy;
- updatePlayerWeaponBulletMotionSystem(runtime(e,e.localPlayer(),[b]),dt);
+ updatePlayerWeaponBulletMotionSystem(runtime(e,e.localPlayer(),[b],!!b.playerBulletHoming),dt);
  s.vx=b.vx;s.vy=b.vy;if(!b.active)s.age=100;
 }
 export function drawNativeShot(e:Engine,c:CanvasRenderingContext2D,s:Shot){
  const b=s.native;if(!b)return;
  b.x=s.x-b.width/2;b.y=s.y-b.height/2;
- const r=runtime(e,e.pattern.id==='exile'?e.advanced.exile.world:e.localPlayer());r.ctx=c;
+ const r=runtime(e,e.pattern.id==='exile'?e.advanced.exile.world:e.localPlayer(),[],isNativeBeam(s));r.ctx=c;
  if(isNativeBeam(s)&&(s.heading??0)!==0){
   const p=e.pattern.id==='exile'?e.advanced.exile.world:e.localPlayer(),h=s.heading!,cs=Math.cos(h),sn=Math.sin(h);
   const unrotate=(a:any)=>{const x=a.x+a.width/2-p.x,y=a.y+a.height/2-p.y;return {...a,x:p.x+x*cs+y*sn-a.width/2,y:p.y-x*sn+y*cs-a.height/2};};

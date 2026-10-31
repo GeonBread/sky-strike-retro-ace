@@ -15,6 +15,7 @@ import {initSpaceCut,syncSpaceCut,constrainCutPlayer} from './spaceCut';
 import {freshMenuDeception,isMenuDeception,menuInputLocked,syncMenuField,moveMenuPlayer,beginMenuReturn,updateMenuReturn,clearMenuByBomb} from './menuDeception';
 import { freshAdvanced, configureZones, timeScale, supports, updateSupports, attackDestructibles, updateSeed, moveExile, constrainWalls, Category } from './advanced';
 import { exileOutside } from './exile';
+import {freshFlightPresence,tickFlightPresence} from './flightPresence';
 import { timedMotion } from './time';
 import { freshVolley, prepareBullet, finishBullet, bulletHarmless } from './normalBullets';
 import { bombExitRadius, bombReaches } from './bomb';
@@ -28,6 +29,7 @@ import { Vec, BombParticle, Phase, CutPiece, CutTelegraph, Entity, Shot, WorldAc
 export class Engine {
   nativeWeapon=freshNativeWeapon();
   continuity=freshContinuity();bossVisibility=1;bossVisualSize=268;
+  flightPresence=freshFlightPresence();
   get emitting(){return !this.encounter.enabled||!this.continuity.closing;}
   encounter=freshEncounter();playStorySound:(kind:StorySound)=>void=()=>{};
   startEncounter(practice=false){startEncounter(this,practice);}
@@ -110,6 +112,7 @@ export class Engine {
       bomb:{smartBombActive:this.smartBombActive,smartBombRadius:this.smartBombRadius,smartBombLimit:this.smartBombLimit,smartBombWorldOrigin:this.smartBombWorldOrigin,smartBombHitBoss:this.smartBombHitBoss,smartBombOrigin:this.smartBombOrigin,bombParticles:this.bombParticles}}:null;
     this.continuity=freshContinuity();
     this.pattern?.exit(this);this.index=i;this.pattern=this.patterns[i];this.stage=stage;
+    this.flightPresence=freshFlightPresence(this.pattern.id==='flight');
     this.finalStand=freshFinalStand();
     this.corridor=freshCorridor();this.fieldWarp=freshFieldWarp();
     this.pauseStorm=freshPauseStorm();this.menuDeception=freshMenuDeception();
@@ -186,7 +189,7 @@ export class Engine {
     this.hazards.push(e);return e;
   }
   damageBoss(amount:number){
-    if(this.attackLocked||this.purification>=0||gateBlocksBoss(this)||this.pattern.id==='outside-hands'&&this.phase==='active')return false;
+    if(this.attackLocked||this.purification>=0||gateBlocksBoss(this)||this.pattern.id==='flight'||this.pattern.id==='outside-hands'&&this.phase==='active')return false;
     if(this.encounter.enabled)return encounterDamage(this,amount);
     const next=Math.max(0,this.bossHp-amount),floor=Math.max(1,this.bossHpMax*.01);
     if(this.bossForm===2&&!this.finalStand.started&&this.phase==='active'&&next<=floor&&this.patterns.some(p=>p.id==='last-stand')){
@@ -496,6 +499,7 @@ export class Engine {
     const targetSplit=supports(this).has('clones')&&this.emitting&&this.phase!=='outro'&&this.phase!=='bombard'&&this.phase!=='restore'&&this.dead<=0?1:0;
     this.split+=(targetSplit-this.split)*Math.min(1,playerDt*5);
     this.move(dt);
+    tickFlightPresence(this,dt);
     if(this.phase==='intro'&&!this.encounter.enabled){const target=this.point(.5,this.pattern.id==='fluid'?.32:.82);this.player.x+=(target.x-this.player.x)*Math.min(1,dt*7);this.player.y+=(target.y-this.player.y)*Math.min(1,dt*7);}
     if(this.encounter.enabled){const target=bossTarget(this),k=1-Math.exp(-bossDt*4);if(!(this.combatPattern.id==='mirror'&&this.lasers.some(l=>l.age>=1.6))&&!isMenuDeception(this)){this.boss.x+=(target.x-this.boss.x)*k;this.boss.y+=(target.y-this.boss.y)*k;}tickBossPresence(this,dt);}
     if(this.phase==='intro'&&this.encounter.enabled){this.updateEntities(dt);this.updateShots(dt);this.updateWorldActors(dt);updateSupports(this,dt);}
